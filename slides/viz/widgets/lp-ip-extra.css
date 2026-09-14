@@ -1,0 +1,19 @@
+/* Layout and marks for the unit 03–05 figures (lp-dual.js, lp-interior.js, ip-formulation.js). */
+
+.viz-valuefn { grid-template-columns: 460px minmax(0, 1fr); }
+.viz-centralpath { grid-template-columns: 500px minmax(0, 1fr); }
+.viz-barrier1d { grid-template-columns: 520px minmax(0, 1fr); }
+.viz-bigm { grid-template-columns: 500px minmax(0, 1fr); }
+.viz-valuefn .viz-right .viz-svg, .viz-bigm .viz-right .viz-svg { margin: 6px 0 8px; max-width: 440px; }
+.viz-valuefn .viz-tab, .viz-centralpath .viz-tab, .viz-bigm .viz-tab, .viz-barrier1d .viz-tab { font-size: 14px; }
+.viz-valuefn .viz-tab td, .viz-centralpath .viz-tab td, .viz-bigm .viz-tab td, .viz-barrier1d .viz-tab td { padding: 3px 8px; }
+
+.viz-target { fill: var(--good-soft); stroke: var(--good); stroke-width: 2; }
+.viz-ellipse { fill: none; stroke: var(--accent); stroke-width: 2.5; }
+.viz-ellipse-prev { fill: none; stroke: var(--ink-faint); stroke-width: 1.5; stroke-dasharray: 5 4; }
+.viz-follow { font-size: 14px; color: var(--ink-soft); display: inline-flex; align-items: center; gap: 4px; }
+
+.viz-bar { fill: var(--accent); }
+.viz-bar-warn { fill: var(--warn); }
+.viz-bar-ink { fill: var(--ink-soft); }
+.viz-bar-label { font: 12px var(--f-body); fill: var(--surface); }

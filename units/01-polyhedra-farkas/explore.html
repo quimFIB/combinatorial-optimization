@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>01 · Explore: polyhedra and Fourier–Motzkin</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+<link rel="stylesheet" href="../../slides/deck.css">
+<link rel="stylesheet" href="../../slides/viz/viz.css">
+</head>
+<body data-trunk="lp">
+<div class="reveal"><div class="slides">
+
+<section class="title-slide">
+  <p class="eyebrow">optional · interactive figures</p>
+  <div class="unit-no">01</div>
+  <h1>Explore: polyhedra and Fourier–Motzkin</h1>
+  <p class="lede">Unit 01's polygon to poke at: switch rows on and off, turn the objective, hover for slacks, and watch Fourier–Motzkin project it.</p>
+  <p class="meta"><span>optional: nothing in the lab depends on it</span><span><a href="slides.html">back to the slides</a></span></p>
+  <aside class="notes">
+    <p>These figures support the slides; they don't replace them, and the unit is complete
+    without them. Each one is computed from the unit's own data or reference solution, so
+    what you see agrees with the numbers on the slides.</p>
+    <p>Inside a figure, the arrow keys and drags belong to the figure; click outside it (or
+    press Esc) to use them for the slides again.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">01 · explore</p>
+  <h2>Poke the polygon</h2>
+  <div class="viz" data-viz="polytope" data-rows='[[-1,0,0],[0,-1,0],[1,1,4],[1,-1,1],[3,-1,6],[-1,-1,-1],[0,1,3],[-1,0,-5]]' data-labels='["row 1","row 2","row 3","row 4","row 5","row 6","row 7","row 8"]'
+       data-off="5,6,7,8" data-objective="2,1" data-box="-1,6,-1,5"></div>
+  <p class="small muted">Try: hover the corner (2.5, 1.5); tick row 5; point the arrow along row 4; untick row 3; tick row 8. Static versions: <a href="slides.html#/4">the running example</a>, <a href="slides.html#/7">tight rows</a>.</p>
+  <aside class="notes">
+    <p><b>What it shows.</b> The polygon of rows 1–4 (unit 01's running example), with rows 5–8
+    available to switch on. Everything is computed in the page from the rows written in this
+    file: the region by clipping, the corners by solving every pair of rows and keeping the
+    feasible ones, the optimum by comparing corners, the certificate by writing $c$ as a
+    nonnegative combination of two rows tight at the optimum.</p>
+    <p><b>Things to try.</b></p>
+    <ul>
+      <li>Hover $(2.5, 1.5)$: rows 3 and 4 light up as tight (slack 0). Hover $(1, 1)$: nothing is tight.</li>
+      <li>Tick row 5, $3x - y \le 6$: the shape doesn't change, but $(2.5, 1.5)$ has three tight rows. That is the degenerate corner of "Finding corners by trying pairs of rows".</li>
+      <li>Drag the arrow to $c = (1, -1)$: a whole edge is optimal, the face of "Faces".</li>
+      <li>Untick row 3: the region runs off to the right and $\max 2x + y$ is unbounded; the dashed edges mark where the view, not a row, cuts the region.</li>
+      <li>Tick row 8, $x \ge 5$: nothing is left. That system has a Farkas certificate: rows 3 and 8 add to $y \le -1$, and with row 2 to $0 \le -1$.</li>
+      <li>With $c = (2, 1)$ the certificate reads $1.5 \cdot$ row 3 $+ 0.5 \cdot$ row 4: those weights are the dual values units 02 and 03 compute.</li>
+    </ul>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">01 · explore</p>
+  <h2>The shadow on the y-axis</h2>
+  <div class="viz" data-viz="polytope" data-rows='[[-1,0,0],[0,-1,0],[1,1,4],[1,-1,1],[3,-1,6],[-1,-1,-1],[0,1,3],[-1,0,-5]]' data-labels='["row 1","row 2","row 3","row 4","row 5","row 6","row 7","row 8"]'
+       data-off="5,6,7,8" data-objective="0,1" data-box="-1,6,-1,5" data-dual="off" data-shadow="y"></div>
+  <p class="small muted">Try: switch rows on and off and watch the list of derived rows and the bar on the left. Static version: <a href="slides.html#/16">eliminate x</a>.</p>
+  <aside class="notes">
+    <p><b>What it shows.</b> Fourier–Motzkin elimination of $x$, live. The rows are sorted by
+    the sign of their $x$-coefficient; every upper bound on $x$ is added to every lower bound
+    with positive multipliers so that $x$ cancels, and rows without $x$ are kept. The derived
+    rows describe the projection, drawn as the thick bar on the left.</p>
+    <ul>
+      <li>With rows 1–4 you get the slide's result, $0 \le y \le 4$, including the redundant $-y \le 1$.</li>
+      <li>Tick row 7 ($y \le 3$): it has no $x$, so it passes straight through, and the bar shrinks to $[0, 3]$.</li>
+      <li>Tick row 8 ($x \ge 5$): one derived row reads $0 \le$ something negative after the next elimination, or the interval turns empty: the Farkas certificate of the constructive proof.</li>
+      <li>Tick row 5: two more upper bounds, so more pairs and more derived rows. That growth, repeated, is the explosion of "Deciding feasibility".</li>
+    </ul>
+  </aside>
+</section>
+
+</div></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/plugin/highlight/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<script src="../../slides/deck.js"></script>
+<script src="../../slides/viz/viz.js"></script>
+<script src="../../slides/viz/widgets/lp2d.js"></script>
+</body>
+</html>

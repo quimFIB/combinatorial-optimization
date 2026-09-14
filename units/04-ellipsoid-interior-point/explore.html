@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>04 · Explore: ellipsoid and interior point</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+<link rel="stylesheet" href="../../slides/deck.css">
+<link rel="stylesheet" href="../../slides/viz/viz.css">
+<link rel="stylesheet" href="../../slides/viz/widgets/lp-ip-extra.css">
+</head>
+<body data-trunk="lp">
+<div class="reveal"><div class="slides">
+
+<section class="title-slide">
+  <p class="eyebrow">optional · interactive figures</p>
+  <div class="unit-no">04</div>
+  <h1>Explore: ellipsoid and interior point</h1>
+  <p class="lede">The ellipsoid method cut by cut, the central path under a slider, and the one-variable barrier.</p>
+  <p class="meta"><span>optional: nothing in the lab depends on it</span><span><a href="slides.html">back to the slides</a></span></p>
+  <aside class="notes">
+    <p>These figures support the slides; they don't replace them, and the unit is complete
+    without them. Each one is computed from the unit's own data or reference solution, so
+    what you see agrees with the numbers on the slides.</p>
+    <p>Inside a figure, the arrow keys and drags belong to the figure; click outside it (or
+    press Esc) to use them for the slides again.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">04 · explore</p>
+  <h2>The ellipsoid method, one cut at a time</h2>
+  <div class="viz" data-viz="ellipsoid" data-runs="deck,corner,empty"></div>
+  <p class="small muted">Try: step the deck's example, then the thin corner; on the empty set, tick "zoom to the ellipse" and watch the area shrink. Static version: <a href="slides.html#/6">two ellipsoid steps</a>.</p>
+  <aside class="notes">
+    <p><b>What it shows.</b> Each step: the current ellipse (solid), the previous one (dashed), the
+    green target region, the centre, and the cut through the centre parallel to the most violated
+    row, with the kept half shaded. The run replays the loop of the reference
+    <code>ellipsoid_feasible</code>, calling the reference <code>ellipsoid_step</code>; centres and
+    matrices are recorded by <code>slides/viz/traces/u04.py</code>, and the ellipses are drawn from
+    them in the page.</p>
+    <ul>
+      <li><b>The deck's example</b> ($x + y \ge 3$): two cuts, as on the slide, centre $(1.96, 1.96)$.</li>
+      <li><b>A thin corner</b>: six cuts; the ellipse flattens along the target's direction.</li>
+      <li><b>An empty set</b> ($y \ge 0.2$ and $y \le 0.1$): every step keeps 0.77 of the area, forever. After enough steps no ball of the promised radius fits, and the method answers "empty".</li>
+    </ul>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">04 · explore</p>
+  <h2>Along the central path</h2>
+  <div class="viz" data-viz="centralpath" data-key="path"></div>
+  <p class="small muted">Try: slide t from left to right; watch y approach (0, 0, 1.5, 0.5) and every y·s stay equal to 1/t. Static versions: <a href="slides.html#/11">the central path</a>, <a href="slides.html#/13">duality on the path</a>.</p>
+  <aside class="notes">
+    <p><b>What it shows.</b> The central path of $\max 2x + y$ on unit 01's polygon, from the
+    reference <code>central_path</code> with $t_0 = 0.01$ and $\mu = 1.25$ (56 points, up to
+    $t \approx 2100$). For each point: the slacks, the dual point $y = 1/(ts)$, the check
+    $A^\top y = c$, and the gap $b^\top y - c^\top x$ against $m/t$.</p>
+    <ul>
+      <li>At small $t$ the point sits near the analytic centre; as $t$ grows it bends toward $(2.5, 1.5)$.</li>
+      <li>Every product $y_i s_i$ equals $1/t$: approximate complementary slackness, the same value in every row.</li>
+      <li>The gap and $m/t$ agree to the centering tolerance (they differ in the fourth decimal at the largest $t$).</li>
+    </ul>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">04 · explore</p>
+  <h2>The barrier on one variable</h2>
+  <div class="viz" data-viz="barrier1d"></div>
+  <p class="small muted">Try: slide t over four orders of magnitude; the minimizer walks from ½ toward 1 and the gap is always 2/t. Static version: <a href="slides.html#/12">the barrier on one variable</a>.</p>
+  <aside class="notes">
+    <p><b>What it shows.</b> $f_t(x) = -tx - \log x - \log(1 - x)$ for $\max x$ on $[0, 1]$, drawn in
+    the page from the formula, with its minimizer from the closed form
+    $x^*(t) = (t - 2 + \sqrt{t^2 + 4})/2t$, the dual point $y = (1/(tx), 1/(t(1-x)))$ and the gap.
+    The walls at 0 and 1 are where the curve shoots up.</p>
+  </aside>
+</section>
+
+</div></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/plugin/highlight/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<script src="../../slides/deck.js"></script>
+<script src="../../slides/viz/viz.js"></script>
+<script src="../../slides/viz/widgets/lp-interior.js"></script>
+<script src="viz-data.js"></script>
+</body>
+</html>

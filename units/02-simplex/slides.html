@@ -63,7 +63,7 @@
   </div>
   <p class="muted">Lab: pivot, pricing rules, the loop with cycle detection, two phases, and Klee–Minty. Then 1000 LPs against HiGHS.</p>
   <div class="box good"><span class="label">getting around</span>
-    <p class="small">Words with a <span class="term" data-term="basis">dotted underline</span> are glossary terms: click one for its definition. <kbd>G</kbd> lists every term in the unit, <kbd>N</kbd> shows the notes. Unit 01's polygon, maximizing $2x + y$, is the running example.</p>
+    <p class="small">Words with a <span class="term" data-term="basis">dotted underline</span> are glossary terms: click one for its definition. <kbd>G</kbd> lists every term in the unit, <kbd>N</kbd> shows the notes. Unit 01's polygon, maximizing $2x + y$, is the running example. Optional extra: <a href="explore.html" target="_blank" rel="noopener">interactive figures</a>, linked from the slides they support by a small ▸ chip; skip them freely.</p>
   </div>
   <aside class="notes">
     <p>Reading plan: section 1 is the algorithm, and the worked tableau example should
@@ -299,6 +299,7 @@
       <p>Two <span class="term" data-term="pivot">pivots</span>, and the vertex $(0,4)$ was never visited. Simplex visits only an improving path, not the whole vertex set.</p>
     </div>
   </div>
+  <p class="viz-link-row"><a class="viz-link" href="explore.html#/1" target="_blank" rel="noopener">explore interactively</a></p>
   <aside class="notes">
     <p>Check step 2 yourself. From $x - y + s_2 = 1$ at the basis $\{s_1, x\}$:
     $x = 1 + y - s_2$. Substitute into $2x + y$ to get $2 + 3y - 2s_2$. The reduced
@@ -378,6 +379,7 @@
       <p class="small muted">Here the reduced costs are already $\le 0$, so it stops. Beale's example is built so that it doesn't.</p>
     </div>
   </div>
+  <p class="viz-link-row"><a class="viz-link" href="explore.html#/1" target="_blank" rel="noopener">explore interactively</a></p>
   <aside class="notes">
     <p><b>The example box.</b> At $(1,0)$ with basis $\{s_1, x, s_3\}$: $x = 1 + y - s_2$,
     $s_1 = 3 - 2y + s_2$ and $s_3 = 6 - 3x + y = 3 - 2y + 3s_2$. Raising $y$ empties $s_1$
@@ -585,6 +587,7 @@
       <p class="small muted">Bland: $(0,0,0) \to (1,0,0) \to (1,80,0) \to (1,80,8200) \to (1,0,9800) \to (0,0,10000)$, 5 pivots. It climbs to the top one step earlier.</p>
     </div>
   </div>
+  <p class="viz-link-row"><a class="viz-link" href="explore.html#/1" target="_blank" rel="noopener">explore interactively</a></p>
   <aside class="notes">
     <p><b>Why Dantzig takes the long way.</b> At the origin of the $n = 2$ cube the reduced
     costs are $10$ for $x_1$ and $1$ for $x_2$, so $x_1$ enters, although the optimum

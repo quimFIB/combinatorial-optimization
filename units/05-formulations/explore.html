@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>05 · Explore: formulations</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+<link rel="stylesheet" href="../../slides/deck.css">
+<link rel="stylesheet" href="../../slides/viz/viz.css">
+<link rel="stylesheet" href="../../slides/viz/widgets/lp-ip-extra.css">
+</head>
+<body data-trunk="ip">
+<div class="reveal"><div class="slides">
+
+<section class="title-slide">
+  <p class="eyebrow">optional · interactive figures</p>
+  <div class="unit-no">05</div>
+  <h1>Explore: formulations</h1>
+  <p class="lede">How the size of M decides the LP bound, on one facility and on the deck's facility-location instance.</p>
+  <p class="meta"><span>optional: nothing in the lab depends on it</span><span><a href="slides.html">back to the slides</a></span></p>
+  <aside class="notes">
+    <p>These figures support the slides; they don't replace them, and the unit is complete
+    without them. Each one is computed from the unit's own data or reference solution, so
+    what you see agrees with the numbers on the slides.</p>
+    <p>Inside a figure, the arrow keys and drags belong to the figure; click outside it (or
+    press Esc) to use them for the slides again.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">05 · explore</p>
+  <h2>Big-M, from one facility to the bound</h2>
+  <div class="viz" data-viz="bigm" data-key="facility" data-u="3"></div>
+  <p class="small muted">Try: slide M from 3 to 30 and watch the extra room on the left and the aggregated bound on the right. Static versions: <a href="slides.html#/7">big-M</a>, <a href="slides.html#/9">the two LPs</a>.</p>
+  <aside class="notes">
+    <p><b>What it shows.</b> Left: one facility's load $x$ (the customers it serves, at most 3)
+    against its opening $y$. The integer points are $(0, 0)$ and the thick segment at $y = 1$; the
+    light region is the relaxation with the tightest valid $M = 3$, and the red region is what a
+    larger $M$ adds. The red point is the LP's favourite trick: full load with the facility open
+    only $3/M$. This part is computed in the page.</p>
+    <p>Right: the deck's two-facility, three-customer instance. The aggregated LP bound for each
+    $M$, the disaggregated bound and the integer optimum 13 were solved by HiGHS
+    (<code>colib.mip.lp_relaxation</code> on the reference <code>ufl_aggregated</code> and
+    <code>ufl_disaggregated</code>, optimum by <code>ufl_brute_force</code>), recorded by
+    <code>slides/viz/traces/u05.py</code>. The bound follows $3 + 18/M$: 9 at $M = 3$, 3.6 at $M = 30$.</p>
+  </aside>
+</section>
+
+</div></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/plugin/highlight/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<script src="../../slides/deck.js"></script>
+<script src="../../slides/viz/viz.js"></script>
+<script src="../../slides/viz/widgets/ip-formulation.js"></script>
+<script src="viz-data.js"></script>
+</body>
+</html>

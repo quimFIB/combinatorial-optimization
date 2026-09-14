@@ -50,7 +50,7 @@
       <p>Presolve and cuts repair weak models, which hides the problem until they can't.</p></div>
   </div>
   <div class="box good"><span class="label">getting around</span>
-    <p class="small">Words with a <span class="term" data-term="formulation">dotted underline</span> are glossary terms: click one for its definition. <kbd>G</kbd> lists every term in the unit, <kbd>N</kbd> shows the notes.</p>
+    <p class="small">Words with a <span class="term" data-term="formulation">dotted underline</span> are glossary terms: click one for its definition. <kbd>G</kbd> lists every term in the unit, <kbd>N</kbd> shows the notes. Optional extra: <a href="explore.html" target="_blank" rel="noopener">interactive figures</a>, linked from the slides they support by a small ▸ chip; skip them freely.</p>
   </div>
   <p class="muted">Lab: three facility-location models with identical integer optima. With presolve and cuts off, SCIP needs 5 644 nodes on one and 1 node on another.</p>
   <aside class="notes">
@@ -242,6 +242,7 @@
       </div>
     </div>
   </div>
+  <p class="viz-link-row"><a class="viz-link" href="explore.html#/1" target="_blank" rel="noopener">explore interactively</a></p>
   <aside class="notes">
     <p><b>The example box.</b> Every customer still goes to its nearest facility
     ($x_{00} = x_{01} = x_{12} = 1$, serving cost 3), and the LP pays only for the opening
@@ -330,6 +331,7 @@
       <p class="small">Same three integer solutions, same 13, and bounds of 3.6, 9 and 13. A branch-and-bound on the first must branch; on the last it stops at the root.</p>
     </div>
   </div>
+  <p class="viz-link-row"><a class="viz-link" href="explore.html#/1" target="_blank" rel="noopener">explore interactively</a></p>
   <aside class="notes">
     <p>Gaps are $(13 - z_{LP}) / 13$: $9.4/13 = 72\%$, $4/13 = 31\%$, 0. All three LP values
     and the $y$ vectors are HiGHS on the reference formulations. The disaggregated LP

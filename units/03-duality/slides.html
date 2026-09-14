@@ -57,7 +57,7 @@
       <p>The <span class="term">dual simplex method</span> keeps optimality and restores feasibility. It is the method used after adding a cut or a bound.</p></div>
   </div>
   <div class="box good"><span class="label">getting around</span>
-    <p class="small">Words with a <span class="term" data-term="dual">dotted underline</span> are glossary terms: click one for its definition. <kbd>G</kbd> lists every term in the unit, <kbd>N</kbd> shows the notes, where the longer proofs live. One LP, $\max 3x + 2y$, runs through every section.</p>
+    <p class="small">Words with a <span class="term" data-term="dual">dotted underline</span> are glossary terms: click one for its definition. <kbd>G</kbd> lists every term in the unit, <kbd>N</kbd> shows the notes, where the longer proofs live. One LP, $\max 3x + 2y$, runs through every section. Optional extra: <a href="explore.html" target="_blank" rel="noopener">interactive figures</a>, linked from the slides they support by a small ▸ chip; skip them freely.</p>
   </div>
   <aside class="notes">
     <p>The lab follows the same order. Step 1 writes the dual, step 2 reads it from
@@ -464,6 +464,7 @@
       <p>Here $y_1 = 1$ on $b_1 \in [3, 6]$. Below 3, the constraint $2x+y \le 6$ stops binding and the price jumps to 3. Above 6, $x+y \le b_1$ stops binding and the price drops to 0.</p>
     </div>
   </div>
+  <p class="viz-link-row"><a class="viz-link" href="explore.html#/1" target="_blank" rel="noopener">explore interactively</a></p>
   <aside class="notes">
     <p>The curve was computed with the exact simplex at 17 values of $b_1$: slopes
     3, 1, 0, with breakpoints at $b_1 = 3$ (value 9) and $b_1 = 6$ (value 12).</p>
@@ -497,6 +498,7 @@
       <p class="small muted">Outside the range the basis changes and the slope changes. A linear prediction there is wrong, which is why lab step 5 must refuse it.</p>
     </div>
   </div>
+  <p class="viz-link-row"><a class="viz-link" href="explore.html#/1" target="_blank" rel="noopener">explore interactively</a></p>
   <aside class="notes">
     <p>Degeneracy caveat: at a degenerate optimum, several optimal bases exist and
     each has its own range, and the left and right derivatives of $z^*$ differ.
@@ -581,6 +583,7 @@
       <p class="small">The next slide runs one pivot of it on the example.</p>
     </div>
   </div>
+  <p class="viz-link-row"><a class="viz-link" href="explore.html#/2" target="_blank" rel="noopener">explore interactively</a></p>
   <aside class="notes">
     <p>Why the ratio test has that form. Pivoting on $T_{rs}$ subtracts
     $\frac{T_{ms}}{T_{rs}} \times$ row $r$ from the objective row. For column $j$ the
@@ -637,6 +640,7 @@
       <p class="cap">Shaded: what the cut removes. Ring: the old optimum, now infeasible. The pivot slides along $x + y = 4$ to the new corner.</p>
     </div>
   </div>
+  <p class="viz-link-row"><a class="viz-link" href="explore.html#/2" target="_blank" rel="noopener">explore interactively</a></p>
   <aside class="notes">
     <p><b>Writing the cut in the basis.</b> The cut is $x + s_3 = 1.5$. The tableau's $x$ row
     says $x - s_1 + s_2 = 2$. Subtract it: $s_1 - s_2 + s_3 = 1.5 - 2 = -\tfrac12$. That is

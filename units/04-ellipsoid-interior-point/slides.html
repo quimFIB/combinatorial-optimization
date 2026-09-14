@@ -50,7 +50,7 @@
       <p>A barrier keeps you inside, and following the central path reaches the optimum in a few dozen Newton steps.</p></div>
   </div>
   <div class="box good"><span class="label">getting around</span>
-    <p class="small">Words with a <span class="term" data-term="central path">dotted underline</span> are glossary terms: click one for its definition. <kbd>G</kbd> lists every term in the unit, <kbd>N</kbd> shows the notes, where the proofs live.</p>
+    <p class="small">Words with a <span class="term" data-term="central path">dotted underline</span> are glossary terms: click one for its definition. <kbd>G</kbd> lists every term in the unit, <kbd>N</kbd> shows the notes, where the proofs live. Optional extra: <a href="explore.html" target="_blank" rel="noopener">interactive figures</a>, linked from the slides they support by a small ▸ chip; skip them freely.</p>
   </div>
   <p class="muted">Then: the pure barrier method breaks down in floating point past $t \approx 10^6$. HiGHS's IPM beats its simplex 7× cold at $n = 3000$, and loses 4× on the warm re-solve.</p>
   <aside class="notes">
@@ -139,6 +139,7 @@
       <p class="small muted">Step 3 is a <span class="term">central cut</span>: it passes through the centre, so exactly half is kept. The next slide does two steps with numbers.</p>
     </div>
   </div>
+  <p class="viz-link-row"><a class="viz-link" href="explore.html#/1" target="_blank" rel="noopener">explore interactively</a></p>
   <aside class="notes">
     <p>Why a half-ellipsoid and not the exact intersection with the feasible set:
     the exact region would be a complicated polytope, and the method's power comes
@@ -195,6 +196,7 @@
       <p class="cap">Dark strip: the target, the polygon above $x + y = 3$. Dotted: the first cut, $x + y = 0$ through the start centre. Each ellipse holds the half the cut kept.</p>
     </div>
   </div>
+  <p class="viz-link-row"><a class="viz-link" href="explore.html#/1" target="_blank" rel="noopener">explore interactively</a></p>
   <aside class="notes">
     <p><b>Step 1 in full.</b> $P' = \frac{4}{3}\left(25I - \frac{2}{3} g g^\top\right)$. Here
     $g g^\top = 12.5 \begin{pmatrix}1 & 1\\1 & 1\end{pmatrix}$, and $\frac23 \cdot 12.5 = 8.33$,
@@ -388,6 +390,7 @@
       <p class="small muted">The next slide shows all of this on one variable, where it can be solved by hand.</p>
     </div>
   </div>
+  <p class="viz-link-row"><a class="viz-link" href="explore.html#/2" target="_blank" rel="noopener">explore interactively</a></p>
   <aside class="notes">
     <p>$f_t$ is strictly convex whenever $A$ has full column rank: the Hessian
     $A^\top \mathrm{diag}(1/s^2) A$ is positive definite. So each $t$ has a unique
@@ -448,6 +451,7 @@
       </div>
     </div>
   </div>
+  <p class="viz-link-row"><a class="viz-link" href="explore.html#/3" target="_blank" rel="noopener">explore interactively</a></p>
   <aside class="notes">
     <p><b>Solving for $x^*(t)$.</b> Multiply $-t - \frac1x + \frac{1}{1-x} = 0$ by
     $x(1-x)$: $-t x (1 - x) - (1 - x) + x = 0$, that is $t x^2 + (2 - t) x - 1 = 0$. The
@@ -490,6 +494,7 @@
       </div>
     </div>
   </div>
+  <p class="viz-link-row"><a class="viz-link" href="explore.html#/2" target="_blank" rel="noopener">explore interactively</a></p>
   <aside class="notes">
     <h4>Derivation</h4>
     <p>With $s = b - Ax$, the gradient of $f_t$ is $-t\,c + A^\top (1/s)$, where $1/s$ is
