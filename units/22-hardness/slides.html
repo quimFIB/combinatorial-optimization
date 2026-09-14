@@ -18,7 +18,7 @@
   <div class="unit-no">22</div>
   <h1>Hardness, and the shape of what is possible</h1>
   <p class="lede">Reductions as programs, the numbers that make a problem hard, and the hierarchy of how close to optimal a polynomial algorithm can promise to get.</p>
-  <p class="meta"><span>needs 11 (and 00, 16, 20)</span><span>~1 h slides + 2 h lab</span><span>lab: <code>uv run co lab 22</code></span></p>
+  <p class="meta"><span>needs 11 (and 00, 16, 20)</span><span>~1½ h slides + 2 h lab</span><span>lab: <code>uv run co lab 22</code></span></p>
   <aside class="notes">
     <p>Parts I–IV built exact methods, and the best of them (CP-SAT, a MIP solver with cuts) prove
     optimality on remarkably large instances. They still take exponential time in the worst case, and
@@ -26,6 +26,12 @@
     <p>This unit is the map, and units 23–25 are the territory. The theory here says, for each problem,
     how good a guarantee is <em>possible</em>. It tells you when a better algorithm is worth looking for
     and when the search is over unless P = NP.</p>
+    <h4>How to read this deck</h4>
+    <p>Three small instances carry the unit: a two-clause 3-CNF pushed through the vertex-cover
+    gadget and back, a four-item knapsack run through the FPTAS, and two six-number partition
+    instances that show bin packing's 3/2 gap. Every number came from the lab's reference
+    solution or brute force. The hardness theorems are stated with a one-line reason; the proofs
+    that are short enough are in the notes.</p>
   </aside>
 </section>
 
@@ -43,6 +49,9 @@
       <p class="small">FPTAS ⊂ PTAS ⊂ APX ⊂ log-APX ⊂ poly-APX; the gap technique; PCP; Unique Games.</p></div>
     <div class="box def"><span class="label">4 · the nine problems</span>
       <p class="small">Best ratio, best hardness, and the open gap, for each of unit 00's problems.</p></div>
+  </div>
+  <div class="box good"><span class="label">getting around</span>
+    <p class="small">Words with a <span class="term" data-term="gadget">dotted underline</span> are glossary terms: click one for its definition. <kbd>G</kbd> lists every term in the unit, <kbd>N</kbd> shows the notes.</p>
   </div>
   <aside class="notes">
     <p>The checkpoint is section 4's table. Try to fill it in yourself before looking. Some rows you can
@@ -63,11 +72,12 @@
   <h2>Karp's chain</h2>
   <div class="cols">
     <div>
-      <div class="box def"><span class="label">polynomial (Karp) reduction $A \le_p B$</span>
+      <div class="box def"><span class="label"><span class="term" data-term="polynomial (Karp) reduction \(A \le_p B\)">polynomial (Karp) reduction</span></span>
+        <p class="small">Written $A \le_p B$.</p>
         <p class="small">A polynomial-time map $f$ from instances of $A$ to instances of $B$ with $x \in A \iff f(x) \in B$. For optimisation, add a polynomial map $g$ taking solutions of $f(x)$ back to solutions of $x$.</p>
       </div>
-      <p class="small">If $B$ is in P, so is $A$. Read the other way: if $A$ is NP-hard, so is $B$. Every NP-hardness proof runs <b>from</b> a known hard problem <b>to</b> the new one.</p>
-      <p class="small muted">Cook (1971) and Levin (1973): SAT is NP-complete. Karp (1972): 21 more, by reductions.</p>
+      <p class="small">If $B$ is in P, so is $A$. Read the other way: if $A$ is <span class="term">NP-hard</span>, so is $B$. The <span class="term" data-term="direction of a reduction">direction</span> matters. Every NP-hardness proof runs <b>from</b> a known hard problem <b>to</b> the new one.</p>
+      <p class="small muted"><span class="term" data-term="Cook–Levin theorem">Cook (1971) and Levin (1973)</span>: SAT is <span class="term">NP-complete</span>. Karp (1972): <span class="term" data-term="Karp's 21 problems">21 more</span>, by reductions.</p>
     </div>
     <div class="fig">
       <svg viewBox="0 0 420 300" width="440" role="img" aria-label="reduction tree from SAT to 3-SAT, then to vertex cover, 3-colouring, Hamiltonian cycle and subset sum; vertex cover to set cover; 3-colouring to graph colouring; Hamiltonian cycle to TSP; subset sum to partition to bin packing">
@@ -118,6 +128,7 @@
 <section>
   <p class="eyebrow">22 · reductions</p>
   <h2>3-SAT → vertex cover, and back</h2>
+  <p class="small">The <span class="term" data-term="3-SAT to vertex cover">reduction</span>: one edge per variable, one triangle per clause, each corner joined to its literal.</p>
   <div class="cols">
     <div class="fig">
       <svg viewBox="0 0 350 235" width="400" role="img" aria-label="gadget for (x1 or not x2 or x3) and (not x1 or x2 or not x3): six literal vertices joined in pairs, two triangles, each corner joined to its literal; a cover of size 7 from x1 true, x2 true, x3 false">
@@ -145,7 +156,7 @@
           <text x="110" y="228">x₁ ∨ ¬x₂ ∨ x₃</text><text x="240" y="228">¬x₁ ∨ x₂ ∨ ¬x₃</text>
         </g>
       </svg>
-      <p class="small muted">Filled: the cover of size $k = n + 2m = 7$ built from $x_1 = x_2 = 1$, $x_3 = 0$.</p>
+      <p class="small muted">Filled: the cover of size $k = n + 2m = 7$ built from $x_1 = x_2 = 1$, $x_3 = 0$. The next slide checks it.</p>
     </div>
     <div>
       <ul class="small">
@@ -165,8 +176,8 @@
     </div>
   </div>
   <aside class="notes">
-    <p>The reduction needs <em>exactly</em> three literals per clause, which is why lab step 2 (clause
-    splitting) exists. With a clause of width 2 the gadget is an edge, not a triangle, and $k$ changes
+    <p>The reduction needs <em>exactly</em> three literals per clause, which is why lab step 2 (<b>clause
+    splitting</b>) exists. With a clause of width 2 the gadget is an edge, not a triangle, and $k$ changes
     per clause. That's doable, but it's the kind of special case where a reduction grows its first bug.</p>
     <p>The backward map in the lab takes <em>any</em> cover of size ≤ $k$, not only minimum ones. The
     lower bound argument shows it's then exactly $k$ with the structure above. Tests hand it a minimum
@@ -178,22 +189,61 @@
 </section>
 
 <section>
+  <p class="eyebrow">22 · reductions · example</p>
+  <h2>The gadget, on the example</h2>
+  <div class="cols">
+    <div>
+      <p class="small">Formula $(x_1 \lor \lnot x_2 \lor x_3) \land (\lnot x_1 \lor x_2 \lor \lnot x_3)$: $n = 3$, $m = 2$. The graph has $2n + 3m = 12$ vertices and $n + 6m = 15$ edges, and $k = n + 2m = 7$.</p>
+      <div class="box ex"><span class="label">forward: assignment to cover</span>
+        <table style="margin:0">
+          <thead><tr><th>piece</th><th>rule</th><th>in the cover</th></tr></thead>
+          <tbody>
+            <tr><td>variable edges</td><td>the true literal</td><td>$x_1$, $x_2$, $\lnot x_3$</td></tr>
+            <tr><td>clause 1</td><td>skip one corner with a true literal ($x_1$)</td><td>corners $\lnot x_2$, $x_3$</td></tr>
+            <tr><td>clause 2</td><td>skip one corner with a true literal ($x_2$)</td><td>corners $\lnot x_1$, $\lnot x_3$</td></tr>
+          </tbody>
+        </table>
+        <p class="small">$3 + 2 + 2 = 7$ vertices. Every one of the 15 edges has an end in the cover; the two skipped corners are covered through $x_1$ and $x_2$ above them.</p>
+      </div>
+    </div>
+    <div>
+      <div class="box ex"><span class="label">backward: a cover the solver picked</span>
+        <p class="small">Brute force over all $2^{12} = 4096$ vertex sets finds 234 covers, the smallest of size 7. The first one found takes $\lnot x_1$, $\lnot x_2$, $\lnot x_3$ at the top.</p>
+        <p class="small">Read it as $x_1 = x_2 = x_3 = \text{false}$. Clause 1 is satisfied by $\lnot x_2$, clause 2 by $\lnot x_1$. A <b>different</b> satisfying assignment from the one we started with, and just as good.</p>
+      </div>
+      <p class="small">The <span class="term" data-term="solution map">solution map</span> never needed the cover to be the one we built: any cover of size $k$ has one vertex per variable edge and two per triangle, and that is enough.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p><b>Why a size-7 cover has exactly that shape.</b> The 3 variable edges share no vertex, so
+    they need 3 distinct cover vertices; each triangle needs 2 of its own corners. That already
+    spends $3 + 4 = 7$, so there is nothing left over: exactly one literal per variable, exactly two
+    corners per triangle. The uncovered corner's link to its literal must then be covered by the
+    literal, which is why that literal is true.</p>
+    <p>All counts are from the reference <code>sat_to_vertex_cover</code>,
+    <code>cover_from_assignment</code> (which returns the 7-vertex cover on the slide),
+    <code>assignment_from_cover</code>, and unit 00's <code>brute_force</code> on the resulting
+    <code>VertexCover</code>: minimum 7, 234 feasible, 4096 examined.</p>
+  </aside>
+</section>
+
+<section>
   <p class="eyebrow">22 · reductions</p>
   <h2>What a reduction preserves, and what it doesn't</h2>
   <div class="cols">
     <div>
       <div class="box def"><span class="label">three strengths</span>
         <ol class="small">
-          <li><b>Decision</b>: yes-instances to yes-instances. Enough for NP-hardness.</li>
-          <li><b>Optimum</b>: $\mathrm{OPT}(f(x))$ determined by $\mathrm{OPT}(x)$, with solutions mapped back. Vertex cover → set cover is this: the same 0/1 vector, the same cost.</li>
-          <li><b>Gap</b>: near-optimal solutions of $f(x)$ map back to near-optimal solutions of $x$ (L-reductions, gap-preserving reductions). Needed to transfer <b>hardness of approximation</b>.</li>
+          <li><b><span class="term" data-term="decision-preserving reduction">Decision</span></b>: yes-instances to yes-instances. Enough for NP-hardness.</li>
+          <li><b><span class="term" data-term="optimum-preserving reduction">Optimum</span></b>: $\mathrm{OPT}(f(x))$ determined by $\mathrm{OPT}(x)$, with solutions mapped back. Vertex cover → set cover is this: the same 0/1 vector, the same cost.</li>
+          <li><b><span class="term" data-term="gap-preserving reduction">Gap</span></b>: near-optimal solutions of $f(x)$ map back to near-optimal solutions of $x$ (L-reductions, gap-preserving reductions). Needed to transfer <b>hardness of approximation</b>.</li>
         </ol>
       </div>
     </div>
     <div>
       <div class="box warn"><span class="label">measured: the gadget is decision-only</span>
         <p class="small">An assignment leaving $u$ clauses unsatisfied gives a cover of $k + u$. So $\text{min cover} - k \le \text{fewest unsatisfied}$. Equality fails: covering <b>both</b> $x_v$ and $\lnot x_v$ costs 1 and can rescue several clause gadgets.</p>
-        <p class="small">300 small random 3-CNFs, MaxSAT by RC2 against the minimum cover by CP-SAT: the excess was <b>strictly smaller on 19</b>.</p>
+        <p class="small">300 small random 3-CNFs, <span class="term">MaxSAT</span> by RC2 against the minimum cover by CP-SAT: the excess was <b>strictly smaller on 19</b>.</p>
       </div>
       <p class="small">So a 1.01-approximate cover tells you nothing useful about a near-satisfying assignment. Approximation-hardness results need reductions built for it.</p>
     </div>
@@ -221,31 +271,37 @@
   <h2>Weak and strong NP-hardness</h2>
   <div class="cols">
     <div>
-      <p class="small">Unit 16's knapsack DP runs in $O(nC)$. Polynomial in the <b>value</b> of $C$, exponential in its <b>length</b> $\log C$: <b>pseudo-polynomial</b>.</p>
+      <p class="small">Unit 16's knapsack DP runs in $O(nC)$. Polynomial in the <b>value</b> of $C$, exponential in its <b>length</b> $\log C$: <span class="term" data-term="pseudo-polynomial time">pseudo-polynomial</span>.</p>
       <div class="box def"><span class="label">definitions</span>
-        <p class="small"><b>Weakly NP-hard</b>: NP-hard, but solvable in time polynomial in $n$ and the largest number.<br>
-        <b>Strongly NP-hard</b>: still NP-hard when every number is at most a polynomial in $n$ (written in unary).</p>
+        <p class="small"><span class="term">Weakly NP-hard</span>: NP-hard, but solvable in time polynomial in $n$ and the largest number.<br>
+        <span class="term">Strongly NP-hard</span>: still NP-hard when every number is at most a polynomial in $n$ (written in <span class="term" data-term="unary encoding">unary</span>).</p>
       </div>
       <table class="dense">
         <thead><tr><th>weak</th><th>strong</th></tr></thead>
         <tbody>
-          <tr><td>knapsack, subset sum, partition</td><td>bin packing, 3-partition</td></tr>
+          <tr><td>knapsack, subset sum, <span class="term">partition</span></td><td>bin packing, <span class="term">3-partition</span></td></tr>
           <tr><td>makespan on 2 machines</td><td>makespan on $m$ machines, $m$ in the input</td></tr>
           <tr><td></td><td>TSP, set cover, vertex cover, colouring (no numbers at all)</td></tr>
         </tbody>
       </table>
     </div>
     <div>
-      <div class="box thm"><span class="label">theorem (Garey & Johnson 1978)</span>
+      <div class="box thm"><span class="label"><span class="term" data-term="Garey–Johnson theorem (no FPTAS)">theorem</span> (Garey & Johnson 1978)</span>
         <p class="small">If a problem is strongly NP-hard, has integer objective values, and $\mathrm{OPT} \le p(n, \text{max number})$ for a polynomial $p$, then it has <b>no FPTAS</b> unless P = NP.</p>
       </div>
-      <div class="box proof"><span class="label">proof</span>
-        <p class="small">Run the FPTAS with $\varepsilon = 1/(p + 1)$. Its error is below $\varepsilon\,\mathrm{OPT} &lt; 1$, so it's exact, in time $\mathrm{poly}(n, p)$. On the unary-sized instances where the problem is still NP-hard, that's polynomial.</p>
+      <div class="box"><span class="label">why</span>
+        <p class="small">With small numbers the optimum is a small integer, so an error below 1 is no error. Pick $\varepsilon$ that small and the FPTAS becomes an exact polynomial algorithm for a strongly hard problem.</p>
+        <p class="proof-pointer">full proof in the notes (N)</p>
       </div>
       <p class="small">An FPTAS is a pseudo-polynomial exact algorithm in disguise, and vice versa (next slide). Weak hardness is the precondition.</p>
     </div>
   </div>
   <aside class="notes">
+    <h4>Full proof</h4>
+    <p>Run the FPTAS with $\varepsilon = 1/(p + 1)$. Its error is below $\varepsilon\,\mathrm{OPT} &lt; 1$,
+    and values are integers, so it's exact, in time $\mathrm{poly}(n, 1/\varepsilon) = \mathrm{poly}(n, p)$.
+    On the unary-sized instances where the problem is still NP-hard, $p$ is polynomial in $n$, so
+    that's a polynomial exact algorithm, which is impossible unless P = NP. $\square$</p>
     <p>Bin packing is the instructive case. It contains partition, which is only weakly hard, so why is
     bin packing strongly hard? Because 3-partition (split $3m$ numbers into $m$ triples of equal sum) is
     strongly NP-hard, and it's bin packing with $m$ bins where every bin must be exactly full. The number
@@ -258,6 +314,7 @@
 <section>
   <p class="eyebrow">22 · numbers</p>
   <h2>The knapsack FPTAS (Ibarra & Kim 1975)</h2>
+  <p class="small">An <span class="term">FPTAS</span>: ratio $1 - \varepsilon$ in time polynomial in $n$ and $1/\varepsilon$. This one is the <span class="term">knapsack FPTAS</span>.</p>
   <div class="cols">
     <div>
       <ol class="small">
@@ -265,7 +322,7 @@
         <li>$K = \varepsilon\, v_{\max} / n$; round $v_i' = \lfloor v_i / K \rfloor$.</li>
         <li>Exact DP <b>by value</b> on $v'$: $W[p]$ = least weight reaching value exactly $p$. At most $n \cdot n/\varepsilon$ values, so $O(n^3/\varepsilon)$ time.</li>
       </ol>
-      <div class="box proof"><span class="label">why $\ge (1 - \varepsilon)\,\mathrm{OPT}$</span>
+      <div class="box"><span class="label">why it loses at most a fraction ε</span>
         $$\begin{aligned} \textstyle\sum_{S} v_i &\ge K \textstyle\sum_{S} v_i' \ge K \textstyle\sum_{O} v_i' \\ &\ge \textstyle\sum_{O} v_i - nK = \mathrm{OPT} - \varepsilon\, v_{\max} \\ &\ge (1 - \varepsilon)\,\mathrm{OPT}\end{aligned}$$
       </div>
       <p class="small muted">The last step needs $\mathrm{OPT} \ge v_{\max}$: step 1's filter. Both it and the $/n$ have a lab test that breaks without them.</p>
@@ -286,6 +343,7 @@
     </div>
   </div>
   <aside class="notes">
+    <p>The next slide runs the three steps on four items, where the loss is not zero.</p>
     <p>Why the actual loss is zero: with 100 items of similar size, the optimum contains about 50 of
     them, and rounding error is spread across many items whose ties are broken nearly at random. The
     $nK$ worst case needs every item in the optimum to lose almost $K$ and the rounded optimum to pick a
@@ -293,6 +351,44 @@
     <p>This is the pattern for the rest of Part V: worst-case guarantees are real theorems, and typical
     performance is much better. Unit 23's <code>then</code> measures the same distance for greedy set
     cover, Christofides and LPT.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">22 · numbers · example</p>
+  <h2>The FPTAS, on four items</h2>
+  <div class="cols">
+    <div>
+      <p class="small">Capacity 24, $\varepsilon = 0.5$.</p>
+      <table>
+        <thead><tr><th>item</th><th class="num">value</th><th class="num">weight</th><th class="num">$v/K$</th><th class="num">rounded $v'$</th></tr></thead>
+        <tbody>
+          <tr><td>0</td><td class="num">16</td><td class="num">8</td><td class="num">4.57</td><td class="num">4</td></tr>
+          <tr><td>1</td><td class="num">28</td><td class="num">12</td><td class="num">8</td><td class="num">8</td></tr>
+          <tr><td>2</td><td class="num">16</td><td class="num">7</td><td class="num">4.57</td><td class="num">4</td></tr>
+          <tr><td>3</td><td class="num">25</td><td class="num">7</td><td class="num">7.14</td><td class="num">7</td></tr>
+        </tbody>
+      </table>
+      <p class="small">$v_{\max} = 28$, so $K = 0.5 \cdot 28 / 4 = 3.5$. Values are divided by $K$ and rounded down.</p>
+    </div>
+    <div>
+      <div class="box ex"><span class="label">what rounding changes</span>
+        <p class="small"><b>Exact optimum:</b> items 0, 2, 3, weight 22, value <b>57</b>.</p>
+        <p class="small"><b>In rounded values</b> that set scores $4 + 4 + 7 = 15$, but so do items 1, 3 ($8 + 7 = 15$, weight 19). Rounding erased the difference, and the DP returns items 1, 3: true value <b>53</b>.</p>
+        <p class="small">Loss $4/57 = 7\%$, well inside the promised 50%. The proof's bound says at least $57 - nK = 57 - 14 = 43$.</p>
+      </div>
+      <p class="small muted">Rounding by $K$ loses less than $K$ per item, at most $nK = \varepsilon\,v_{\max}$ in all. That is the whole proof on the previous slide.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p><b>The rounded DP.</b> Rounded values sum to 23, so the value table has 24 entries instead of
+    86 for the exact values: that shrinkage is where the speed comes from. Among sets fitting in
+    capacity 24, the best rounded score is 15, reached by $\{0,2,3\}$ (weight 22) and $\{1,3\}$
+    (weight 19); $\{1,2\}$ scores 12, $\{0,1\}$ 12. The reference DP keeps the lighter way of
+    reaching each value, so it returns $\{1, 3\}$.</p>
+    <p>The instance was found by searching small random knapsacks for one where the reference
+    <code>knapsack_fptas</code> with $\varepsilon = 0.5$ loses value against
+    <code>knapsack_by_value</code>, which returned 57 for items $\{0, 2, 3\}$.</p>
   </aside>
 </section>
 
@@ -311,29 +407,29 @@
         <thead><tr><th>class</th><th>guarantee</th><th>example</th></tr></thead>
         <tbody>
           <tr><td><b>FPTAS</b></td><td>$1 \pm \varepsilon$, time poly$(n, 1/\varepsilon)$</td><td>knapsack</td></tr>
-          <tr><td><b>PTAS</b></td><td>$1 \pm \varepsilon$, time poly$(n)$ for each fixed $\varepsilon$, e.g. $n^{1/\varepsilon}$</td><td>Euclidean TSP (Arora 1998); makespan on $m$ identical machines (Hochbaum & Shmoys 1987)</td></tr>
-          <tr><td><b>APX</b></td><td>some constant ratio</td><td>vertex cover (2), metric TSP (3/2), Max-Cut (0.878), Max-3SAT (7/8)</td></tr>
-          <tr><td><b>log-APX</b></td><td>$O(\log n)$</td><td>set cover ($\ln n$)</td></tr>
-          <tr><td><b>poly-APX</b></td><td>$n^{c}$</td><td>colouring, clique</td></tr>
+          <tr><td><b><span class="term">PTAS</span></b></td><td>$1 \pm \varepsilon$, time poly$(n)$ for each fixed $\varepsilon$, e.g. $n^{1/\varepsilon}$</td><td>Euclidean TSP (Arora 1998); makespan on $m$ identical machines (Hochbaum & Shmoys 1987)</td></tr>
+          <tr><td><b><span class="term">APX</span></b></td><td>some constant <span class="term" data-term="approximation ratio">ratio</span></td><td>vertex cover (2), metric TSP (3/2), Max-Cut (0.878), Max-3SAT (7/8)</td></tr>
+          <tr><td><b><span class="term">log-APX</span></b></td><td>$O(\log n)$</td><td>set cover ($\ln n$)</td></tr>
+          <tr><td><b><span class="term">poly-APX</span></b></td><td>$n^{c}$</td><td>colouring, clique</td></tr>
           <tr><td>none</td><td>no ratio at all</td><td>general TSP; 0/1 IP feasibility</td></tr>
         </tbody>
       </table>
       <p class="small muted">Every inclusion is strict unless P = NP.</p>
     </div>
     <div>
-      <div class="box def"><span class="label">the gap technique</span>
+      <div class="box def"><span class="label">the <span class="term">gap technique</span></span>
         <p class="small">If it's NP-hard to tell $\mathrm{OPT} \le a$ from $\mathrm{OPT} \ge b$, no algorithm beats ratio $b/a$ (unless P = NP).</p>
       </div>
       <ul class="small">
-        <li><b>Bin packing, 3/2.</b> Partition asks whether 2 bins suffice. Otherwise 3 are needed. A ratio below 3/2 would decide partition.</li>
+        <li><b>Bin packing, 3/2.</b> Partition asks whether 2 bins suffice. Otherwise 3 are needed. A ratio below 3/2 would decide partition (next slide).</li>
         <li><b>General TSP, nothing.</b> Hamiltonian cycle: edges weigh 1, non-edges $\rho n + 1$. A tour costs $n$ if a cycle exists, and $&gt; \rho n$ otherwise.</li>
         <li><b>Colouring, 4/3.</b> Deciding 3-colourability separates 3 from ≥ 4.</li>
       </ul>
     </div>
   </div>
   <aside class="notes">
-    <p>Bin packing's 3/2 is an <em>absolute</em> ratio: it comes from instances with OPT = 2. It says
-    nothing about large instances, and indeed bin packing has an asymptotic PTAS (Fernandez de la Vega
+    <p>Bin packing's 3/2 is an <span class="term" data-term="absolute vs asymptotic ratio">absolute</span> ratio: it comes from instances with OPT = 2. It says
+    nothing about large instances, and indeed bin packing has an <span class="term">asymptotic PTAS</span> (Fernandez de la Vega
     &amp; Lueker 1981) and an algorithm using OPT + O(log OPT) bins (Hoberg &amp; Rothvoss 2017). Whether
     OPT + 1 is achievable in polynomial time is open. "Bin packing is hard to approximate" is true only in
     the narrow sense.</p>
@@ -346,23 +442,56 @@
 </section>
 
 <section>
+  <p class="eyebrow">22 · hierarchy · example</p>
+  <h2>The 3/2 gap, on two instances</h2>
+  <div class="cols">
+    <div>
+      <div class="box ex"><span class="label">a yes-instance: 2 bins</span>
+        <p class="small">Sizes $3, 1, 1, 2, 2, 1$, total 10, bins of capacity 5.</p>
+        <p class="small">$\{3, 2\}$ and $\{1, 1, 2, 1\}$: both exactly 5. <b>OPT = 2.</b></p>
+      </div>
+      <div class="box warn"><span class="label">a no-instance: 3 bins</span>
+        <p class="small">Sizes $4, 4, 2$, total 10, capacity 5.</p>
+        <p class="small">No subset sums to 5 (the subset sums are 0, 2, 4, 6, 8, 10). Two bins would need exactly 5 each, so <b>OPT = 3</b>: $\{4\}$, $\{4\}$, $\{2\}$.</p>
+      </div>
+    </div>
+    <div>
+      <div class="box thm"><span class="label">why no ratio below 3/2</span>
+        <p class="small">Suppose an algorithm always uses fewer than $\tfrac32\,\mathrm{OPT}$ bins.</p>
+        <p class="small">On a yes-instance it uses fewer than $\tfrac32 \cdot 2 = 3$ bins: exactly <b>2</b>. On a no-instance it can't use fewer than 3.</p>
+        <p class="small">So "did it use 2 bins?" answers partition, which is NP-hard. Unless P = NP, no such algorithm runs in polynomial time.</p>
+      </div>
+      <p class="small">Both instances have total size exactly twice the capacity. That's the only kind of instance the argument needs, and it's why the 3/2 says nothing about instances needing 100 bins.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>The general construction: given numbers $a_1, \dots, a_n$ with even total $2T$ (a partition
+    instance), make items of those sizes and bins of capacity $T$. Two bins suffice exactly when the
+    numbers split into two halves of equal sum. Otherwise at least 3 bins are needed. An algorithm with
+    ratio below 3/2 must therefore answer exactly 2 on the yes-instances.</p>
+    <p>Both instances were checked by enumeration: the six-number one has a subset summing to 5
+    (several), and $\{4, 4, 2\}$ has none.</p>
+  </aside>
+</section>
+
+<section>
   <p class="eyebrow">22 · hierarchy</p>
   <h2>The PCP theorem: where approximation hardness comes from</h2>
   <div class="cols">
     <div>
-      <div class="box thm"><span class="label">PCP theorem (Arora–Safra; Arora–Lund–Motwani–Sudan–Szegedy 1998)</span>
-        <p class="small">$\mathrm{NP} = \mathrm{PCP}(O(\log n), O(1))$: every NP statement has a proof that a verifier can check by reading a <b>constant number of bits</b> chosen with $O(\log n)$ random bits, always accepting a correct proof and rejecting a false claim with probability ≥ ½.</p>
+      <div class="box thm"><span class="label"><span class="term" data-term="PCP theorem">PCP theorem</span> (Arora–Safra; Arora–Lund–Motwani–Sudan–Szegedy 1998)</span>
+        <p class="small">$\mathrm{NP} = \mathrm{PCP}(O(\log n), O(1))$: every NP statement has a <span class="term" data-term="probabilistically checkable proof">proof</span> that a verifier can check by reading a <b>constant number of bits</b> chosen with $O(\log n)$ random bits, always accepting a correct proof and rejecting a false claim with probability ≥ ½.</p>
       </div>
       <div class="box def"><span class="label">equivalently: a gap</span>
         <p class="small">There is an $\varepsilon &gt; 0$ such that telling a satisfiable 3-CNF from one where every assignment violates ≥ $\varepsilon m$ clauses is NP-hard.</p>
       </div>
-      <p class="small muted">Dinur (2007) gave a combinatorial proof by gap amplification.</p>
+      <p class="small muted">Dinur (2007) gave a combinatorial proof by <span class="term">gap amplification</span>.</p>
     </div>
     <div>
       <p class="small">Before PCP, the gap technique needed a lucky NP-hard question with a built-in gap (2 vs 3 bins). Afterwards, <b>every</b> NP problem has one, via Max-3SAT, and gap-preserving reductions carry it onward.</p>
-      <div class="box good"><span class="label">Håstad (2001): optimal inapproximability</span>
+      <div class="box good"><span class="label"><span class="term" data-term="Håstad's theorem">Håstad (2001)</span>: optimal inapproximability</span>
         <p class="small">A verifier reading <b>3 bits</b> and checking their parity. Consequence: for every $\varepsilon &gt; 0$, Max-3SAT is NP-hard to approximate within $7/8 + \varepsilon$.</p>
-        <p class="small">A <b>uniformly random assignment</b> satisfies $7/8$ of the clauses in expectation. The dumbest algorithm is optimal.</p>
+        <p class="small">A <b>uniformly random assignment</b> satisfies $7/8$ of the clauses in expectation: a clause of three distinct literals fails only when all three come out false, probability $\tfrac12 \cdot \tfrac12 \cdot \tfrac12 = \tfrac18$. The dumbest algorithm is optimal.</p>
       </div>
     </div>
   </div>
@@ -382,14 +511,14 @@
   <h2>Three thresholds, and the Unique Games Conjecture</h2>
   <div class="cols three" style="gap:.8em">
     <div class="box def"><span class="label">set cover</span>
-      <p class="small">Greedy: $H_n \le \ln n + 1$ (Johnson 1974; Lovász 1975; Chvátal 1979).</p>
+      <p class="small">Greedy: <span class="term" data-term="\(H_n\)">$H_n$</span> $\le \ln n + 1$ (Johnson 1974; Lovász 1975; Chvátal 1979).</p>
       <p class="small">NP-hard within $(1 - \varepsilon)\ln n$ (Dinur & Steurer 2014; Feige 1998 under a weaker assumption).</p>
       <p class="small"><b>Closed</b>: greedy is optimal up to lower-order terms.</p>
     </div>
     <div class="box def"><span class="label">vertex cover</span>
       <p class="small">Maximal matching or LP rounding: 2. Nothing known beats $2 - o(1)$.</p>
       <p class="small">NP-hard: 1.3606 (Dinur & Safra 2005), then $\sqrt 2 - \varepsilon$ (Khot, Minzer & Safra 2018).</p>
-      <p class="small">UGC-hard: $2 - \varepsilon$ (Khot & Regev 2008).</p>
+      <p class="small"><span class="term">UGC-hard</span>: $2 - \varepsilon$ (Khot & Regev 2008).</p>
     </div>
     <div class="box def"><span class="label">Max-Cut</span>
       <p class="small">Goemans–Williamson SDP: $\alpha_{GW} \approx 0.87856$ (unit 25).</p>
@@ -397,7 +526,7 @@
       <p class="small">UGC-hard above $\alpha_{GW}$ (Khot, Kindler, Mossel & O'Donnell 2007).</p>
     </div>
   </div>
-  <div class="box warn"><span class="label">Unique Games Conjecture (Khot 2002)</span>
+  <div class="box warn"><span class="label"><span class="term" data-term="Unique Games Conjecture (UGC)">Unique Games Conjecture</span> (Khot 2002)</span>
     <p class="small">For every $\varepsilon &gt; 0$ there is a $k$ such that, for constraint problems on a graph whose edge constraints are permutations of $k$ labels, it's NP-hard to tell instances where $1 - \varepsilon$ of the constraints can be satisfied from those where at most $\varepsilon$ can. <b>Open.</b> If true, the simple algorithms for vertex cover and Max-Cut, and SDP rounding for every CSP (Raghavendra 2008), are optimal.</p>
   </div>
   <aside class="notes">
@@ -406,7 +535,7 @@
     explain why. That's the practical payoff the curriculum promises: once a threshold is known, a
     better <em>worst-case</em> algorithm isn't worth hunting for. Effort goes into instance-specific
     methods instead (Parts II–IV) or into typical-case performance (unit 26).</p>
-    <p>The 2018 result proved the 2-to-2 Games Conjecture, a weaker cousin of UGC, which gives
+    <p>The 2018 result proved the <b>2-to-2 Games</b> Conjecture, a weaker cousin of UGC, which gives
     $\sqrt 2$ for vertex cover unconditionally. It's considered evidence for UGC, but the full conjecture
     remains open.</p>
   </aside>
@@ -422,7 +551,7 @@
   <p class="eyebrow">22 · checkpoint</p>
   <h2>Best ratio, best hardness, the gap</h2>
   <table class="dense">
-    <thead><tr><th>problem (unit 00)</th><th>best polynomial guarantee</th><th>hardness (unless P = NP)</th><th>gap</th></tr></thead>
+    <thead><tr><th>problem (unit 00)</th><th>best polynomial guarantee</th><th>hardness (unless P = NP)</th><th><span class="term" data-term="open gap">gap</span></th></tr></thead>
     <tbody>
       <tr><td>assignment</td><td>exact (Hungarian, unit 15)</td><td>in P</td><td>none</td></tr>
       <tr><td>knapsack</td><td>FPTAS (Ibarra & Kim 1975)</td><td>weakly NP-hard: no exact polynomial algorithm</td><td>none</td></tr>
@@ -431,7 +560,7 @@
       <tr><td>Max-Cut</td><td>0.878 (GW, unit 25)</td><td>16/17; $\alpha_{GW}$ under UGC</td><td>0.878 vs 0.941</td></tr>
       <tr><td>TSP, metric</td><td>$3/2 - 10^{-36}$ (Karlin, Klein & Oveis Gharan 2021)</td><td>123/122 (Karpinski, Lampis & Schmied 2015)</td><td><b>wide open</b></td></tr>
       <tr><td>TSP, Euclidean (our generator)</td><td>PTAS (Arora 1998; Mitchell 1999)</td><td>strongly NP-hard, so no FPTAS</td><td>none</td></tr>
-      <tr><td>bin packing</td><td>OPT + O(log OPT) (Hoberg & Rothvoss 2017); FFD $\frac{11}{9}$OPT + $\frac69$</td><td>absolute 3/2</td><td>OPT + 1?</td></tr>
+      <tr><td>bin packing</td><td>OPT + O(log OPT) (Hoberg & Rothvoss 2017); <span class="term">FFD</span> $\frac{11}{9}$OPT + $\frac69$</td><td>absolute 3/2</td><td>OPT + 1?</td></tr>
       <tr><td>graph colouring</td><td>$O\big(n (\log\log n)^2 / \log^3 n\big)$ (Halldórsson 1993)</td><td>$n^{1-\varepsilon}$ (Zuckerman 2007)</td><td>lower-order</td></tr>
       <tr><td>job shop, makespan</td><td>polylogarithmic in $m$ (Shmoys, Stein & Wein 1994, and refinements)</td><td>5/4 (Williamson et al. 1997)</td><td><b>wide open</b></td></tr>
     </tbody>

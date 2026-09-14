@@ -18,7 +18,7 @@
   <div class="unit-no">25</div>
   <h1>Semidefinite relaxations</h1>
   <p class="lede">Give each vertex a vector instead of a number, constrain only inner products, and round with a random hyperplane: Goemans–Williamson's 0.878, the Lovász theta function, and the hierarchies above them.</p>
-  <p class="meta"><span>needs 24, 04</span><span>~1 h slides + 2¼ h lab</span><span>lab: <code>uv run co lab 25</code></span></p>
+  <p class="meta"><span>needs 24, 04</span><span>~1½ h slides + 2¼ h lab</span><span>lab: <code>uv run co lab 25</code></span></p>
   <aside class="notes">
     <p>A branch unit: nothing later depends on it, but it finishes the story of relaxations. Unit 22 said
     Max-Cut's 0.878 is optimal under the Unique Games Conjecture. This unit builds the algorithm and
@@ -26,6 +26,12 @@
     <p>The curriculum lists "needs 21" for this unit, which looks like a slip for 04: the SDP is solved by
     an interior-point method, and unit 04 is where you met them. Nothing from lazy clause generation is
     used.</p>
+    <h4>How to read this deck</h4>
+    <p>The 5-cycle $C_5$ carries the unit: its SDP vectors are drawn and cut by one hyperplane, and its
+    theta number is squeezed between two integers you can check by hand. A 2×2 matrix shows what PSD
+    means before any of that. Every value was computed with the lab's reference solution (CLARABEL
+    through cvxpy). The analysis of the constant 0.878 is on the slide as an idea, with the
+    calculation in the notes.</p>
   </aside>
 </section>
 
@@ -43,6 +49,9 @@
       <p class="small">Lovász's θ between the independence number and the clique cover number.</p></div>
     <div class="box def"><span class="label">4 · hierarchies and cost</span>
       <p class="small">Lasserre / sum of squares; why SDPs stay a theoretical tool.</p></div>
+  </div>
+  <div class="box good"><span class="label">getting around</span>
+    <p class="small">Words with a <span class="term" data-term="semidefinite program">dotted underline</span> are glossary terms: click one for its definition. <kbd>G</kbd> lists every term in the unit, <kbd>N</kbd> shows the notes.</p>
   </div>
   <aside class="notes">
     <p>The checkpoint has two halves. The empirical one is easy: GW cuts average well above 0.878 of the
@@ -62,33 +71,65 @@
   <h2>Semidefinite programs are vector programs</h2>
   <div class="cols">
     <div>
-      <div class="box def"><span class="label">SDP</span>
+      <div class="box def"><span class="label"><span class="term" data-term="semidefinite program (SDP)">SDP</span></span>
         $$\max\ \langle C, X \rangle \ \ \text{s.t.}\ \langle A_k, X \rangle = b_k,\ \ X \succeq 0$$
-        <p class="small">$X \succeq 0$: symmetric with all eigenvalues $\ge 0$. A convex cone, but not polyhedral.</p>
+        <p class="small">$X \succeq 0$, <span class="term" data-term="positive semidefinite (PSD)">positive semidefinite</span>: symmetric with all eigenvalues $\ge 0$. The <span class="term">PSD cone</span> is convex, but not polyhedral. <span class="term" data-term="\(\langle C, X \rangle\)">$\langle C, X\rangle$</span> is $\sum_{ij} C_{ij}X_{ij}$.</p>
       </div>
       <div class="box thm"><span class="label">Cholesky, read as modelling</span>
-        <p class="small">$X \succeq 0 \iff X = V V^\top$ for some $V$. So $X_{ij} = v_i \cdot v_j$: an SDP is an optimisation over vectors $v_1, \dots, v_n$ with linear constraints on their <b>inner products</b>.</p>
+        <p class="small">$X \succeq 0 \iff X = V V^\top$ for some $V$. So $X_{ij} = v_i \cdot v_j$ ($X$ is their <span class="term">Gram matrix</span>): an SDP is a <span class="term">vector program</span>, an optimisation over vectors $v_1, \dots, v_n$ with linear constraints on their <b>inner products</b>.</p>
       </div>
       <p class="small">With $v_i$ restricted to $\{\pm 1\} \subset \mathbb{R}^1$ you get the integer problem. Allowing $\mathbb{R}^n$ is the relaxation.</p>
     </div>
     <div>
       <ul class="small">
-        <li><b>Solvable</b> to precision ε in polynomial time: interior-point methods with the barrier $-\log\det X$ (unit 04). The lab uses CLARABEL.</li>
-        <li><b>Duality</b> as in unit 03, except strong duality needs a Slater point, and optimal values need not be attained.</li>
-        <li><b>Low rank exists</b> (Barvinok 1995; Pataki 1998): some optimal $X$ has rank $r$ with $r(r+1)/2 \le$ the number of constraints.</li>
+        <li><b>Solvable</b> to precision ε in polynomial time: interior-point methods with the <span class="term" data-term="log-det barrier">barrier</span> $-\log\det X$ (unit 04). The lab uses CLARABEL.</li>
+        <li><b>Duality</b> as in unit 03, except strong duality needs a <span class="term">Slater point</span>, and optimal values need not be attained.</li>
+        <li><b><span class="term" data-term="low-rank solution">Low rank</span> exists</b> (Barvinok 1995; Pataki 1998): some optimal $X$ has rank $r$ with $r(r+1)/2 \le$ the number of constraints.</li>
         <li><b>Not an LP in disguise</b>: for Max-Cut, no LP of size $n^{o(\log n / \log\log n)}$ beats ratio ½ (Chan, Lee, Raghavendra & Steurer 2013), while this SDP gets 0.878.</li>
       </ul>
-      <p class="small muted">Lab step 1: solve, then factor $X$ back into unit vectors (eigendecomposition, clip tiny negative eigenvalues, renormalise).</p>
+      <p class="small muted">Lab step 1: solve, then factor $X$ back into unit vectors (<span class="term">eigendecomposition</span>, clip tiny negative eigenvalues, renormalise).</p>
     </div>
   </div>
   <aside class="notes">
     <p>"Precision ε" matters. SDP solutions are irrational in general, so exact solution isn't even well
     defined, and pathological SDPs can have optimal solutions with doubly exponential entries. For
     relaxations like GW's (bounded feasible set, a strictly feasible point) none of that bites.</p>
-    <p>The low-rank fact is what makes Burer–Monteiro methods work in practice. With n unit-diagonal
+    <p>The low-rank fact is what makes <b>Burer–Monteiro methods</b> work in practice. With n unit-diagonal
     constraints, rank about √(2n) suffices, so you can optimise over an n × √(2n) matrix V directly,
     non-convexly, and it usually finds the global optimum. That's how SDP relaxations of Max-Cut get
     solved for n in the hundreds of thousands.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">25 · PSD · example</p>
+  <h2>PSD, on 2×2 matrices</h2>
+  <div class="cols">
+    <div>
+      <div class="box ex"><span class="label">one that is PSD</span>
+        $$X = \begin{pmatrix} 1 & -\tfrac12 \\ -\tfrac12 & 1 \end{pmatrix}$$
+        <p class="small">Eigenvalues $\tfrac12$ and $\tfrac32$, both $\ge 0$. Factor it: $v_1 = (1, 0)$, $v_2 = (-\tfrac12, \tfrac{\sqrt3}2)$. Check $v_1 \cdot v_1 = 1$, $v_2 \cdot v_2 = \tfrac14 + \tfrac34 = 1$, $v_1 \cdot v_2 = -\tfrac12$ ✓.</p>
+        <p class="small">Two unit vectors at <b>120°</b>: the matrix <em>is</em> that picture.</p>
+      </div>
+    </div>
+    <div>
+      <div class="box warn"><span class="label">one that is not</span>
+        $$Y = \begin{pmatrix} 1 & 2 \\ 2 & 1 \end{pmatrix}$$
+        <p class="small">Eigenvalues $3$ and $-1$. No vectors exist: two unit vectors have inner product between $-1$ and $1$, never 2.</p>
+      </div>
+      <p class="small"><b>For 2×2 with unit diagonal</b>, PSD means exactly $|X_{12}| \le 1$: a cosine. In general PSD is "some unit vectors realise all these cosines at once", which is what makes it a constraint across all pairs.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>The eigenvalues of $\begin{pmatrix}1 & c\\ c & 1\end{pmatrix}$ are $1 + c$ and $1 - c$, both
+    nonnegative exactly when $|c| \le 1$. For $c = -\tfrac12$: $\tfrac12, \tfrac32$; for $c = 2$: $3, -1$.</p>
+    <p>The reference <code>vectors_from_gram</code> on $X$ returns $(-0.5, -0.866)$ and $(-0.5, 0.866)$:
+    a rotated copy of the vectors on the slide, still at 120°. Factorizations are unique only up to
+    rotation, which is exactly why the random hyperplane has to be uniform.</p>
+    <p>Why the 3×3 case already goes beyond cosines: three unit vectors can't be pairwise at 180°.
+    The matrix with 1 on the diagonal and $-1$ everywhere else has eigenvalue $-1$, so PSD forbids it,
+    while each 2×2 submatrix is fine. This is the triangle inequality a cut must satisfy, and an LP over
+    pairs cannot see it.</p>
   </aside>
 </section>
 
@@ -105,10 +146,10 @@
     <div>
       $$\begin{aligned}\max\ & \textstyle\sum_{uv \in E} w_{uv} \frac{1 - v_u \cdot v_v}{2} \\ \text{s.t. } & \|v_u\| = 1\end{aligned}$$
       <p class="small">A cut is $v_u \in \{\pm 1\}$: an edge contributes $w$ iff its ends differ. So SDP ≥ OPT.</p>
-      <p class="small"><b>Round</b>: draw $r$ with independent $N(0,1)$ entries (a uniform direction), and put $u$ on side $[v_u \cdot r \ge 0]$.</p>
-      <div class="box proof"><span class="label">the constant</span>
-        <p class="small">$u, v$ are separated with probability $\theta_{uv}/\pi$. The SDP counts $(1 - \cos\theta_{uv})/2$ for that edge. So</p>
-        $$\begin{aligned}\mathbb{E}[\text{cut}] &\ge \min_{\theta} \frac{\theta/\pi}{(1 - \cos\theta)/2} \cdot \mathrm{SDP} \\ &\ge 0.87856\ \mathrm{OPT}\end{aligned}$$
+      <p class="small">The <span class="term">Max-Cut SDP</span>. <b><span class="term" data-term="hyperplane rounding">Round</span></b>: draw $r$ with independent $N(0,1)$ entries (a uniform direction), and put $u$ on side $[v_u \cdot r \ge 0]$.</p>
+      <div class="box"><span class="label">why 0.878, in words</span>
+        <p class="small">A random line separates two vectors with probability equal to their angle over 180° (the <span class="term">separation probability</span>). The SDP credits that edge a bit more, $(1 - \cos\theta)/2$. Edge by edge, rounding keeps at least <span class="term" data-term="\(\alpha_{GW}\)">$\alpha_{GW}$</span> $= 0.87856$ of the credit, and the credit totals at least OPT.</p>
+        <p class="proof-pointer">the calculation: notes (N)</p>
       </div>
     </div>
     <div class="fig">
@@ -130,16 +171,72 @@
     </div>
   </div>
   <aside class="notes">
+    <h4>Full proof of the constant</h4>
+    <p>$u, v$ are separated with probability $\theta_{uv}/\pi$, and the SDP counts
+    $(1 - \cos\theta_{uv})/2$ for that edge. By linearity of expectation,
+    $\mathbb{E}[\text{cut}] = \sum_{uv} w_{uv}\,\theta_{uv}/\pi \ge \min_\theta \frac{\theta/\pi}{(1-\cos\theta)/2} \cdot \sum_{uv} w_{uv} \frac{1 - \cos\theta_{uv}}{2} = \alpha_{GW} \cdot \mathrm{SDP} \ge \alpha_{GW} \cdot \mathrm{OPT}$,
+    using nonnegative weights. The minimum is at $\theta \approx 133.6°$.</p>
     <p>Why the projection argument works. The component of r in the plane spanned by v<sub>u</sub> and
     v<sub>v</sub> is a 2D Gaussian, so its direction is uniform on the circle. Only that component
     decides the two signs. The hyperplane's trace in the plane is the line perpendicular to it, and it
     separates the two vectors with probability θ/π.</p>
-    <p>The same SDP-and-hyperplane recipe gives 0.878 for Max-2SAT. Lewin, Livnat and Zwick (2002)
+    <p>This whole procedure is the <b>Goemans–Williamson algorithm</b>. The same SDP-and-hyperplane recipe gives 0.878 for Max-2SAT. Lewin, Livnat and Zwick (2002)
     reached 0.940 for Max-2SAT with a more careful rotation of the vectors before rounding. Raghavendra
     (2008) showed that, under UGC, a canonical SDP followed by a suitable rounding is optimal for
     <em>every</em> constraint satisfaction problem.</p>
     <p>Weights must be nonnegative. With negative weights the per-edge bound fails for edges whose SDP
     angle is small, and the guarantee has to be restated.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">25 · GW · example</p>
+  <h2>Goemans–Williamson on the 5-cycle</h2>
+  <div class="cols wide-right">
+    <div class="fig">
+      <svg viewBox="0 0 260 250" width="320" role="img" aria-label="five unit vectors at multiples of 144 degrees and a hyperplane line splitting them three and two">
+        <circle cx="130" cy="125" r="90" fill="none" class="rule" stroke-width="1.2"/>
+        <line x1="112.6" y1="26.5" x2="147.4" y2="223.5" class="accent" stroke-width="2" stroke-dasharray="6 4"/>
+        <g stroke-width="2.5">
+          <line x1="130" y1="125" x2="220" y2="125" class="accent"/>
+          <line x1="130" y1="125" x2="57.2" y2="72.1" class="ink"/>
+          <line x1="130" y1="125" x2="157.8" y2="210.6" class="accent"/>
+          <line x1="130" y1="125" x2="157.8" y2="39.4" class="accent"/>
+          <line x1="130" y1="125" x2="57.2" y2="177.9" class="ink"/>
+        </g>
+        <g font-size="13" text-anchor="middle" class="mono">
+          <text x="236" y="129">v₀</text><text x="44" y="66">v₁</text><text x="166" y="232">v₂</text>
+          <text x="166" y="30">v₃</text><text x="44" y="192">v₄</text>
+        </g>
+      </svg>
+      <p class="cap">The SDP optimum for $C_5$: $v_k$ at $k \times 144°$, so neighbours $v_k, v_{k+1}$ are 144° apart. Dashed: one hyperplane. Coloured: the side $\{v_0, v_2, v_3\}$.</p>
+    </div>
+    <div>
+      <table>
+        <thead><tr><th>quantity</th><th class="num">value</th></tr></thead>
+        <tbody>
+          <tr><td>SDP: $5 \times (1 - \cos 144°)/2$</td><td class="num">4.5225</td></tr>
+          <tr><td>E[GW]: $5 \times 144/180$</td><td class="num">4.0000</td></tr>
+          <tr><td>OPT (an odd cycle loses one edge)</td><td class="num">4</td></tr>
+        </tbody>
+      </table>
+      <div class="box ex"><span class="label">one hyperplane, by hand</span>
+        <p class="small">Sides: $\{v_0, v_2, v_3\}$ against $\{v_1, v_4\}$. Edges $01, 12, 34, 40$ cross; edge $23$ doesn't. <b>4 edges cut</b>: an optimal cut.</p>
+        <p class="small">Every hyperplane in general position cuts exactly 4 here, so rounding always gets OPT. The whole loss, $4.52 \to 4$, is between the SDP and the integers.</p>
+      </div>
+    </div>
+  </div>
+  <aside class="notes">
+    <p><b>Why the vectors spread like that.</b> The SDP wants neighbours as far apart as possible, but
+    five vectors can't be pairwise opposite around an odd cycle. Walking round the cycle in steps of
+    144° closes up after five steps ($5 \times 144° = 720°$), so every edge gets the same large angle.
+    The reference <code>maxcut_sdp</code> returns $X_{k,k+1} = -0.809 = \cos 144°$ and
+    <code>vectors_from_gram</code> recovers a planar configuration; <code>expected_cut</code> gives 4.0000.</p>
+    <p><b>The hyperplane.</b> Its normal points at 10°. $v_0$ (0°), $v_3$ (72°) and $v_2$ (288°) have
+    positive inner product with it; $v_1$ (144°) and $v_4$ (216°) negative. Normals at 50° and 100°
+    also give cuts of 4, with different sides.</p>
+    <p>Per edge the ratio is $(144/180) / ((1 - \cos 144°)/2) = 0.8 / 0.9045 = 0.8845$, the C₅ row of
+    the table two slides on.</p>
   </aside>
 </section>
 
@@ -164,13 +261,13 @@
       <ul class="small">
         <li><b>Expected GW: 0.956–0.962</b> of OPT, far above 0.878.</li>
         <li><b>Single hyperplanes vary</b>: one cut only 0.752 of OPT. The theorem is about the expectation.</li>
-        <li><b>The edge LP is useless</b>: $x = \tfrac12$ makes every $z_e = 1$.</li>
-        <li><b>The triangle LP beat the SDP</b> on these small graphs (exact to three decimals). But all $z = \tfrac23$ is feasible for it, so on large dense random graphs it's stuck at ⅔ of the total weight, while the optimum tends to ½. It also needs $4\binom{n}{3}$ rows.</li>
+        <li><b>The <span class="term">edge LP</span> is useless</b>: $x = \tfrac12$ makes every $z_e = 1$.</li>
+        <li><b>The <span class="term" data-term="triangle (metric) LP">triangle LP</span> beat the SDP</b> on these small graphs (exact to three decimals). But all $z = \tfrac23$ is feasible for it, so on large dense random graphs it's stuck at ⅔ of the total weight, while the optimum tends to ½. It also needs $4\binom{n}{3}$ rows.</li>
       </ul>
     </div>
   </div>
   <aside class="notes">
-    <p>Small instances flatter every relaxation. The triangle LP describes the cut polytope exactly for
+    <p>Small instances flatter every relaxation. The triangle LP describes the <b>cut polytope</b> exactly for
     graphs with no K<sub>5</sub> minor (Barahona 1983), and small sparse random graphs are often close
     to that. The SDP's strength is uniform: its worst case is 0.878 on every graph.</p>
     <p>The best-of-200 column is a reminder of what practitioners do: solve the SDP once and round many
@@ -184,6 +281,7 @@
   <h2>Why 0.878 is nonetheless tight</h2>
   <div class="cols">
     <div>
+      <p class="small">The <span class="term">three senses of tightness</span>:</p>
       <div class="box def"><span class="label">1 · the analysis is tight per edge</span>
         <p class="small">Rounding recovers $\frac{\theta/\pi}{(1-\cos\theta)/2}$ of each edge's SDP value. On C₅ the SDP vectors sit 144° apart: SDP 4.5225, E[GW] 4.0000, ratio <b>0.8845</b>. Graphs whose vectors sit at 133.6° attain α (Karloff 1999).</p>
       </div>
@@ -193,7 +291,7 @@
     </div>
     <div>
       <div class="box warn"><span class="label">3 · no algorithm can, under UGC</span>
-        <p class="small">Khot, Kindler, Mossel & O'Donnell (2007), with Majority is Stablest (Mossel, O'Donnell & Oleszkiewicz 2010): beating $\alpha_{GW} + \varepsilon$ is Unique-Games-hard. Without UGC, the NP-hardness threshold is 16/17 ≈ 0.941 (unit 22).</p>
+        <p class="small">Khot, Kindler, Mossel & O'Donnell (2007), with <span class="term">Majority is Stablest</span> (Mossel, O'Donnell & Oleszkiewicz 2010): beating $\alpha_{GW} + \varepsilon$ is Unique-Games-hard. Without UGC, the NP-hardness threshold is 16/17 ≈ 0.941 (unit 22).</p>
       </div>
       <table class="dense">
         <thead><tr><th>angle</th><th class="num">rounding / SDP per edge</th></tr></thead>
@@ -230,11 +328,11 @@
   <div class="cols">
     <div>
       $$\begin{aligned}\vartheta(G) = \max\ & \textstyle\sum_{ij} X_{ij} \\ \text{s.t. } & \mathrm{tr}\,X = 1,\ X \succeq 0 \\ & X_{uv} = 0 \quad (uv \in E)\end{aligned}$$
-      <div class="box thm"><span class="label">sandwich</span>
+      <div class="box thm"><span class="label"><span class="term" data-term="sandwich theorem">sandwich</span></span>
         $$\alpha(G) \le \vartheta(G) \le \chi(\bar G)$$
-        <p class="small">Independence number ≤ theta ≤ clique cover number. Both outer numbers are NP-hard; θ is computable to any precision.</p>
+        <p class="small"><span class="term" data-term="independence number \(\alpha(G)\)">Independence number</span> ≤ <span class="term" data-term="Lovász theta function \(\vartheta(G)\)">theta</span> ≤ <span class="term" data-term="clique cover number \(\chi(\bar G)\)">clique cover number</span>, the colouring number of the <span class="term" data-term="graph complement \(\bar G\)">complement</span>. Both outer numbers are NP-hard; θ is computable to any precision.</p>
       </div>
-      <p class="small"><b>Perfect graphs</b> have $\alpha = \chi(\bar G)$, so θ computes both, and colourings too, in polynomial time (Grötschel, Lovász & Schrijver 1981). No combinatorial polynomial algorithm for colouring perfect graphs is known.</p>
+      <p class="small"><b><span class="term" data-term="perfect graph">Perfect graphs</span></b> have $\alpha = \chi(\bar G)$, so θ computes both, and colourings too, in polynomial time (Grötschel, Lovász & Schrijver 1981). No combinatorial polynomial algorithm for colouring perfect graphs is known.</p>
     </div>
     <div>
       <table class="dense">
@@ -248,7 +346,7 @@
           <tr><td>G(14, ½) #2</td><td class="num">5</td><td class="num">5.1088</td><td class="num">6</td></tr>
         </tbody>
       </table>
-      <p class="small">Why Lovász invented it: the <b>Shannon capacity</b> of C₅, the number of symbols per use a noisy 5-letter channel can send with zero error, is $\sqrt 5 = \vartheta(C_5)$.</p>
+      <p class="small">Why Lovász invented it: the <span class="term">Shannon capacity</span> of C₅, the number of symbols per use a noisy 5-letter channel can send with zero error, is $\sqrt 5 = \vartheta(C_5)$.</p>
     </div>
   </div>
   <aside class="notes">
@@ -265,6 +363,39 @@
   </aside>
 </section>
 
+<section>
+  <p class="eyebrow">25 · theta · example</p>
+  <h2>Theta of the 5-cycle, squeezed</h2>
+  <div class="cols">
+    <div>
+      <div class="box ex"><span class="label">independence number: 2</span>
+        <p class="small">$\{0, 2\}$ has no edge. Three vertices of a 5-cycle always include two neighbours. So $\alpha(C_5) = 2$.</p>
+        <p class="small">It feeds theta a feasible matrix: $X = \tfrac12 \mathbf 1_S \mathbf 1_S^\top$ with $S = \{0,2\}$ has trace 1, is 0 on every edge, is PSD, and its entries sum to <b>2</b>.</p>
+      </div>
+      <div class="box ex"><span class="label">clique cover number: 3</span>
+        <p class="small">The cliques of $C_5$ are its edges and vertices. Cover the 5 vertices with $\{0,1\}, \{2,3\}, \{4\}$: 3 cliques. Two can't do it, since each covers at most 2 vertices. So $\chi(\bar C_5) = 3$.</p>
+      </div>
+    </div>
+    <div>
+      <p class="small">The sandwich for $C_5$:</p>
+      $$2 \;\le\; \vartheta(C_5) = \sqrt5 = 2.2361 \;\le\; 3$$
+      <p class="small">θ lands strictly between, so $C_5$ is <b>not perfect</b>: the two NP-hard numbers differ, and the SDP says exactly how far apart the truth could be.</p>
+      <p class="small">Compare the 5-cycle's Max-Cut on the previous slides: the same odd cycle, a different SDP, and again a gap caused by oddness.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p><b>The lower-bound matrix.</b> $\mathbf 1_S \mathbf 1_S^\top$ has ones in the four entries
+    $(0,0), (0,2), (2,0), (2,2)$. Divided by 2 its trace is 1, the entries sum to $4/2 = 2$, and the
+    only off-diagonal nonzeros are at $(0,2)$, which is not an edge. It is rank one, hence PSD. So
+    $\vartheta \ge 2$ with no solver at all.</p>
+    <p><b>The value $\sqrt5$</b> is the reference <code>lovasz_theta</code> on $C_5$: 2.2360680.
+    Lovász's closed form for odd cycles is $\vartheta(C_n) = \frac{n\cos(\pi/n)}{1 + \cos(\pi/n)}$;
+    for $n = 5$ that is $\sqrt 5$.</p>
+    <p><b>Shannon capacity, concretely.</b> Two uses of the $C_5$ channel can send the 5 words
+    $(0,0), (1,2), (2,4), (3,1), (4,3)$ with no two confusable, beating $\alpha^2 = 4$.</p>
+  </aside>
+</section>
+
 <section class="divider">
   <p class="eyebrow">section 4</p>
   <h2>Hierarchies and cost</h2>
@@ -276,27 +407,33 @@
   <h2>Lasserre, sum of squares, and lower bounds against them</h2>
   <div class="cols">
     <div>
-      <div class="box def"><span class="label">level-r moment relaxation (Lasserre 2001; Parrilo 2000)</span>
-        <p class="small">One variable $y_S$ for every set $S$ of at most $2r$ variables, standing for $\mathbb{E}[\prod_{i \in S} x_i]$ under a "pseudo-distribution". Require the moment matrix $(y_{S \cup T})_{|S|,|T| \le r}$ to be PSD, plus localising constraints.</p>
+      <div class="box def"><span class="label">the idea (Lasserre 2001; Parrilo 2000)</span>
+        <p class="small">The <span class="term" data-term="Lasserre (sum-of-squares) hierarchy">Lasserre hierarchy</span>: GW gave each vertex a vector. Level $r$ gives a variable to every <b>group</b> of up to $2r$ vertices, standing for "how often are these all 1 together" under a <span class="term">pseudo-distribution</span>, and asks the table of them, the <span class="term">moment matrix</span>, to be PSD.</p>
+        <p class="proof-pointer">precise definition: notes (N)</p>
       </div>
       <ul class="small">
         <li>Level 1 on Max-Cut is GW's SDP. Adding triangle inequalities is part of level 2.</li>
         <li>Level $n$ is <b>exact</b>: the moment matrix of a true distribution over cuts.</li>
         <li>Size $n^{O(r)}$, so solving level $r$ takes time $n^{O(r)}$.</li>
       </ul>
-      <p class="small muted">The LP analogue is Sherali–Adams (1990): same lifting, with linear constraints only.</p>
+      <p class="small muted">The LP analogue is <span class="term" data-term="Sherali–Adams hierarchy">Sherali–Adams</span> (1990): same lifting, with linear constraints only.</p>
     </div>
     <div>
-      <div class="box warn"><span class="label">lower bounds</span>
-        <p class="small"><b>Grigoriev (2001)</b>: random 3-XOR needs level Ω(n) to refute. So does a simple knapsack instance, $\sum x_i = n/2$ for odd $n$.<br>
+      <div class="box warn"><span class="label"><span class="term" data-term="hierarchy lower bound">lower bounds</span></span>
+        <p class="small"><b>Grigoriev (2001)</b>: random <span class="term">3-XOR</span> needs level Ω(n) to refute. So does a simple knapsack instance, $\sum x_i = n/2$ for odd $n$.<br>
         <b>Schoenebeck (2008)</b>: random 3-SAT likewise. Tulsiani (2009) turned such gaps into hardness-of-approximation-style lower bounds for problems like vertex cover.</p>
       </div>
       <p class="small">The hierarchies are a model of "all reasonable convex relaxations". A lower bound against level Ω(n) rules out a whole family of algorithms, without any complexity assumption.</p>
     </div>
   </div>
   <aside class="notes">
+    <h4>Precise definition</h4>
+    <p>One variable $y_S$ for every set $S$ of at most $2r$ variables, standing for
+    $\mathbb{E}[\prod_{i \in S} x_i]$ under a pseudo-distribution. Require the moment matrix
+    $(y_{S \cup T})_{|S|,|T| \le r}$ to be PSD, plus localising constraints for each problem
+    constraint.</p>
     <p>Why "sum of squares": the dual of the level-r moment relaxation certifies $f \ge c$ by writing
-    $f - c$ as a sum of squares of degree-r polynomials, modulo the constraints. A refutation of a
+    $f - c$ as a sum of squares of degree-r polynomials (a <b>sum-of-squares certificate</b>), modulo the constraints. A refutation of a
     formula is an SOS certificate that the number of satisfied clauses is below m. Grigoriev's result says
     no such certificate of low degree exists for 3-XOR, even though Gaussian elimination refutes it in
     polynomial time. So SOS is strong but not all-powerful.</p>
@@ -328,7 +465,7 @@
       <ul class="small">
         <li>The SDP has $n^2$ variables. Interior-point iterations factor dense matrices, and the measured time grows like $n^{3.5}$ to $n^5$ here.</li>
         <li>An exact proof of optimality ran out of time at n = 60. The SDP bound is still available at 150, if slowly.</li>
-        <li><b>In practice</b>: first-order and low-rank methods (Burer & Monteiro 2003) reach much larger n with modest accuracy, and SDP bounds inside branch and bound (BiqMac, Rendl, Rinaldi & Wiegele 2010) solve dense Max-Cut instances that LP-based solvers can't.</li>
+        <li><b>In practice</b>: first-order and low-rank methods (Burer & Monteiro 2003) reach much larger n with modest accuracy, and <span class="term" data-term="SDP-based branch and bound">SDP bounds inside branch and bound</span> (BiqMac, Rendl, Rinaldi & Wiegele 2010) solve dense Max-Cut instances that LP-based solvers can't.</li>
       </ul>
       <p class="small">So "a theoretical tool" means: the <b>ideas</b> (vectors, rounding, hierarchies) are central, while off-the-shelf <b>interior-point</b> SDP solvers rarely are.</p>
     </div>

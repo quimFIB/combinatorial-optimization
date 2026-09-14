@@ -18,13 +18,19 @@
   <div class="unit-no">23</div>
   <h1>Combinatorial approximation algorithms</h1>
   <p class="lede">Greedy, matchings, spanning trees and sorting, each with a lower bound on the optimum it can compute, and a proof that fits on one slide.</p>
-  <p class="meta"><span>needs 22, 16, 15, 13</span><span>~1 h slides + 2½ h lab</span><span>lab: <code>uv run co lab 23</code></span></p>
+  <p class="meta"><span>needs 22, 16, 15, 13</span><span>~1½ h slides + 2½ h lab</span><span>lab: <code>uv run co lab 23</code></span></p>
   <aside class="notes">
     <p>Unit 22 drew the map of what's possible. This unit fills in the easy half of the "best guarantee"
     column with combinatorial algorithms: no LPs, no SDPs, only structures from Part III. Units 24 and 25
     fill in the rest with relaxations.</p>
     <p>The curriculum calls Christofides "the moment trunk B pays off". It needs a minimum spanning tree
     (unit 13) and a minimum-weight perfect matching (unit 15), composed through an Euler circuit.</p>
+    <h4>How to read this deck</h4>
+    <p>Three small instances carry it: five elements where greedy set cover pays 10 against an
+    optimum of 7, with every price shown; the six points of the double-tree figure, run through
+    both TSP algorithms with their lower bounds; and the two seven-job tight families for list
+    scheduling and LPT. All numbers are from the lab's reference solution and brute force. The
+    price lemma and the scheduling bounds are given as ideas on the slides and proved in the notes.</p>
   </aside>
 </section>
 
@@ -42,6 +48,9 @@
       <p class="small">Double tree (2), Christofides (3/2), and the 2021 improvement.</p></div>
     <div class="box def"><span class="label">4 · scheduling, and the gap to practice</span>
       <p class="small">List scheduling, LPT; tight families; ratios measured against CP-SAT.</p></div>
+  </div>
+  <div class="box good"><span class="label">getting around</span>
+    <p class="small">Words with a <span class="term" data-term="approximation algorithm">dotted underline</span> are glossary terms: click one for its definition. <kbd>G</kbd> lists every term in the unit, <kbd>N</kbd> shows the notes.</p>
   </div>
   <aside class="notes">
     <p>The measured finding of the unit, stated up front: on random instances every algorithm here does
@@ -63,10 +72,10 @@
   <h2>Every proof in this unit has one shape</h2>
   <div class="cols">
     <div>
-      <p class="small">OPT is unknown, and computing it is NP-hard. So find a quantity $\mathrm{LB}$ with</p>
+      <p class="small">OPT is unknown, and computing it is NP-hard. So find a <span class="term" data-term="lower bound LB">lower bound</span> $\mathrm{LB}$ with</p>
       $$\mathrm{ALG} \le \rho \cdot \mathrm{LB} \quad\text{and}\quad \mathrm{LB} \le \mathrm{OPT}$$
-      <p class="small">The algorithm constructs its solution <b>and</b> its lower bound together. The lab returns both, so tests check each inequality separately.</p>
-      <div class="box warn"><span class="label">the limit of the method</span>
+      <p class="small">That makes it a <span class="term" data-term="\(\rho\)-approximation">$\rho$-approximation</span>. The algorithm constructs its solution <b>and</b> its lower bound together. The lab returns both, so tests check each inequality separately.</p>
+      <div class="box warn"><span class="label">the <span class="term" data-term="limit of a lower bound">limit of the method</span></span>
         <p class="small">If some instance has $\mathrm{OPT} / \mathrm{LB} = r$, no analysis against that $\mathrm{LB}$ can prove a ratio below $r$. That's the integrality gap of unit 05 again, for bounds that aren't LPs.</p>
       </div>
     </div>
@@ -99,17 +108,18 @@
   <h2>Greedy set cover and its prices</h2>
   <div class="cols">
     <div>
-      <p class="small">Buy the set with the least cost per <b>newly</b> covered element. Charge each new element that price.</p>
-      <div class="box thm"><span class="label">price lemma</span>
+      <p class="small"><span class="term">Greedy set cover</span>: buy the set with the least cost per <b>newly</b> covered element. Charge each new element that <span class="term" data-term="price (set cover)">price</span>.</p>
+      <div class="box thm"><span class="label"><span class="term">price lemma</span></span>
         <p class="small">For every set $S$: $\sum_{e \in S} \mathrm{price}_e \le H_{|S|}\, c_S$.</p>
       </div>
-      <div class="box proof"><span class="label">proof</span>
-        <p class="small">List $S$'s elements in the order greedy covered them, last first: $e_k, \dots, e_1$. When $e_j$ was covered, at least $j$ elements of $S$ were uncovered, so $S$ offered a ratio of at most $c_S / j$. Greedy paid no more: $\mathrm{price}_{e_j} \le c_S / j$. Sum over $j$. Applied to an optimal cover: $\mathrm{ALG} = \sum_e \mathrm{price}_e \le H_d \cdot \mathrm{OPT}$.</p>
+      <div class="box"><span class="label">why</span>
+        <p class="small">While some of $S$ was still uncovered, $S$ itself was on offer at $c_S$ divided by what it still covered, and greedy never pays more than the best offer. The last element of $S$ costs at most $c_S$, the one before at most $c_S/2$, and so on: $H_{|S|}\,c_S$. Add over an optimal cover to get $\mathrm{ALG} \le H_d \cdot \mathrm{OPT}$.</p>
+        <p class="proof-pointer">full proof in the notes (N)</p>
       </div>
       <p class="small muted">Johnson 1974; Lovász 1975; Chvátal 1979. Unit 22: $(1-\varepsilon)\ln n$ is NP-hard, so this is optimal.</p>
     </div>
     <div>
-      <div class="box def"><span class="label">tight family</span>
+      <div class="box def"><span class="label"><span class="term">tight family</span></span>
         <p class="small">Singletons $\{i\}$ at cost $L/(i+1)$, and the whole universe at $L + 1$ ($L = \mathrm{lcm}(1..n)$). Greedy takes every singleton, at total cost $L \cdot H_n$.</p>
       </div>
       <table class="dense">
@@ -124,14 +134,63 @@
     </div>
   </div>
   <aside class="notes">
+    <h4>Full proof of the price lemma</h4>
+    <p>List $S$'s elements in the order greedy covered them, last first: $e_k, \dots, e_1$. When
+    $e_j$ was covered, at least $j$ elements of $S$ were uncovered, so $S$ offered a ratio of at
+    most $c_S / j$. Greedy paid no more: $\mathrm{price}_{e_j} \le c_S / j$. Summing over $j$ gives
+    $H_k\, c_S$. Applied to each set of an optimal cover, whose sets together contain every element:
+    $\mathrm{ALG} = \sum_e \mathrm{price}_e \le H_d \cdot \mathrm{OPT}$. $\square$</p>
     <p>The price lemma is an LP duality argument in disguise. Scaled down by $H_d$, the prices satisfy
     every dual constraint $\sum_{e \in S} y_e \le c_S$ of the set cover LP. So
-    $\mathrm{ALG}/H_d = \sum_e y_e \le \mathrm{LP} \le \mathrm{OPT}$. This is <b>dual fitting</b>, and the
+    $\mathrm{ALG}/H_d = \sum_e y_e \le \mathrm{LP} \le \mathrm{OPT}$. This is <span class="term">dual fitting</span>, and the
     guarantee is really against the LP, which is stronger. Unit 24 turns the idea into the primal–dual
     method.</p>
     <p>The tight family uses weights. For <em>unit</em> costs greedy's worst case is still
     $\Theta(\log n)$, but the classic instance is more intricate (two disjoint "rows" and
     exponentially growing "columns") and only reaches about $\tfrac12 \log_2 n$.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">23 · guarantees · example</p>
+  <h2>Greedy set cover, on five elements</h2>
+  <div class="cols">
+    <div>
+      <p class="small">Elements 0–4. Sets: $S_0 = \{2\}$ cost 5, $\ S_1 = \{0\}$ cost 1, $\ S_2 = \{1,2,3,4\}$ cost 6, $\ S_3 = \{0,1,3,4\}$ cost 4.</p>
+      <div class="box ex"><span class="label">greedy, step by step</span>
+        <table style="margin:0">
+          <thead><tr><th class="num">step</th><th>cost per new element</th><th>buys</th><th>prices charged</th></tr></thead>
+          <tbody>
+            <tr><td class="num">1</td><td>$5,\ 1,\ \tfrac64,\ \tfrac44$</td><td>$S_1$ (tie, lower index)</td><td>element 0: 1</td></tr>
+            <tr><td class="num">2</td><td>$5,\ \cdot,\ \tfrac64,\ \tfrac43$</td><td>$S_3$</td><td>1, 3, 4: $\tfrac43$ each</td></tr>
+            <tr><td class="num">3</td><td>$5,\ \cdot,\ 6,\ \cdot$</td><td>$S_0$</td><td>element 2: 5</td></tr>
+          </tbody>
+        </table>
+        <p class="small">Total $1 + 4 + 5 = $ <b>10</b> $=$ the sum of the prices.</p>
+      </div>
+    </div>
+    <div>
+      <div class="box warn"><span class="label">the optimum</span>
+        <p class="small">$S_1 + S_2$: cost <b>7</b>. Greedy's step 2 looked cheapest ($\tfrac43$ against $\tfrac32$) but left element 2 to be bought alone at 5.</p>
+      </div>
+      <div class="box ex"><span class="label">the price lemma, checked</span>
+        <p class="small">On $S_2$, four elements, cost 6: its prices are $\tfrac43 + 5 + \tfrac43 + \tfrac43 = 9 \le H_4 \cdot 6 = 12.5$.</p>
+        <p class="small">On $S_1$: $1 \le H_1 \cdot 1 = 1$.</p>
+        <p class="small">Adding over the optimal cover: $10 \le 12.5 + 1$, so greedy is within $H_4 \approx 2.08$ of optimal. Actual ratio $10/7 = 1.43$.</p>
+      </div>
+    </div>
+  </div>
+  <aside class="notes">
+    <p><b>Step 1 in detail.</b> Nothing is covered yet, so each set's ratio is cost over size:
+    $S_0$ 5, $S_1$ 1, $S_2$ $6/4 = 1.5$, $S_3$ $4/4 = 1$. $S_1$ and $S_3$ tie at 1; the reference breaks
+    ties by lowest index. <b>Step 2.</b> Element 0 is covered: $S_2$ still covers 4 new ($1.5$),
+    $S_3$ covers 3 new ($\tfrac43$). <b>Step 3.</b> Only element 2 remains: $S_0$ at 5 beats $S_2$ at 6.</p>
+    <p><b>Watching the lemma's order.</b> Greedy covered $S_2$'s element 2 last, when only 1 of
+    $S_2$'s elements was uncovered: price $5 \le 6/1$. Its elements 1, 3, 4 were covered when all 4
+    were uncovered: $\tfrac43 \le 6/4$. The proof's bounds $6/1, 6/2, 6/3, 6/4$ are generous here.</p>
+    <p>From the reference <code>greedy_set_cover</code> (prices as Fractions) and unit 00's
+    <code>brute_force</code> over the 16 subsets, which finds 7 at $\{S_1, S_2\}$. The instance came
+    from a search for small cases where greedy loses by at least 40%.</p>
   </aside>
 </section>
 
@@ -147,7 +206,7 @@
   <div class="cols">
     <div>
       <div class="box def"><span class="label">vertex cover</span>
-        <p class="small">Take a <b>maximal</b> matching $M$ (scan edges, keep those with both ends free). Cover: all $2|M|$ endpoints.</p>
+        <p class="small">Take a <span class="term" data-term="maximal matching">maximal matching</span> $M$ (scan edges, keep those with both ends free). Cover: all $2|M|$ endpoints (<span class="term" data-term="matching-based vertex cover">matching-based vertex cover</span>).</p>
         <ul class="small">
           <li>Feasible: an uncovered edge could have joined $M$.</li>
           <li>$\mathrm{OPT} \ge |M|$: matching edges share no vertex, so each needs its own.</li>
@@ -158,9 +217,9 @@
     </div>
     <div>
       <div class="box def"><span class="label">k-center (Gonzalez 1985)</span>
-        <p class="small">Start anywhere; repeatedly add the point farthest from the chosen centres. Radius $r$ = the farthest distance left.</p>
+        <p class="small"><span class="term" data-term="\(k\)-center">$k$-center</span> by <span class="term">farthest-first traversal</span>: start anywhere; repeatedly add the point farthest from the chosen centres. Radius $r$ = the farthest distance left.</p>
         <ul class="small">
-          <li>The $k$ centres and the final farthest point are $k + 1$ points pairwise $\ge r$ apart.</li>
+          <li>The $k$ centres and the final farthest point are $k + 1$ points pairwise $\ge r$ apart: a <span class="term">packing witness</span>.</li>
           <li>Two share an optimal centre, so $r \le 2\,\mathrm{OPT}$ by the triangle inequality.</li>
         </ul>
         <p class="small">NP-hard to beat $2 - \varepsilon$ (Hsu & Nemhauser 1979).</p>
@@ -186,6 +245,7 @@
 <section>
   <p class="eyebrow">23 · metric TSP</p>
   <h2>The double tree: 2</h2>
+  <p class="small">The <span class="term" data-term="double-tree algorithm">double-tree algorithm</span> for <span class="term">metric TSP</span>.</p>
   <div class="cols">
     <div class="fig">
       <svg viewBox="0 0 330 210" width="380" role="img" aria-label="a spanning tree on six points, and the tour 0 1 2 4 5 3 obtained by shortcutting its depth-first walk">
@@ -210,9 +270,9 @@
     </div>
     <div>
       <ol class="small">
-        <li>$\mathrm{MST} \le \mathrm{OPT}$: delete one edge of the optimal tour and a spanning path remains.</li>
+        <li>$\mathrm{MST} \le \mathrm{OPT}$ (<span class="term" data-term="minimum spanning tree (MST)">minimum spanning tree</span>): delete one edge of the optimal tour and a spanning path remains.</li>
         <li>Walk around the tree, using every edge twice: length $2\,\mathrm{MST}$.</li>
-        <li>Skip vertices already visited. Each skip replaces a path by one edge, <b>no longer by the triangle inequality</b>.</li>
+        <li>Skip vertices already visited (<span class="term">shortcutting</span>). Each skip replaces a path by one edge, <b>no longer by the <span class="term">triangle inequality</span></b>.</li>
       </ol>
       <p class="small">So $\mathrm{tour} \le 2\,\mathrm{MST} \le 2\,\mathrm{OPT}$. The walk's shortcut is exactly a preorder of the tree.</p>
       <p class="small">Measured, 30 instances with $n \le 60$: mean <b>1.30–1.37</b>, worst <b>1.49</b>.</p>
@@ -234,16 +294,17 @@
 <section>
   <p class="eyebrow">23 · metric TSP</p>
   <h2>Christofides: 3/2</h2>
+  <p class="small"><span class="term" data-term="Christofides' algorithm">Christofides' algorithm</span>, five steps, each a unit of the course.</p>
   <div class="cols">
     <div>
       <ol class="small">
         <li><b>MST</b> $T$ (unit 13). $w(T) \le \mathrm{OPT}$.</li>
-        <li><b>Odd vertices</b> $O$ of $T$: an even number (handshake lemma).</li>
-        <li><b>Min-weight perfect matching</b> $M$ on $O$ (unit 15's blossom, weighted). $w(M) \le \mathrm{OPT}/2$.</li>
-        <li><b>Euler circuit</b> of $T + M$: every degree is now even.</li>
+        <li><b><span class="term" data-term="odd vertices">Odd vertices</span></b> $O$ of $T$: an even number (<span class="term" data-term="handshake lemma">handshake lemma</span>).</li>
+        <li><b><span class="term" data-term="minimum-weight perfect matching">Min-weight perfect matching</span></b> $M$ on $O$ (unit 15's blossom, weighted). $w(M) \le \mathrm{OPT}/2$.</li>
+        <li><b><span class="term" data-term="Euler circuit">Euler circuit</span></b> of $T + M$: every degree is now even.</li>
         <li><b>Shortcut</b>: triangle inequality.</li>
       </ol>
-      <div class="box proof"><span class="label">why $w(M) \le \mathrm{OPT}/2$</span>
+      <div class="box"><span class="label">why the matching costs at most half the tour</span>
         <p class="small">Shortcut the optimal tour to visit only $O$: length $\le \mathrm{OPT}$. Its edges alternate between two perfect matchings on $O$. The cheaper is $\le \mathrm{OPT}/2$, and $M$ is cheaper still.</p>
       </div>
     </div>
@@ -258,7 +319,7 @@
       </table>
       <p class="small muted">Lab <code>then</code>: 10 instances per size, mean (max), optima by CP-SAT's circuit constraint (under 2 s each).</p>
       <div class="box good"><span class="label">45 years at 3/2</span>
-        <p class="small">Christofides (1976) and Serdyukov (1978). Karlin, Klein & Oveis Gharan (2021): $3/2 - 10^{-36}$, by sampling a random spanning tree from the max-entropy distribution fitted to the Held–Karp LP.</p>
+        <p class="small">Christofides (1976) and Serdyukov (1978). <span class="term" data-term="Karlin–Klein–Oveis Gharan">Karlin, Klein & Oveis Gharan</span> (2021): $3/2 - 10^{-36}$, by sampling a random spanning tree from the max-entropy distribution fitted to the Held–Karp LP.</p>
       </div>
     </div>
   </div>
@@ -276,6 +337,55 @@
   </aside>
 </section>
 
+<section>
+  <p class="eyebrow">23 · metric TSP · example</p>
+  <h2>Both TSP algorithms, on six points</h2>
+  <p class="small">The six points of the double-tree figure, distances rounded to integers (one unit = 10 px).</p>
+  <div class="cols">
+    <div>
+      <table class="dense">
+        <thead><tr><th></th><th class="num">0</th><th class="num">1</th><th class="num">2</th><th class="num">3</th><th class="num">4</th><th class="num">5</th></tr></thead>
+        <tbody>
+          <tr><td>0</td><td class="num">·</td><td class="num">8</td><td class="num">16</td><td class="num">10</td><td class="num">17</td><td class="num">23</td></tr>
+          <tr><td>1</td><td class="num"></td><td class="num">·</td><td class="num">9</td><td class="num">12</td><td class="num">13</td><td class="num">17</td></tr>
+          <tr><td>2</td><td class="num"></td><td class="num"></td><td class="num">·</td><td class="num">14</td><td class="num">9</td><td class="num">9</td></tr>
+          <tr><td>3</td><td class="num"></td><td class="num"></td><td class="num"></td><td class="num">·</td><td class="num">10</td><td class="num">18</td></tr>
+          <tr><td>4</td><td class="num"></td><td class="num"></td><td class="num"></td><td class="num"></td><td class="num">·</td><td class="num">8</td></tr>
+        </tbody>
+      </table>
+      <div class="box ex"><span class="label">the lower bounds</span>
+        <p class="small">MST: $01, 03, 12, 24, 45$ = $8 + 10 + 9 + 9 + 8 =$ <b>44</b> $\le$ OPT.</p>
+        <p class="small">Odd vertices of the MST: 3 and 5 (leaves). Their only perfect matching: edge $35$, weight <b>18</b> $\le$ OPT/2.</p>
+        <p class="small">Optimal tour (brute force): $0\,1\,2\,5\,4\,3$, length <b>54</b>. Check: $44 \le 54$ and $18 \le 27$.</p>
+      </div>
+    </div>
+    <div>
+      <table>
+        <thead><tr><th>algorithm</th><th>tour</th><th class="num">length</th><th class="num">promised at most</th></tr></thead>
+        <tbody>
+          <tr><td>double tree</td><td>0 1 2 4 5 3</td><td class="num">62</td><td class="num">$2 \cdot 44 = 88$</td></tr>
+          <tr><td>Christofides</td><td>0 3 5 4 2 1</td><td class="num">62</td><td class="num">$44 + 18 = 62$</td></tr>
+          <tr><td>optimum</td><td>0 1 2 5 4 3</td><td class="num">54</td><td class="num"></td></tr>
+        </tbody>
+      </table>
+      <p class="small">Both tours are the same cycle traversed from different ends: ratio $62 / 54 = 1.15$. Christofides lands exactly on its own bound $w(T) + w(M) = 62$, because shortcutting its Euler circuit $0\,3\,5\,4\,2\,1\,0$ saved nothing.</p>
+      <p class="small muted">The optimum avoids the long edge $35$ (18) by visiting 5 from 2 and 4, and 3 from 4 and 0.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p><b>Double tree.</b> The reference DFS from 0 visits children in increasing order: 0, 1, 2, 4, 5,
+    back up, then 3. Tour edges $01 (8) + 12 (9) + 24 (9) + 45 (8) + 53 (18) + 30 (10) = 62$. The walk
+    around the tree has length 88; shortcutting $5 \to 4 \to 2 \to 1 \to 0 \to 3$ into $5 \to 3$
+    saved 26.</p>
+    <p><b>Christofides.</b> The MST's degrees are 2, 2, 2, 1, 2, 1, so only 3 and 5 are odd, and the
+    matching is forced. $T + M$ is a single cycle through all six vertices, so the Euler circuit visits
+    each vertex once and the shortcut changes nothing: the tour is that cycle, read as 0 3 5 4 2 1.
+    With more odd vertices the matching has choices and shortcuts start to help.</p>
+    <p>All from the reference <code>prim</code>, <code>double_tree</code>, <code>odd_vertices</code>,
+    <code>christofides</code> and a brute force over the 120 tours starting at 0.</p>
+  </aside>
+</section>
+
 <section class="divider">
   <p class="eyebrow">section 4</p>
   <h2>Scheduling</h2>
@@ -287,12 +397,12 @@
   <h2>List scheduling and LPT (Graham 1966, 1969)</h2>
   <div class="cols">
     <div>
-      <p class="small">$n$ jobs, $m$ identical machines, minimise the makespan. Lower bounds: $\mathrm{OPT} \ge \sum_j p_j / m$ and $\mathrm{OPT} \ge \max_j p_j$.</p>
-      <div class="box proof"><span class="label">list scheduling: each job to the least-loaded machine</span>
+      <p class="small">$n$ jobs, $m$ identical machines, minimise the makespan (<span class="term" data-term="identical machines makespan">identical machines</span>). <span class="term" data-term="makespan lower bounds">Lower bounds</span>: $\mathrm{OPT} \ge \sum_j p_j / m$ and $\mathrm{OPT} \ge \max_j p_j$.</p>
+      <div class="box"><span class="label"><span class="term">list scheduling</span>: each job to the least-loaded machine</span>
         <p class="small">Let job $j$ finish last. Its machine was least loaded, so it held $\le (\sum p - p_j)/m$:</p>
         $$\begin{aligned} C &\le \tfrac{1}{m}\textstyle\sum p + (1 - \tfrac1m)\,p_j \\ &\le (2 - \tfrac1m)\,\mathrm{OPT}\end{aligned}$$
       </div>
-      <div class="box proof"><span class="label">LPT: sort longest first</span>
+      <div class="box"><span class="label"><span class="term" data-term="LPT (longest processing time first)">LPT</span>: sort longest first</span>
         <p class="small">If the last job $j$ sets the makespan and $j &gt; m$, then $p_j \le p_{m+1}$ and two of the first $m+1$ jobs share a machine in OPT: $p_j \le \mathrm{OPT}/2$, giving $3/2$. A finer counting argument gives $4/3 - 1/(3m)$.</p>
       </div>
     </div>
@@ -317,6 +427,7 @@
     </div>
   </div>
   <aside class="notes">
+    <p>The next slide runs both tight families for $m = 3$.</p>
     <p>Why LPT is so good on random data. The analysis charges the worst case to the <em>smallest</em>
     job placed last. With sorted jobs, that's small, and with many jobs per machine the loads even out
     to within about one small job. On uniform times with n/m ≥ 4, the loss is a percent or two.</p>
@@ -328,13 +439,53 @@
 </section>
 
 <section>
+  <p class="eyebrow">23 · scheduling · example</p>
+  <h2>The tight families, on seven jobs</h2>
+  <div class="cols">
+    <div>
+      <div class="box ex"><span class="label">six jobs of 1, then one of 3; three machines</span>
+        <p class="small"><b>List scheduling</b> spreads the ones evenly: loads $2, 2, 2$. The 3 then lands on a machine with 2: makespan <b>5</b>.</p>
+        <p class="small"><b>Optimum</b>: the 3 alone, three ones on each other machine: <b>3</b>. Ratio $5/3 = 2 - \tfrac13$, exactly the bound.</p>
+        <p class="small"><b>LPT</b> places the 3 first and then the ones: <b>3</b>, optimal.</p>
+      </div>
+    </div>
+    <div>
+      <div class="box ex"><span class="label">jobs 5, 5, 4, 4, 3, 3, 3; three machines</span>
+        <table style="margin:0">
+          <thead><tr><th>job</th><th>goes to</th><th>loads after</th></tr></thead>
+          <tbody>
+            <tr><td>5, 5, 4</td><td>one each</td><td>5, 5, 4</td></tr>
+            <tr><td>4</td><td>the 4</td><td>5, 5, 8</td></tr>
+            <tr><td>3</td><td>a 5</td><td>8, 5, 8</td></tr>
+            <tr><td>3</td><td>the other 5</td><td>8, 8, 8</td></tr>
+            <tr><td>3</td><td>any</td><td><b>11</b>, 8, 8</td></tr>
+          </tbody>
+        </table>
+        <p class="small"><b>Optimum</b>: $\{5,4\}, \{5,4\}, \{3,3,3\}$, makespan <b>9</b>. LPT's ratio $11/9 = \tfrac43 - \tfrac19$, exactly its bound for $m = 3$.</p>
+      </div>
+    </div>
+  </div>
+  <aside class="notes">
+    <p><b>The first family.</b> Total work 9 on 3 machines, so OPT ≥ 3, and the schedule on the slide
+    reaches it. List scheduling's analysis charges the last job, 3, on top of an average load of 2,
+    the worst case of $\frac1m\sum p + (1 - \frac1m)p_j = 3 + \tfrac23 \cdot 3 = 5$.</p>
+    <p><b>The second family.</b> Total work 27, so OPT ≥ 9, reached as shown. LPT's last job has
+    length $m = 3$, and it is the one the $4/3 - 1/(3m)$ analysis charges.</p>
+    <p>Makespans from the reference <code>list_scheduling</code> and <code>lpt</code> on
+    <code>list_scheduling_tight(3)</code> and <code>lpt_tight(3)</code>: 5 and 11. The reference
+    also gives 11 for plain list scheduling on the second family, since those jobs already arrive
+    sorted.</p>
+  </aside>
+</section>
+
+<section>
   <p class="eyebrow">23 · beyond</p>
   <h2>Local search as an approximation algorithm: k-median</h2>
   <div class="cols">
     <div>
-      <p class="small">$k$-median: open $k$ facilities, minimising the <b>sum</b> of distances from clients to their nearest open facility (k-center minimises the maximum).</p>
+      <p class="small"><span class="term" data-term="\(k\)-median">$k$-median</span>: open $k$ facilities, minimising the <b>sum</b> of distances from clients to their nearest open facility (k-center minimises the maximum).</p>
       <div class="box thm"><span class="label">Arya et al. (2004)</span>
-        <p class="small">Local search that swaps up to $p$ facilities at a time, stopping at a local optimum, is a $(3 + 2/p)$-approximation.</p>
+        <p class="small">Local search that swaps up to $p$ facilities at a time, stopping at a <span class="term">local optimum</span>, is a $(3 + 2/p)$-approximation: <span class="term" data-term="local search with a guarantee">local search with a guarantee</span>.</p>
       </div>
       <p class="small">The proof pairs each optimal facility with a swap and adds up the local optimality inequalities of all the swaps: the same "compare against OPT piece by piece" as the price lemma.</p>
     </div>
