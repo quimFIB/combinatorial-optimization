@@ -2,7 +2,7 @@
 
 Fill in the parts marked TODO, one step at a time, and run
     uv run co test 20
-after each. Read README.md first; HINTS.md has a ladder of hints per step.
+after each. Read README.md first; HINTS.org has a ladder of hints per step.
 
 Clauses come in DIMACS form: lists of nonzero ints, v for x_v and -v for not x_v, variables
 1..n. Internally a literal is the int i = 2v + (1 if negative): its negation is i ^ 1 and its

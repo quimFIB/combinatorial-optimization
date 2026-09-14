@@ -1,0 +1,101 @@
+#+title: Hints — lab 24
+#+startup: content
+#+options: ^:{}
+
+One rung at a time; then ~solution/lab.py~ or ~solution/functional.py~.
+
+* Step 1 — Vertex cover by threshold rounding
+
+** Rung 1 — the LP call
+One row per edge and one column per vertex: ~A = [[1 if v in e else 0 for v in range(n)] for e in edges]~.
+~covering_lp(A, weights)~ returns ~(value, x, y)~. Keep the first two. With no edges, return
+~(0.0, [0.0] * n)~ without calling the solver.
+
+** Rung 2 — the two-line proof
+Feasible: x_u + x_v ≥ 1, so one of them is ≥ ½ and gets rounded up. Cost: each vertex taken has
+x_v ≥ ½, so w_v ≤ 2·w_v·x_v. Sum: cost ≤ 2·LP ≤ 2·OPT. Rounding at ~t - 1e-9~ protects against
+a solver returning 0.49999999997.
+
+** Functional route
+Both functions are single comprehensions: ~[int(xv >= t - EPS) for xv in x]~.
+
+* Step 2 — Randomized rounding
+
+** Rung 1 — one element's probability
+Element e is missed in one round iff every set containing it is skipped:
+∏_{j∋e}(1 − x_j). Rounds are independent, so raise it to the power ~rounds~. Clamp ~1 − x_j~ at 0,
+since the solver can return x_j = 1.0000000001.
+
+** Rung 2 — the bound
+1 − x ≤ e^{−x}, so ∏(1 − x_j) ≤ e^{−Σx_j} ≤ e^{−1} by LP feasibility. After t rounds, each
+element is missed with probability ≤ e^{−t}, and the union bound over the universe gives
+n·e^{−t}. With t = ln n + 2 that's below 1/e², while expected cost is ≤ t·LP = O(log n)·OPT.
+
+** Rung 3 — expected cost
+Set j appears in the union unless every round skips it: probability 1 − (1 − x_j)^t. By
+linearity, the expected cost is Σ c_j(1 − (1 − x_j)^t). That's ≤ Σ c_j·t·x_j = t·LP, by
+Bernoulli's inequality.
+
+** Functional route
+~draws = [[rng.random() < xj for xj in x] for _ in range(rounds)]~, then ~any~ down each column.
+The probabilities use ~math.prod~ inside a comprehension over elements.
+
+* Step 3 — Primal–dual set cover
+
+** Rung 1 — the loop
+Keep ~paid[j] = Σ_{e∈S_j} y_e~ up to date instead of recomputing it. For uncovered e,
+~delta = min(cost[j] − paid[j] for j containing e)~. Add delta to y_e and to ~paid[j]~ for every j
+containing e, then buy every such j with ~paid[j] == cost[j]~.
+
+** Rung 2 — why f
+Every bought set is tight: c_j = Σ_{e∈S_j} y_e. So cost = Σ_{j bought} Σ_{e∈S_j} y_e
+≤ Σ_e f·y_e, since each e lies in at most f sets. And y is dual feasible (no set is ever
+overpaid), so Σ y_e ≤ LP ≤ OPT. Integers in, integers out: ~Fraction~ keeps "tight" exact anyway.
+
+** Functional route
+~reduce~ over elements with state ~(y, paid, x)~ as tuples. Skip covered elements by returning
+the state unchanged.
+
+* Step 4 — Jain–Vazirani
+
+** Rung 1 — events, not a clock
+Don't step time in small increments: nothing interesting happens between events. At the
+current t, settle everything: open every facility whose receipts reach its cost, freeze every
+active client within distance t of an open facility, and repeat until nothing changes (opening
+can freeze, and freezing can't un-pay, but do the loop anyway). Then jump to the next event.
+
+** Rung 2 — the next event
+Two kinds of event:
+- an active client reaching a facility: any ~dist[i][j] > t~ with j active;
+- an unopened facility becoming paid. Its receipts grow at slope k = the number of active
+  clients already within reach (~dist ≤ t~), so it is paid at ~t + (cost − receipts) / k~ if k > 0.
+
+The next t is the minimum. Use ~Fraction~ throughout, so ties are exact.
+
+** Rung 3 — pruning and the factor 3
+Scan temporarily open facilities by opening time. Keep one unless some client strictly pays
+both it and an already-kept facility. A client j whose nearest kept facility is far has a
+temporarily open facility i tight with it (d_ij ≤ α_j). i was dropped because of a kept i′
+sharing a paying client h, and i′ opened no later than i. The triangle inequality through h
+gives d_{i′j} ≤ d_ij + d_ih + d_{i′h} ≤ 3α_j.
+
+** Functional route
+The ascent is ~tz.iterate~ over ~(t, alpha tuple, opened dict)~. One step runs a fixpoint of
+"settle at t" (compare consecutive states with ~tz.sliding_window(2, ...)~), then jumps to the
+minimum event time. Pruning is a ~reduce~ over facilities sorted by ~(opened_at[i], i)~.
+
+* Step 5 — Integrality gaps
+
+** Rung 1 — K_n
+All ½ is feasible with value n/2. Any cover of K_n misses at most one vertex, since two missed
+vertices would leave their edge uncovered. So OPT = n − 1 and the gap is 2 − 2/n → 2.
+
+** Rung 2 — GF(2)^k
+~bin(u & v).count("1") % 2~ is the dot product. For v ≠ 0, exactly half of all 2^k vectors u
+have u·v = 1, and none of them is u = 0. So every set has 2^{k−1} elements, and by symmetry every
+element is in 2^{k−1} sets. x = 1/2^{k−1} everywhere is feasible. A family of sets v₁ … v_r
+misses every nonzero u orthogonal to all of them, and such a u exists unless the v's span GF(2)^k.
+So r ≥ k.
+
+** Functional route
+~min(tz.frequencies(tz.concat(sc.sets)).values())~ is the rarest element's count.

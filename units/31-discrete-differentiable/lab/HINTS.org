@@ -1,0 +1,102 @@
+#+title: Hints — lab 31
+#+startup: content
+#+options: ^:{}
+
+One rung at a time; then ~solution/lab.py~ or ~solution/functional.py~.
+
+* Step 1 — Sinkhorn
+
+** Rung 1 — why log-domain
+The kernel exp(−C/ε) underflows for small ε: at ε = 0.002 and C = 1 that's exp(−500). Keep potentials f
+and g instead of scalings u = exp(f/ε), and write every update as −ε·logsumexp. ~scipy.special.logsumexp~
+takes an ~axis~. Broadcasting ~g[None, :] - C~ gives the n × n matrix to reduce along rows.
+
+** Rung 2 — what the updates do
+Setting f makes every row of P sum to 1, and setting g then makes every column sum to 1 (and slightly
+breaks the rows). That's why the tests demand exact column sums and only approximate row sums. As ε → 0,
+P concentrates on an optimal assignment, and convergence slows: the iteration count grows roughly like 1/ε.
+
+** Functional route
+~reduce~ over ~range(iterations)~ with state ~(f, g)~. Rounding is a ~reduce~ over sorted entries with state
+~(assignment dict, used columns)~.
+
+* Step 2 — Gradients through Sinkhorn
+
+** Rung 1
+Write the same loop with ~jnp~ and ~jax.scipy.special.logsumexp~, and JAX differentiates through all the
+iterations. Return the regularised cost ⟨C, P⟩ + ε Σ P(log P − 1), computed from log P directly so no
+log(0) appears.
+
+** Rung 2 — why the gradient is P
+The regularised cost is a minimum over P of a function linear in C. By the envelope (Danskin) theorem,
+its gradient in C is the minimiser. The hard assignment cost is also a minimum, but over permutations, and
+its "gradient" is a permutation matrix that jumps when the optimum changes. Sinkhorn replaces the jump by a
+smooth P, and ε sets how smooth.
+
+** Functional route
+Share the Sinkhorn potentials between numpy and JAX by passing the array module and the ~logsumexp~ in as
+arguments, so one fold serves both. JAX transformations need pure functions, so this is the step where
+functional code is the natural style: compute log P from the potentials, P from its exponential, and return the
+regularised cost as one expression. ~jax.grad~ of that closure is the gradient.
+
+* Step 3 — Discrete samples, continuous gradients
+
+** Rung 1 — Gumbel
+If G_k are independent Gumbel(0, 1), then argmax_k(logits_k + G_k) has distribution softmax(logits).
+Replace argmax by softmax at temperature τ and the sample becomes differentiable in the logits (a
+reparameterisation). At τ → 0 it's one-hot again, and the gradients blow up.
+
+** Rung 2 — straight-through
+~hard + soft - stop_gradient(soft)~ has the forward value ~hard~ (the soft terms cancel), and the gradient
+of ~soft~ (stop_gradient has none). It's biased: the gradient belongs to a different function than the one
+evaluated.
+
+** Rung 3 — REINFORCE
+∇E[f(k)] = E[f(k) ∇log p_k], and ∇log softmax_k = e_k − p. Unbiased, whatever f is (f needn't be
+differentiable), but its variance is large. ~then~ measures bias and spread for every estimator.
+
+** Functional route
+Every sampler and estimator is a single expression. Gumbel-max is ~argmax(logits − log(−log u))~, and
+straight-through is ~one_hot(argmax soft) + soft − stop_gradient(soft)~. The exact gradient is ~p · (v − p·v)~,
+and REINFORCE is the average of ~f(k)(e_k − p)~ over the samples, written as a ~sum~ over a generator with a
+zero start. With JAX, pass the random key in explicitly and never keep a stateful generator.
+
+* Step 4 — Differentiating an argmin
+
+** Rung 1 — which constraints matter
+At the solution, a constraint with positive multiplier is active and stays active under small changes
+of q (strict complementarity). Inactive ones stay inactive. Fix that set S, and the KKT conditions are
+the linear system Qx + A_Sᵀλ_S = −q, A_S x = b_S.
+
+** Rung 2 — the implicit function theorem
+Differentiate that linear system in q: Q X + A_Sᵀ L = −I and A_S X = 0. Solve for all n columns at once.
+With no active constraints X = −Q⁻¹. With x_i pinned by a bound, column i of X is zero. That's exactly
+what OptNet and cvxpylayers do, generalised to any convex program.
+
+** Functional route
+The active set is a comprehension over ~zip(slack, λ)~. The Jacobian is a block system built by ~np.block~ and
+one ~np.linalg.solve~ for all n right-hand sides at once. ~reshape(-1, n)~ keeps an empty active set a
+0 × n matrix, so the block shapes still line up.
+
+* Step 5 — Learning to branch
+
+** Rung 1 — collecting decisions
+Wrap unit 07's ~strong_branching~ in a rule that calls it, computes ~candidate_features~ for the same
+node, records ~(features, position of the chosen variable)~, and returns the choice. Pass the wrapper to
+unit 07's ~branch_and_bound~. The tree runs exactly as with strong branching.
+
+** Rung 2 — the ranker
+Treat each node as a classification over its candidates: scores s = F w, probabilities softmax(s), loss
+−log p_chosen. The gradient in w is Fᵀ(p − e_chosen). Average over samples and take full steps. Start at
+zero, so the first step is exactly the test's hand value.
+
+** Rung 3 — evaluating it honestly
+Imitation accuracy isn't the goal: node count on unseen instances is. Unit 28's method applies. Use held-out
+instances from a stated generator, a shifted geometric mean over them, paired tests against each baseline, a
+correction for testing three pairs, and a verdict that can be "no better than pseudocost".
+
+** Functional route
+Features are array expressions over the fractional candidates. The recorder is the one stateful piece: it has
+to observe unit 07's tree while the tree runs, so it wraps strong branching in a closure that appends to a
+local list. The ranker is a fold over epochs, ~reduce(lambda w, _: w − lr · grad(w), range(epochs), zeros)~,
+where the gradient is a sum over samples of ~Fᵀ(softmax(Fw) − e_chosen)~. The learned rule is a closure over w.

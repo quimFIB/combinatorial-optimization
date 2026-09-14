@@ -2,7 +2,7 @@
 
 Fill in the functions marked TODO, one step at a time, and run
     uv run co test 16
-after each. Read README.md first; HINTS.md has a ladder of hints per step.
+after each. Read README.md first; HINTS.org has a ladder of hints per step.
 
 Conventions. Graphs have vertices 0..n-1 and undirected edges (u, v). A tree
 decomposition is a list `bags` of sets of vertices together with `tree_edges`,

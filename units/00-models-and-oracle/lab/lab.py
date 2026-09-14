@@ -5,7 +5,7 @@ Fill in the functions marked TODO, one step at a time. Run
     uv run co test 00
 
 after each; a step's tests go from "not started" to ✓. Everything you need
-from the library is imported below. Stuck? HINTS.md, one rung at a time.
+from the library is imported below. Stuck? HINTS.org, one rung at a time.
 
 Any style passes: the tests call your functions and check what they return,
 never how. Loops, comprehensions, recursion, `functools.reduce` (a foldl) —

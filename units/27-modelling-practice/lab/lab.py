@@ -2,7 +2,7 @@
 
 Fill in the functions marked TODO, one step at a time, and run
     uv run co test 27
-after each. Read README.md first; HINTS.md has a ladder of hints per step.
+after each. Read README.md first; HINTS.org has a ladder of hints per step.
 
 The running example is bin packing: item sizes (positive integers) and a bin capacity. Every model is a
 pyscipopt Model minimising the number of bins, and each step is one intervention that must not change the

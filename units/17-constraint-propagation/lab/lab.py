@@ -2,7 +2,7 @@
 
 Fill in the parts marked TODO, one step at a time, and run
     uv run co test 17
-after each. Read README.md first; HINTS.md has a ladder of hints per step.
+after each. Read README.md first; HINTS.org has a ladder of hints per step.
 
 Variables are 0..n-1 with finite integer domains (frozensets). A propagator is an object
 with `.vars` (the variables it watches) and `.prune(dom)`: a *pure* function of the current

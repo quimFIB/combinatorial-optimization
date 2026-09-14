@@ -2,7 +2,7 @@
 
 Fill in the functions marked TODO, one step at a time, and run
     uv run co test 15
-after each. Read README.md first; HINTS.md has a ladder of hints per step.
+after each. Read README.md first; HINTS.org has a ladder of hints per step.
 
 Conventions. A bipartite graph has left vertices 0..nl-1, right vertices
 0..nr-1, and `edges` is a list of pairs (l, r). A bipartite matching is a dict

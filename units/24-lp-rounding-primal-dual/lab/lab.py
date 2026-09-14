@@ -2,7 +2,7 @@
 
 Fill in the functions marked TODO, one step at a time, and run
     uv run co test 24
-after each. Read README.md first; HINTS.md has a ladder of hints per step.
+after each. Read README.md first; HINTS.org has a ladder of hints per step.
 
 LPs are solved by colib.approx.covering_lp (HiGHS): min c.x, A x >= 1, 0 <= x <= 1, returning the value, the
 primal and the row duals. Everything else is yours. Set cover and vertex cover instances are unit 00's classes;

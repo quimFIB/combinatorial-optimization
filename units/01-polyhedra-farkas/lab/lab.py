@@ -82,7 +82,7 @@ def farkas_certificate(system):
 
     No LP solver. Your step-1 `eliminate` already builds every derived row as
     a nonnegative combination of the original rows; the task is to keep track
-    of *which* combination. HINTS.md rung 2 has a way to do that without
+    of *which* combination. HINTS.org rung 2 has a way to do that without
     changing `eliminate` at all.
     """
     raise NotImplementedError("step 5: farkas_certificate")

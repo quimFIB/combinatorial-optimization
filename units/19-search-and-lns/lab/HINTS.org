@@ -1,0 +1,92 @@
+#+title: Hints — lab 19
+#+startup: content
+#+options: ^:{}
+
+One rung at a time; then ~solution/lab.py~ or ~solution/functional.py~.
+
+* Step 1 — Building blocks
+
+** Rung 1 — Luby
+Find the smallest k with 2^k − 1 ≥ i. If i = 2^k − 1, return 2^(k−1). Otherwise recurse on
+i − 2^(k−1) + 1. The sequence is two copies of the previous block followed by a doubled term.
+
+** Rung 2 — random first-fail
+One pass: track the smallest size seen, and a list of variables with that size (reset the list
+when a smaller one appears). Return ~rng.choice(ties)~. Build the list in index order, so a given
+seed always makes the same choices.
+
+** Functional route
+Luby is its own recursive definition: find the k with 2ᵏ − 1 ≥ i, return 2ᵏ⁻¹ at the end of a block, and
+otherwise recurse on i − 2ᵏ⁻¹ + 1. ~random_first_fail~ is a closure over the rng (drawing from an rng is the
+one effect it needs). The quasigroup model is a comprehension over rows and columns.
+
+* Step 2 — dom/wdeg
+
+** Rung 1
+In ~__init__~: ~weight = {id(p): 1}~ and ~on[v]~ = the propagators with v among their vars.
+~on_failure~: add 1. ~wdeg~: sum the weights of the propagators on v for which some /other/ variable
+of the propagator is still unfixed. That's the "future" degree: a constraint whose other variables
+are all fixed can't guide the choice.
+
+** Rung 2 — infinities
+~math.inf == math.inf~ is True but ~inf - inf~ is nan, so test ties with ~score == best~ before
+any tolerance comparison.
+
+** Functional route
+The engine calls ~on_failure~ as a callback, so some state has to change between calls. The reference
+keeps that change to a rebinding: ~self.weight~ is replaced with ~tz.assoc(weight, id(p), w + 1)~, never
+mutated in place. ~wdeg~ and ~choose~ are pure reads: a sum over the watching propagators, then the minimum of |dom| / wdeg, with ties broken by the rng.
+
+* Step 3 — Restarts
+
+** Rung 1
+#+begin_example
+for r in range(max_restarts):
+    limit = base * luby(r + 1); if node_budget: limit = min(limit, budget - total.nodes); stop if <= 0
+    sols, st = cp.solve(..., node_limit=limit, choose=choose, on_failure=on_failure)
+    accumulate; total.extra["restarts"] = r
+    if sols: return sols[0], total
+    if st.extra["complete"]: break          # no solution exists
+#+end_example
+Call ~cp.solve~ through the module (~cp.solve~, not a local alias). The Luby test replaces it
+to record the limits.
+
+** Functional route
+An unfold over ~(restart index, accumulated Stats, solution, done)~. Each step runs unit 17's ~solve~ with
+the Luby limit, capped by what's left of the node budget, and builds a new ~Stats~ with the totals. Stop at a
+solution, at a complete search (proved unsatisfiable), or at ~max_restarts~.
+
+* Step 4 — Distributions
+
+** Rung 1
+~sorted(((nodes, solved) for solved, nodes in map(run, seeds)), key=...)~. For the nearest-rank
+p90, use ~sorted_nodes[ceil(0.9 * n) - 1]~.
+
+** Functional route
+~runtime_distribution~ is a sorted ~map~ of the run over the seeds. ~summarise~ is arithmetic over one sorted
+list: the median by parity, the 90th percentile by index, and the tail ratio p90 / median.
+
+* Step 5 — LNS
+
+** Rung 1 — greedy
+~job_ready[j]~ and ~machine_ready[m]~, both 0. While operations remain, loop over j: if job j has a
+next operation (m, d), then t = max(job_ready[j], machine_ready[m]); record it and set both ready
+times to t + d.
+
+** Rung 2 — the neighbourhood
+The operation list is ~[(j, k) for j, job in enumerate(shop.jobs) for k in range(len(job))]~ and
+variable v is its index, matching unit 18. For each machine, collect ~(current[v], v, op)~ for the
+kept operations and sort. Consecutive pairs (a, b) get ~cp.LinearLe([a, b], [1, -1], -duration(a))~.
+The freed jobs' operations are unconstrained except by the model, so they can move anywhere.
+
+** Rung 3 — why it works
+With 70% of each machine's order fixed, propagation pins down most start times, and the
+search space is the freed jobs' insertions. That's small enough to explore in 150 nodes, and
+it's centred on a good schedule. This is the destroy-and-repair loop, with the propagator as the
+repair engine.
+
+** Functional route
+The greedy schedule is a fold over operations in round-robin order, with state ~(starts, job ready, machine
+ready)~ as three dicts rebuilt per step. LNS is an unfold over ~(iteration, current solution, trace)~: free
+some jobs at random, keep the others' machine order as ~LinearLe~ chains grouped with ~tz.groupby~, ask for a
+better makespan, and take ~tz.nth(iterations, ...)~.

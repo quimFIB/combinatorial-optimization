@@ -2,7 +2,7 @@
 
 Fill in the functions marked TODO, one step at a time, and run
     uv run co test 26
-after each. Read README.md first; HINTS.md has a ladder of hints per step.
+after each. Read README.md first; HINTS.org has a ladder of hints per step.
 
 TSP: dist is a symmetric integer matrix, a tour is a permutation of range(n) (any rotation or direction).
 CVRP: colib.colgen.CVRP (vertex 0 the depot); a solution is a list of routes, each a list of customers.

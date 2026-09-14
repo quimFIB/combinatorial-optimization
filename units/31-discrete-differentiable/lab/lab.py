@@ -2,7 +2,7 @@
 
 Fill in the functions marked TODO, one step at a time, and run
     uv run co test 31
-after each. Read README.md first; HINTS.md has a ladder of hints per step.
+after each. Read README.md first; HINTS.org has a ladder of hints per step.
 
 Assignment costs are n x n arrays. JAX is used where gradients are the point (steps 2 and 3); everything else
 is numpy. Branch and bound is unit 07's (colib.ref), whose branching rules have the signature

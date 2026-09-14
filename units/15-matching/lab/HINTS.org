@@ -1,0 +1,132 @@
+#+title: Hints — lab 15
+#+startup: content
+#+options: ^:{}
+
+One rung at a time; then ~solution/lab.py~ or ~solution/functional.py~.
+
+* Step 1 — Hopcroft–Karp
+
+** Rung 1 — the BFS
+~dist[l] = 0~ for free left vertices, and INF for the rest. Pop l; for each neighbour
+r, let ~m = match_r[r]~. If r is free, set ~found = True~ (keep going, to finish the
+layer). Otherwise, if ~dist[m]~ is INF, set ~dist[m] = dist[l] + 1~ and enqueue m.
+If nothing was found, the matching is maximum.
+
+** Rung 2 — the DFS
+~dfs(l)~: for each r in ~adj[l]~ with ~m = match_r[r]~, if r is free or
+(~dist[m] == dist[l] + 1~ and ~dfs(m)~), then match l with r and return True. After
+the loop, set ~dist[l] = INF~ and return False. That last line keeps a phase linear.
+
+** Functional route
+An unfold whose state is the matching dict. Each step finds one shortest augmenting
+path by a layered BFS that records ~parent[l] = (previous l, r)~. Walk the parents
+back from the free right vertex, and ~{**match_l, **dict(path)}~ flips the whole
+path at once. Stop when no path exists.
+
+* Step 2 — König
+
+** Rung 1
+Start ~reach_l~ with the free left vertices. From a reached l, follow an edge to r
+unless it is l's own matched edge, and add r to ~reach_r~. If r is matched, add
+~match_r[r]~ to ~reach_l~. Return ~(all_left - reach_l, reach_r)~.
+
+** Rung 2 — why it's a cover
+Take an edge (l, r) with l reached. If it's unmatched, the search reaches r. If it's
+matched, l was reached /through/ r, so r is reached. Either way r is in the cover.
+If l isn't reached, l is in the cover. So every edge is covered. For the size: every
+unreached left vertex is matched, every reached right vertex is matched (or you'd
+have an augmenting path), and no matched edge counts twice.
+
+** Functional route
+~iterate~ a step that expands both reached sets, and stop at the first state equal
+to the one before it (~sliding_window(2, ...)~).
+
+* Step 3 — Hungarian
+
+** Rung 1 — the layout
+Use arrays of length n + 1. ~p[j]~ is the row matched to column j (0 means none),
+and ~way[j]~ is the previous column on the shortest path to j. To add row i, set
+~p[0] = i~ and ~j0 = 0~: the virtual column 0 is "matched" to the new row, which
+makes the new row just another tree row.
+
+** Rung 2 — growing the tree
+~minv = [INF] * (n + 1)~ and ~used = [False] * (n + 1)~. Loop:
+~used[j0] = True~, ~i0 = p[j0]~. For each unused column j, compute
+~cur = cost[i0-1][j-1] - u[i0] - v[j]~. If ~cur < minv[j]~, set ~minv[j] = cur~ and
+~way[j] = j0~. Track the unused j with the smallest ~minv[j]~ as ~(delta, j1)~.
+
+** Rung 3 — the potential shift
+For every j: if used, ~u[p[j]] += delta~ and ~v[j] -= delta~. Otherwise
+~minv[j] -= delta~. Then ~j0 = j1~; stop if ~p[j0] == 0~. This keeps every reduced
+cost nonnegative and makes the tree edges tight.
+
+** Rung 4 — flipping
+~while j0: j1 = way[j0]; p[j0] = p[j1]; j0 = j1~. Afterwards ~assign[p[j]-1] = j-1~.
+Return ~u[1:]~ and ~v[1:]~.
+
+** Functional route
+Fold over rows with state ~(u, v, p)~. Inside, ~tz.iterate~ a ~grow~ step over a dict
+of tuples, and stop at the first state whose new column is free. Every rung-3 update
+is a tuple comprehension, e.g.
+~tuple(x - delta if used[j] else x for j, x in enumerate(v))~. The flip is a second
+~iterate~ over ~(p, j0)~, until ~j0 == 0~.
+
+* Step 4 — Certificate
+
+** Rung 1
+~sorted(assign) == list(range(n))~, then feasibility on all n² pairs, then tightness on
+the n assigned pairs. Why it's enough: for any assignment σ,
+cost(σ) ≥ Σ u + Σ v. The inequality is term by term, because each row and each
+column appears exactly once. Your assignment attains it with equality.
+
+** Functional route
+A certificate check is a conjunction, so write it as one ~and~ of three predicates: the assignment is a
+permutation, every reduced cost is nonnegative (~all~ over i, j), and every assigned pair is tight. ~all~ and
+~and~ short-circuit at the first failure.
+
+* Step 5 — Gale–Shapley
+
+** Rung 1
+~rank[r][p]~ is the position of p in r's list. Keep ~next_choice[p]~, ~holder[r]~ and a
+deque of free proposers. The loop ends after at most n² proposals.
+
+** Rung 2 — is_stable
+For each p, walk p's list /until/ reaching p's own partner. Each r before it is
+preferred by p. If r also prefers p to its partner, that's a blocking pair.
+
+** Functional route
+An unfold over ~(receiver → holder dict, next choice per proposer as a tuple, queue of free proposers)~, until
+the queue is empty. Each step handles one proposal and returns new structures; a rejected proposer goes to the
+back of the queue. ~is_stable~ is ~next~ over a generator of blocking pairs: for each proposer, the receivers
+it ranks above its partner (~takewhile~ over its preference list) who also prefer it.
+
+* Step 6 — Blossom
+
+** Rung 1 — the state
+Per search (from one free root): ~parent[v]~ for odd vertices, ~base[v]~ (initially v),
+~used[v]~ for even vertices that are in the queue, and ~mate~ shared across searches.
+Skip an edge v–to if ~base[v] == base[to]~ or ~mate[v] == to~.
+
+** Rung 2 — the two cases
+If ~to == root~ or ~to~'s mate has a parent, ~to~ is even and you have found a
+blossom. Otherwise, if ~to~ has no parent, set ~parent[to] = v~. If ~to~ is free,
+return it (an augmenting path). Else mark ~mate[to]~ used and enqueue it.
+
+** Rung 3 — contracting
+~lca(a, b)~: walk up from a through ~base~ and ~parent[mate[·]]~, marking bases, then
+walk up from b until you hit a mark. ~mark_path(v, b, child)~: while
+~base[v] != b~, mark ~base[v]~ and ~base[mate[v]]~ in the blossom, set
+~parent[v] = child~, then ~child = mate[v]~ and ~v = parent[mate[v]]~. Call it from
+both ends. Then set ~base[i] = lca~ for each i whose base is marked, and enqueue it if
+it wasn't used.
+
+** Rung 4 — augmenting
+From the free end: ~pv = parent[end]~, ~ppv = mate[pv]~, match end with pv, then
+~end = ppv~. Stop at -1.
+
+** Functional route
+The functional reference doesn't have one, and says so. Edmonds' contraction bookkeeping is a union-find over
+blossom bases that is rewritten on every contraction, and a persistent rewrite obscures the algorithm rather
+than clarifying it. ~functional.py~ calls the imperative ~blossom~. If you want to try anyway, represent the
+base map as a persistent dict and each contraction as a fold over the blossom's vertices, and expect the code
+to be longer than the imperative version.

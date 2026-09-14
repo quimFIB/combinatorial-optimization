@@ -2,7 +2,7 @@
 
 Fill in the functions and methods marked TODO, one step at a time, and run
     uv run co test 30
-after each. Read README.md first; HINTS.md has a ladder of hints per step.
+after each. Read README.md first; HINTS.org has a ladder of hints per step.
 
 Three engines. Dual numbers carry a value and a derivative forward (forward mode). A scalar tape records
 every operation on Var nodes and sweeps it backwards (reverse mode). An array tape does the same for numpy
