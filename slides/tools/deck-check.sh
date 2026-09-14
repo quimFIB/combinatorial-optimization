@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Authoring check for one unit's deck, in headless Brave (or Chromium):
-#   1. the deck's own ?check=1 overflow report
+#   1. the deck's ?check=1 overflow test (deck-overflow.mjs)
 #   2. every marked glossary term opens a definition; G, Esc and a slide link work
 #   3. optional screenshots of chosen slides (reveal indices, 0-based)
 #
@@ -22,9 +22,7 @@ url="file://$unit/slides.html"
 (cd "$ROOT" && ./co glossary "$(basename "$unit" | cut -d- -f1)" >/dev/null)
 
 echo "== overflow"
-timeout 90 "$BROWSER" --headless=new --disable-gpu --user-data-dir="$OUT/profile" \
-  --window-size=1600,1000 --virtual-time-budget=30000 --dump-dom "$url?check=1" 2>/dev/null \
-  | grep -o 'class="deck-check"[^>]*>[^<]*' | sed 's/.*>//' || echo "no report: the deck did not finish loading"
+timeout 150 node "$ROOT/slides/tools/deck-overflow.mjs" "$url" "$OUT" "$BROWSER" || echo "no report: the deck did not finish loading"
 
 echo "== terms and keys"
 timeout 150 node "$ROOT/slides/tools/deck-click.mjs" "$url" "$OUT" "$BROWSER"

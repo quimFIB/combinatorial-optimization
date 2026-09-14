@@ -337,3 +337,13 @@ body.reading { overflow: auto !important; height: auto !important; }
 @media print {
   .gl-pop, .gl-index { display: none; }
 }
+
+/* link to a unit's optional interactive figures (explore.html): small, muted, skippable */
+.reveal a.viz-link {
+  display: inline-block; font: 13px var(--f-mono); letter-spacing: .04em; color: var(--ink-soft);
+  border: 1px solid var(--rule); border-radius: 12px; padding: 2px 10px; text-decoration: none;
+  background: var(--surface);
+}
+.reveal a.viz-link::before { content: "▸ "; color: var(--accent); }
+.reveal a.viz-link:hover { color: var(--accent); border-color: var(--accent); }
+.reveal .viz-link-row { position: absolute; right: 8px; top: 2px; margin: 0; }

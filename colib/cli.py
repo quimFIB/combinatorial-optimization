@@ -2,6 +2,8 @@
 
     co slides 01          open the unit's slides in a browser (rebuilds its glossary.js)
     co glossary [01]      rebuild glossary.js from GLOSSARY.org, for one unit or all
+    co explore 01         open the unit's optional interactive figures (rebuilds its viz data)
+    co viz [01]           rebuild viz-data.js for the interactive figures, one unit or all
     co lab 01             open the lab sheet (README.md) in Emacs
     co test 01            run the lab's tests against your code
     co test 01 --solution run them against the reference solution
@@ -79,11 +81,21 @@ def _glossary(units, verbose=False) -> list[str]:
     return warnings
 
 
+def _viz(units, verbose=False):
+    """Rebuild each unit's viz-data.js from slides/viz/traces/uNN.py, where one exists."""
+    sys.path.insert(0, str(ROOT))
+    from slides.viz import traces
+    for unit in units:
+        out = traces.build(unit)
+        if verbose and out:
+            print(f"built {out.relative_to(ROOT)}")
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(prog="co", description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = ap.add_subparsers(dest="cmd", required=True)
-    for name in ("slides", "lab"):
+    for name in ("slides", "lab", "explore"):
         sub.add_parser(name).add_argument("unit")
     for name in ("test", "then"):
         p = sub.add_parser(name)
@@ -91,6 +103,7 @@ def main(argv=None):
         p.add_argument("--solution", nargs="?", const="imperative", choices=("imperative", "functional"),
                        help="use a reference solution instead of your lab (default: imperative)")
     sub.add_parser("glossary").add_argument("unit", nargs="?")
+    sub.add_parser("viz").add_argument("unit", nargs="?")
     sub.add_parser("status")
     sub.add_parser("data")
     args, rest = ap.parse_known_args(argv)
@@ -105,6 +118,17 @@ def main(argv=None):
         unit = find_unit(args.unit)
         _glossary([unit])
         _open(unit / "slides.html")
+    elif args.cmd == "explore":
+        unit = find_unit(args.unit)
+        page = unit / "explore.html"
+        if not page.exists():
+            sys.exit(f"{unit.name} has no interactive figures yet")
+        _glossary([unit])
+        _viz([unit])
+        _open(page)
+    elif args.cmd == "viz":
+        units = [find_unit(args.unit)] if args.unit else sorted(p for p in UNITS.iterdir() if p.is_dir())
+        _viz(units, verbose=True)
     elif args.cmd == "glossary":
         units = [find_unit(args.unit)] if args.unit else sorted(p for p in UNITS.iterdir() if p.is_dir())
         sys.exit(1 if _glossary(units, verbose=True) else 0)
