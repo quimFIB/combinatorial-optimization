@@ -1,0 +1,2 @@
+/* Matroid figures (matroids.js): a readout that reports a shortfall. */
+.viz-readout.viz-bad { color: var(--warn); font-weight: 600; }

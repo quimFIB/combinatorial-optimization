@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>14 · Explore: network flows</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+<link rel="stylesheet" href="../../slides/deck.css">
+<link rel="stylesheet" href="../../slides/viz/viz.css">
+</head>
+<body data-trunk="comb">
+<div class="reveal"><div class="slides">
+
+<section class="title-slide">
+  <p class="eyebrow">optional · interactive figures</p>
+  <div class="unit-no">14</div>
+  <h1>Explore: network flows</h1>
+  <p class="lede">The residual graph as augmenting paths use it, and push–relabel with every node drawn at its height, both replayed from the reference solution.</p>
+  <p class="meta"><span>optional: nothing in the lab depends on it</span><span><a href="slides.html">back to the slides</a></span></p>
+  <aside class="notes">
+    <p>These figures support the slides; they don't replace them, and the unit is complete
+    without them. Each one is computed from the unit's own data or reference solution, so
+    what you see agrees with the numbers on the slides.</p>
+    <p>Inside a figure, the arrow keys and drags belong to the figure; click outside it (or
+    press Esc) to use them for the slides again.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">14 · explore</p>
+  <h2>Augmenting paths, on the residual graph</h2>
+  <div class="viz" data-viz="flow-augment" data-runs="ek,ff"></div>
+  <p class="small muted">Try: step through Edmonds–Karp, then switch the menu to depth-first Ford–Fulkerson and watch its third path run backwards along b → a. Static version: <a href="slides.html#/5">augmenting, on the example</a>.</p>
+  <aside class="notes">
+    <p><b>What it shows.</b> The textbook network of the slides ($sa = 3$, $sb = 2$, $ab = 1$, $at = 3$,
+    $bt = 2$) as its residual graph: every arc with remaining capacity, forward arcs solid and
+    backward arcs dashed. Each augmenting path is shown before it is used (thick), then the
+    graph after sending its bottleneck. At the end the nodes still reachable from $s$ are
+    filled: the source side of a minimum cut.</p>
+    <ul>
+      <li><b>Edmonds–Karp</b> is a logged copy of the reference <code>edmonds_karp</code>: breadth-first,
+      so it finds $s \to a \to t$ then $s \to b \to t$, the table on the slide. No backward arc is needed.</li>
+      <li><b>Ford–Fulkerson, depth first</b> uses the same residual graph but picks paths by depth-first
+      search in the same adjacency order. Its first path $s \to a \to b \to t$ wastes the arc $a \to b$;
+      its third path $s \to b \to a \to t$ cancels that unit through the backward arc $b \to a$. Four
+      paths instead of two, same value 5.</li>
+    </ul>
+    <p>Both runs are recorded by <code>slides/viz/traces/u14.py</code> on the reference
+    <code>Residual</code> class, and checked against the reference <code>edmonds_karp</code> before they
+    are written.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">14 · explore</p>
+  <h2>Push–relabel, drawn at the heights</h2>
+  <div class="viz" data-viz="push-relabel" data-runs="pr"></div>
+  <p class="small muted">Try: step and watch nodes rise; flow only runs one level downhill. Step 9 sends a unit back up the arc it came down. Static version: <a href="slides.html#/8">the push–relabel table</a>.</p>
+  <aside class="notes">
+    <p><b>What it shows.</b> The same network under FIFO push–relabel, with each node drawn at its
+    height. The source starts at height 4 and floods its arcs; a node with excess (shaded) pushes to
+    a neighbour exactly one level below, and when it can't, it relabels: rises to one above its
+    lowest residual neighbour.</p>
+    <p>The run is a logged copy of the reference <code>push_relabel</code>, one state per push or
+    relabel, and its final flow is checked against the reference. It is the nine-row table of
+    "Dinic and push–relabel, on the example", including the undo: $b$ rises to height 2, above $a$,
+    and returns the unit $a$ pushed to it.</p>
+  </aside>
+</section>
+
+</div></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/plugin/highlight/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<script src="../../slides/deck.js"></script>
+<script src="../../slides/viz/viz.js"></script>
+<script src="../../slides/viz/widgets/flows.js"></script>
+<script src="viz-data.js"></script>
+</body>
+</html>

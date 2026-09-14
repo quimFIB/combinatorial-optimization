@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>15 · Explore: matching</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+<link rel="stylesheet" href="../../slides/deck.css">
+<link rel="stylesheet" href="../../slides/viz/viz.css">
+<link rel="stylesheet" href="../../slides/viz/widgets/matching.css">
+</head>
+<body data-trunk="comb">
+<div class="reveal"><div class="slides">
+
+<section class="title-slide">
+  <p class="eyebrow">optional · interactive figures</p>
+  <div class="unit-no">15</div>
+  <h1>Explore: matching</h1>
+  <p class="lede">König's cover grown from a matching, the Hungarian method's potentials shifting, and Gale–Shapley's proposals, each replayed from the reference solution.</p>
+  <p class="meta"><span>optional: nothing in the lab depends on it</span><span><a href="slides.html">back to the slides</a></span></p>
+  <aside class="notes">
+    <p>These figures support the slides; they don't replace them, and the unit is complete
+    without them. Each one is computed from the unit's own data or reference solution, so
+    what you see agrees with the numbers on the slides.</p>
+    <p>Inside a figure, the arrow keys and drags belong to the figure; click outside it (or
+    press Esc) to use them for the slides again.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">15 · explore</p>
+  <h2>König's cover, built from a matching</h2>
+  <div class="viz" data-viz="konig" data-run="konig"></div>
+  <p class="small muted">Try: step from the free left vertex along alternating paths; the last step turns what was reached into a cover. Static version: <a href="slides.html#/5">König's cover, on a small graph</a>.</p>
+  <aside class="notes">
+    <p><b>What it shows.</b> The slide's bipartite graph with the maximum matching the reference
+    <code>hopcroft_karp</code> finds, $\{\ell_0 r_0, \ell_2 r_1\}$. The search starts at the free left
+    vertex and follows alternating paths: an unmatched edge to the right, the matched edge back.
+    The cover is the left vertices <em>not</em> reached plus the right vertices reached, and it has
+    the matching's size, so each proves the other optimal.</p>
+    <p>A logged copy of the reference <code>konig_cover</code>, checked against it.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">15 · explore</p>
+  <h2>The Hungarian method, potential by potential</h2>
+  <div class="viz" data-viz="hungarian" data-run="hungarian"></div>
+  <p class="small muted">Try: step and watch zeros appear as the potentials shift; the assigned cells are always zeros. Static version: <a href="slides.html#/10">the Hungarian method, on a 3×3 matrix</a>.</p>
+  <aside class="notes">
+    <p><b>What it shows.</b> The slide's cost matrix. Each cell shows its reduced cost
+    $c_{ij} - u_i - v_j$ (large) and its cost (small). Rows are added one at a time; the search
+    tree's rows and columns are highlighted, and each shift adds $\delta$ to the tree rows' $u$ and
+    subtracts it from the tree columns' $v$, which keeps every reduced cost $\ge 0$ and creates a new
+    zero. When a zero reaches a free column, the assignment grows along the tight path.</p>
+    <p>At the end the assigned cells are all zero and every other cell is $\ge 0$: the potentials are
+    a dual certificate, and $\sum u + \sum v = 5$ = the cost. The run is a logged copy of the
+    reference <code>hungarian</code>, checked against its assignment and potentials.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">15 · explore</p>
+  <h2>Gale–Shapley, proposal by proposal</h2>
+  <div class="viz" data-viz="gale-shapley" data-run="gale"></div>
+  <p class="small muted">Try: follow C down its list while X and Y trade up. Static version: <a href="slides.html#/19">Gale–Shapley, round by round</a>.</p>
+  <aside class="notes">
+    <p><b>What it shows.</b> The slide's preferences. Each step is one proposal: accepted by a free
+    receiver, accepted with the previous partner dropped, or rejected. Proposers only move down
+    their lists (brackets mark choices used up) and receivers only trade up, which is why it ends,
+    and why the result has no blocking pair.</p>
+    <p>A logged copy of the reference <code>gale_shapley</code>; its matching is checked against the
+    reference and by <code>is_stable</code>.</p>
+  </aside>
+</section>
+
+</div></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/plugin/highlight/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<script src="../../slides/deck.js"></script>
+<script src="../../slides/viz/viz.js"></script>
+<script src="../../slides/viz/widgets/matching.js"></script>
+<script src="viz-data.js"></script>
+</body>
+</html>

@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>13 · Explore: matroids</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+<link rel="stylesheet" href="../../slides/deck.css">
+<link rel="stylesheet" href="../../slides/viz/viz.css">
+<link rel="stylesheet" href="../../slides/viz/widgets/matroids.css">
+</head>
+<body data-trunk="comb">
+<div class="reveal"><div class="slides">
+
+<section class="title-slide">
+  <p class="eyebrow">optional · interactive figures</p>
+  <div class="unit-no">13</div>
+  <h1>Explore: matroids</h1>
+  <p class="lede">Greedy run with two independence oracles, one where it is optimal and one where it fails, and an augmenting path of matroid intersection, each replayed from the reference solution.</p>
+  <p class="meta"><span>optional: nothing in the lab depends on it</span><span><a href="slides.html">back to the slides</a></span></p>
+  <aside class="notes">
+    <p>These figures support the slides; they don't replace them, and the unit is complete
+    without them. Each one is computed from the unit's own data or reference solution, so
+    what you see agrees with the numbers on the slides.</p>
+    <p>Inside a figure, the arrow keys and drags belong to the figure; click outside it (or
+    press Esc) to use them for the slides again.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">13 · explore</p>
+  <h2>One greedy, two oracles</h2>
+  <div class="viz" data-viz="matroid-greedy" data-runs="forest,path"></div>
+  <p class="small muted">Try: step through Kruskal on the forests, then switch to the matchings on the path and watch the heavy middle edge block both ends. Static version: <a href="slides.html#/5">greedy and exchange, on one graph</a>.</p>
+  <aside class="notes">
+    <p><b>What it shows.</b> The same greedy loop, heaviest edge first, with the oracle deciding
+    what "still independent" means. With the forest oracle (the graphic matroid) on the slide's
+    graph, greedy keeps 34, 23, 01, 12 and every rejected edge closes a cycle; brute force over all
+    128 edge sets confirms that 18 is optimal. With the matching oracle on the path with weights
+    2, 3, 2, greedy takes the 3 and is stuck at 3, while the two end edges give 4.</p>
+    <p>The failure is the exchange axiom failing: $\{12\}$ is smaller than $\{01, 23\}$ but neither
+    of the larger set's edges can join it. That witness comes from the reference
+    <code>matroid_witness</code>. The greedy runs are logged copies of the reference
+    <code>greedy</code> with the reference <code>graphic</code> and <code>partition</code> oracles.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">13 · explore</p>
+  <h2>An augmenting path in the exchange graph</h2>
+  <div class="viz" data-viz="matroid-intersection" data-run="intersection"></div>
+  <p class="small muted">Try: follow the sources, sinks and arcs, then the flip that grows I from one edge to two. Static version: <a href="slides.html#/10">one augmenting path, on three edges</a>.</p>
+  <aside class="notes">
+    <p><b>What it shows.</b> The slide's three-edge path, starting from the stuck set $I = \{e_1\}$.
+    Sources are edges that can join $I$ in $M_1$ (one edge per left vertex), sinks those that can join
+    in $M_2$ (one per right vertex). Arcs record single swaps: $x \to y$ if swapping $x$ out for $y$
+    stays in $M_1$, $y \to x$ if it stays in $M_2$. The shortest source-to-sink path $e_0 \to e_1 \to e_2$
+    is flipped, giving $\{e_0, e_2\}$, and then no source is left.</p>
+    <p>A logged copy of the reference <code>intersection</code> (started from $\{e_1\}$ instead of the
+    empty set), with its final size checked against the reference.</p>
+  </aside>
+</section>
+
+</div></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/plugin/highlight/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<script src="../../slides/deck.js"></script>
+<script src="../../slides/viz/viz.js"></script>
+<script src="../../slides/viz/widgets/matroids.js"></script>
+<script src="viz-data.js"></script>
+</body>
+</html>

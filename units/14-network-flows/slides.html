@@ -49,7 +49,7 @@
       <p>Matching, project selection, baseball elimination, segmentation: flows in disguise.</p></div>
   </div>
   <div class="box good"><span class="label">getting around</span>
-    <p class="small">Words with a <span class="term" data-term="residual graph">dotted underline</span> are glossary terms: click one for its definition. <kbd>G</kbd> lists every term in the unit, <kbd>N</kbd> shows the notes.</p>
+    <p class="small">Words with a <span class="term" data-term="residual graph">dotted underline</span> are glossary terms: click one for its definition. <kbd>G</kbd> lists every term in the unit, <kbd>N</kbd> shows the notes. Optional extra: <a href="explore.html" target="_blank" rel="noopener">interactive figures</a>, linked from the slides they support by a small ▸ chip; skip them freely.</p>
   </div>
   <aside class="notes">
     <p>The lab builds all three max-flow algorithms. That is deliberate, because the
@@ -137,6 +137,7 @@
       <p class="small muted">It is LP duality (unit 03) for the flow LP, whose dual is the cut LP, with integrality from total unimodularity (unit 06).</p>
     </div>
   </div>
+  <p class="viz-link-row"><a class="viz-link" href="explore.html#/1" target="_blank" rel="noopener">explore interactively</a></p>
   <aside class="notes">
     <p>Integrality follows from the algorithm: starting from zero flow with integer
     capacities, every bottleneck is an integer, so every intermediate flow is
@@ -196,6 +197,7 @@
       </div>
     </div>
   </div>
+  <p class="viz-link-row"><a class="viz-link" href="explore.html#/1" target="_blank" rel="noopener">explore interactively</a></p>
   <aside class="notes">
     <p><b>Step 1.</b> The reference <code>edmonds_karp</code> scans $s$'s arcs in order, so BFS
     reaches $a$, then $b$, then $t$ from $a$: the shortest path $s \to a \to t$, bottleneck 3.
@@ -314,6 +316,7 @@
       <p class="small">No excess left: a maximum flow of 5, same flow as Edmonds–Karp.</p>
     </div>
   </div>
+  <p class="viz-link-row"><a class="viz-link" href="explore.html#/2" target="_blank" rel="noopener">explore interactively</a></p>
   <aside class="notes">
     <p><b>The push–relabel run</b> is a logged copy of the reference <code>push_relabel</code>. The
     source starts at height $n = 4$ and floods both of its arcs. Node $a$ holds 3 but sits at

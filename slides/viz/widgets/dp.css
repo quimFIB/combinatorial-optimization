@@ -1,0 +1,9 @@
+/* Unit 16's DP table (slides/viz/widgets/dp.js). */
+.viz-dp-cell { fill: var(--surface); stroke: var(--rule); stroke-width: 1; }
+.viz-dp-cell.current { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 2.5; }
+.viz-dp-cell.dep { fill: var(--good-soft); stroke: var(--good); stroke-width: 1.5; }
+.viz-dp-cell.path { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.5; }
+.viz-dp-num { font: 16px var(--f-mono); fill: var(--ink); }
+.viz-dp-num.strong { font-weight: 700; }
+.viz-dp-arrow { fill: none; stroke: var(--accent); stroke-width: 2; }
+.viz-dp-arrow.took { stroke-width: 3.5; }

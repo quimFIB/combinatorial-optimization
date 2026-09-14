@@ -1,0 +1,7 @@
+/* Unit 15's Hungarian matrix (slides/viz/widgets/matching.js). */
+.viz-hu-cell { fill: var(--surface); stroke: var(--rule); stroke-width: 1; }
+.viz-hu-cell.tree { fill: var(--surface-sunk); }
+.viz-hu-cell.tight { fill: var(--good-soft); }
+.viz-hu-cell.assigned { stroke: var(--accent); stroke-width: 4; }
+.viz-hu-rc { font: 600 26px var(--f-mono); fill: var(--ink); }
+.viz-label.strong-accent { fill: var(--accent); font-weight: 600; }

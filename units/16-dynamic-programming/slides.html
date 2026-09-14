@@ -53,7 +53,7 @@
       <p class="small">FPT, XP, kernels: the honest way to say "hard but not hopeless".</p></div>
   </div>
   <div class="box good"><span class="label">getting around</span>
-    <p class="small">Words with a <span class="term" data-term="dynamic programming (DP)">dotted underline</span> are glossary terms: click one for its definition. <kbd>G</kbd> lists every term in the unit, <kbd>N</kbd> shows the notes.</p>
+    <p class="small">Words with a <span class="term" data-term="dynamic programming (DP)">dotted underline</span> are glossary terms: click one for its definition. <kbd>G</kbd> lists every term in the unit, <kbd>N</kbd> shows the notes. Optional extra: <a href="explore.html" target="_blank" rel="noopener">interactive figures</a>, linked from the slides they support by a small ▸ chip; skip them freely.</p>
   </div>
   <aside class="notes">
     <p>The lab's <code>then</code> step gives three pictures of "exponential". Held–Karp is
@@ -177,6 +177,7 @@
       <p class="small muted">The state "capacity used" forgets <em>which</em> items filled it. That forgetting is the merge that makes this $O(nC)$ instead of $2^n$.</p>
     </div>
   </div>
+  <p class="viz-link-row"><a class="viz-link" href="explore.html#/1" target="_blank" rel="noopener">explore interactively</a></p>
   <aside class="notes">
     <p><b>Reconstruction.</b> Walk back from the bottom-right cell: row 1–4 at capacity 6 took item 4,
     so move to row 1–3 at capacity 1, where nothing was taken all the way up. The reference
@@ -352,6 +353,7 @@
       </div>
     </div>
   </div>
+  <p class="viz-link-row"><a class="viz-link" href="explore.html#/2" target="_blank" rel="noopener">explore interactively</a></p>
   <aside class="notes">
     <p>"in" is the best cover of the subtree that contains the vertex; "out" is the best that doesn't,
     which forces every child in. Vertices 1 and 2 tie between in and out: vertex 1 in costs its own
