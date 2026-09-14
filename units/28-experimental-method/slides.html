@@ -18,13 +18,18 @@
   <div class="unit-no">28</div>
   <h1>Experimental method</h1>
   <p class="lede">Summaries that don't lie, pictures that answer the right question, intervals and tests for claims about randomised and chaotic solvers, and an audit of this course's own earlier conclusions.</p>
-  <p class="meta"><span>needs 27</span><span>~1 h slides + 2½ h lab</span><span>lab: <code>uv run co lab 28</code></span></p>
+  <p class="meta"><span>needs 27</span><span>~1½ h slides + 2½ h lab</span><span>lab: <code>uv run co lab 28</code></span></p>
   <aside class="notes">
     <p>Unit 27 ended with a table that looked like a staircase of improvements and turned out to be mostly
     noise. This unit is the method that would have told you so in advance: store runs, not summaries;
     choose the summary for the question; attach uncertainty; correct for the number of questions asked.</p>
     <p>The curriculum says: "Expect at least one earlier conclusion not to survive; that is the unit
     working." It happened. Unit 19's claim that restarts worsen the median has been withdrawn.</p>
+    <h4>How to read this deck</h4>
+    <p>The two-solver, ten-instance table on the first content slide is the running example for
+    summaries. Two example slides work the other tools by hand: a performance profile for three
+    solvers on four instances, and a bootstrap interval from five visible resamples followed by
+    Holm's correction on three p-values. All values were computed with the lab's reference functions.</p>
   </aside>
 </section>
 
@@ -42,6 +47,9 @@
       <p class="small">Seeds, paired bootstrap intervals, Wilcoxon, Holm; instance selection; negative results.</p></div>
     <div class="box def"><span class="label">4 · the audit</span>
       <p class="small">Unit 07's branching claim survives, quantified. Unit 19's median claim doesn't.</p></div>
+  </div>
+  <div class="box good"><span class="label">getting around</span>
+    <p class="small">Words with a <span class="term" data-term="shifted geometric mean (SGM)">dotted underline</span> are glossary terms: click one for its definition. <kbd>G</kbd> lists every term in the unit, <kbd>N</kbd> shows the notes.</p>
   </div>
   <aside class="notes">
     <p>The checkpoint: every performance claim in your notes regenerates from one command, and survives,
@@ -63,20 +71,21 @@
     <div>
       <p class="small">Two solvers, ten instances:</p>
       <table class="dense">
-        <thead><tr><th></th><th class="num">9 instances</th><th class="num">1 instance</th><th class="num">arith. mean</th><th class="num">geo. mean</th><th class="num">SGM, shift 10</th></tr></thead>
+        <thead><tr><th></th><th class="num">9 instances</th><th class="num">1 instance</th><th class="num"><span class="term" data-term="arithmetic mean (of times)">arith. mean</span></th><th class="num"><span class="term" data-term="geometric mean">geo. mean</span></th><th class="num"><span class="term" data-term="shifted geometric mean (SGM)">SGM</span>, shift 10</th></tr></thead>
         <tbody>
           <tr><td>A</td><td class="num">1 s each</td><td class="num">1 000 s</td><td class="num">100.9</td><td class="num">2.0</td><td class="num">7.3</td></tr>
           <tr><td>B</td><td class="num">2 s each</td><td class="num">100 s</td><td class="num">11.8</td><td class="num">3.0</td><td class="num">5.0</td></tr>
         </tbody>
       </table>
       <p class="small">The arithmetic mean is one instance's number. The geometric mean treats 1 s → 2 s like 500 s → 1 000 s: <b>ratios</b>, which is what comparisons are about. The shift keeps trivial instances from dominating.</p>
+      <p class="small"><b>PAR-2 on the example</b>, with a 300 s limit: A's 1 000 s run becomes 600 s, and A's arithmetic mean drops from 100.9 to 60.9. The limit and $k$ moved the number, not the solver.</p>
       $$\mathrm{SGM}_s(t) = \exp\Big(\tfrac1n \textstyle\sum_i \log(t_i + s)\Big) - s$$
     </div>
     <div>
-      <div class="box def"><span class="label">timeouts</span>
-        <p class="small">An unsolved run has no time, only a lower bound. <b>PAR-k</b> counts it as $k \times$ the limit. The result depends on the limit and on $k$, so report both, and report the solved count separately.</p>
+      <div class="box def"><span class="label"><span class="term" data-term="timeout (censored run)">timeouts</span></span>
+        <p class="small">An unsolved run has no time, only a lower bound. <b><span class="term" data-term="PAR-\(k\)">PAR-k</span></b> counts it as $k \times$ the limit. The result depends on the limit and on $k$, so report both, and report the solved count separately.</p>
       </div>
-      <div class="box warn"><span class="label">censoring, in this course</span>
+      <div class="box warn"><span class="label"><span class="term">censoring</span>, in this course</span>
         <p class="small">Unit 19 reported a mean of 153.6 nodes with a 3 000-node cap. Three capped runs contributed 90 of it: without them the mean is 65.6. A higher cap would give a higher mean. The number described the cap as much as the solver.</p>
       </div>
       <p class="small muted">SCIP and most MIP benchmark reports use shift 10 s (Achterberg 2007). For sub-second runs, pick a shift on their scale: the lab's audit uses 0.1 s.</p>
@@ -87,6 +96,9 @@
     3.0. With shift 10, A is exp((9 log 11 + log 1010)/10) − 10 ≈ 7.3 and B is exp((9 log 12 + log 110)/10) − 10 ≈ 5.0
     (all checked by computation). A wins the geometric mean, and B wins the other two. None
     of them is wrong, and each answers a different question. Pick it before looking at the data.</p>
+    <p>The PAR-2 line: with a 300 s limit A's slow instance is unsolved and counts $2 \times 300 = 600$, so
+    A's mean is $(9 \cdot 1 + 600)/10 = 60.9$; B's 100 s instance is solved and its mean stays 11.8. With a
+    limit of 2 000 s it would be solved and count 1 000. Report the limit, $k$ and the solved counts.</p>
     <p>For node counts, shifted geometric means work the same way. Unit 28's audit uses shift 10 nodes.</p>
   </aside>
 </section>
@@ -102,14 +114,14 @@
   <h2>Performance profiles (Dolan & Moré 2002)</h2>
   <div class="cols">
     <div>
-      <p class="small">For problem $p$ and solver $s$: $r_{p,s} = t_{p,s} / \min_{s'} t_{p,s'}$, or $\infty$ if $s$ failed.</p>
+      <p class="small">For problem $p$ and solver $s$, the <span class="term" data-term="performance ratio \(r_{p,s}\)">performance ratio</span> $r_{p,s} = t_{p,s} / \min_{s'} t_{p,s'}$, or $\infty$ if $s$ failed. The <span class="term">performance profile</span>:</p>
       $$\rho_s(\tau) = \tfrac{1}{|P|}\,\big|\{p : r_{p,s} \le \tau\}\big|$$
       <ul class="small">
         <li>$\rho_s(1)$: the share of problems $s$ wins (ties count for everyone).</li>
         <li>$\rho_s(\tau)$ for large $\tau$: the share $s$ solves at all.</li>
         <li>A curve that starts high is fast; one that ends high is robust. They can cross.</li>
       </ul>
-      <div class="box warn"><span class="label">a known trap</span>
+      <div class="box warn"><span class="label">a known trap (<span class="term" data-term="profile reordering trap">reordering</span>)</span>
         <p class="small">Ratios are to the best solver <em>in the comparison</em>. Adding or removing a solver can reorder the others' curves (Gould & Scott 2016). Compare two at a time when the question is two-way.</p>
       </div>
     </div>
@@ -123,18 +135,62 @@
           <tr><td>strong</td><td class="num">0.00</td><td class="num">0.00</td><td class="num">0.00</td><td class="num">0.04</td><td class="num">0.92</td><td class="num">1.00</td></tr>
         </tbody>
       </table>
-      <div class="box def"><span class="label">virtual best solver</span>
+      <div class="box def"><span class="label"><span class="term" data-term="virtual best solver (VBS)">virtual best solver</span></span>
         <p class="small">Per problem, the fastest solver's time. It's the ceiling for any portfolio of these solvers, and the gap to it says how much choosing per instance could buy. Here pseudocost is the virtual best on 22 of 24.</p>
       </div>
     </div>
   </div>
   <aside class="notes">
-    <p>Time-to-target plots (unit 26) are the per-instance analogue for randomised algorithms: a
+    <p><b>Time-to-target plots</b> (unit 26) are the per-instance analogue for randomised algorithms: a
     distribution over seeds on one instance, where a profile is a distribution over instances. Use TTT
     plots when the question is "how long until good enough, and how reliably"; use profiles when it's
     "across a benchmark set, how often and by how much".</p>
     <p>Gould and Scott's note ("A note on performance profiles for benchmarking software", ACM TOMS 2016)
     shows the reordering effect concretely. The fix is simple: keep pairwise profiles for pairwise claims.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">28 · pictures · example</p>
+  <h2>A performance profile, by hand</h2>
+  <div class="cols">
+    <div>
+      <p class="small">Three solvers, four instances, seconds ("—" = failed):</p>
+      <table>
+        <thead><tr><th>instance</th><th class="num">X</th><th class="num">Y</th><th class="num">Z</th><th>best</th></tr></thead>
+        <tbody>
+          <tr><td>p1</td><td class="num">2</td><td class="num">4</td><td class="num">3</td><td>X</td></tr>
+          <tr><td>p2</td><td class="num">10</td><td class="num">5</td><td class="num">—</td><td>Y</td></tr>
+          <tr><td>p3</td><td class="num">1</td><td class="num">1</td><td class="num">2</td><td>X, Y</td></tr>
+          <tr><td>p4</td><td class="num">—</td><td class="num">8</td><td class="num">4</td><td>Z</td></tr>
+        </tbody>
+      </table>
+      <p class="small"><b>Ratios</b> (time over the row's best): X $1, 2, 1, \infty$; Y $2, 1, 1, 2$; Z $1.5, \infty, 2, 1$.</p>
+      <p class="small">The virtual best takes 2, 5, 1, 4: every instance solved.</p>
+    </div>
+    <div>
+      <div class="box ex"><span class="label">the profile: share of instances with ratio at most τ</span>
+        <table style="margin:0">
+          <thead><tr><th>τ</th><th class="num">1</th><th class="num">1.5</th><th class="num">2</th><th class="num">large</th></tr></thead>
+          <tbody>
+            <tr><td>X</td><td class="num">0.50</td><td class="num">0.50</td><td class="num">0.75</td><td class="num">0.75</td></tr>
+            <tr><td>Y</td><td class="num">0.50</td><td class="num">0.50</td><td class="num"><b>1.00</b></td><td class="num"><b>1.00</b></td></tr>
+            <tr><td>Z</td><td class="num">0.25</td><td class="num">0.50</td><td class="num">0.75</td><td class="num">0.75</td></tr>
+          </tbody>
+        </table>
+        <p class="small">X and Y tie as winners at τ = 1 (the tie on p3 counts for both). Only Y reaches 1: it solves everything, never worse than 2× the best.</p>
+      </div>
+      <p class="small">Drop Y and recompute: X's ratio on p2 becomes 1 and Z's on p4 stays 1, so X's curve starts at 0.75. Removing a solver changed the others' curves: the trap on the previous slide.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>Each column of the profile counts ratios. At τ = 1.5, X has $\{1, 1\}$ (2 of 4), Y has $\{1, 1\}$,
+    Z has $\{1, 1.5\}$. At τ = 2, X adds p2's ratio 2, Y adds p1 and p4, Z adds p3. Failures (∞) never
+    count. The reference <code>performance_profile</code> returns exactly this table, and
+    <code>virtual_best</code> picks X, Y, X, Z (the p3 tie broken by solver name).</p>
+    <p><b>Without Y.</b> p1: X 1, Z 1.5. p2: X is now the best solver, ratio 1; Z failed. p3: X 1, Z 2.
+    p4: X failed, Z 1. So X's profile at τ = 1 is 0.75 instead of 0.5, although X itself did nothing
+    different. This is Gould and Scott's point, on four rows.</p>
   </aside>
 </section>
 
@@ -150,18 +206,18 @@
   <div class="cols">
     <div>
       <ul class="small">
-        <li><b>Seeds.</b> A deterministic MIP solver still varies with seeds and model permutations (unit 27). Run several, and treat (instance, seed) as the unit of observation.</li>
-        <li><b>Pairing.</b> Two solvers on the same instances: analyse the per-instance log ratios, not two independent means. Most of the variance is between instances, and pairing removes it.</li>
-        <li><b>Bootstrap.</b> Resample the per-instance ratios, recompute the geometric mean each time, and take percentiles. No normality assumption.</li>
+        <li><b>Seeds.</b> A deterministic MIP solver still varies with seeds and model permutations (unit 27). Run several, and treat (instance, seed) as the <span class="term">unit of observation</span>.</li>
+        <li><b><span class="term" data-term="paired comparison">Pairing</span>.</b> Two solvers on the same instances: analyse the per-instance log ratios, not two independent means. Most of the variance is between instances, and pairing removes it.</li>
+        <li><b><span class="term">Bootstrap</span>.</b> Resample the per-instance ratios, recompute the geometric mean each time, and take percentiles. No normality assumption.</li>
       </ul>
       $$\text{ratio} = \exp\Big(\tfrac1n\textstyle\sum_i \log\frac{a_i + s}{b_i + s}\Big)$$
     </div>
     <div>
-      <div class="box def"><span class="label">Wilcoxon signed-rank</span>
-        <p class="small">Paired, rank-based: do the differences tend to be positive? Its p-value answers "is there a difference", and the bootstrap interval answers "how big". Report both.</p>
+      <div class="box def"><span class="label"><span class="term" data-term="Wilcoxon signed-rank test">Wilcoxon signed-rank</span></span>
+        <p class="small">Paired, rank-based: do the differences tend to be positive? Its <span class="term">p-value</span> answers "is there a difference", and the bootstrap interval answers "how big" (the <span class="term">effect size</span>). Report both.</p>
       </div>
-      <div class="box warn"><span class="label">multiple comparisons</span>
-        <p class="small">Three solvers mean three pairwise tests. At α = 0.05 each, the chance of at least one false positive is about 14% if nothing differs. <b>Holm</b>: sort the p-values, multiply the $k$-th smallest by $m - k$, and keep them monotone. Uniformly more powerful than Bonferroni.</p>
+      <div class="box warn"><span class="label"><span class="term" data-term="multiple comparisons problem">multiple comparisons</span></span>
+        <p class="small">Three solvers mean three pairwise tests. At α = 0.05 each, the chance of at least one false positive is about 14% if nothing differs. <b><span class="term" data-term="Holm–Bonferroni correction">Holm</span></b>: sort the p-values, multiply the $k$-th smallest by $m - k$, and keep them monotone. Uniformly more powerful than <span class="term" data-term="Bonferroni correction">Bonferroni</span>.</p>
       </div>
       <p class="small muted">Holm (1979), <em>Scand. J. Statistics</em> 6.</p>
     </div>
@@ -177,11 +233,58 @@
 </section>
 
 <section>
+  <p class="eyebrow">28 · inference · example</p>
+  <h2>A bootstrap interval and Holm, in numbers</h2>
+  <div class="cols">
+    <div>
+      <div class="box ex"><span class="label">five resamples, shown</span>
+        <p class="small">Per-instance time ratios, new over old: $0.6, 0.8, 0.9, 1.1, 0.7$. Mean 0.82. Draw 5 values <b>with replacement</b>, five times:</p>
+        <table style="margin:0">
+          <thead><tr><th>resample</th><th class="num">mean</th></tr></thead>
+          <tbody>
+            <tr><td>0.6, 0.7, 1.1, 0.8, 0.9</td><td class="num">0.82</td></tr>
+            <tr><td>0.9, 1.1, 1.1, 0.6, 0.6</td><td class="num">0.86</td></tr>
+            <tr><td>0.7, 0.9, 1.1, 0.6, 0.9</td><td class="num">0.84</td></tr>
+            <tr><td>1.1, 0.8, 0.7, 0.7, 0.6</td><td class="num">0.78</td></tr>
+            <tr><td>0.6, 0.9, 0.7, 0.8, 0.8</td><td class="num">0.76</td></tr>
+          </tbody>
+        </table>
+        <p class="small">The spread of these means is the uncertainty. With 2 000 resamples the 95% <span class="term" data-term="percentile bootstrap interval">percentile interval</span> is <b>[0.68, 0.98]</b>: faster, but by somewhere between 2% and 32%.</p>
+      </div>
+    </div>
+    <div>
+      <div class="box ex"><span class="label">Holm on three p-values</span>
+        <table style="margin:0">
+          <thead><tr><th>test</th><th class="num">raw p</th><th class="num">rank</th><th class="num">× (m − k)</th><th class="num">adjusted</th></tr></thead>
+          <tbody>
+            <tr><td>A vs B</td><td class="num">0.01</td><td class="num">1st</td><td class="num">× 3 = 0.03</td><td class="num"><b>0.03</b></td></tr>
+            <tr><td>B vs C</td><td class="num">0.03</td><td class="num">2nd</td><td class="num">× 2 = 0.06</td><td class="num">0.06</td></tr>
+            <tr><td>A vs C</td><td class="num">0.04</td><td class="num">3rd</td><td class="num">× 1 = 0.04</td><td class="num">0.06</td></tr>
+          </tbody>
+        </table>
+        <p class="small">Unadjusted, all three are "significant" at 0.05. After Holm, only A vs B is. The last row is raised to 0.06 because adjusted values must not decrease down the ranking.</p>
+      </div>
+      <p class="small muted">Bonferroni would multiply all three by 3: 0.03, 0.09, 0.12. Same verdict here, but Holm is never stricter.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>The resamples are <code>random.Random(1).choices(values, k=5)</code> five times; the reference
+    <code>bootstrap_ci</code> with those five resamples returns (0.76, 0.84), the smallest and fourth of the
+    sorted means. Five resamples are only for showing the mechanics: the interval from 2 000 resamples,
+    same seed, is (0.68, 0.98). In practice resample log ratios, as the lab's
+    <code>geometric_ratio_ci</code> does, so that 0.5× and 2× are symmetric.</p>
+    <p>Holm's adjusted values are the reference <code>holm([0.01, 0.04, 0.03])</code> = [0.03, 0.06, 0.06],
+    in the original order. Reading it: sort the p-values, multiply the smallest by the number of tests,
+    the next by one fewer, and so on, then carry the running maximum.</p>
+  </aside>
+</section>
+
+<section>
   <p class="eyebrow">28 · inference</p>
   <h2>Instance selection, per-instance claims, negative results</h2>
   <div class="cols">
     <div>
-      <div class="box warn"><span class="label">instance selection bias</span>
+      <div class="box warn"><span class="label"><span class="term">instance selection bias</span></span>
         <ul class="small">
           <li>Instances chosen because the new method does well on them (or generated by a generator tuned during development).</li>
           <li>Instances "too easy" or "too hard" dropped after seeing results.</li>
@@ -191,10 +294,10 @@
       </div>
     </div>
     <div>
-      <div class="box def"><span class="label">per-instance or aggregate?</span>
+      <div class="box def"><span class="label"><span class="term" data-term="aggregate vs per-instance claim">per-instance or aggregate?</span></span>
         <p class="small">"Faster on average" (an aggregate claim) and "faster on most instances" (a per-instance claim) are different. Unit 28's audit reports both: pseudocost has the lower SGM <em>and</em> wins 22 of 24.</p>
       </div>
-      <div class="box good"><span class="label">a negative result worth reading</span>
+      <div class="box good"><span class="label">a <span class="term">negative result</span> worth reading</span>
         <p class="small">State the hypothesis, the instances and budget, the effect size with its interval, and what it rules out. "Restarts don't reliably change the median on QCP(12, 55%): 3/8 instances worse, p = 0.79, and the original instance's intervals overlap" rules out a specific claim, which is useful.</p>
       </div>
     </div>
@@ -217,7 +320,7 @@
   <h2>Unit 07: branching rules, from 3 instances to 24</h2>
   <div class="cols">
     <div>
-      <p class="small"><b>Claim</b> (totals over 3 instances): strong branching uses the fewest nodes; pseudocost is fastest.</p>
+      <p class="small">An <span class="term">audit</span>. <b>Claim</b> (totals over 3 instances): strong branching uses the fewest nodes; pseudocost is fastest.</p>
       <table class="dense">
         <thead><tr><th>rule</th><th class="num">SGM nodes</th><th class="num">SGM s</th><th class="num">fewest nodes</th><th class="num">fastest</th></tr></thead>
         <tbody>
@@ -266,7 +369,7 @@
       <p class="small">Eight more instances, 30 seeds each: restarts lower the mean on <b>7/8</b> (p = 0.03) and raise the median on <b>3/8</b> (p = 0.79).</p>
     </div>
     <div>
-      <div class="box warn"><span class="label">verdict: the median claim is withdrawn</span>
+      <div class="box warn"><span class="label">verdict: the median claim is <span class="term" data-term="withdrawn claim">withdrawn</span></span>
         <p class="small">The intervals overlap on the original instance, and the family shows no consistent direction. Unit 19's lab sheet and slides have been corrected in place.</p>
       </div>
       <div class="box good"><span class="label">what survives</span>
