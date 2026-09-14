@@ -18,7 +18,7 @@
   <div class="unit-no">16</div>
   <h1>Dynamic programming over combinatorial structure</h1>
   <p class="lede">Shortest paths in a DAG of states; knapsack and what "pseudo-polynomial" really means; Held–Karp; trees, treewidth and Courcelle; the vocabulary of parameterised complexity.</p>
-  <p class="meta"><span>needs 15</span><span>~1½ h slides + 3 h lab</span><span>lab: <code>uv run co lab 16</code></span></p>
+  <p class="meta"><span>needs 15</span><span>~2 h slides + 3 h lab</span><span>lab: <code>uv run co lab 16</code></span></p>
   <aside class="notes">
     <p>Branch-and-bound (unit 07) searches a tree of decisions and prunes with bounds.
     Dynamic programming searches a DAG of <em>states</em> and prunes by merging. Two
@@ -28,6 +28,12 @@
     subsets, subtrees, bags.</p>
     <p>Two later units depend on this one. Unit 10's column generation prices columns with
     the knapsack DP, and unit 22's knapsack FPTAS is the DP run on rounded values.</p>
+    <h4>How to read this deck</h4>
+    <p>Every DP in the unit is shown filled in on a small instance: a knapsack table for 4 items,
+    the Held–Karp subset table for 4 cities, in/out values on a 7-vertex tree, an elimination
+    ordering on a 5-vertex graph, and Buss's kernel on 7 vertices. All numbers were computed with
+    the lab's reference solution. The one proof on the slides ("FPT iff kernel") is stated, with
+    the argument in the notes.</p>
   </aside>
 </section>
 
@@ -45,6 +51,9 @@
       <p class="small">Trees, tree decompositions, elimination orderings, DP on bags, Courcelle's theorem.</p></div>
     <div class="box def"><span class="label">4 · parameters</span>
       <p class="small">FPT, XP, kernels: the honest way to say "hard but not hopeless".</p></div>
+  </div>
+  <div class="box good"><span class="label">getting around</span>
+    <p class="small">Words with a <span class="term" data-term="dynamic programming (DP)">dotted underline</span> are glossary terms: click one for its definition. <kbd>G</kbd> lists every term in the unit, <kbd>N</kbd> shows the notes.</p>
   </div>
   <aside class="notes">
     <p>The lab's <code>then</code> step gives three pictures of "exponential". Held–Karp is
@@ -68,12 +77,12 @@
     <div>
       <div class="box def"><span class="label">the recipe</span>
         <ol class="small">
-          <li>A <b>state</b> summarises a partial solution by exactly what the future needs to know.</li>
-          <li>A <b>transition</b> extends it by one decision, with a cost.</li>
-          <li>The states and transitions form a <b>DAG</b>. The optimum is a shortest (or longest) path, computed in topological order.</li>
+          <li>A <span class="term">state</span> summarises a partial solution by exactly what the future needs to know.</li>
+          <li>A <span class="term">transition</span> extends it by one decision, with a cost.</li>
+          <li>The states and transitions form a <span class="term">DAG</span>. The optimum is a shortest (or longest) path, computed in <span class="term">topological order</span>.</li>
         </ol>
       </div>
-      <p class="small">Time = (number of states) × (transitions per state). Correctness = <b>optimal substructure</b>: an optimal path's prefixes are optimal paths to their states.</p>
+      <p class="small">Time = (number of states) × (transitions per state). Correctness = <span class="term">optimal substructure</span>: an optimal path's prefixes are optimal paths to their states.</p>
     </div>
     <div>
       <table>
@@ -110,7 +119,7 @@
       $$B_i(c) = \max\bigl(B_{i-1}(c),\ B_{i-1}(c - w_i) + v_i\bigr)$$
       <p class="small">$n$ items, capacity $C$: $O(nC)$ time. Knapsack is NP-hard. So have we shown P = NP?</p>
       <div class="box warn"><span class="label">no: count the input</span>
-        <p class="small">$C$ is written in $\log_2 C$ bits. $O(nC) = O(n \cdot 2^{\log C})$ is <b>exponential in the input length</b>. It is polynomial only in the numeric <em>value</em>: a <b>pseudo-polynomial</b> algorithm.</p>
+        <p class="small">$C$ is written in $\log_2 C$ bits. $O(nC) = O(n \cdot 2^{\log C})$ is <b>exponential in the input length</b>. It is polynomial only in the numeric <em>value</em>: a <span class="term">pseudo-polynomial</span> algorithm.</p>
       </div>
     </div>
     <div>
@@ -124,7 +133,7 @@
         </tbody>
       </table>
       <div class="box def"><span class="label">weak vs strong NP-hardness</span>
-        <p class="small">Knapsack is <b>weakly</b> NP-hard: hard only when the numbers are huge. Bin packing and TSP are <b>strongly</b> NP-hard: still hard with numbers bounded by a polynomial in $n$. So they have no pseudo-polynomial algorithm unless P = NP.</p>
+        <p class="small">Knapsack is <span class="term" data-term="weakly NP-hard">weakly</span> NP-hard: hard only when the numbers are huge. Bin packing and TSP are <span class="term" data-term="strongly NP-hard">strongly</span> NP-hard: still hard with numbers bounded by a polynomial in $n$. So they have no pseudo-polynomial algorithm unless P = NP.</p>
       </div>
     </div>
   </div>
@@ -137,9 +146,45 @@
     weight. $W_i(p)$ = least weight achieving value $p$ takes $O(n \cdot \sum v)$. Round
     values down to multiples of $\varepsilon v_{\max} / n$ and the table shrinks to
     $O(n^3/\varepsilon)$, while the answer loses at most a factor $1 - \varepsilon$.</p>
-    <p>The lab's unbounded variant is unit 10's pricing problem. Given dual prices
+    <p>The lab's <b>unbounded knapsack</b> variant is unit 10's pricing problem. Given dual prices
     $\pi_i$ on item demands, find the cutting pattern of maximum total price. A pattern
     with total price above 1 is a column with negative reduced cost.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">16 · states · example</p>
+  <h2>The knapsack table, filled in</h2>
+  <div class="cols wide-left">
+    <div>
+      <p class="small">Capacity $C = 6$. Items (weight, value): $1{:}\ (2, 3)$, $\ 2{:}\ (3, 4)$, $\ 3{:}\ (4, 5)$, $\ 4{:}\ (5, 9)$. Row $i$ = best value using items $1..i$; column = capacity.</p>
+      <table>
+        <thead><tr><th>items</th><th class="num">0</th><th class="num">1</th><th class="num">2</th><th class="num">3</th><th class="num">4</th><th class="num">5</th><th class="num">6</th></tr></thead>
+        <tbody>
+          <tr><td>none</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">0</td></tr>
+          <tr><td>1</td><td class="num">0</td><td class="num">0</td><td class="num">3</td><td class="num">3</td><td class="num">3</td><td class="num">3</td><td class="num">3</td></tr>
+          <tr><td>1–2</td><td class="num">0</td><td class="num">0</td><td class="num">3</td><td class="num">4</td><td class="num">4</td><td class="num"><b>7</b></td><td class="num">7</td></tr>
+          <tr><td>1–3</td><td class="num">0</td><td class="num">0</td><td class="num">3</td><td class="num">4</td><td class="num">5</td><td class="num">7</td><td class="num">8</td></tr>
+          <tr><td>1–4</td><td class="num">0</td><td class="num">0</td><td class="num">3</td><td class="num">4</td><td class="num">5</td><td class="num">9</td><td class="num"><b>9</b></td></tr>
+        </tbody>
+      </table>
+      <p class="small">Answer: 9, by item 4 alone. $5 \times 7 = 35$ cells, each one max of two numbers.</p>
+    </div>
+    <div class="box ex"><span class="label">three cells, worked</span>
+      <p class="small"><b>Row 1–2, capacity 5:</b> skip item 2 → 3; take it → row above at $5 - 3 = 2$, plus 4 → $3 + 4 = 7$. Keep 7.</p>
+      <p class="small"><b>Row 1–3, capacity 6:</b> skip → 7; take item 3 → row above at $6 - 4 = 2$, plus 5 → 8. Keep 8.</p>
+      <p class="small"><b>Row 1–4, capacity 6:</b> skip → 8; take item 4 → row above at $6 - 5 = 1$, plus 9 → 9. Keep 9.</p>
+      <p class="small muted">The state "capacity used" forgets <em>which</em> items filled it. That forgetting is the merge that makes this $O(nC)$ instead of $2^n$.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p><b>Reconstruction.</b> Walk back from the bottom-right cell: row 1–4 at capacity 6 took item 4,
+    so move to row 1–3 at capacity 1, where nothing was taken all the way up. The reference
+    <code>knapsack([3, 4, 5, 9], [2, 3, 4, 5], 6)</code> returns <code>(9, [3])</code> (items are
+    0-indexed there).</p>
+    <p><b>Greedy by value per weight</b> happens to work here: item 4 has the best ratio (1.8), uses 5 of
+    the 6, and nothing else fits. Lower item 4's value to 6 and the DP's answer becomes 8 (items 1 and 3),
+    while ratio-greedy takes item 1 (1.5) then item 2 (1.33) for only 7.</p>
   </aside>
 </section>
 
@@ -155,11 +200,11 @@
   <div class="cols">
     <div>
       $$\begin{aligned} D(\{k\}, k) &= d_{0k} \\ D(S, k) &= \min_{j \in S \setminus \{k\}} D(S \setminus \{k\}, j) + d_{jk} \end{aligned}$$
-      <p class="small">$S \subseteq \{1, \dots, n-1\}$, $k \in S$. Tour length $= \min_k D(\text{all}, k) + d_{k0}$.</p>
+      <p class="small">The <span class="term" data-term="Held–Karp DP">Held–Karp DP</span>: $S \subseteq \{1, \dots, n-1\}$, $k \in S$. Tour length $= \min_k D(\text{all}, k) + d_{k0}$.</p>
       <ul class="small">
         <li>$O(n^2 2^n)$ time and $O(n 2^n)$ space. Space is what stops you around $n = 25$ to $30$.</li>
         <li>Works unchanged for asymmetric distances.</li>
-        <li>A bitmask per subset; masks in increasing order are topologically sorted, since $S \setminus \{k\} &lt; S$.</li>
+        <li>A <span class="term" data-term="bitmask DP">bitmask</span> per subset; masks in increasing order are topologically sorted, since $S \setminus \{k\} &lt; S$.</li>
       </ul>
       <div class="box"><span class="label">sixty years on</span>
         <p class="small">No $O((2 - \varepsilon)^n)$ algorithm is known for general weighted TSP. For undirected Hamiltonicity, Björklund (2014) broke $2^n$ with algebraic methods.</p>
@@ -168,7 +213,7 @@
     <div>
       <p class="small">Lab <code>then</code>, Euclidean, seconds:</p>
       <table>
-        <thead><tr><th class="num">n</th><th class="num">Held–Karp</th><th class="num">B&amp;B (07) MTZ</th><th class="num">lazy DFJ (09)</th><th class="num">SCIP MTZ</th></tr></thead>
+        <thead><tr><th class="num">n</th><th class="num">Held–Karp</th><th class="num">B&amp;B (07) <span class="term" data-term="MTZ formulation">MTZ</span></th><th class="num">lazy DFJ (09)</th><th class="num">SCIP MTZ</th></tr></thead>
         <tbody>
           <tr><td class="num">8</td><td class="num">0.001</td><td class="num">0.49</td><td class="num">0.023</td><td class="num">0.29</td></tr>
           <tr><td class="num">12</td><td class="num">0.003</td><td class="num">5.6</td><td class="num">0.006</td><td class="num">0.043</td></tr>
@@ -199,6 +244,42 @@
   </aside>
 </section>
 
+<section>
+  <p class="eyebrow">16 · subsets · example</p>
+  <h2>Held–Karp on four cities</h2>
+  <div class="cols">
+    <div>
+      <p class="small">Distances (symmetric): $d_{01} = 2,\ d_{02} = 9,\ d_{03} = 10,\ d_{12} = 6,\ d_{13} = 4,\ d_{23} = 3$. Start and end at city 0.</p>
+      <table>
+        <thead><tr><th>$S$</th><th>end $k$</th><th class="num">$D(S, k)$</th><th>came from</th></tr></thead>
+        <tbody>
+          <tr><td>$\{1\}, \{2\}, \{3\}$</td><td>1, 2, 3</td><td class="num">2, 9, 10</td><td>city 0</td></tr>
+          <tr><td>$\{1,2\}$</td><td>1 / 2</td><td class="num">15 / 8</td><td>2 / 1</td></tr>
+          <tr><td>$\{1,3\}$</td><td>1 / 3</td><td class="num">14 / 6</td><td>3 / 1</td></tr>
+          <tr><td>$\{2,3\}$</td><td>2 / 3</td><td class="num">13 / 12</td><td>3 / 2</td></tr>
+          <tr><td>$\{1,2,3\}$</td><td>1 / 2 / 3</td><td class="num">16 / 9 / 11</td><td>3 / 3 / 2</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div>
+      <div class="box ex"><span class="label">one cell, and the answer</span>
+        <p class="small"><b>$D(\{1,2,3\}, 2)$:</b> come from 1 via $D(\{1,3\}, 1) + d_{12} = 14 + 6 = 20$, or from 3 via $D(\{1,3\}, 3) + d_{32} = 6 + 3 = 9$. Keep 9.</p>
+        <p class="small"><b>Close the tour:</b> $16 + d_{10} = 18$, $\ 9 + d_{20} = 18$, $\ 11 + d_{30} = 21$. Optimum <b>18</b>.</p>
+        <p class="small"><b>Read it back:</b> end at 1, came from 3, which came from 2, which came from 0: tour $0\!-\!2\!-\!3\!-\!1\!-\!0$, $9 + 3 + 4 + 2 = 18$.</p>
+      </div>
+      <p class="small muted">12 table entries instead of $3! = 6$ orderings here; at $n = 20$ it is $19 \cdot 2^{19} \approx 10^7$ entries instead of $19! \approx 10^{17}$.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p><b>The size-2 row.</b> $D(\{1,2\}, 1) = D(\{2\}, 2) + d_{21} = 9 + 6 = 15$ and
+    $D(\{1,2\}, 2) = D(\{1\}, 1) + d_{12} = 2 + 6 = 8$. The same pattern gives $\{1,3\}$ and $\{2,3\}$.
+    For the full set, $D(\{1,2,3\}, 1) = \min(13 + 6, 12 + 4) = 16$ and
+    $D(\{1,2,3\}, 3) = \min(15 + 4, 8 + 3) = 11$.</p>
+    <p>Two tours tie at 18: ending at 1 is $0\!-\!2\!-\!3\!-\!1\!-\!0$, ending at 2 is the same tour reversed.
+    The reference <code>held_karp</code> returns <code>(18, [0, 2, 3, 1])</code>.</p>
+  </aside>
+</section>
+
 <section class="divider">
   <p class="eyebrow">section 3</p>
   <h2>Treewidth</h2>
@@ -210,13 +291,13 @@
   <h2>On trees, NP-hard problems become easy</h2>
   <div class="cols">
     <div>
-      <p class="small">Minimum-weight vertex cover on a tree, rooted anywhere:</p>
+      <p class="small">The <span class="term" data-term="tree DP for vertex cover">tree DP for vertex cover</span>, rooted anywhere:</p>
       $$\begin{aligned} \mathrm{in}(v) &= w_v + \textstyle\sum_{c} \min(\mathrm{in}(c), \mathrm{out}(c)) \\ \mathrm{out}(v) &= \textstyle\sum_{c} \mathrm{in}(c) \end{aligned}$$
       <p class="small">$O(n)$. The state is (vertex, in or out) because a subtree talks to the rest of the tree <b>only through its root</b>.</p>
       <p class="small muted">Lab step 3 runs it on a 5 000-vertex path, so it must not recurse. Python's recursion limit is 1 000.</p>
     </div>
     <div>
-      <div class="box thm"><span class="label">the separator idea</span>
+      <div class="box thm"><span class="label">the <span class="term" data-term="separator">separator</span> idea</span>
         <p class="small">A tree DP works because removing a vertex splits the tree into independent parts. If a graph splits into independent parts by removing <b>small sets</b> of vertices, recursively, the same DP works with the small set as the state.</p>
         <p class="small">"Small" is the <b>treewidth</b>, and the state space is $2^{\text{set size}}$ for vertex cover, or $q^{\text{set size}}$ for $q$-colouring.</p>
       </div>
@@ -230,6 +311,54 @@
     has to be covered. Otherwise the child takes its better option. A mutation that
     forgets the "must" produces an invalid cover with a smaller weight, and the tests
     check coverage separately for exactly that reason.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">16 · treewidth · example</p>
+  <h2>In and out, on a seven-vertex tree</h2>
+  <div class="cols wide-right">
+    <div class="fig">
+      <svg viewBox="0 0 340 230" width="340" role="img" aria-label="a binary tree of seven weighted vertices, with the optimal cover {1, 2} filled">
+        <g class="ink" stroke-width="2">
+          <line x1="170" y1="35" x2="90" y2="110"/><line x1="170" y1="35" x2="250" y2="110"/>
+          <line x1="90" y1="110" x2="45" y2="185"/><line x1="90" y1="110" x2="135" y2="185"/>
+          <line x1="250" y1="110" x2="205" y2="185"/><line x1="250" y1="110" x2="295" y2="185"/>
+        </g>
+        <g stroke-width="2" class="ink">
+          <circle cx="170" cy="35" r="16" class="fill-ground"/><circle cx="90" cy="110" r="16" class="fill-unit"/><circle cx="250" cy="110" r="16" class="fill-unit"/>
+          <circle cx="45" cy="185" r="16" class="fill-ground"/><circle cx="135" cy="185" r="16" class="fill-ground"/><circle cx="205" cy="185" r="16" class="fill-ground"/><circle cx="295" cy="185" r="16" class="fill-ground"/>
+        </g>
+        <g font-size="13" class="mono" text-anchor="middle">
+          <text x="170" y="40">0</text><text x="45" y="190">3</text><text x="135" y="190">4</text><text x="205" y="190">5</text><text x="295" y="190">6</text>
+          <text x="208" y="30">w=3</text><text x="44" y="108">1: w=2</text><text x="298" y="108">2: w=4</text>
+          <text x="45" y="220">w=1</text><text x="135" y="220">w=1</text><text x="205" y="220">w=2</text><text x="295" y="220">w=2</text>
+        </g>
+      </svg>
+      <p class="cap">Vertex weights $w$. Filled: the optimal cover $\{1, 2\}$, weight 6.</p>
+    </div>
+    <div>
+      <table>
+        <thead><tr><th>vertex</th><th class="num">in</th><th class="num">out</th><th>why</th></tr></thead>
+        <tbody>
+          <tr><td>leaves 3, 4, 5, 6</td><td class="num">1, 1, 2, 2</td><td class="num">0</td><td>in = own weight</td></tr>
+          <tr><td>1 (children 3, 4)</td><td class="num">2</td><td class="num">2</td><td>in: $2 + 0 + 0$; out: $1 + 1$</td></tr>
+          <tr><td>2 (children 5, 6)</td><td class="num">4</td><td class="num">4</td><td>in: $4 + 0 + 0$; out: $2 + 2$</td></tr>
+          <tr><td>root 0</td><td class="num">9</td><td class="num"><b>6</b></td><td>in: $3 + 2 + 4$; out: $2 + 4$</td></tr>
+        </tbody>
+      </table>
+      <div class="box ex"><span class="label">reading back the cover</span>
+        <p class="small">Root: out (6 &lt; 9). So both children <b>must</b> be in: 1 and 2. Below them the parents are in, so each leaf takes its better value, out (0). Cover $\{1, 2\}$, weight $2 + 4 = 6$.</p>
+      </div>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>"in" is the best cover of the subtree that contains the vertex; "out" is the best that doesn't,
+    which forces every child in. Vertices 1 and 2 tie between in and out: vertex 1 in costs its own
+    2, vertex 1 out costs its two leaves $1 + 1$. The tie is broken by the parent: once the root is
+    out, 1 and 2 have no choice.</p>
+    <p>Taking all four leaves covers the bottom edges but not $ and $, so it also needs vertex 0: weight  + 1 + 2 + 2 + 3 = 9$. The reference <code>tree_vertex_cover</code> returns
+    <code>(6, {1, 2})</code>.</p>
   </aside>
 </section>
 
@@ -267,14 +396,14 @@
     </div>
     <div>
       <div class="box def"><span class="label">definition (Robertson–Seymour)</span>
-        <p class="small">A tree $T$ with a <b>bag</b> $B_t \subseteq V$ per node, such that</p>
+        <p class="small">A <span class="term">tree decomposition</span>: a tree $T$ with a <span class="term">bag</span> $B_t \subseteq V$ per node, such that</p>
         <ol class="small">
           <li>every edge $uv$ lies inside some bag;</li>
           <li>for every vertex $v$, the bags containing $v$ form a connected subtree.</li>
         </ol>
-        <p class="small"><b>Width</b> $= \max |B_t| - 1$. <b>Treewidth</b> $\mathrm{tw}(G)$ = the minimum width over all decompositions.</p>
+        <p class="small"><span class="term" data-term="width">Width</span> $= \max |B_t| - 1$. <span class="term" data-term="treewidth \(\mathrm{tw}(G)\)">Treewidth</span> $\mathrm{tw}(G)$ = the minimum width over all decompositions.</p>
       </div>
-      <p class="small">Trees: 1. Cycles: 2. Series–parallel graphs: $\le 2$. The $k \times k$ grid: $k$. $K_n$: $n - 1$. The lab's $k$-trees: exactly $k$.</p>
+      <p class="small">Trees: 1. Cycles: 2. Series–parallel graphs: $\le 2$. The $k \times k$ grid: $k$. $K_n$: $n - 1$. The lab's <span class="term" data-term="\(k\)-tree">$k$-trees</span>: exactly $k$.</p>
       <p class="small muted">Property 2 is what makes a bag a separator: the parts of the graph below and above it share only the bag's vertices.</p>
     </div>
   </div>
@@ -296,17 +425,17 @@
     <div>
       <ol class="small">
         <li>Pick a vertex $v$. Its bag is $v$ plus its current neighbours.</li>
-        <li>Join those neighbours into a clique (the <b>fill-in</b>), then delete $v$.</li>
+        <li>Join those neighbours into a clique (the <span class="term" data-term="fill-in (elimination)">fill-in</span>), then delete $v$.</li>
         <li>Repeat. Hang each bag off the bag of its earliest-eliminated neighbour.</li>
       </ol>
       <div class="box thm"><span class="label">fact</span>
-        <p class="small">$\mathrm{tw}(G) = \min$ over orderings of the largest neighbourhood at elimination time. Every decomposition comes from some ordering.</p>
+        <p class="small">$\mathrm{tw}(G) = \min$ over <span class="term" data-term="elimination ordering">elimination orderings</span> of the largest neighbourhood at elimination time. Every decomposition comes from some ordering.</p>
       </div>
       <p class="small">Computing treewidth is NP-hard (Arnborg, Corneil & Proskurowski 1987). For fixed $k$, width $\le k$ is decidable in linear time (Bodlaender 1996), with constants too large to run.</p>
     </div>
     <div>
       <div class="box good"><span class="label">in practice: greedy orderings</span>
-        <p class="small"><b>Min-degree</b>: eliminate the vertex of smallest current degree. <b>Min-fill</b>: the one adding fewest fill edges. Min-fill is exact on chordal graphs (a simplicial vertex adds no fill); both are exact on $k$-trees; both are often close elsewhere.</p>
+        <p class="small"><span class="term" data-term="min-degree heuristic">Min-degree</span>: eliminate the vertex of smallest current degree. <span class="term" data-term="min-fill heuristic">Min-fill</span>: the one adding fewest fill edges. Min-fill is exact on <span class="term" data-term="chordal graph">chordal graphs</span> (a <span class="term" data-term="simplicial vertex">simplicial vertex</span> adds no fill); both are exact on $k$-trees; both are often close elsewhere.</p>
       </div>
       <div class="box warn"><span class="label">orderings matter enormously</span>
         <p class="small">A star eliminated centre-first turns the leaves into a clique, giving width $n - 1$. Leaves first gives width 1. Lab step 4 tests both.</p>
@@ -327,11 +456,48 @@
 </section>
 
 <section>
+  <p class="eyebrow">16 · treewidth · example</p>
+  <h2>Two elimination orderings, on one graph</h2>
+  <div class="cols">
+    <div>
+      <p class="small">Vertices 0–4, edges $01, 02, 12, 13, 23, 34$: triangles $\{0,1,2\}$ and $\{1,2,3\}$ sharing edge 12, and a pendant edge 34.</p>
+      <div class="box ex"><span class="label">min-degree: width 2</span>
+        <table style="margin:0">
+          <thead><tr><th>eliminate</th><th>neighbours then</th><th>bag</th><th>fill added</th></tr></thead>
+          <tbody>
+            <tr><td>4 (degree 1)</td><td>3</td><td>$\{3,4\}$</td><td>none</td></tr>
+            <tr><td>0 (degree 2)</td><td>1, 2</td><td>$\{0,1,2\}$</td><td>none (12 exists)</td></tr>
+            <tr><td>1</td><td>2, 3</td><td>$\{1,2,3\}$</td><td>none (23 exists)</td></tr>
+            <tr><td>2, then 3</td><td>3; none</td><td>$\{2,3\}$, $\{3\}$</td><td>none</td></tr>
+          </tbody>
+        </table>
+        <p class="small">Largest bag 3: width 2. No fill at all, because the graph is chordal.</p>
+      </div>
+    </div>
+    <div>
+      <div class="box warn"><span class="label">vertex 1 first: width 3</span>
+        <p class="small">Eliminating 1 first: its neighbours 0, 2, 3 must become a clique. Edges 02 and 23 exist, but <b>03 is added</b>. Bag $\{0,1,2,3\}$: width 3.</p>
+        <p class="small">Same graph, same algorithm, one bad choice at the start: the DP over this decomposition would use $2^4$ states per bag instead of $2^3$.</p>
+      </div>
+      <p class="small">Hanging bags together: each bag attaches to the bag of its earliest-eliminated remaining neighbour. From min-degree: $\{3,4\} - \{3\}$, $\{0,1,2\} - \{1,2,3\} - \{2,3\} - \{3\}$.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>Both decompositions pass the reference <code>is_tree_decomposition</code>; the min-degree one
+    has width 2 and the "1 first" one width 3. The treewidth is exactly 2: the graph contains a
+    triangle (so at least 2), and min-degree achieved 2.</p>
+    <p>On top of the width-2 decomposition, the reference <code>td_vertex_cover</code> with unit
+    weights returns a cover of size 3, for example $\{0, 1, 3\}$: each triangle needs two of its
+    vertices, and 1 serves both.</p>
+  </aside>
+</section>
+
+<section>
   <p class="eyebrow">16 · treewidth</p>
   <h2>DP over a decomposition — and predicting its runtime</h2>
   <div class="cols">
     <div>
-      <p class="small">Root the decomposition. For each bag $t$ and each $S \subseteq B_t$ covering the edges inside $B_t$:</p>
+      <p class="small">The <span class="term" data-term="DP over a decomposition">DP over a decomposition</span>. Root it. For each bag $t$ and each $S \subseteq B_t$ covering the edges inside $B_t$:</p>
       $$\begin{aligned} T_t(S) &= w(S) + \textstyle\sum_{c\ \text{child}} \beta_c(S \cap B_c) \\ \beta_c(P) &= \min_{S' \subseteq B_c,\ S' \cap B_t = P} T_c(S') - w(P) \end{aligned}$$
       <p class="small">Group each child's table by its restriction to the shared vertices once, then each parent entry costs $O(1)$ per child. Total $\approx \sum_t 2^{|B_t|}$, times small factors.</p>
       <p class="small muted">Every restriction has some valid child entry: put all non-shared vertices in the cover.</p>
@@ -355,7 +521,7 @@
     vertex in both the child bag and the parent bag is counted in the parent's $w(S)$.
     By property 2, any vertex shared by two children is also in the parent, so it is
     subtracted from each child and counted exactly once.</p>
-    <p>Textbooks convert to a <b>nice</b> decomposition (introduce, forget and join nodes,
+    <p>Textbooks convert to a <span class="term" data-term="nice tree decomposition">nice</span> decomposition (introduce, forget and join nodes,
     each changing one vertex), which makes the $O(2^w \cdot n)$ bound clean and the proofs
     uniform. The lab skips that. Grouping by restriction gives the same asymptotics with
     less code.</p>
@@ -372,8 +538,8 @@
   <h2>Courcelle's theorem: why all of these work</h2>
   <div class="cols">
     <div>
-      <div class="box thm"><span class="label">Courcelle 1990</span>
-        <p class="small">Every graph property expressible in <b>monadic second-order logic</b> (MSO₂: quantify over vertices, edges, <em>and sets</em> of them) can be decided in time $f(k, |\varphi|) \cdot n$ on graphs of treewidth $\le k$.</p>
+      <div class="box thm"><span class="label"><span class="term" data-term="Courcelle's theorem">Courcelle</span> 1990</span>
+        <p class="small">Every graph property expressible in <span class="term" data-term="monadic second-order logic">monadic second-order logic</span> (MSO₂: quantify over vertices, edges, <em>and sets</em> of them) can be decided in time $f(k, |\varphi|) \cdot n$ on graphs of treewidth $\le k$.</p>
       </div>
       <p class="small">Arnborg, Lagergren & Seese (1991) extended it to optimisation: find a minimum or maximum set satisfying an MSO formula.</p>
     </div>
@@ -408,18 +574,19 @@
   <h2>FPT, XP, and kernels</h2>
   <div class="cols">
     <div>
-      <div class="box def"><span class="label">with a parameter $k$</span>
+      <div class="box def"><span class="label">with a <span class="term" data-term="parameter \(k\)">parameter</span></span>
         <ul class="small">
-          <li><b>FPT</b>: time $f(k) \cdot n^{O(1)}$, with the exponential confined to $k$. Vertex cover by solution size: $O(1.2738^k + kn)$ (Chen, Kanj & Xia 2010). Anything MSO by treewidth.</li>
-          <li><b>XP</b>: time $n^{f(k)}$, polynomial for each fixed $k$ but with $k$ in the exponent. $k$-clique by brute force is $O(n^k)$.</li>
-          <li><b>W[1]-hard</b>: believed not FPT. $k$-clique, $k$-independent set.</li>
+          <li><b><span class="term" data-term="FPT">FPT</span></b>: time $f(k) \cdot n^{O(1)}$, with the exponential confined to $k$. Vertex cover by solution size: $O(1.2738^k + kn)$ (Chen, Kanj & Xia 2010). Anything MSO by treewidth.</li>
+          <li><b><span class="term">XP</span></b>: time $n^{f(k)}$, polynomial for each fixed $k$ but with $k$ in the exponent. $k$-clique by brute force is $O(n^k)$.</li>
+          <li><b><span class="term">W[1]-hard</span></b>: believed not FPT. $k$-clique, $k$-independent set.</li>
         </ul>
       </div>
     </div>
     <div>
-      <div class="box thm"><span class="label">kernelisation</span>
+      <div class="box thm"><span class="label"><span class="term" data-term="kernelization">kernelisation</span></span>
         <p class="small">A polynomial-time reduction to an equivalent instance of size $g(k)$. A decidable problem is FPT <b>iff</b> it has a kernel.</p>
-        <p class="small"><b>Buss's kernel for vertex cover $\le k$:</b> a vertex of degree $&gt; k$ must be in the cover, so take it and set $k \leftarrow k - 1$. Once none remain, more than $k^2$ edges means "no". Result: $O(k^2)$ edges. The LP (unit 24's half-integrality) gives a $2k$-vertex kernel.</p>
+        <p class="proof-pointer">why: notes (N)</p>
+        <p class="small"><b><span class="term" data-term="Buss's kernel">Buss's kernel</span> for vertex cover $\le k$:</b> a vertex of degree $&gt; k$ must be in the cover, so take it and set $k \leftarrow k - 1$. Once none remain, more than $k^2$ edges means "no". Result: $O(k^2)$ edges. The LP (unit 24's half-integrality) gives a $2k$-vertex kernel.</p>
       </div>
       <p class="small muted">Kernels are exactly what presolve does in a MIP solver (unit 27), with a guarantee.</p>
     </div>
@@ -430,11 +597,49 @@
     hardness lives in. Knapsack's lives in the magnitude of the numbers (pseudo-polynomial).
     Vertex cover's lives in the solution size and in the treewidth, and not in $n$. Clique's
     apparently doesn't live in the solution size, since it is W[1]-hard.</p>
+    <h4>Full proof</h4>
     <p>The "FPT iff kernel" proof is short. Given an $f(k) n^c$ algorithm: if
     $n \ge f(k)$, run it, which takes $n^{c+1}$ time, polynomial, and output a trivial yes
     or no instance. Otherwise the instance itself has size $&lt; f(k)$, and it is its own
     kernel. Hence the interest in <em>polynomial</em> kernels, which not every FPT problem
     has under standard assumptions.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">16 · parameters · example</p>
+  <h2>Buss's kernel, applied once</h2>
+  <div class="cols">
+    <div>
+      <p class="small">Is there a vertex cover of size $\le k = 3$? Graph on 7 vertices: a star $01, 02, 03, 04$ and a path $15, 56$.</p>
+      <table>
+        <thead><tr><th>rule</th><th>what happens</th><th class="num">$k$</th></tr></thead>
+        <tbody>
+          <tr><td>degree $&gt; k$?</td><td>vertex 0 has degree 4 &gt; 3: <b>take it</b>, delete its edges</td><td class="num">2</td></tr>
+          <tr><td>degree $&gt; k$?</td><td>left: $15, 56$; highest degree 2, not &gt; 2</td><td class="num">2</td></tr>
+          <tr><td>edges $&gt; k^2$?</td><td>2 edges $\le 4$: keep going</td><td class="num">2</td></tr>
+          <tr><td>isolated vertices</td><td>drop 2, 3, 4</td><td class="num">2</td></tr>
+        </tbody>
+      </table>
+      <p class="small">Kernel: the path $1\!-\!5\!-\!6$, asking for a cover of size $\le 2$.</p>
+    </div>
+    <div>
+      <div class="box ex"><span class="label">why vertex 0 is forced</span>
+        <p class="small">If 0 were left out, all 4 of its neighbours would have to be in, and $4 &gt; 3 = k$. So any cover of size $\le 3$ contains 0.</p>
+      </div>
+      <div class="box ex"><span class="label">solving the kernel</span>
+        <p class="small">$\{5\}$ covers the path. Put back the forced vertex: cover $\{0, 5\}$, size 2 $\le 3$. <b>Yes.</b></p>
+        <p class="small">The kernel's size depends only on $k$ (at most $k^2$ edges), however many leaves the star had.</p>
+      </div>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>The "more than $k^2$ edges means no" rule: once every vertex has degree $\le k$, each cover
+    vertex covers at most $k$ edges, so $k$ of them cover at most $k^2$. Here there are 2 edges and
+    $k = 2$ after the reduction, so the rule doesn't fire.</p>
+    <p>Add 10 more leaves to vertex 0 and the kernel is identical: that is the point of a kernel. The
+    reference <code>tree_vertex_cover</code> (this graph is a tree) confirms the minimum cover is
+    $\{0, 5\}$.</p>
   </aside>
 </section>
 
