@@ -1,0 +1,102 @@
+#+title: Glossary — unit 16
+#+startup: content latexpreview
+#+options: ^:{}
+
+The terms this unit introduces, in the order the deck meets them. The slides
+stay the definition of record; each entry names the slide it comes from, so a
+term can be looked up here and read properly there.
+
+* States
+
+- dynamic programming (DP) :: Searching a DAG of states in topological order,
+  merging partial solutions that reach the same state. /Slide: DP is a shortest
+  path in a DAG of states./
+- state :: A summary of a partial solution holding exactly what the future needs
+  to know. The "same future" test.
+- transition :: One decision extending a state, with a cost.
+- DAG :: A directed acyclic graph; the states and transitions form one.
+- topological order :: An order of the DAG's nodes with every arc pointing
+  forward.
+- optimal substructure :: An optimal path's prefixes are optimal paths to their
+  states. What makes DP correct.
+- DP running time :: Number of states times transitions per state.
+- reconstruction :: Recovering the optimal solution, not just its value, by
+  walking the table back.
+- 0/1 knapsack DP :: \(B_i(c) = \max(B_{i-1}(c),\ B_{i-1}(c - w_i) + v_i)\).
+  \(O(nC)\). /Slide: Knapsack in O(nC) — and why that is not P = NP./
+- unbounded knapsack :: Each item may be used any number of times; unit 10's
+  pricing problem.
+- pseudo-polynomial :: Polynomial in the numeric value \(C\) but exponential in its
+  \(\log C\) bits of input. Why \(O(nC)\) does not show P = NP.
+- weakly NP-hard :: Hard only when the numbers are huge, like knapsack.
+- strongly NP-hard :: Hard even with numbers polynomial in \(n\), like bin packing
+  and TSP. No pseudo-polynomial algorithm unless P = NP.
+- value-indexed knapsack :: \(W_i(p)\), the least weight achieving value \(p\).
+  Rounding the values gives unit 22's FPTAS.
+
+* Subsets
+
+- bitmask DP :: DP whose state includes a subset stored as a bitmask. Masks in
+  increasing order are topologically sorted.
+- Held–Karp DP :: \(D(S, k) = \min_{j \in S \setminus \{k\}} D(S \setminus \{k\},
+  j) + d_{jk}\): shortest path from city 0 through set \(S\) ending at \(k\).
+  \(O(n^2 2^n)\) time, \(O(n 2^n)\) space; works for asymmetric distances. /Slide:
+  Held–Karp (and Bellman), 1962./
+- MTZ formulation :: The Miller–Tucker–Zemlin TSP model with ordering variables:
+  compact and very weak.
+
+* Treewidth
+
+- tree DP for vertex cover :: \(\mathrm{in}(v) = w_v + \sum_c \min(\mathrm{in}(c),
+  \mathrm{out}(c))\), \(\mathrm{out}(v) = \sum_c \mathrm{in}(c)\). \(O(n)\), because
+  a subtree talks to the rest only through its root. /Slide: On trees, NP-hard
+  problems become easy./
+- separator :: A vertex set whose removal splits a graph into independent parts.
+- tree decomposition :: A tree with a bag \(B_t \subseteq V\) per node such that
+  every edge lies in some bag, and the bags containing each vertex form a connected
+  subtree (Robertson–Seymour). /Slide: Tree decompositions./
+- bag :: The vertex set at one node of a tree decomposition. Property 2 makes it a
+  separator.
+- width :: \(\max |B_t| - 1\) of a decomposition. The \(-1\) makes trees width 1.
+- treewidth \(\mathrm{tw}(G)\) :: The minimum width over all decompositions. Trees
+  1, cycles 2, the \(k \times k\) grid \(k\), \(K_n\) \(n - 1\).
+- \(k\)-tree :: A graph built from a \((k+1)\)-clique by repeatedly adding a
+  vertex joined to a \(k\)-clique. Treewidth exactly \(k\); /partial/ \(k\)-trees
+  are its subgraphs.
+- elimination ordering :: An order to delete vertices: each vertex's bag is itself
+  plus its current neighbours, which are then joined into a clique. Every
+  decomposition comes from one. /Slide: Finding decompositions: elimination
+  orderings./
+- fill-in (elimination) :: The edges added to make a vertex's neighbours a clique
+  before deleting it. The same object sparse Cholesky creates.
+- min-degree heuristic :: Eliminate the vertex of smallest current degree.
+- min-fill heuristic :: Eliminate the vertex adding the fewest fill edges. Exact on
+  chordal graphs.
+- chordal graph :: One where every cycle of four or more vertices has a chord.
+- simplicial vertex :: One whose neighbours already form a clique, so eliminating it
+  adds no fill.
+- DP over a decomposition :: For each bag and each subset of it, the best partial
+  solution below; children combined by grouping their tables on the shared vertices.
+  Total about \(\sum_t 2^{|B_t|}\). /Slide: DP over a decomposition — and predicting
+  its runtime./
+- nice tree decomposition :: One whose nodes are introduce, forget or join, each
+  changing one vertex. Textbook form; the lab skips it.
+- monadic second-order logic (MSO₂) :: Logic quantifying over vertices, edges and
+  sets of them. /Slide: Courcelle's theorem: why all of these work./
+- Courcelle's theorem :: Every MSO₂-expressible graph property is decidable in
+  \(f(k, |\varphi|) \cdot n\) time on treewidth \(\le k\) (1990), with \(f\) a
+  tower of exponentials.
+
+* Parameters
+
+- parameter \(k\) :: A measure of the input, besides its size, that the hardness
+  might live in: solution size, treewidth. /Slide: FPT, XP, and kernels./
+- FPT (fixed-parameter tractable) :: Time \(f(k) \cdot n^{O(1)}\), with the
+  exponential confined to \(k\).
+- XP :: Time \(n^{f(k)}\): polynomial for each fixed \(k\), with \(k\) in the
+  exponent.
+- W[1]-hard :: Believed not FPT, like \(k\)-clique.
+- kernelization :: A polynomial reduction to an equivalent instance of size \(g(k)\).
+  A decidable problem is FPT iff it has a kernel.
+- Buss's kernel :: For vertex cover \(\le k\): take every vertex of degree \(> k\);
+  if more than \(k^2\) edges remain, answer no. Leaves \(O(k^2)\) edges.

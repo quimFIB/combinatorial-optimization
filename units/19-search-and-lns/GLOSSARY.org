@@ -1,0 +1,96 @@
+#+title: Glossary — unit 19
+#+startup: content latexpreview
+#+options: ^:{}
+
+The terms this unit introduces, in the order the deck meets them. The slides
+stay the definition of record; each entry names the slide it comes from, so a
+term can be looked up here and read properly there.
+
+* Heuristics
+
+- variable ordering :: The rule for which variable to branch on next. /Slide:
+  Variable and value ordering./
+- value ordering :: The rule for which value to try first. Matters only in
+  satisfiable subtrees; for a proof every value is tried.
+- fail first :: Branch where a dead end is most likely, so it is found near the
+  root (Haralick & Elliott 1980).
+- succeed first :: Try the value most likely to lead to a solution.
+- first-fail :: Smallest domain first.
+- randomised first-fail :: First-fail with ties broken at random; the source of
+  run-to-run variation in the lab.
+- dom/deg :: Domain size divided by the variable's number of constraints.
+- dom/wdeg :: Domain size divided by weighted degree, where each constraint's weight
+  counts how often it failed. Draws search to the hard core (Boussemart et al.
+  2004).
+- hard core :: The small part of a problem responsible for its difficulty, such as
+  the \(\ne\) clique hidden in the lab's chain instance.
+- impact-based search :: Prefer variables whose assignments shrank the search space
+  most in the past (Refalo 2004).
+- activity-based search :: Prefer variables whose domains change most often; a
+  VSIDS-like count (Michel & Van Hentenryck 2012).
+- symmetry breaking during search (SBDS, SBDD) :: After a failed branch, excluding
+  its symmetric images, instead of adding ordering constraints to the model.
+- heuristics as bets :: A heuristic wins on some instance families and loses on
+  others: dom/wdeg beats first-fail on a hidden core and loses on QCP.
+
+* Heavy tails
+
+- quasigroup completion (QCP) :: Filling a partial Latin square so each row and
+  column has every symbol once. The lab's benchmark. /Slide: The runtime
+  distribution of one instance./
+- runtime distribution :: The distribution of search effort on one instance across
+  random seeds.
+- heavy tail :: \(P(T > t) \sim C t^{-\alpha}\): a Pareto-like tail. With \(\alpha
+  < 1\) the mean is infinite in the limit (Gomes et al. 2000).
+- Pareto (power-law) tail :: A straight line of slope \(-\alpha\) on a log–log plot
+  of \(P(T > t)\), unlike an exponential tail, which curves down.
+- early mistake :: A wrong decision near the root that leaves an exponentially large
+  solution-free subtree to exhaust. The cause of heavy tails.
+- median, p90 :: The 50th and 90th percentiles of a runtime sample: robust
+  summaries where the mean is not.
+
+* Restarts and nogoods
+
+- restart :: Abandoning the current search tree and starting again, keeping some
+  learned state. /Slide: Luby's universal schedule./
+- cutoff :: The node budget after which a run restarts.
+- Las Vegas algorithm :: A randomized algorithm that is always correct but has a
+  random running time.
+- Luby sequence :: \(1, 1, 2, 1, 1, 2, 4, 1, 1, 2, \dots\). Cutoffs \(c \cdot
+  \text{luby}(i)\) are within a log factor of the best fixed cutoff for any unknown
+  distribution (Luby, Sinclair & Zuckerman 1993).
+- geometric restarts :: Cutoffs \(c \cdot r^i\).
+- adaptive restarts :: Restarting when recent conflicts look worse than average
+  (Audemard & Simon 2012).
+- restarts hurt without a tail :: On an instance whose runtimes cluster, restarting
+  only throws away progress; the lab's light instance doubled its mean.
+- nogood :: A set of decisions proved to have no solution below it, recorded as a
+  constraint so search never re-enters it. /Slide: What to remember across
+  restarts./
+- decision nogood :: A nogood naming only decisions. Weak compared with one that
+  records the reasons for failure: clause learning (unit 20).
+- nogoods from restarts :: Nogoods extracted from the refuted branches of the tree
+  at each restart (Lecoutre et al. 2007).
+
+* Large neighbourhood search
+
+- large neighbourhood search (LNS) :: Repeatedly destroy part of a solution and
+  repair it with an exact search engine under a small budget, keeping improvements
+  (Shaw 1998). /Slide: Destroy and repair./
+- destroy operator :: The rule for which part to free, such as a random 30% of the
+  jobs.
+- repair :: Searching the freed part with full propagation and "objective < best".
+- neighbourhood :: The set of solutions reachable by one destroy-and-repair step.
+  Exponentially large, but explored by propagation rather than enumeration.
+- related destroy :: Freeing parts that interact, such as jobs sharing machines near
+  the critical path. Usually beats random destroy.
+- ALNS :: Adaptive LNS, choosing among destroy operators by their past success
+  (Ropke & Pisinger 2006).
+- greedy dispatch :: The lab's starting schedule: place operations one at a time by
+  a simple rule.
+- makespan :: The finishing time of the last operation in a schedule.
+- critical path :: The chain of operations that determines the makespan.
+- portfolio :: Several workers with different strategies running in parallel and
+  sharing one incumbent, as CP-SAT does. /Slide: In the tools./
+- guided local search :: OR-Tools routing's metaheuristic: local search that
+  penalizes features of local optima to escape them.

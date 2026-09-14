@@ -1,0 +1,136 @@
+#+title: Glossary — unit 00
+#+startup: content latexpreview
+#+options: ^:{}
+
+The terms this unit introduces, in the order the deck meets them. The slides
+stay the definition of record; each entry names the slide it comes from, so a
+term can be looked up here and read properly there.
+
+* What makes a problem combinatorial
+
+- optimization problem :: A set of instances. Claims like "vertex cover is
+  NP-hard" are about the problem, meaning every graph. /Slide: Problems and
+  instances./
+- instance :: One concrete input: a pair \((F, c)\) of a feasible set and an
+  objective. "This graph has a cover of size 12" is a claim about an instance.
+- feasible set :: \(F\), the solutions that satisfy the constraints.
+- objective :: \(c : F \to \mathbb{R}\), the value to minimize or maximize.
+- combinatorial :: \(F\) is finite and given /implicitly/: a simple, enumerable
+  space \(S\) plus constraints, \(F = \{x \in S : x \text{ satisfies the
+  constraints}\}\). Finite makes enumeration possible; implicit makes it useless.
+- space :: The enumerable set \(S\) that candidates are drawn from, such as
+  \(\{0,1\}^n\), permutations, or set partitions.
+- encoding size :: The number of bits needed to write an instance down. Running
+  times are measured against it.
+- decision version :: "Is there \(x \in F\) with \(c(x) \le k\)?" Complexity
+  classes are defined on these. /Slide: Four questions about one instance./
+- evaluation version :: "What is \(\min_{x \in F} c(x)\)?"
+- search (optimization) version :: "Find an \(x^*\) achieving the optimum."
+- counting version :: "How many \(x \in F\) have \(c(x) \le k\)?" Can be far
+  harder than the other three: counting perfect matchings is #P-complete, while
+  finding one is polynomial.
+- self-reducibility :: Turning an evaluation oracle into a search algorithm by
+  fixing one decision at a time and asking whether the optimum survives.
+
+* The nine problems
+
+- knapsack :: Choose items under a capacity to maximize value. Space
+  \(\{0,1\}^n\). /Slide: The cast./
+- set cover :: Choose the fewest sets whose union covers every element.
+- assignment :: Match \(n\) workers to \(n\) jobs at minimum cost. The one
+  polynomial problem of the nine: its LP relaxation is already integral.
+- bin packing :: Pack items into the fewest bins of fixed capacity. Space: set
+  partitions.
+- graph colouring :: Colour vertices so adjacent ones differ, using the fewest
+  colours.
+- max-cut :: Split the vertices in two to maximize the edges crossing. No
+  constraints at all; every subset is feasible.
+- TSP :: The shortest tour visiting every city once.
+- job-shop :: Order jobs on machines to minimize the finishing time.
+- vertex cover :: The fewest vertices touching every edge. Space
+  \(\{0,1\}^V\), constraints \(x_u + x_v \ge 1\) for every edge \(uv\).
+- pseudo-polynomial :: Polynomial in the numeric values rather than their bit
+  size, like knapsack's \(O(nC)\) DP. Fast when numbers are small.
+- strongly NP-hard :: NP-hard even when every number is small, as bin packing is.
+  Rules out a pseudo-polynomial algorithm (unit 22).
+- predicate model :: A problem given only as ~is_feasible~ and ~objective~ code.
+  A black box: enumeration is the only algorithm it admits. /Slide: One problem,
+  three descriptions./
+- integer program :: The same problem as linear constraints over integer
+  variables. Exposes linear structure an LP relaxation can use.
+- constraint model :: The same problem in a CP solver's language. Exposes
+  logical structure a propagator can use.
+
+* Spaces and symmetry
+
+- set partition :: A split of \(\{0, \dots, n-1\}\) into unlabelled blocks; how
+  bin packing and colouring are enumerated. /Slide: The space is a modelling
+  choice./
+- Bell number \(B_n\) :: The number of set partitions of \(n\) items:
+  \(1, 1, 2, 5, 15, 52, \dots\) and \(115\,975\) at \(n = 10\).
+- restricted growth string :: A sequence with \(a_0 = 0\) and \(a_i \le 1 +
+  \max(a_0, \dots, a_{i-1})\), where \(a_i\) is item \(i\)'s bin. Each set
+  partition has exactly one, so enumerating these lists every packing once.
+- symmetry :: Different labellings of the same solution, such as renaming the
+  bins. Enumerating them all repeats work.
+- symmetry breaking :: Choosing a space or constraint so each solution is
+  represented once. The biggest single lever on real MIP and CP models (units 05,
+  27).
+
+* Certificates
+
+- certificate :: A short, checkable piece of evidence for a claim about an
+  instance. /Slide: Two kinds of evidence./
+- upper-bound certificate :: For a minimization, a feasible \(x\) with
+  \(c(x) = k\): proves the optimum is at most \(k\). Checking it is polynomial,
+  which is what puts decision versions in NP.
+- lower-bound certificate :: An argument that /no/ \(x \in F\) has \(c(x) <
+  k\). Enumeration is one, exponentially long. Short ones are not expected in
+  general (NP \(\ne\) coNP) but often exist for particular instances; finding
+  them is most of the course.
+- NP, coNP :: Decision problems with short checkable "yes" certificates, and with
+  short checkable "no" certificates.
+- matching :: A set of edges no two of which share an endpoint. /Slide: A lower
+  bound for vertex cover./
+- matching lower bound :: For any matching \(M\) and cover \(C\) in the same
+  graph, \(|C| \ge |M|\). A cover and a matching of equal size prove each other
+  optimal.
+- \(\nu(G)\), \(\tau(G)\) :: The size of a largest matching and of a smallest
+  vertex cover.
+- weak duality :: \(\nu(G) \le \tau(G)\) for every graph: any feasible solution
+  of one problem bounds every solution of the other. The pattern of unit 03.
+- duality gap :: When the best bound is strictly below the optimum. On a
+  triangle \(\nu = 1\) but \(\tau = 2\), so no matching certifies the cover.
+  /Slide: When the bound is not enough./
+- König's theorem :: In a bipartite graph \(\max |M| = \min |C|\), so the
+  matching certificate always exists.
+- bipartite graph :: One whose vertices split into two sides with every edge
+  crossing. Equivalently, no odd cycle.
+- fractional relaxation :: Allowing \(0 \le x \le 1\) instead of \(x \in
+  \{0,1\}\). On the triangle both relaxations reach \(\tfrac32\), so the gap
+  comes from integrality, not from duality.
+
+* An oracle you trust
+
+- oracle :: A slow, obviously correct solver that other code is checked against.
+  Here: brute force. /Slide: Brute force, done once and done right./
+- brute force :: Evaluating every candidate in the space and keeping the best
+  feasible one. The definition of the optimum, executed.
+- self-certifying :: The oracle's own count, ~examined == space.size()~, is the
+  proof that nothing was skipped.
+- problem interface :: ~space()~, ~is_feasible~, ~objective~, ~sense~. Every
+  colib problem has it, which is what makes one oracle work for all nine.
+- ~sense~ :: Whether the problem minimizes or maximizes.
+- differential testing :: Running your algorithm and the oracle on the same
+  generated instances and reporting any disagreement. /Slide: Differential
+  testing./
+- smallest first :: Sweeping instance sizes upward so the first failure is the
+  smallest counterexample, the one you can draw. Used in place of shrinking.
+- ratio mode :: Checking an approximation algorithm against a guaranteed ratio
+  (say ~ratio=2~) instead of equality.
+- max-degree greedy :: Repeatedly take the vertex covering the most uncovered
+  edges. Plausible and wrong: fails on a 7-vertex spider. /Slide: The harness
+  catches what you believe./
+- the wall :: The largest \(n\) brute force can handle in a given time. Sets the
+  test sizes for the rest of the course: \(n \le 12\) for subset spaces,
+  \(n \le 8\) for tours and partitions. /Slide: The wall./

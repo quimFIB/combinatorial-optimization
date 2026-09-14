@@ -1,0 +1,102 @@
+#+title: Glossary — unit 17
+#+startup: content latexpreview
+#+options: ^:{}
+
+The terms this unit introduces, in the order the deck meets them. The slides
+stay the definition of record; each entry names the slide it comes from, so a
+term can be looked up here and read properly there.
+
+\(n\) variables, \(e\) constraints, \(d\) the largest domain size.
+
+* The formalism
+
+- constraint satisfaction problem (CSP) :: Variables \(x_1, \dots, x_n\), finite
+  domains \(D_i\), and constraints over subsets of the variables. /Slide:
+  Constraint satisfaction problems./
+- domain :: The set of values a variable may still take.
+- constraint :: An arbitrary relation over some variables' domains: "≠", "all
+  different", a table of allowed tuples. No linearity required.
+- solution (CSP) :: An assignment of a domain value to every variable satisfying
+  every constraint.
+- optimization in CP :: Adding "objective < best" after each solution and
+  continuing to search.
+- prune vs relax :: CP's core move removes impossible values; MIP's relaxes and
+  bounds. Neither dominates.
+
+* Consistency
+
+- consistency level :: How much local reasoning a propagation step enforces.
+  /Slide: A ladder of consistency levels./
+- node consistency :: Every value satisfies the unary constraints.
+- support :: For a binary constraint on \((x, y)\), a value \(b \in D_y\)
+  compatible with \(a \in D_x\).
+- arc consistency (AC) :: Every value of every variable has a support on every
+  binary constraint.
+- path consistency :: Every consistent pair of values extends to any third
+  variable. Rarely enforced.
+- \(k\)-consistency :: Every consistent assignment to \(k - 1\) variables extends to
+  any \(k\)-th. Costs \(O(n^k d^k)\).
+- strong \(k\)-consistency :: \(j\)-consistency for every \(j \le k\). Strong
+  \(n\)-consistency means backtrack-free search.
+- constraint graph :: Variables as nodes, an edge for each binary constraint.
+- revise :: Removing the values of \(x\) that have no support in \(y\) for one
+  arc. The step AC-3 repeats.
+- AC-3 :: A queue of arcs, revised until none changes anything. \(O(ed^3)\)
+  (Mackworth 1977).
+- AC-4 :: Support counters per value. \(O(ed^2)\) time, heavy in memory.
+- AC-2001 :: AC-3 plus a "last support" pointer per value, reaching \(O(ed^2)\).
+- Freuder's theorem :: On a tree-shaped constraint graph, arc consistency makes
+  search backtrack-free; width \(w\) plus strong \((w+1)\)-consistency does in
+  general (1982).
+- sound :: Never removes a value that belongs to a solution. /Slide: Arc
+  consistent, yet unsatisfiable./
+- complete :: Removes every value that belongs to no solution. Arc consistency is
+  sound but not complete: an odd cycle with two colours is arc consistent and
+  unsatisfiable.
+- confluence :: The fixpoint does not depend on the order propagators run in; only
+  the number of propagations does.
+- domain (generalised arc) consistency :: Every value in every domain belongs to
+  some satisfying tuple of the constraint. /Slide: Bounds consistency vs domain
+  consistency./
+- bounds consistency :: Only each domain's min and max need supports, with the
+  others relaxed to intervals. Interior holes are ignored.
+- redundant (implied) constraint :: A constraint that changes nothing semantically
+  but gives propagation more to work with, like \(\sum_i s_i = n\) in magic series.
+
+* The engine
+
+- propagator :: A function \(p : D \to D\) for one constraint that narrows domains.
+  /Slide: Propagators and the fixpoint./
+- contracting :: \(p(D) \subseteq D\).
+- monotone (propagator) :: \(D \subseteq D'\) implies \(p(D) \subseteq p(D')\).
+  Needed for confluence.
+- idempotent :: Running the propagator twice gives nothing more than running it
+  once. LinearEq and Count are not, so they are re-queued.
+- fixpoint :: The domains after running propagators until none changes anything:
+  the greatest common fixpoint, independent of order (Apt 1999).
+- watch list :: For each variable, the propagators to wake when it changes.
+- propagation (count) :: One propagator call; the measure of inference effort.
+- propagation events :: Finer wake-up reasons: fixed, bounds changed, any change.
+- trailing :: Logging each domain change so it can be undone back to a mark on
+  backtrack. /Slide: Trailing, copying, or recomputing./
+- trail :: The log itself.
+- copying :: Snapshotting the whole store at each search node.
+- recomputation :: Storing only the decisions and replaying them on backtrack.
+- structural sharing :: Immutable domain tuples that share unchanged parts, making
+  copying cheap; the functional engine's approach.
+
+* Search
+
+- CP search loop :: Propagate to a fixpoint; fail on an empty domain; accept when
+  all variables are fixed; otherwise branch and recurse. /Slide: The CP loop, and
+  its two numbers./
+- first-fail :: Branch on the variable with the smallest domain, so dead ends show
+  up near the root.
+- binary branching :: \(x = a\), then \(x \ne a\). The second branch is propagated,
+  unlike \(d\)-way branching with one child per value.
+- node (search) :: One search state; the measure of search effort.
+- failure :: A node where some domain became empty.
+- nodes vs propagations :: Stronger propagation lowers nodes and raises
+  propagations per node. Units 18–21 each trade one against the other.
+- magic series :: A sequence \(s_0, \dots, s_{n-1}\) where \(s_i\) counts the
+  occurrences of \(i\) in the sequence. One of the lab's models.

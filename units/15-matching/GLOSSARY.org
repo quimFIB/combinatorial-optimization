@@ -1,0 +1,115 @@
+#+title: Glossary — unit 15
+#+startup: content latexpreview
+#+options: ^:{}
+
+The terms this unit introduces, in the order the deck meets them. The slides
+stay the definition of record; each entry names the slide it comes from, so a
+term can be looked up here and read properly there.
+
+* Bipartite cardinality
+
+- matching :: A set of edges no two of which share a vertex.
+- free (exposed) vertex :: A vertex no matching edge touches. /Slide: Augmenting
+  paths: Berge's theorem./
+- alternating path :: A path whose edges alternate between outside and inside the
+  matching.
+- augmenting path :: An alternating path with both ends free. Flipping it,
+  \(M \mathbin{\triangle} P\), gives a matching with one more edge.
+- symmetric difference \(\triangle\) :: The edges in exactly one of two sets.
+- Berge's theorem :: A matching is maximum iff it has no augmenting path. Holds in
+  every graph.
+- maximum vs maximal matching :: Largest possible, versus one no edge can be added
+  to.
+- König's theorem :: In a bipartite graph, maximum matching size equals minimum
+  vertex cover size (1931). /Slide: König and Hall: min–max theorems./
+- König's cover construction :: From a maximum matching, let \(Z\) be the vertices
+  reachable from free left vertices by alternating paths; the cover is \((L
+  \setminus Z) \cup (R \cap Z)\). Lab step 2.
+- neighbourhood \(N(S)\) :: The vertices adjacent to some vertex of \(S\).
+- Hall's theorem :: A matching saturating the left side exists iff \(|N(S)| \ge
+  |S|\) for every left set \(S\) (1935). A set with too few neighbours is the
+  certificate of impossibility.
+- saturate :: To match every vertex of a set.
+- perfect matching :: One that saturates every vertex.
+- Hopcroft–Karp :: Phases of BFS layering from all free left vertices, then a DFS
+  taking a maximal set of vertex-disjoint shortest augmenting paths. \(O(\sqrt V)\)
+  phases, \(O(E \sqrt V)\) total; Dinic on the unit-capacity network. /Slide:
+  Hopcroft–Karp: many shortest paths per phase./
+
+* Assignment
+
+- assignment problem :: Match \(n\) rows to \(n\) columns at minimum total cost.
+  /Slide: The assignment LP and its dual./
+- assignment dual :: \(\max \sum_i u_i + \sum_j v_j\) subject to \(u_i + v_j \le
+  c_{ij}\).
+- dual potentials \((u, v)\) :: The dual variables, one per row and column.
+- reduced cost (assignment) :: \(c_{ij} - u_i - v_j\). Dual feasibility means all
+  are nonnegative.
+- doubly stochastic matrix :: A nonnegative matrix with every row and column
+  summing to 1.
+- Birkhoff–von Neumann theorem :: The doubly stochastic matrices are the convex
+  hull of the permutation matrices, so the assignment LP has integral vertices.
+- optimality certificate (assignment) :: A permutation \(\sigma\) plus dual-feasible
+  \((u, v)\) with \(u_i + v_{\sigma(i)} = c_{i\sigma(i)}\) for every \(i\). Checked
+  in \(O(n^2)\) without a solver. Lab step 4.
+- tight edge :: One with zero reduced cost, \(c_{ij} = u_i + v_j\). /Slide: The
+  Hungarian method is primal–dual./
+- Hungarian method :: Keep dual-feasible potentials and a partial assignment on
+  tight edges; grow an alternating tree, and when stuck, shift the duals by the
+  smallest reduced cost \(\delta\) to make a new edge tight. \(O(n^3)\).
+- primal–dual method :: An algorithm that maintains a dual solution explicitly and
+  uses it to steer the primal; the pattern of units 11 and 24.
+- \(\mathrm{minv}\) :: The smallest reduced cost into each column from the tree; it
+  makes each dual step \(O(n)\). Dijkstra's tentative distance in disguise.
+- virtual column 0 :: The lab's trick of pretending the new row is matched to a
+  dummy column, so every row enters through the same loop.
+- cost scaling :: The push–relabel family OR-Tools uses for assignment, suited to
+  large sparse graphs. /Slide: How much faster is production code?/
+
+* General graphs
+
+- odd component :: A connected component with an odd number of vertices. /Slide:
+  Tutte's theorem, and why the bipartite search fails./
+- Tutte's theorem :: \(G\) has a perfect matching iff \(\mathrm{odd}(G - U) \le
+  |U|\) for every vertex set \(U\) (1947).
+- Tutte–Berge formula :: \(\nu(G) = \min_U \tfrac12 (|V| + |U| - \mathrm{odd}(G -
+  U))\).
+- Tutte set :: The \(U\) attaining the formula: the general-graph certificate that
+  no larger matching exists.
+- blossom :: An odd alternating cycle reached at its base. /Slide: Edmonds 1965:
+  shrink the blossom./
+- base :: The blossom vertex where the alternating path enters the cycle.
+- even (outer) and odd (inner) vertices :: Vertices at even or odd distance from a
+  free root in an alternating tree.
+- contraction \(G / B\) :: Shrinking a blossom to one vertex. \(M\) has an
+  augmenting path in \(G\) iff \(M/B\) has one in \(G/B\).
+- blossom algorithm :: Grow alternating trees; contract a blossom when two even
+  vertices of the same tree meet; augment when a free vertex is reached, expanding
+  blossoms along the path. \(O(V^3)\); \(O(E \sqrt V)\) by Micali–Vazirani.
+- ~base[v]~ relabelling :: The lab's contraction: each vertex records the base of
+  its outermost blossom, instead of building \(G / B\).
+- Edmonds–Cobham thesis :: Polynomial running time is the right formal notion of a
+  good algorithm (1965). Why P is the dividing line of unit 22.
+- matching polytope :: Degree rows plus odd-set inequalities \(x(E[S]) \le (|S| -
+  1)/2\) for odd \(S\). The convex hull of matchings (Edmonds 1965). /Slide: The
+  matching polytope./
+- \(E[S]\) :: The edges with both endpoints in \(S\).
+- Padberg–Rao separation :: Finding a violated odd-set inequality with a minimum odd
+  cut via a Gomory–Hu tree.
+- weighted blossom algorithm :: The primal–dual method on the matching polytope,
+  with a dual variable on every odd set. Not built in the lab.
+- double cover :: The bipartite graph with two copies of every vertex, used in the
+  lab to compute the degree-constraint LP's optimum.
+
+* Stable matching
+
+- stable matching :: A perfect matching with no blocking pair. /Slide:
+  Gale–Shapley./
+- blocking pair :: A proposer and receiver who both prefer each other to their
+  partners.
+- Gale–Shapley algorithm :: Free proposers propose down their lists; receivers keep
+  the best offer so far. At most \(n^2\) proposals.
+- proposer-optimal :: Every proposer gets their best stable partner, and every
+  receiver their worst.
+- strategy-proof (for proposers) :: Truthful ranking is a dominant strategy for
+  proposers, but not for receivers.

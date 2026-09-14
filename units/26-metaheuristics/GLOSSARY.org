@@ -1,0 +1,105 @@
+#+title: Glossary — unit 26
+#+startup: content latexpreview
+#+options: ^:{}
+
+The terms this unit introduces, in the order the deck meets them. The slides
+stay the definition of record; each entry names the slide it comes from, so a
+term can be looked up here and read properly there.
+
+* Local search, engineered
+
+- local search :: Repeatedly apply an improving move from a neighbourhood until
+  none exists.
+- 2-opt :: Remove edges \(ab\) and \(cd\), add \(ac\) and \(bd\), reversing the
+  stretch between (Croes 1958). /Slide: 2-opt, neighbour lists, don't-look bits./
+- neighbour list :: Each city's \(k\) nearest cities, sorted by distance. An
+  improving 2-opt move is visible from one endpoint's list, and the scan can stop at
+  the first neighbour farther than the tour edge.
+- don't-look bits :: Skip a city whose surroundings have not changed since it last
+  failed to improve; re-queue the four endpoints of every applied move (Bentley
+  1992).
+- sweep :: Scanning every city for an improving move in turn, without don't-look
+  bits.
+- nearest neighbour tour :: Start anywhere and always go to the closest unvisited
+  city. A common starting tour.
+- Or-opt :: Move a segment of 1–3 cities elsewhere, possibly reversed (Or 1976).
+  /Slide: From 2-opt to Lin–Kernighan and LKH./
+- 3-opt :: Remove three edges and reconnect.
+- Lin–Kernighan (LK) :: A variable-depth sequence of exchanges, extended while the
+  cumulative gain stays positive (1973).
+- LKH :: Helsgaun's LK implementation with 5-opt moves and α-nearness candidates.
+  The reference TSP heuristic.
+- α-nearness :: How much the minimum 1-tree grows if an edge is forced in (unit 11).
+  Picks candidate edges better than distance.
+- Concorde :: The exact TSP solver (unit 09), the other half of "state of the art"
+  for TSP.
+
+* Metaheuristics
+
+- metaheuristic :: A general strategy for escaping local optima, wrapped around a
+  local search. Promises nothing; only measurement supports one. /Slide:
+  Annealing, tabu, GRASP, ILS, ALNS./
+- simulated annealing :: Accept a worsening move \(\Delta\) with probability
+  \(e^{-\Delta/T}\), lowering \(T\) over time.
+- Metropolis acceptance :: That acceptance rule: always take improvements, take
+  worsening moves with probability \(e^{-\Delta/T}\).
+- temperature \(T\) :: The parameter controlling how often worsening moves are
+  accepted. Tune it in units of a typical \(\Delta\).
+- cooling schedule :: How \(T\) falls. /Geometric/ cooling multiplies it by a
+  constant each step. Hajek's \(T_k \ge c / \log k\) guarantees convergence and is
+  too slow to use.
+- tabu search :: Take the best non-tabu move even if it worsens; recent moves are
+  forbidden for a /tenure/, unless an /aspiration criterion/ overrides (Glover
+  1986).
+- GRASP :: Greedy randomized adaptive search: restart from randomized greedy
+  constructions, each followed by local search (Feo & Resende 1995).
+- restricted candidate list :: The near-best choices a GRASP construction picks from
+  at random; its greediness \(\alpha\) sets how near.
+- iterated local search (ILS) :: Kick the local optimum and descend again, keeping
+  the result by an acceptance rule.
+- kick (perturbation) :: The move that leaves a local optimum in ILS.
+- double bridge :: A 4-opt kick \(A\,B\,C\,D \to A\,C\,B\,D\) that 2-opt and 3-opt
+  cannot undo in one step.
+- multi-start :: Independent local searches from fresh starting points.
+- ALNS :: Adaptive large neighbourhood search: destroy and repair, choosing operators
+  by adaptive weights (unit 19).
+- adaptive weights :: Scores per operator, updated from how well each has done, that
+  set the probability of choosing it.
+- random removal, worst removal :: Destroy operators that remove random customers,
+  or the customers costing most in their current position.
+- greedy insertion :: Repair by inserting each removed customer where it adds least
+  cost.
+- genetic algorithm :: A population recombined by crossover and mutated. Usually a
+  poor fit for structured problems. /Slide: Genetic algorithms: usually the wrong
+  answer, with one notable exception./
+- crossover :: Combining two parent solutions into a child.
+- memetic algorithm :: A genetic algorithm whose children are improved by local
+  search.
+- hybrid genetic search (HGS) :: The memetic algorithm for vehicle routing (Vidal et
+  al.), among the best CVRP heuristics: strong local search, route-preserving
+  crossover, diversity management.
+- giant tour :: A CVRP solution written as one sequence of customers, split into
+  routes afterwards; what HGS's crossover operates on.
+
+* Honest comparison
+
+- equal budget :: The same wall-clock time on the same machine, or the same number of
+  evaluations, for every method compared. /Slide: How "our metaheuristic beat
+  theirs" goes wrong./
+- training set :: Instances used for tuning, kept separate from the test instances.
+- state-of-the-art baseline :: The best known method, engineered equally; without
+  it a comparison has not been made.
+- time-to-target (TTT) plot :: The empirical CDF of the time each seed takes to reach
+  a fixed target value, with failures kept in the denominator (Aiex, Resende &
+  Ribeiro 2007).
+- empirical CDF :: The fraction of runs finished by each time.
+- Mann–Whitney U test :: A rank-based test of whether one algorithm's times tend to
+  be smaller. No normality assumption; capped runs count as the cap.
+- not rejecting ≠ equal :: A non-significant test means the data cannot tell, not
+  that the methods are the same.
+- multiple comparisons :: Running many tests raises the chance of a false positive:
+  six at \(\alpha = 0.05\) give about 26% (unit 28).
+- guided local search (GLS) :: OR-Tools routing's metaheuristic: penalizes features
+  of local optima to escape them. /Slide: Equal budgets: TSP and CVRP./
+- best found :: The best solution any method reached, used as the reference when no
+  optimum or bound is known.

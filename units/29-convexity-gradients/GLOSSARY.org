@@ -1,0 +1,92 @@
+#+title: Glossary — unit 29
+#+startup: content latexpreview
+#+options: ^:{}
+
+The terms this unit introduces, in the order the deck meets them. The slides
+stay the definition of record; each entry names the slide it comes from, so a
+term can be looked up here and read properly there.
+
+* Convexity
+
+- convex function :: \(f(\theta x + (1 - \theta) y) \le \theta f(x) + (1 -
+  \theta) f(y)\). For differentiable \(f\), \(f(y) \ge f(x) + \nabla f(x)^\top (y -
+  x)\): the tangent plane is a global under-estimator. /Slide: Convex, smooth,
+  strongly convex./
+- global minimum from a zero gradient :: For convex \(f\), \(\nabla f(x) = 0\)
+  means \(x\) is a global minimum. Local optimality is global, unlike in
+  combinatorial problems.
+- subgradient :: Any \(g\) with \(f(y) \ge f(x) + g^\top (y - x)\) for all \(y\);
+  the gradient's replacement where \(f\) has a kink (unit 11).
+- \(L\)-smooth :: \(\|\nabla f(x) - \nabla f(y)\| \le L \|x - y\|\). Bounds how far
+  a gradient step can go: step \(1/L\). For \(\frac12 x^\top Q x\), \(L =
+  \lambda_{\max}(Q)\).
+- \(\mu\)-strongly convex :: \(f(y) \ge f(x) + \nabla f(x)^\top (y - x) +
+  \frac{\mu}{2}\|y - x\|^2\). Bounds how flat the bottom can be; \(\mu =
+  \lambda_{\min}(Q)\) for a quadratic.
+- condition number \(\kappa\) :: \(L / \mu\). Decides how many steps a first-order
+  method needs.
+- central-difference gradient check :: Comparing a gradient with \((f(x + h e_i) -
+  f(x - h e_i)) / 2h\), error \(O(h^2)\).
+- Rosenbrock function :: A standard non-convex test function with a curved narrow
+  valley.
+
+* First-order methods
+
+- first-order method :: An optimization method that uses only function values and
+  gradients. /Slide: Gradient descent, momentum, and the lower bound./
+- gradient descent (GD) :: \(x \leftarrow x - \frac1L \nabla f(x)\). Error
+  \(LR^2/2k\) for smooth convex \(f\), \((1 - 1/\kappa)^k\) when strongly convex,
+  with \(R = \|x_0 - x^*\|\).
+- momentum :: Adding a multiple of the previous step to the current one.
+- heavy ball :: GD plus \(\beta (x_k - x_{k-1})\) (Polyak 1964). Rate
+  \((\frac{\sqrt\kappa - 1}{\sqrt\kappa + 1})^k\) on quadratics with tuned
+  parameters; no general guarantee.
+- Nesterov's accelerated gradient :: Take the gradient at
+  \(x_k + \frac{k-1}{k+2}(x_k - x_{k-1})\). Error \(2LR^2/(k+1)^2\) for smooth convex \(f\) (1983).
+- first-order lower bound :: Any method whose iterates lie in the span of past
+  gradients has error \(\Omega(LR^2/k^2)\) on some smooth convex function, so
+  Nesterov's method is optimal up to constants.
+- linear convergence :: Error shrinking by a constant factor per iteration, like
+  \((1 - 1/\kappa)^k\).
+- stochastic gradient :: An unbiased estimate of \(\nabla f\), such as from a
+  mini-batch. Rate drops to \(O(1/\sqrt k)\) for convex \(f\).
+- variance reduction :: SAG, SVRG: recovering linear rates for finite sums.
+- conjugate gradient (CG) :: A Krylov method optimal on quadratics, needing no
+  parameters. /Slide: Measured: iterations to 1e−8./
+- L-BFGS :: A quasi-Newton method that builds curvature from recent gradients with
+  limited memory. The default with unknown conditioning.
+
+* Constraints
+
+- projection \(\Pi_C\) :: The closest point of \(C\) to a given point. /Slide:
+  Projected gradient and Frank–Wolfe./
+- projected gradient :: \(x_{k+1} = \Pi_C(x_k - \frac1L \nabla f(x_k))\). Same
+  rates as GD when projecting is cheap.
+- projection onto the simplex :: Sort, take prefix sums, find a threshold, clip.
+  \(O(n \log n)\). Lab step 3.
+- probability simplex :: \(\{x \ge 0 : \sum_i x_i = 1\}\).
+- linear minimization oracle :: A routine returning \(\arg\min_{s \in C} g^\top
+  s\): an LP over \(C\), or a combinatorial algorithm over a combinatorial polytope.
+- Frank–Wolfe (conditional gradient) :: \(s_k\) from the linear oracle, then \(x_{k+1}
+  = x_k + \frac{2}{k+2}(s_k - x_k)\) (1956). No projection. Rate \(O(LD^2/k)\),
+  with \(D\) the diameter of \(C\).
+- Frank–Wolfe gap :: \(g_k = \nabla f(x_k)^\top (x_k - s_k) \ge f(x_k) - f^*\): a
+  free certificate of suboptimality.
+
+* KKT
+
+- KKT conditions :: For convex \(\min f(x)\) with \(g_i(x) \le 0\): stationarity
+  \(\nabla f + \sum_i \lambda_i \nabla g_i = 0\), feasibility, \(\lambda \ge 0\),
+  and complementarity \(\lambda_i g_i(x^*) = 0\) (Karush 1939; Kuhn & Tucker
+  1951). /Slide: The KKT conditions, and the LP case./
+- Lagrange multiplier \(\lambda_i\) :: The price on constraint \(i\) in the KKT
+  conditions.
+- stationarity :: The gradient of the Lagrangian vanishes.
+- complementarity :: A constraint with slack has zero multiplier. For an LP this is
+  exactly unit 03's complementary slackness.
+- Slater's condition :: A strictly feasible point exists. Makes KKT necessary for
+  convex problems; not needed with linear constraints.
+- KKT residuals :: How far a point and multipliers are from satisfying each
+  condition. "Optimal" in floating point means residuals below a tolerance.
+- QP :: A quadratic program: \(\min \frac12 x^\top Q x + q^\top x\) under linear
+  constraints; stationarity reads \(Qx + q + A^\top \lambda = 0\).

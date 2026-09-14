@@ -17,7 +17,7 @@ uv sync
 ## Working a unit
 
 ```fish
-uv run co slides 01          # theory: N = notes beside slide, R = reading mode
+uv run co slides 01          # theory: N = notes beside slide, R = reading mode, G = glossary
 uv run co lab 01             # the lab sheet
 uv run co test 01            # after each step; ends with a progress line
 uv run co then 01            # the solver comparison, once the tests pass
@@ -57,10 +57,14 @@ colib/              shared scaffolding, not the lesson
   vrptw.py          VRPTW instances, Solomon's files, SCIP's lazy-cut plumbing (capstone)
   testing.py        pytest plugin: load_lab, "not started" skips, progress line
   cli.py            the `co` command
+  glossary.py       GLOSSARY.org -> glossary.js, and the checks `co glossary` reports
 slides/             deck.css + deck.js shared by every deck
+  tools/            authoring checks: deck-check.sh (overflow, terms, keys), org-latex-check.sh
 data/solomon/       Solomon's instances, downloaded by `co data` (regenerable, not course material)
 units/NN-slug/
   slides.html       theory, with <aside class="notes"> on every content slide
+  GLOSSARY.org      the unit's terms in deck order, each naming its slide; math previews inline
+  glossary.js       generated from GLOSSARY.org for the slides' term popovers (`co glossary`)
   lab/
     README.md       the lab sheet: steps, time per step, "done when", checkpoint
     lab.py          stubs raising NotImplementedError: this is the file you edit
@@ -121,6 +125,20 @@ tests, and a `then.py` whose numbers the slides and lab sheet quote.
 - **Slides state; notes explain.** A slide holds a definition, theorem, figure or
   table. The notes hold the argument, the history, and what later unit the idea
   feeds. Every content slide has notes.
+- **Ideas on the slide, proofs in the notes.** The course is for grasping and using
+  the concepts. Where a result has a proof worth knowing, the slide says why it is
+  true in a sentence or two of plain words, and the full argument goes in the notes
+  under a `<h4>Full proof</h4>`, with `<p class="proof-pointer">full proof in the
+  notes (N)</p>` on the slide.
+- **A small worked example for every definition.** Prefer one running example the
+  whole deck returns to (unit 01's four-row polygon) over a fresh one per slide.
+  Examples go in `<div class="box ex">`, with numbers you have checked.
+- **Mark glossary terms.** Wrap a term's first use on a slide in
+  `<span class="term">…</span>`, adding `data-term="…"` when the words differ from the
+  glossary entry. Clicking it shows the definition from the unit's `glossary.js`,
+  which `co slides` builds from `GLOSSARY.org`; `co glossary` rebuilds every unit
+  and reports a marked term the glossary lacks, or a glossary slide link that names
+  no slide.
 - **Figures are inline SVG** using the classes in `deck.css`, so they follow dark
   mode. Numbers on slides come from running code, never from memory.
 - **A lab is 2–3 hours and 4–6 steps.** Each step is one function of 10–40 lines,
@@ -136,6 +154,12 @@ tests, and a `then.py` whose numbers the slides and lab sheet quote.
   route" fold. Where an algorithm genuinely needs mutable state (a simplex
   tableau, a CDCL trail), the functional solution may keep it local to one
   function, and the lab sheet should say so rather than pretend.
+- **Every unit has a glossary.** `GLOSSARY.org` defines the unit's terms as an
+  Org description list (`- term :: definition`), grouped by the deck's sections,
+  each entry naming the slide it comes from; the slides stay the definition of
+  record. Write math as `\(…\)`, not `$…$`, so `#+startup: latexpreview` renders
+  it. Don't let a wrapped line start with `-`, `+` or `1.`: Org reads it as a new
+  list item.
 - **Check the deck for overflow.** Open `units/NN-*/slides.html?check=1`: it visits
   every slide and replaces the page with a list of display equations wider than
   their column and slides taller than the frame. Long equations fail silently

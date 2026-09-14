@@ -1,0 +1,113 @@
+#+title: Glossary — unit 04
+#+startup: content latexpreview
+#+options: ^:{}
+
+The terms this unit introduces, in the order the deck meets them. The slides
+stay the definition of record; each entry names the slide it comes from, so a
+term can be looked up here and read properly there.
+
+Convention throughout: \(\max\{c^\top x : Ax \le b\}\) with
+\(A \in \mathbb{R}^{m \times n}\), every constraint a row, and slacks
+\(s = b - Ax\).
+
+* Is LP in P?
+
+- bit size \(L\) :: The number of bits needed to write \(A, b, c\) as integers.
+  "Polynomial" for LP means polynomial in \(L\). /Slide: What was known, and what
+  wasn't./
+- strongly polynomial :: Polynomial in \(m\) and \(n\) alone, independent of the
+  numbers. Known for network flows; open for general LP (one of Smale's problems).
+- NP ∩ coNP :: Where LP was known to sit before 1979: short certificates both ways
+  (units 01, 03), but no polynomial algorithm.
+- Karmarkar's algorithm :: The 1984 polynomial interior-point method that also
+  looked practical.
+
+* The ellipsoid method
+
+- ellipsoid :: \(E = \{z : (z - x)^\top P^{-1} (z - x) \le 1\}\), described by
+  a centre \(x\) and a positive definite matrix \(P\). /Slide: The update, and
+  why the volume shrinks./
+- ellipsoid method :: Start with a ball containing the feasible set. If the
+  centre is infeasible, keep the half on the feasible side of a violated row, wrap
+  it in the smallest ellipsoid, repeat. Stop when the centre is feasible or the
+  ellipsoid is too small to hold the set. /Slide: The idea./
+- central cut :: A cut through the current centre, \(\{a^\top z \le a^\top x\}\),
+  keeping exactly half the ellipsoid.
+- ellipsoid update :: \(g = Pa / \sqrt{a^\top P a}\), \(x' = x - g/(n+1)\),
+  \(P' = \frac{n^2}{n^2 - 1}(P - \frac{2}{n+1} g g^\top)\).
+- volume ratio :: Each step shrinks volume by a factor below
+  \(e^{-1/(2(n+1))}\), whatever the cut.
+- iteration bound :: If a nonempty feasible set contains a ball of radius \(r\)
+  inside the starting ball of radius \(R\), then \(k \ge 2n(n+1) \ln(R/r)\) steps
+  suffice. Lab step 5.
+- \(R\) and \(r\) from the data :: Cramer's rule bounds a solution's size by
+  \(2^{O(L)}\); relaxing each \(b_i\) by \(2^{-O(L)}\) gives a flat polytope a ball
+  of radius \(2^{-O(L)}\) without changing feasibility. /Slide: From feasibility
+  to polynomial-time LP./
+- sliding objective :: Turning the feasibility method into optimization by adding
+  \(c^\top x \ge \gamma\) and raising \(\gamma\).
+- Khachiyan's theorem :: LP feasibility is decided in \(O(n^2 L)\) ellipsoid
+  iterations with polynomial precision, so LP is in P (1979).
+- separation oracle :: A procedure that, given a point, says it is feasible or
+  returns a violated inequality. All the ellipsoid method needs, even for
+  exponentially many constraints (unit 09). /Slide: Useless in practice,
+  indispensable in theory./
+
+* Interior-point methods
+
+- log barrier :: \(-\sum_i \log(b_i - a_i^\top x)\), a penalty that is finite
+  inside the polyhedron and infinite on its boundary. /Slide: The log barrier and
+  the central path./
+- barrier function \(f_t\) :: \(f_t(x) = -t\, c^\top x - \sum_i \log(b_i -
+  a_i^\top x)\). The parameter \(t\) weighs the objective against the barrier.
+- analytic centre :: The minimizer of the barrier alone (\(t \to 0\)). Depends
+  on the description, not just the shape: a redundant row moves it.
+- central path :: The curve of minimizers \(x^*(t)\) as \(t\) grows, running
+  from the analytic centre to an optimal point.
+- Newton's method :: Minimizing \(f_t\) by repeatedly solving with its Hessian
+  \(A^\top \mathrm{diag}(1/s^2) A\). Converges quadratically near the minimizer.
+- centering :: Minimizing \(f_t\) for one fixed \(t\).
+- backtracking line search :: Shrinking the Newton step until it both decreases
+  \(f_t\) enough and stays strictly inside the polyhedron. Lab step 2.
+- Newton decrement :: The predicted decrease from a Newton step, used as the
+  stopping test for centering.
+- dual point on the path :: At \(x^*(t)\), \(y = 1/(t s)\) is dual feasible:
+  \(A^\top y = c,\ y > 0\). /Slide: Duality comes for free on the path./
+- duality gap on the path :: Exactly \(m/t\). To reach accuracy \(\varepsilon\),
+  run until \(t \ge m/\varepsilon\).
+- approximate complementary slackness :: \(y_i s_i = 1/t\) in every row, instead
+  of unit 03's \(y_i s_i = 0\).
+- path following :: Centre at \(t\), multiply \(t\) by \(\mu\), re-centre from
+  the previous point. With \(\mu = 1 + 1/\sqrt m\) the total is
+  \(O(\sqrt m \log(m/\varepsilon))\) Newton steps.
+- primal–dual interior-point method :: Newton's method on the perturbed KKT
+  system \(Ax + s = b,\ A^\top y = c,\ y_i s_i = \mu\) in \((x, y, s)\) together,
+  driving \(\mu \to 0\). What production solvers run.
+- predictor–corrector :: Mehrotra's (1992) long-step scheme; 20–60 iterations
+  almost regardless of size.
+- self-concordance :: The property of the log barrier behind the
+  \(O(\sqrt m)\) iteration bound (Nesterov & Nemirovski, 1994).
+- floating-point breakdown :: Past \(t \approx 10^6\), slacks near \(10^{-7}\)
+  push the Hessian's condition number beyond \(10^{14}\) and the Newton direction
+  becomes noise. /Slide: Where floating point ends the pure barrier method./
+- crossover :: Moving an interior-point solution to a vertex of equal value with
+  simplex-like steps, so branch-and-bound and sensitivity analysis get a basis
+  (Megiddo 1991).
+- relative interior of the optimal face :: Where an IPM's answer lies when the
+  optimum is not unique: strictly inside the set of optimal points, not at a
+  vertex.
+
+* Choosing between them
+
+- cold solve :: Solving from scratch. IPM iterations barely grow with size, each
+  one a sparse Cholesky factorization. /Slide: Cold solves: IPM iterations barely
+  grow./
+- normal-equations matrix :: \(A\,\mathrm{diag}(y/s)\,A^\top\), the matrix each
+  IPM iteration factorizes. A few dense columns make it dense.
+- fill-in :: Nonzeros a factorization creates where the matrix had zeros.
+- concurrent solving :: Running simplex and IPM in parallel and taking the first
+  answer, because no rule predicts the winner.
+- warm solve :: Re-solving after a small change. Simplex re-solves 25× faster than
+  cold; IPM gains nothing, because the old optimum is on the boundary, the worst
+  place to start a barrier method. /Slide: Warm solves: why branch-and-bound wants
+  simplex./

@@ -1,0 +1,88 @@
+#+title: Glossary — unit 13
+#+startup: content latexpreview
+#+options: ^:{}
+
+The terms this unit introduces, in the order the deck meets them. The slides
+stay the definition of record; each entry names the slide it comes from, so a
+term can be looked up here and read properly there.
+
+* Greedy and matroids
+
+- ground set \(E\) :: The elements to choose from. /Slide: Independence systems,
+  and one algorithm for all of them./
+- independence system :: A family \(\mathcal{I}\) of subsets of \(E\) containing
+  \(\emptyset\) and closed under taking subsets.
+- independent set :: A member of \(\mathcal{I}\).
+- greedy algorithm (max weight) :: Sort by decreasing weight; take each
+  positive-weight element if the chosen set stays independent.
+- independence oracle :: A function answering "is this set independent?". The lab's
+  greedy is written against one, never against a data structure.
+- hereditary axiom :: A subset of an independent set is independent. /Slide: The
+  matroid axioms./
+- exchange axiom :: If \(A, B\) are independent and \(|A| < |B|\), some \(b \in B
+  \setminus A\) has \(A + b\) independent.
+- matroid :: An independence system satisfying the exchange axiom.
+- basis (matroid) :: A maximal independent set. All bases of any subset have the
+  same size.
+- rank \(r(S)\) :: The size of a basis of \(S\).
+- graphic matroid :: The forests of a graph.
+- uniform matroid \(U_{k,n}\) :: All sets of at most \(k\) of \(n\) elements.
+- partition matroid :: At most \(c_b\) elements from each block \(b\) of a
+  partition of \(E\).
+- linear matroid :: The linearly independent sets of a list of vectors. Where the
+  axioms come from (Whitney 1935).
+- transversal matroid :: The sets matchable into the other side of a bipartite
+  graph. Unit-time jobs with deadlines form one.
+- Rado–Edmonds theorem :: Greedy finds a maximum-weight independent set for every
+  weight function if and only if the system is a matroid. /Slide: Rado–Edmonds:
+  greedy works exactly on matroids./
+- exchange witness :: A pair \((A, B)\) violating the exchange axiom. Weighting
+  \(A\) at \(1 + \varepsilon\) and \(B \setminus A\) at 1 builds an instance where
+  greedy fails. Lab step 3 finds it.
+- Kruskal's algorithm :: Greedy on the graphic matroid: a minimum or maximum
+  spanning forest.
+- incidence vector :: The 0/1 vector of a subset of \(E\).
+- matroid polytope :: \(P(M) = \{x \ge 0 : \sum_{e \in S} x_e \le r(S)\ \forall S
+  \subseteq E\}\), the convex hull of the independent sets (Edmonds 1970). TDI, with
+  exponentially many rows. /Slide: The matroid polytope./
+- greedy dual certificate :: \(y_{S_i} = w(e_i) - w(e_{i+1})\) on the prefixes of
+  greedy's order: a dual solution proving greedy optimal by LP duality.
+
+* Two matroids
+
+- matroid intersection :: The largest set independent in two matroids \(M_1\)
+  and \(M_2\) at once. /Slide: Matroid intersection./
+- common independent set :: A set independent in both.
+- Edmonds' intersection theorem :: \(\max |I| = \min_{A \subseteq E} r_1(A) +
+  r_2(E \setminus A)\). König's theorem is the case of two partition matroids.
+- rainbow spanning forest :: A forest using at most one edge of each colour:
+  graphic intersected with a partition matroid.
+- exchange graph :: Arcs \(x \to y\) (\(x \in I\), \(y \notin I\)) when \(I - x +
+  y\) is independent in \(M_1\), and \(y \to x\) when it is independent in \(M_2\).
+  Sources can be added to \(I\) in \(M_1\), sinks in \(M_2\).
+- augmenting path (matroid) :: A shortest source-to-sink path in the exchange
+  graph; flipping it grows \(I\) by one. It must be shortest for the result to stay
+  independent.
+- three-matroid intersection :: NP-hard: a directed Hamiltonian path is a common
+  independent set of size \(n - 1\) in a graphic and two partition matroids.
+  /Slide: Two is polynomial, three is NP-hard./
+- matroid parity :: A generalization of matching to matroids; polynomial for linear
+  matroids, intractable in the oracle model.
+
+* Beyond matroids: submodularity
+
+- marginal gain :: \(f(A + e) - f(A)\), what adding \(e\) contributes. /Slide:
+  Diminishing returns, and 1 − 1/e./
+- submodular function :: \(f(A + e) - f(A) \ge f(B + e) - f(B)\) whenever \(A
+  \subseteq B\) and \(e \notin B\): diminishing returns. Rank and coverage
+  functions are submodular.
+- monotone :: \(f(A) \le f(B)\) whenever \(A \subseteq B\).
+- submodular function minimization :: Polynomial; separation over the matroid
+  polytope is an instance of it.
+- maximum coverage :: Choose \(k\) sets to cover the most elements.
+- \(1 - 1/e\) guarantee :: For monotone submodular \(f\) under a cardinality limit,
+  greedy reaches at least \((1 - 1/e) \cdot \mathrm{OPT}\) (Nemhauser, Wolsey &
+  Fisher 1978). Best possible for max coverage unless P = NP (Feige 1998).
+- worst-case guarantee :: A floor, not a forecast: on random instances greedy
+  reached 93–99% against the 63% bound. /Slide: The guarantee against the typical
+  case./

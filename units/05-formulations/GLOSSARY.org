@@ -1,0 +1,111 @@
+#+title: Glossary — unit 05
+#+startup: content latexpreview
+#+options: ^:{}
+
+The terms this unit introduces, in the order the deck meets them. The slides
+stay the definition of record; each entry names the slide it comes from, so a
+term can be looked up here and read properly there.
+
+Convention throughout: MILPs are minimization problems, so LP bounds are lower
+bounds.
+
+* Formulations and relaxations
+
+- MILP :: A mixed-integer linear program, \(\min\{c^\top x : Ax \le b,\ x_j \in
+  \mathbb{Z} \text{ for } j \in I\}\). /Slide: Integer programs and their LP
+  relaxation./
+- IP :: A MILP in which every variable is integer.
+- LP relaxation :: The MILP with integrality dropped. Its optimum \(z_{LP}\) is a
+  lower bound: \(z_{LP} \le z_{IP}\).
+- integrality gap :: Of an instance, \(z_{IP} - z_{LP}\) or the ratio
+  \(z_{IP} / z_{LP}\). Of a formulation for a problem class, the worst ratio over
+  all instances (unit 24).
+- pruning :: Discarding a branch whose LP bound is no better than the best known
+  solution (unit 07).
+- incumbent :: The best integer solution found so far.
+- global bound :: The best lower bound proved so far. Optimality is proved when it
+  meets the incumbent.
+- formulation :: A polyhedron \(P\) whose integer points are exactly the
+  solutions, \(P \cap \mathbb{Z}^n = S\). /Slide: Formulations are polyhedra, and
+  some are better./
+- stronger formulation :: \(P_2\) is at least as strong as \(P_1\) if \(P_2
+  \subseteq P_1\). Its bound is then at least as good for every objective. Two
+  formulations can also be incomparable.
+- ideal formulation :: \(\mathrm{conv}(S)\), the convex hull of the solutions.
+  Over it the LP optimum is integral, so the MILP is an LP. Usually exponentially
+  large and as hard to find as the problem.
+- Meyer's theorem :: For rational data, \(\mathrm{conv}(S)\) is a polyhedron
+  (1974). With irrational data it need not be.
+
+* Strength
+
+- big-M constraint :: \(x \le My,\ y \in \{0,1\}\), switching a continuous
+  quantity off with a binary. /Slide: Big-M, and why the M matters./
+- valid M :: Any \(M\) at least the true upper bound \(u\) on \(x\).
+- tightest valid M :: The best upper bound on \(x\) you can prove. A larger
+  \(M\) lets the LP set \(y = x/M\), opening a facility "a little" and weakening
+  the bound; it also mixes magnitudes in one row, inviting unit 02's tolerance
+  problems.
+- indicator constraint :: \(y = 1 \Rightarrow a^\top x \le b\), given to the
+  solver directly so it handles the switch by branching or by choosing \(M\)
+  itself.
+- disjunctive formulation :: The convex hull of a union of polyhedra, obtained by
+  copying variables (Balas 1979).
+- UFL :: Uncapacitated facility location: choose facilities to open and assign
+  every customer, minimizing opening plus service cost.
+- aggregated formulation :: One linking row per facility, \(\sum_j x_{ij} \le C
+  y_i\). /Slide: Aggregated against disaggregated./
+- disaggregated formulation :: One linking row per facility–customer pair,
+  \(x_{ij} \le y_i\). Strictly stronger: its rows sum to the aggregated ones, and
+  it forbids \(y_i = 1/C\) for a facility serving one customer.
+- capacitated facility location (CFL) :: UFL with capacities, \(\sum_j d_j x_{ij}
+  \le u_i y_i\). /Slide: When a constraint is implied, and still helps./
+- linking row :: \(x_{ij} \le y_i\) added to CFL. Removes no integer solution but
+  cuts off fractional ones.
+- cover row :: \(\sum_i u_i y_i \ge \sum_j d_j\): open capacity must cover total
+  demand. Valid, and it tightens the relaxation.
+- valid inequality :: One satisfied by every integer solution. Adding it never
+  changes the MILP and may tighten its relaxation. All of unit 08 in one sentence.
+- extended formulation :: A description in extra variables whose projection is
+  the polytope you want. Can replace exponentially many facets with polynomially
+  many rows. /Slide: Extended formulations: add variables, lose facets./
+- permutahedron :: The convex hull of all permutations of \((1, \dots, n)\).
+  \(2^n - 2\) facets, but an \(O(n \log n)\) extended formulation via a sorting
+  network.
+- extension complexity limits :: The TSP, cut and stable-set polytopes have no
+  polynomial-size extended formulation (Fiorini et al. 2012), nor does the perfect
+  matching polytope (Rothvoss 2014), though matching is polynomial.
+- nonnegative rank :: The rank measure of the slack matrix that equals the size of
+  the smallest extended formulation. /Slide notes./
+- symmetry (formulation defect) :: A model in which every solution appears many
+  times under relabelling, such as \(K!\) copies of each bin packing. Branch and
+  bound proves the same thing once per copy. /Slide: Symmetry is a formulation
+  defect./
+- symmetry-breaking rows :: Constraints that pick one representative, such as
+  \(y_1 \ge y_2 \ge \dots\), or item \(i\) only in bins \(\le i\).
+- orbital fixing :: A solver technique that fixes variables using the symmetry
+  group it detects in the model.
+
+* What solvers do with your model
+
+- presolve :: The solver's rewriting of the model before solving: removing,
+  tightening and substituting. /Slide: Presolve and cuts repair weak models./
+- bound tightening :: A presolve reduction that shrinks variable bounds, and so
+  \(M\), to what is provable.
+- implied bound cut :: A cut that recovers \(x_{ij} \le y_i\) from bounds and
+  linking rows.
+- knapsack cover cut, flow cover cut :: Cut families that recover capacity
+  structure (unit 08).
+- node count :: The number of branch-and-bound nodes solved. Within one solver, a
+  good measure of formulation strength; not comparable across solvers.
+- robust vs fragile model :: Strong before the solver touches it, versus strong
+  only because presolve quietly repaired it.
+- MIPLIB :: The standard library of MIP instances with known optima, used to test
+  solvers. /Slide: A caught bug, and why brute force stays in the course./
+
+* In the lab
+
+- ~MILP~ :: A min problem as plain tuples, in ~colib.mip~.
+- gap closed :: \((z_{\text{strong}} - z_{\text{weak}}) / (z_{IP} -
+  z_{\text{weak}})\): the fraction of the weak formulation's gap that the strong
+  one closes. Lab step 5.

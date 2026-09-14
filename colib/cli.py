@@ -1,6 +1,7 @@
 """`co` — the one command for working through a unit.
 
-    co slides 01          open the unit's slides in a browser
+    co slides 01          open the unit's slides in a browser (rebuilds its glossary.js)
+    co glossary [01]      rebuild glossary.js from GLOSSARY.org, for one unit or all
     co lab 01             open the lab sheet (README.md) in Emacs
     co test 01            run the lab's tests against your code
     co test 01 --solution run them against the reference solution
@@ -63,6 +64,21 @@ def _edit(path: Path):
     _open(path)
 
 
+def _glossary(units, verbose=False) -> list[str]:
+    """Rebuild each unit's glossary.js; print what doesn't resolve (a slide link that names
+    no slide, a term the deck marks that the glossary lacks)."""
+    from colib import glossary
+    warnings = []
+    for unit in units:
+        found = glossary.build(unit)
+        warnings += found
+        for w in found:
+            print(f"{unit.name}: {w}", file=sys.stderr)
+        if verbose and (unit / "glossary.js").exists():
+            print(f"built {(unit / 'glossary.js').relative_to(ROOT)}")
+    return warnings
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(prog="co", description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -74,6 +90,7 @@ def main(argv=None):
         p.add_argument("unit")
         p.add_argument("--solution", nargs="?", const="imperative", choices=("imperative", "functional"),
                        help="use a reference solution instead of your lab (default: imperative)")
+    sub.add_parser("glossary").add_argument("unit", nargs="?")
     sub.add_parser("status")
     sub.add_parser("data")
     args, rest = ap.parse_known_args(argv)
@@ -85,7 +102,12 @@ def main(argv=None):
         env["CO_SOLUTION"] = args.solution
 
     if args.cmd == "slides":
-        _open(find_unit(args.unit) / "slides.html")
+        unit = find_unit(args.unit)
+        _glossary([unit])
+        _open(unit / "slides.html")
+    elif args.cmd == "glossary":
+        units = [find_unit(args.unit)] if args.unit else sorted(p for p in UNITS.iterdir() if p.is_dir())
+        sys.exit(1 if _glossary(units, verbose=True) else 0)
     elif args.cmd == "lab":
         _edit(find_unit(args.unit) / "lab" / "README.md")
     elif args.cmd == "test":

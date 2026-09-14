@@ -1,0 +1,89 @@
+#+title: Glossary — unit 27
+#+startup: content latexpreview
+#+options: ^:{}
+
+The terms this unit introduces, in the order the deck meets them. The slides
+stay the definition of record; each entry names the slide it comes from, so a
+term can be looked up here and read properly there.
+
+* Before branching
+
+- presolve :: The solver's rewriting of a model before search. /Slide: What
+  presolve does, and what defeats it./
+- bound tightening :: Deriving a smaller variable bound from the constraints, such as
+  \(x \le 12\) from \(x + 10y \le 12\).
+- coefficient tightening :: Shrinking a coefficient to what the bounds allow, such as
+  \(x \le 1000y\) with \(x \le 50\) becoming \(x \le 50y\).
+- dual fixing :: Fixing a variable at the bound its objective and constraints both
+  favour.
+- aggregation (presolve) :: Substituting a variable away using an equality such as
+  \(x = y + z\).
+- probing :: Tentatively fixing a binary both ways and learning implications from
+  what propagation deduces.
+- clique detection :: Merging pairwise conflicts between binaries into one clique
+  row.
+- numerically wide coefficients :: Values like \(10^{-6}\) next to \(10^6\) in one
+  model, where tolerances start to bite and cuts get rejected.
+- indicator constraint :: \(y = 1 \Rightarrow a^\top x \le b\) given to the solver
+  directly, which chooses a big-M reformulation, branching, or SOS1.
+- SOS1 :: A special ordered set of type 1: at most one variable in the set is
+  nonzero.
+
+* Symmetry
+
+- symmetry (model) :: A permutation of variables, such as relabelling bins, that maps
+  solutions to solutions of equal cost. With 17 bins, up to \(17!\) copies of every
+  solution. /Slide: Interchangeable objects cost k!/
+- orbit :: The set of solutions (or variables) a symmetry group maps into each other.
+- symmetry-breaking constraints :: Constraints that keep one representative per
+  orbit, such as \(y_b \ge y_{b+1}\) and item \(i\) only in bins \(0..i\).
+- lex-leader constraints :: Symmetry breaking that keeps the lexicographically
+  largest member of each orbit (Crawford et al. 1996).
+- orbitope :: The convex hull of lexicographically sorted 0/1 matrices, with a
+  propagation algorithm (Kaibel & Pfetsch 2008).
+- orbital branching and fixing :: Detecting the symmetry group, branching on orbits,
+  and fixing variables in the same orbit (Ostrowski et al. 2011).
+
+* Starts, bounds, reformulation
+
+- first-fit decreasing (FFD) :: Sort items largest first and put each in the first bin
+  it fits. At most \(\tfrac{11}{9}\mathrm{OPT} + \tfrac69\) bins, so it caps the
+  bins a model needs. /Slide: Bounds, starts, and a different model./
+- Martello–Toth L2 :: A bin-packing lower bound at least \(\lceil \sum / C
+  \rceil\). With symmetry broken, bins \(0..L_2 - 1\) can be fixed as used.
+- bounded model :: The assignment model restricted to the FFD bin count, with the
+  first \(L_2\) bins fixed open.
+- MIP start (warm start) :: A feasible solution handed to the solver before the first
+  node, giving an incumbent for pruning and a seed for improvement heuristics.
+- solution pool :: Several solutions kept by the solver instead of one.
+- reformulation :: Changing the model itself rather than tuning it. The one
+  intervention with a large, stable effect in the lab.
+- arc-flow model :: One unit of flow per bin along a path through capacities \(0..C\),
+  each arc an item size (Valério de Carvalho 1999). Pseudo-polynomial size, no bin
+  identities, and the same LP as the pattern model of unit 10.
+- round-up property :: For almost all practical bin-packing instances, the optimum is
+  the pattern LP rounded up, so the root LP proves optimality.
+- shifted geometric mean (SGM) :: \(\left(\prod_i (t_i + s)\right)^{1/n} - s\):
+  the geometric mean of times shifted by \(s\), so tiny times do not dominate
+  (unit 28).
+
+* Logs and variability
+
+- statistics report :: SCIP's end-of-solve summary: presolvers, constraints,
+  separators, primal heuristics, branching rules, B&B tree, root node, solution.
+  /Slide: Reading a SCIP statistics report./
+- first LP value :: The root LP bound before cuts. Compared with the final dual bound,
+  it shows what cuts bought.
+- stuck dual bound :: A dual bound that never leaves the first LP value while nodes
+  pile up: a weak relaxation.
+- performance variability :: Large changes in solve time from irrelevant changes such
+  as the random seed or row order. /Slide: Performance variability: the same model,
+  different seeds./
+- random seed (solver) :: The number fixing a solver's internal random choices.
+  Different seeds give different trees on the same model.
+- chaotic behaviour (MIP) :: A tiny change alters early branching, and the tree grows
+  differently from there (Lodi & Tramontani 2013).
+- within noise :: An effect no larger than the run-to-run variation across seeds; a
+  legitimate row in a before/after table, with the seed runs as evidence.
+- MIPLIB 2017 :: The standard MIP library: 1 065 instances with a 240-instance
+  benchmark set (Gleixner et al. 2021).

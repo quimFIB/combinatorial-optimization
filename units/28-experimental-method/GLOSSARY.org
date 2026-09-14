@@ -1,0 +1,87 @@
+#+title: Glossary — unit 28
+#+startup: content latexpreview
+#+options: ^:{}
+
+The terms this unit introduces, in the order the deck meets them. The slides
+stay the definition of record; each entry names the slide it comes from, so a
+term can be looked up here and read properly there.
+
+* Summaries
+
+- arithmetic mean (of times) :: Dominated by the slowest instance; one instance's
+  number. /Slide: Arithmetic, geometric, shifted geometric./
+- geometric mean :: \(\exp(\frac1n \sum_i \log t_i)\). Treats equal ratios equally,
+  which is what comparisons are about.
+- shifted geometric mean (SGM) :: \(\mathrm{SGM}_s(t) = \exp(\frac1n \sum_i
+  \log(t_i + s)) - s\). The shift \(s\) keeps trivial instances from dominating;
+  10 s is the MIP convention, and the shift should match the scale of the runs.
+- timeout (censored run) :: An unsolved run, whose time is only a lower bound.
+- censoring :: Observations cut off at a limit. A mean of capped counts describes the
+  cap as much as the solver.
+- PAR-\(k\) :: Penalized average runtime: count each timeout as \(k\) times the
+  limit. Depends on the limit and \(k\); report both, and the solved count
+  separately.
+- run store :: Storing every individual run (solver, instance, seed, time, status)
+  rather than summaries, so analysis can be redone without re-solving. The lab uses
+  SQLite.
+- resumable runner :: A benchmark runner that skips runs already stored and records
+  timeouts as such.
+
+* Pictures
+
+- performance ratio \(r_{p,s}\) :: \(t_{p,s} / \min_{s'} t_{p,s'}\) for problem
+  \(p\) and solver \(s\), or \(\infty\) if \(s\) failed. /Slide: Performance
+  profiles (Dolan & Moré 2002)./
+- performance profile :: \(\rho_s(\tau)\), the fraction of problems on which solver
+  \(s\) is within a factor \(\tau\) of the best. \(\rho_s(1)\) is its win share;
+  large \(\tau\) gives its solved share.
+- profile reordering trap :: Ratios are to the best solver present, so adding or
+  removing a solver can reorder the others (Gould & Scott 2016). Compare two at a
+  time for two-way claims.
+- virtual best solver (VBS) :: Per problem, the fastest solver's time. The ceiling
+  for any portfolio of those solvers.
+- time-to-target plot :: The per-instance, over-seeds counterpart of a profile
+  (unit 26).
+
+* Inference
+
+- unit of observation :: What one data point is; here an (instance, seed) pair.
+  /Slide: Seeds, pairing, intervals, and many tests./
+- paired comparison :: Analysing per-instance log ratios of two solvers on the same
+  instances, removing the large between-instance variance.
+- paired geometric ratio :: \(\exp(\frac1n \sum_i \log \frac{a_i + s}{b_i + s})\),
+  the typical factor by which solver \(a\) differs from \(b\).
+- bootstrap :: Resampling the observations with replacement and recomputing the
+  summary each time, to see how much it would move.
+- percentile bootstrap interval :: The middle 95% of the bootstrap summaries: an
+  interval with no normality assumption.
+- confidence interval :: A range for an effect size; answers "how big".
+- effect size :: How large a difference is, as opposed to whether one exists.
+- Wilcoxon signed-rank test :: A paired, rank-based test of whether differences tend
+  to be positive; answers "is there a difference".
+- p-value :: The probability of data at least this extreme if there were no
+  difference.
+- multiple comparisons problem :: Each extra test adds a chance of a false positive:
+  three at \(\alpha = 0.05\) give about 14%.
+- Holm–Bonferroni correction :: Sort the \(m\) p-values, multiply the \(k\)-th
+  smallest by \(m - k + 1\), and keep the adjusted values monotone. Uniformly more
+  powerful than Bonferroni.
+- Bonferroni correction :: Multiply every p-value by the number of tests.
+- instance selection bias :: Choosing or dropping instances after seeing results, or
+  letting one family stand for a problem. Fix the set before running. /Slide:
+  Instance selection, per-instance claims, negative results./
+- aggregate vs per-instance claim :: "Faster on average" versus "faster on most
+  instances"; different claims, and both can be reported.
+- negative result :: A stated hypothesis, instances, budget and effect size with its
+  interval, showing what was ruled out.
+
+* The audit
+
+- audit :: Re-running an earlier conclusion with stored runs, more instances,
+  intervals and corrected tests. /Slide: Unit 07: branching rules, from 3 instances
+  to 24./
+- regenerable claim :: A performance claim that one command reproduces from stored
+  runs. The checkpoint.
+- withdrawn claim :: A conclusion that did not survive, corrected in place: unit 19's
+  "restarts make the median worse". /Slide: Unit 19: restarts, with intervals and
+  eight more instances./

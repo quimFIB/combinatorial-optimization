@@ -1,0 +1,100 @@
+#+title: Glossary — capstone
+#+startup: content latexpreview
+#+options: ^:{}
+
+The terms the capstone introduces, in the order the deck meets them. Most of its
+vocabulary comes from earlier units, whose glossaries define it; this one covers
+what is new or used in a new sense. The slides stay the definition of record, and
+each entry names the slide it comes from.
+
+* The problem
+
+- VRPTW :: Vehicle routing with time windows: serve every customer once from a depot
+  with identical vehicles of capacity \(Q\), starting each service inside its window,
+  minimizing total distance. /Slide: VRPTW./
+- time window \([a_i, b_i]\) :: The interval in which service at customer \(i\) must
+  start. Arriving early means waiting, which is free.
+- service time \(s_i\) :: How long service at customer \(i\) takes.
+- horizon :: The depot's window \([a_0, b_0]\): vehicles leave no earlier than
+  \(a_0\) and return by \(b_0\).
+- start-time recurrence :: \(t_j = \max(a_j,\ t_i + s_i + d_{ij}) \le b_j\) along a
+  route; the entire time-window model.
+- Solomon instances :: The standard VRPTW benchmark (1987): 56 instances of 100
+  customers in series C (clustered), R (random) and RC (mixed); series 1 has short
+  horizons and tight windows, series 2 long horizons and wide windows.
+- R101.25 :: Naming convention: instance R101 truncated to its first 25 customers.
+- hierarchical objective :: Minimize vehicles first, then distance; the convention of
+  the heuristic best-known tables. /Slide: Two objectives, and why the numbers are in
+  tenths./
+- distance-only objective :: Minimize distance alone, with distances truncated to one
+  decimal and stored as integer tenths. The exact literature's convention, and the
+  lab's. Not comparable with hierarchical results.
+
+* Four models of one problem
+
+- arc MIP :: Binary arc variables, start-time variables, and big-M time rows
+  \(t_j \ge t_i + s_i + d_{ij} - M_{ij}(1 - x_{ij})\) with the smallest valid
+  \(M_{ij}\). The time rows rule out subtours but not overloads. /Slide: A compact
+  model whose capacity lives in your cuts./
+- \(\delta^+(i)\), \(\delta^-(i)\) :: The arcs leaving and entering \(i\) or a set.
+- rounded capacity inequality :: \(x(\delta^-(S)) \ge \lceil q(S)/Q \rceil\) for
+  every customer set \(S\): at least that many vehicles must enter it. With the right
+  side 1 it is unit 09's subtour row.
+- connected-components separation :: Checking each component of the support graph as
+  a candidate \(S\). Exact on integer points, heuristic on fractional ones.
+- CVRPSEP :: The standard code for separating capacity cuts heuristically.
+- constraint handler :: SCIP's plugin for lazy constraints; the lab supplies
+  ~separate(values)~ and ~colib.vrptw.lazy_cut_handler~ the plumbing.
+- route set partitioning :: \(\min \sum_r c_r \lambda_r\) with every customer covered
+  exactly once; \(= 1\), not \(\ge 1\), because truncated distances can break the
+  triangle inequality. /Slide: Routes as columns, found by labelling./
+- label :: A partial route at a vertex: reduced cost, load, start time, unreachable
+  set, route.
+- unreachable set (Feillet) :: Customers already visited or no longer reachable within
+  the windows, counted together so dominance fires more often (Feillet et al. 2004).
+- dominance (VRPTW labels) :: \(L\) dominates \(L'\) if it is no worse in cost, load
+  and time and its unreachable set is a subset of \(L'\)'s.
+- heuristic pricing pass :: Labelling with a cap on labels per vertex, used until it
+  fails; only the final pass must be exact.
+- arc branching :: Branching on an arc's total flow \(\sum_r [ij \in r]
+  \lambda_r\): forbid the arc, or force it by forbidding its alternatives.
+- multiple-circuit constraint :: CP-SAT's constraint that arc literals form circuits
+  through a depot visited by many and every other vertex on exactly one. Replaces
+  degree rows and subtour elimination. /Slide: A circuit constraint, enforced
+  implications, and a strategy./
+- enforced implication :: A constraint active only when a literal is true
+  (~only_enforce_if~), propagated directly instead of through big-M.
+- decision strategy :: A branching order given to CP-SAT, such as short arcs first;
+  followed with one worker only under ~FIXED_SEARCH~.
+- latest start \(\ell_k\) :: \(\min(b_k,\ \ell_{k+1} - s_k - d_{k,k+1})\), the latest
+  service start at \(k\) that keeps the rest of the route feasible. /Slide: Feasible
+  insertion in constant time./
+- constant-time feasible insertion :: Checking that inserting \(c\) between \(p\) and
+  \(q\) meets \(c\)'s window and starts \(q\) by \(\ell_q\), plus load, without
+  rescheduling the rest (Savelsbergh 1992).
+- Shaw removal :: Destroying customers related in space, time and demand.
+- regret-\(k\) repair :: Inserting first the customer with most to lose,
+  \(\sum_{h=2}^{k}(\text{cost}_h - \text{cost}_1)\) over its best positions.
+- new-route option :: Allowing repair to open a route; without it ALNS cannot increase
+  the route count and gets stuck.
+
+* Refereeing
+
+- referee :: The harness that re-checks every solution, recomputes every cost and
+  compares methods fairly. /Slide: What the harness holds fixed, and what it
+  measures./
+- violation checker :: Step 1's function that finds every broken window, capacity or
+  coverage requirement in a claimed solution.
+- primal gap :: \(\gamma(v, v^*) = |v - v^*| / \max(|v|, |v^*|)\), or 1 with no
+  solution, where \(v^*\) is the best value any method found (Berthold 2013).
+- PAR1 :: Penalized average runtime with timeouts counted at the limit; the
+  time-to-proof metric for the exact methods.
+- refuted claim :: A method's "optimal" contradicted by a better solution from another
+  method, or two different proven optima.
+- head-to-head verdict :: A paired Wilcoxon test with Holm's correction over all
+  pairs, reporting a winner or "indistinguishable".
+- primal integral :: The area under a method's gap-versus-time curve, capturing when it
+  found good solutions, not just where it ended.
+- window / horizon ratio :: Mean window width over the depot's horizon; the crude
+  instance characteristic used to explain which method wins. /Slide: Which
+  characteristics favour which method./

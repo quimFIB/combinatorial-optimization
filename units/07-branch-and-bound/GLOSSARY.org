@@ -1,0 +1,102 @@
+#+title: Glossary — unit 07
+#+startup: content latexpreview
+#+options: ^:{}
+
+The terms this unit introduces, in the order the deck meets them. The slides
+stay the definition of record; each entry names the slide it comes from, so a
+term can be looked up here and read properly there.
+
+Convention throughout: minimization. LP bounds are lower bounds, and the
+incumbent is an upper bound.
+
+* The tree
+
+- branch and bound :: Split the feasible set, bound each piece with its LP
+  relaxation, discard pieces that cannot beat the best solution found. Land &
+  Doig, 1960. /Slide: LP-based branch and bound./
+- node :: One subproblem: the original MILP with some variable bounds tightened.
+- root :: The node with no added bounds; its LP is the MILP's LP relaxation.
+- branching :: Picking a fractional \(x_j = v\) and creating two children with
+  \(x_j \le \lfloor v \rfloor\) and \(x_j \ge \lceil v \rceil\). The children
+  partition the integer points and both cut off the fractional solution.
+- open node :: A node created but not yet solved or branched on.
+- prune by infeasibility :: Discard a node whose LP is infeasible.
+- prune by integrality :: A node whose LP solution is integral becomes a
+  candidate incumbent and needs no children.
+- prune by bound :: Discard a node whose LP bound is at least the incumbent's
+  value.
+- incumbent :: The best integer solution found so far.
+- upper bound \(U\) (primal bound) :: The incumbent's value, or \(+\infty\)
+  before one exists. /Slide: Two bounds, one gap./
+- lower bound \(L\) (dual bound) :: The smallest LP bound among open nodes. Every
+  unexplored integer point lies in some open node.
+- gap :: \((U - L) / |U|\). The solver stops at 0 or below a tolerance.
+- relative gap tolerance :: The stopping threshold: \(10^{-4}\) by default in
+  HiGHS and Gurobi, 0 in SCIP. On an objective of \(10^6\) it allows 100 units of
+  difference.
+
+* Node selection
+
+- node selection :: The rule for which open node to process next. /Slide:
+  Depth-first against best-first./
+- depth-first search (DFS) :: Always a child of the last node. Finds incumbents
+  early and uses little memory; can linger in a bad subtree.
+- best-first search :: Always the open node with the smallest bound. Raises
+  \(L\) fastest and branches on the fewest nodes for a given branching rule; the
+  frontier grows large and incumbents come late.
+- frontier :: The set of open nodes.
+- best estimate selection :: Choosing nodes by an estimate of the best integer
+  solution below them, not by bound alone.
+- plunging (diving) :: Following children depth-first from a promising node for a
+  while before jumping back. What solvers ship, as a hybrid.
+
+* Branching
+
+- branching rule :: The rule for which fractional variable to split on. The
+  biggest single influence on tree size. /Slide: Most fractional, and why it's
+  weak./
+- most-fractional branching :: Pick the variable closest to 0.5. Measured to be
+  about as good as random.
+- fractionality :: How far \(x_j\) is from the nearest integer.
+- \(\Delta_j^-\), \(\Delta_j^+\) :: The bound improvement in the down and up child
+  when branching on \(x_j\).
+- product score :: \(\max(\Delta_j^-, \varepsilon) \cdot \max(\Delta_j^+,
+  \varepsilon)\). Rewards moving both children; \(\varepsilon\) keeps a zero on
+  one side from erasing the other.
+- strong branching :: Compute \(\Delta_j^\pm\) exactly by solving both child LPs
+  for each candidate. Fewest nodes, most LP solves. /Slide: Strong branching and
+  pseudocosts./
+- probe LP :: A child LP solved only to score a candidate during strong branching.
+- pseudocost :: The average bound gain per unit of fractionality observed when
+  branching on \(x_j\) before. Pseudocost branching multiplies it by the current
+  fractionality; costs nothing per node, but is uninformed at the top of the tree.
+- pseudocost initialization :: What to assume for a variable never branched on.
+  The whole weakness of pseudocosts.
+- reliability branching :: Strong branching on a variable until its pseudocosts
+  have enough observations each way, then trusting them. SCIP's default.
+
+* The other job, and the gap to SCIP
+
+- primal heuristic :: A method for finding good integer solutions quickly, so
+  pruning by bound starts early. /Slide: Primal heuristics./
+- rounding heuristic :: Round the LP solution while keeping feasibility where
+  possible (simple rounding, ZI rounding).
+- diving heuristic :: Fix a variable, re-solve, repeat down one branch without
+  keeping a tree.
+- RINS :: Relaxation-induced neighbourhood search: fix variables where incumbent
+  and LP agree, solve the sub-MILP that remains. Large neighbourhood search with the
+  MILP solver as repair (unit 19).
+- feasibility pump :: Alternate between projecting onto the LP polytope and
+  rounding to the nearest integer point, until the two meet.
+- conflict analysis :: Learning a constraint from why a node was infeasible, as
+  SAT solvers do (unit 20). /Slide: Your factor of shame./
+- factor of shame :: Your best node count divided by SCIP's on the same instance.
+- SCIP bare :: SCIP with presolve and cuts off. Separates the effect of branching
+  and LP handling from that of cuts, presolve and heuristics.
+
+* In the lab
+
+- ~solve_node(milp, lb, ub)~ :: Solves one node's LP under the given bounds,
+  returning a ~NodeLP~.
+- ~INT_TOL~ :: The tolerance within which a value counts as integral.
+- ~BBResult~ :: The tree's result, including node and LP-solve counts.

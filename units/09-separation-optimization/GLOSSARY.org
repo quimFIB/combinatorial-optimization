@@ -1,0 +1,95 @@
+#+title: Glossary — unit 09
+#+startup: content latexpreview
+#+options: ^:{}
+
+The terms this unit introduces, in the order the deck meets them. The slides
+stay the definition of record; each entry names the slide it comes from, so a
+term can be looked up here and read properly there.
+
+* The theorem
+
+- optimization oracle :: Given \(c\), returns \(\arg\max\{c^\top x : x \in P\}\)
+  or reports \(P = \emptyset\). "Solve the problem for any objective." /Slide: Two
+  ways to be given a polytope./
+- separation oracle :: Given \(y\), certifies \(y \in P\) or returns an
+  inequality valid for \(P\) that \(y\) violates. "Find a violated constraint, if
+  there is one."
+- well-described polyhedron :: One whose facets have bounded encoding size
+  \(\varphi\), so running times can be polynomial in \(\varphi\) and \(n\).
+- strong and weak oracles :: The exact versions above, and versions with an
+  \(\varepsilon\) tolerance used for general convex bodies.
+- affine hull :: The smallest affine space containing \(P\). A
+  lower-dimensional polytope contains no ball, so it must be found first.
+- GLS theorem (separation ⇔ optimization) :: For a family of well-described
+  polyhedra, optimization is polynomial if and only if separation is (Grötschel,
+  Lovász & Schrijver 1981). /Slide: Grötschel, Lovász & Schrijver (1981)./
+- sliding objective :: In the ellipsoid method, cutting with the objective row
+  when the centre is feasible, to push toward the optimum.
+- polar \(P^\circ\) :: \(\{a : a^\top x \le 1\ \forall x \in P\}\), with \(0\)
+  in the interior of \(P\). Its vertices are \(P\)'s facets and vice versa, so
+  optimizing over \(P\) is separating over \(P^\circ\).
+- NP-hardness of separation :: The contrapositive direction: if optimizing over
+  a polytope is NP-hard, so is separating over it. Why TSP codes separate chosen
+  families only.
+- submodular function minimization :: First made polynomial through GLS, via
+  separation over the base polytope (unit 13). /Slide: What it bought./
+- theta function :: Lovász's SDP bound, through which maximum stable set in
+  perfect graphs is polynomial (unit 25). No combinatorial algorithm is known.
+- minimum odd cut :: The separation routine for matching's odd-set inequalities
+  (Padberg & Rao 1982), via Gomory–Hu trees.
+
+* Subtours
+
+- subtour :: A cycle through only some of the cities. The degree rows alone allow
+  a solution made of several disjoint ones. /Slide: The subtour elimination LP./
+- \(\delta(v)\), \(\delta(S)\) :: The edges with exactly one endpoint at \(v\),
+  or in \(S\): the cut around \(S\).
+- degree rows :: \(\sum_{e \in \delta(v)} x_e = 2\) for every city.
+- subtour elimination row :: \(\sum_{e \in \delta(S)} x_e \ge 2\) for every
+  proper nonempty \(S\): every set must be entered and left. There are
+  \(2^{n-1} - 1\).
+- DFJ formulation :: Dantzig, Fulkerson & Johnson's 1954 TSP model: degree rows
+  plus all subtour rows over edge variables. The first cutting-plane computation.
+- subtour polytope :: The LP relaxation of the DFJ formulation; strictly contains
+  the TSP polytope.
+- support graph :: The graph of edges with \(x^*_e > 0\), weighted by
+  \(x^*_e\).
+- global minimum cut :: The lightest \(\delta(S)\) over all proper \(S\). \(x^*\)
+  violates a subtour row iff this is below 2. /Slide: Separation is a minimum
+  cut./
+- connected components check :: For integer points, a solution of the degree rows
+  is a union of cycles, and each cycle's vertex set has cut weight 0. Components
+  suffice.
+- Stoer–Wagner algorithm :: Global minimum cut without flows: build a
+  maximum-adjacency order, record the cut of the last vertex, merge the last two,
+  repeat \(n - 1\) times. \(O(nm + n^2 \log n)\).
+- maximum-adjacency order :: Repeatedly add the vertex most strongly attached to
+  the vertices already added.
+- cut of the phase :: The last vertex's total attachment in a maximum-adjacency
+  order: a minimum cut separating the last two vertices.
+- Gomory–Hu tree :: A tree encoding all pairwise minimum cuts, built with \(n -
+  1\) max-flow computations (unit 14).
+
+* In practice
+
+- lazy constraint :: A row checked on every candidate integer solution; a violated
+  one rejects the solution and is added. Required for correctness. /Slide: Lazy
+  constraints and callbacks./
+- user cut :: A row separated at fractional LP points to tighten the bound.
+  Optional, for speed only.
+- callback :: The solver hook where lazy constraints and user cuts are added
+  (Gurobi's ~cbLazy~ and ~cbCut~).
+- constraint handler :: SCIP's version, with ~check~, ~enforce~ and ~separate~
+  methods.
+- enforcement :: Checking a candidate integer solution against the implicit
+  constraints. Subtour rows only as user cuts can let a tour made of subtours
+  through.
+- 4/3 conjecture :: That the subtour LP's integrality gap for metric TSP is
+  \(\tfrac43\). Proved at most \(\tfrac32\); open. /Slide: How good is the bound,
+  and how far has this gone?/
+- Held–Karp bound :: The Lagrangian 1-tree bound, equal to the subtour LP bound
+  (unit 11).
+- comb inequality :: A family of TSP facets with no known exact polynomial
+  separation, separated heuristically by Concorde.
+- Concorde :: The TSP branch-and-cut code of Applegate, Bixby, Chvátal & Cook,
+  which solved an 85 900-city instance to optimality.

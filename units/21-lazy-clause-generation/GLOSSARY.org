@@ -1,0 +1,81 @@
+#+title: Glossary — unit 21
+#+startup: content latexpreview
+#+options: ^:{}
+
+The terms this unit introduces, in the order the deck meets them. The slides
+stay the definition of record; each entry names the slide it comes from, so a
+term can be looked up here and read properly there.
+
+* Explanations
+
+- lazy clause generation (LCG) :: CP propagators running inside a CDCL solver's
+  propagation loop, each returning a clause that explains its inference so the
+  solver can learn from it (Ohrimenko, Stuckey & Codish 2007–09).
+- order encoding :: One Boolean \([x \le v]\) per threshold of an integer
+  variable, linked by \([x \le v] \rightarrow [x \le v + 1]\). A bound change is a
+  single literal. /Slide: Integers as Booleans: the order encoding./
+- bound literal :: \([x \le v]\), or its negation \(\lnot[x \le v]\), meaning
+  \(x \ge v + 1\).
+- lazy literal creation :: Creating \([x \le v]\) only when propagation or an
+  explanation needs it, so large domains stay affordable.
+- direct encoding :: One Boolean \([x = v]\) per value. Good for \(\ne\) and
+  tables, bad for bounds.
+- log encoding :: The binary digits of \(x\). Compact, with weak propagation.
+- explanation :: A clause, valid in every solution of the constraint, whose
+  literals are all false now except the newly propagated one. /Slide: A
+  propagator's inference, as a clause./
+- explained propagator :: A propagator that returns an explanation with every
+  narrowing.
+- precedence :: \(x + d \le y\), explained by \(\lnot[x \ge a] \lor [y \ge a +
+  d]\).
+- reified constraint :: A constraint tied to a Boolean \(b\) so it holds exactly
+  when \(b\) is true, such as "operation 3 precedes operation 7".
+- unary resource :: A machine running one task at a time: cumulative with
+  capacity 1.
+- lst, ect :: A task's latest start time and earliest completion time; its
+  compulsory part is \([lst, ect)\).
+- explanation quality :: The most general explanation (fewest, weakest literals)
+  gives learned clauses that prune the most. Explaining with every current bound is
+  valid and nearly useless.
+- lazy explanation :: Recording only enough to rebuild an explanation, and building
+  the clause only if conflict analysis resolves through that literal.
+- ablation :: Removing one component at a time to measure what it contributes.
+  /Slide: Measured: what learning from propagation buys./
+
+* The same idea, elsewhere
+
+- SMT :: Satisfiability modulo theories: SAT over atoms from a theory such as
+  linear arithmetic or equality with functions. /Slide: SMT, DPLL(T), and
+  logic-based Benders./
+- DPLL(T) :: A CDCL solver over Boolean abstractions of theory atoms, with a theory
+  solver that returns explanation clauses (Nieuwenhuis, Oliveras & Tinelli 2006).
+  LCG is DPLL(T) with CP propagators as the theory.
+- theory solver :: The component that checks theory atoms for consistency and
+  explains conflicts and propagations.
+- logic-based Benders :: Benders with any subproblem solver, which returns an
+  inference about the master's decision (Hooker & Ottosson 2003).
+- decide, check, explain :: The common pattern: decide in one representation,
+  check in a richer one, hand back a certificate of why in the first. Separation,
+  pricing, Benders cuts and LCG all follow it.
+
+* CP-SAT
+
+- CP-SAT :: Google's solver: an LCG core, a linear relaxation with cuts, and a
+  portfolio of search and LNS workers. /Slide: Reading CP-SAT's log./
+- subsolver (worker) :: One member of CP-SAT's portfolio, with its own heuristics,
+  restart policy and LP level (~default_lp~, ~no_lp~, ~max_lp~, ~quick_restart~).
+- LP worker :: A worker that maintains the linear relaxation and its cuts, for
+  bounds and reduced-cost fixing.
+- shared incumbent :: The best solution found, visible to all workers.
+- solution hint :: A starting assignment given to the solver to guide early search.
+- VeriPB :: A proof format able to justify theory lemmas; needed because an
+  explanation clause is not RUP from the CNF, so DRAT checkers reject LCG proofs.
+
+* Choosing a solver
+
+- the three questions :: What does the LP relaxation see? What does propagation
+  see? What can learning reuse? /Slide: MIP, CP, SAT, or CP-SAT?/
+- MINLP :: Mixed-integer nonlinear programming, solved by spatial branch and bound;
+  outside this course's solvers.
+- nurse rostering :: Scheduling staff over shifts with coverage, rest and fairness
+  rules. The worked example for choosing CP-SAT first.

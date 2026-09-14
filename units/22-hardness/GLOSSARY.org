@@ -1,0 +1,102 @@
+#+title: Glossary — unit 22
+#+startup: content latexpreview
+#+options: ^:{}
+
+The terms this unit introduces, in the order the deck meets them. The slides
+stay the definition of record; each entry names the slide it comes from, so a
+term can be looked up here and read properly there.
+
+* Reductions
+
+- polynomial (Karp) reduction \(A \le_p B\) :: A polynomial map \(f\) with \(x
+  \in A \iff f(x) \in B\); for optimization, plus a map \(g\) taking solutions of
+  \(f(x)\) back to solutions of \(x\). /Slide: Karp's chain./
+- direction of a reduction :: To show a new problem \(B\) hard, reduce a known hard
+  problem /to/ \(B\). The reverse only shows \(B\) is no harder.
+- NP-complete :: In NP and NP-hard.
+- NP-hard :: At least as hard as every problem in NP under polynomial reductions.
+- Cook–Levin theorem :: SAT is NP-complete (1971, 1973).
+- Karp's 21 problems :: The NP-complete problems Karp derived from SAT by reductions
+  in 1972.
+- gadget :: A small piece of the target instance that simulates one part of the
+  source, such as a triangle per clause. /Slide: 3-SAT → vertex cover, and back./
+- 3-SAT to vertex cover :: An edge per variable (its two literals), a triangle per
+  clause, links from each corner to its literal. Satisfiable iff a cover of size
+  \(k = n + 2m\) exists.
+- solution map :: The function taking a solution of the reduced instance back to
+  one of the original.
+- clause splitting :: Turning any CNF into exactly-3-CNF with fresh variables, plus
+  a map extending assignments. Lab step 2.
+- exponential time hypothesis (ETH) :: That 3-SAT needs \(2^{\Omega(n)}\) time.
+  Transferring it needs reductions of linear size.
+- decision-preserving reduction :: Maps yes-instances to yes-instances. Enough for
+  NP-hardness. /Slide: What a reduction preserves, and what it doesn't./
+- optimum-preserving reduction :: \(\mathrm{OPT}(f(x))\) is determined by
+  \(\mathrm{OPT}(x)\), with solutions mapped back, like vertex cover to set cover.
+- gap-preserving reduction :: Maps near-optimal solutions to near-optimal ones
+  (L-reductions, AP-reductions). Needed to transfer hardness of approximation.
+- MaxSAT :: Maximize the number of satisfied clauses.
+
+* Numbers
+
+- pseudo-polynomial time :: Polynomial in the value of the numbers, exponential in
+  their bit length. /Slide: Weak and strong NP-hardness./
+- weakly NP-hard :: NP-hard, but solvable in time polynomial in \(n\) and the
+  largest number: knapsack, subset sum, partition.
+- strongly NP-hard :: Still NP-hard when every number is polynomial in \(n\)
+  (written in unary): bin packing, 3-partition, and problems with no numbers.
+- unary encoding :: Writing a number \(N\) with \(N\) symbols, so its size is its
+  value.
+- partition :: Split numbers into two sets of equal sum. Weakly NP-hard; bin
+  packing with two bins.
+- 3-partition :: Split \(3m\) numbers into \(m\) triples of equal sum. Strongly
+  NP-hard.
+- Garey–Johnson theorem (no FPTAS) :: A strongly NP-hard problem with integer
+  objective bounded by a polynomial in \(n\) and the largest number has no FPTAS
+  unless P = NP.
+- FPTAS :: Fully polynomial-time approximation scheme: ratio \(1 \pm
+  \varepsilon\) in time polynomial in \(n\) and \(1/\varepsilon\). /Slide: The
+  knapsack FPTAS (Ibarra & Kim 1975)./
+- knapsack FPTAS :: Drop items that do not fit alone, round values to multiples of
+  \(K = \varepsilon v_{\max} / n\), solve exactly by value. \(O(n^3 /
+  \varepsilon)\), at least \((1 - \varepsilon)\mathrm{OPT}\).
+
+* The hierarchy
+
+- approximation ratio :: The worst-case factor between an algorithm's value and the
+  optimum. /Slide: FPTAS ⊂ PTAS ⊂ APX ⊂ log-APX ⊂ poly-APX./
+- PTAS :: Ratio \(1 \pm \varepsilon\) in polynomial time for each fixed
+  \(\varepsilon\), possibly like \(n^{1/\varepsilon}\).
+- APX :: Problems with some constant-ratio polynomial algorithm.
+- log-APX :: Problems with an \(O(\log n)\) ratio.
+- poly-APX :: Problems with an \(n^c\) ratio.
+- gap technique :: If telling \(\mathrm{OPT} \le a\) from \(\mathrm{OPT} \ge b\)
+  is NP-hard, no algorithm beats ratio \(b/a\) unless P = NP.
+- absolute vs asymptotic ratio :: A guarantee for every instance, versus one that
+  only holds as OPT grows. Bin packing's \(3/2\) is absolute; asymptotically it
+  has a PTAS.
+- asymptotic PTAS :: A PTAS whose guarantee holds up to an additive term, for large
+  OPT.
+- PCP theorem :: \(\mathrm{NP} = \mathrm{PCP}(O(\log n), O(1))\): every NP claim
+  has a proof checkable by reading a constant number of randomly chosen bits.
+  Equivalently, gap 3-SAT is NP-hard. /Slide: The PCP theorem: where approximation
+  hardness comes from./
+- probabilistically checkable proof :: A proof format a randomized verifier checks by
+  sampling a few bits, accepting correct proofs and rejecting false claims with
+  probability at least ½.
+- gap amplification :: Dinur's combinatorial proof of the PCP theorem (2007).
+- Håstad's theorem :: Max-3SAT is NP-hard to approximate within \(7/8 +
+  \varepsilon\), which a random assignment achieves (2001).
+- Unique Games Conjecture (UGC) :: That distinguishing almost-satisfiable from
+  almost-unsatisfiable label-permutation constraint systems is NP-hard (Khot 2002).
+  Open. If true, 2 for vertex cover and \(\alpha_{GW}\) for Max-Cut are optimal.
+  /Slide: Three thresholds, and the Unique Games Conjecture./
+- UGC-hard :: Hard assuming the Unique Games Conjecture.
+- \(H_n\) :: The harmonic number \(1 + \tfrac12 + \dots + \tfrac1n \le \ln n +
+  1\): greedy set cover's ratio.
+- 2-to-2 Games theorem :: A proved weaker cousin of UGC giving \(\sqrt 2 -
+  \varepsilon\) hardness for vertex cover (Khot, Minzer & Safra 2018).
+- open gap :: The distance between the best known guarantee and the best known
+  hardness for a problem. /Slide: Best ratio, best hardness, the gap./
+- FFD :: First-fit decreasing for bin packing: \(\tfrac{11}{9}\mathrm{OPT} +
+  \tfrac69\) bins.

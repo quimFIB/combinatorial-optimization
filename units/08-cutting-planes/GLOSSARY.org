@@ -1,0 +1,102 @@
+#+title: Glossary — unit 08
+#+startup: content latexpreview
+#+options: ^:{}
+
+The terms this unit introduces, in the order the deck meets them. The slides
+stay the definition of record; each entry names the slide it comes from, so a
+term can be looked up here and read properly there.
+
+\(S\) is the integer feasible set throughout.
+
+* General cuts
+
+- valid inequality :: \(a^\top x \le \beta\) satisfied by every \(x \in S\).
+  /Slide: Valid inequalities and separation./
+- cut (cutting plane) :: A valid inequality violated by the current LP point
+  \(x^*\): \(a^\top x^* > \beta\).
+- facet of \(\mathrm{conv}(S)\) :: The strongest kind of valid inequality; the
+  hull is exactly the intersection of its facets.
+- separation problem :: Given \(x^*\) and a family of valid inequalities, find a
+  member violated by \(x^*\) or prove none exists. A family with hard separation
+  is useless in practice.
+- cutting-plane method :: Solve the LP, separate, add the cut, re-solve with the
+  dual simplex; branch when no cut is found.
+- Chvátal–Gomory (CG) cut :: For \(Ax \le b\), \(x \ge 0\) integer and any
+  \(u \ge 0\): \(\lfloor u^\top A \rfloor x \le \lfloor u^\top b \rfloor\).
+  Farkas' combination plus one rounding step. /Slide: Chvátal–Gomory rounding./
+- CG closure :: The polyhedron obtained by adding every CG cut at once.
+  Repeating finitely often reaches \(\mathrm{conv}(S)\) for bounded pure IPs.
+- CG rank :: How many rounds of closure an inequality needs. Edmonds' odd-set
+  inequalities have rank 1; some TSP inequalities have rank growing with \(n\).
+- cutting-plane proof :: A CG derivation viewed as a proof system for integer
+  infeasibility.
+- fractional part \(f(v)\) :: \(v - \lfloor v \rfloor\). /Slide: Gomory's cut,
+  read off the tableau./
+- Gomory fractional cut :: From a tableau row \(x_i + \sum_{j \in N} \bar a_{ij}
+  z_j = \bar b_i\) with \(\bar b_i\) fractional: \(\sum_{j \in N} f(\bar a_{ij})
+  z_j \ge f(\bar b_i)\). A CG cut with multipliers from row \(i\) of
+  \(A_B^{-1}\). Needs every variable, slacks included, integral.
+- Gomory mixed-integer (GMI) cut :: The version for MILPs, with a different
+  coefficient formula for continuous variables. Among the most effective cuts in
+  modern solvers.
+- stalling :: Successive cut rounds improving the bound less and less while
+  coefficients and density grow. /Slide: Convergence in theory, stalling in
+  practice./
+- coefficient growth :: The number of digits in cut coefficients rising round
+  after round; in floating point it makes cuts invalid.
+- dynamism :: The ratio of largest to smallest coefficient in a row; solvers
+  discard cuts where it is too high.
+
+* Structural cuts
+
+- cover :: For a knapsack row \(\sum_j w_j x_j \le c\), a set \(C\) with
+  \(\sum_{j \in C} w_j > c\): not all of it fits. /Slide: Knapsack cover
+  inequalities./
+- cover inequality :: \(\sum_{j \in C} x_j \le |C| - 1\).
+- minimal cover :: A cover from which removing any item makes it fit.
+- cover separation :: \(x^*\) violates the cover inequality for \(C\) iff
+  \(\sum_{j \in C} (1 - x_j^*) < 1\), so separation is a knapsack problem:
+  minimize that sum over covers. Exact by DP over integer weights (lab step 3);
+  solvers usually do it greedily.
+- lifting :: Strengthening a valid inequality for a restriction (some variables
+  fixed to 0) by bringing the variables back one at a time, each with the largest
+  coefficient that keeps it valid. /Slide: Lifting: strengthening a cut variable
+  by variable./
+- sequential up-lifting :: \(\alpha_j = r - \max\{\sum_{\text{lifted}} \alpha_i
+  x_i : \sum w_i x_i \le c - w_j\}\) for the next \(j \notin C\), where \(r\) is
+  the right-hand side.
+- lifted cover inequality :: A minimal cover inequality after sequential lifting.
+  Always a facet of the knapsack polytope; the lifting order can change which.
+- mixed-integer rounding (MIR) cut :: A rounding formula applied to an
+  aggregation of rows. /Slide: The families solvers actually run./
+- aggregation :: A combination of several rows into one, used as the base for MIR
+  cuts. Sees structure no single row shows.
+- flow cover cut :: A cut from fixed-charge flow rows \(x \le uy\).
+- conflict graph :: A graph on binaries (and their complements) with an edge
+  wherever two cannot both be 1.
+- clique cut :: \(\sum_{j \in K} x_j \le 1\) for a clique \(K\) of the conflict
+  graph.
+- odd cycle cut :: A cut from an odd cycle in the conflict graph.
+- zero-half cut :: A CG cut with every \(u_i \in \{0, \tfrac12\}\), separated as
+  a parity problem.
+- implied bound cut :: A cut from bounds and implications, such as recovering \(x
+  \le uy\).
+
+* Branch-and-cut
+
+- branch-and-cut :: Branch and bound with cutting planes added at the root and at
+  nodes. /Slide: Cut loops and cut management./
+- root cut loop :: Rounds of solve, separate, select and add at the root, until
+  the bound stops moving enough.
+- efficacy :: How far a cut moves \(x^*\): \((a^\top x^* - \beta) / \|a\|\).
+- parallelism filter :: Skipping a cut nearly parallel to one already chosen.
+- cut pool :: Where cuts that have been slack for several rounds are kept after
+  removal from the LP, ready to be re-added if violated again.
+- aging :: Counting how many consecutive rounds a cut has been slack, and
+  dropping it once that exceeds a limit. The lab's ~age_pool~: a binding cut
+  resets to age 0, a slack one ages by 1.
+- local cut :: A cut derived at a node and valid only in its subtree, because it
+  uses that node's bound changes.
+- global cut :: A cut valid everywhere in the tree.
+- root gap closed :: The share of the root integrality gap the cuts removed.
+  /Slide: What your cuts were worth, and SCIP's./

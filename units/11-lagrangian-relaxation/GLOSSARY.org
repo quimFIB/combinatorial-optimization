@@ -1,0 +1,95 @@
+#+title: Glossary — unit 11
+#+startup: content latexpreview
+#+options: ^:{}
+
+The terms this unit introduces, in the order the deck meets them. The slides
+stay the definition of record; each entry names the slide it comes from, so a
+term can be looked up here and read properly there.
+
+Convention throughout: \(z = \min\{c^\top x : Ax \ge b,\ x \in X\}\), where
+optimizing over \(X\) alone is easy.
+
+* Dualising
+
+- complicating constraints :: The rows \(Ax \ge b\) that make the problem hard;
+  the ones to move into the objective. /Slide: The Lagrangian function./
+- dualising (relaxing) a constraint :: Removing it and adding a price for its
+  violation to the objective.
+- Lagrange multipliers :: The prices \(u \ge 0\), one per dualised row; free sign
+  for equality rows.
+- Lagrangian function :: \(L(u) = \min_{x \in X} c^\top x + u^\top (b - Ax)\).
+- Lagrangian subproblem :: The easy minimization over \(X\) that evaluates
+  \(L(u)\).
+- weak duality (Lagrangian) :: \(L(u) \le z\) for every \(u \ge 0\).
+- Lagrangian dual :: \(z_{LD} = \max_{u \ge 0} L(u)\). A concave maximization with
+  no local maxima but no gradient.
+- concave, piecewise linear :: \(L\) is the lower envelope of one affine function
+  per \(x \in X\), non-differentiable at its kinks, where the maximum almost always
+  sits.
+- Geoffrion's theorem :: \(z_{LD} = \min\{c^\top x : Ax \ge b,\ x \in
+  \mathrm{conv}(X)\}\), so \(z_{LP} \le z_{LD} \le z\) (1974). /Slide: Geoffrion
+  1974: which bound you get./
+- integrality property :: \(\mathrm{conv}(X)\) equals the LP description of
+  \(X\). Then \(z_{LD} = z_{LP}\): the relaxation gives nothing the LP didn't,
+  though it may be faster. The prediction the checkpoint asks for.
+- GAP :: The generalized assignment problem: assign each job to one agent,
+  respecting agent capacities, at minimum cost.
+- relaxation A (knapsacks) :: Dualise "each job exactly once", leaving one knapsack
+  per agent. No integrality property, so it beats the LP.
+- relaxation B (one agent per job) :: Dualise the capacities, leaving "each job
+  picks an agent". Integral LP, so it stops at the LP bound.
+
+* Subgradients
+
+- subgradient :: \(g\) with \(L(v) \le L(u) + g^\top (v - u)\) for all \(v\).
+  For the Lagrangian, \(g = b - Ax(u)\), the violation of the dualised rows: free
+  to compute. /Slide: Subgradient ascent./
+- subgradient ascent :: \(u \leftarrow [u + t_k g]_+\), projecting back onto
+  \(u \ge 0\).
+- diminishing step rule :: \(\sum t_k = \infty\), \(\sum t_k^2 < \infty\).
+  Converges, slowly: \(O(1/\varepsilon^2)\) iterations.
+- Polyak step :: \(t_k = \lambda_k (\bar z - L(u)) / \|g\|^2\), with \(\bar z\)
+  an upper bound.
+- Held–Wolfe–Crowder rule :: Halve \(\lambda\) when the bound stops improving.
+  Lab step 2.
+- not an ascent method :: A subgradient step can lower \(L\) even when small; it
+  only brings \(u\) closer to the optimal multipliers. Always keep the best bound
+  seen.
+- zig-zag :: The bouncing of \(L(u)\) under a fixed large step.
+- Kelley's cutting-plane method :: Maximize the envelope of the affine pieces seen
+  so far as an LP. Its dual is unit 10's restricted master. /Slide: Beyond plain
+  subgradients./
+- bundle method :: The cutting-plane model plus a quadratic proximal term: the
+  stabilised version, with convergence guarantees.
+- volume algorithm :: A subgradient method that also averages relaxed solutions
+  into an approximate primal LP solution (Barahona & Anbil 2000).
+- primal recovery :: Weighted averages of the \(x(u_k)\) converging to an optimal
+  point over \(\mathrm{conv}(X)\).
+
+* Held–Karp
+
+- 1-tree :: A spanning tree on vertices \(1, \dots, n-1\) plus two edges at
+  vertex 0. Every tour is a 1-tree with all degrees 2. /Slide: 1-trees and the Held–Karp
+  bound (1970–71)./
+- vertex penalties \(\pi_v\) :: Multipliers on "degree = 2", turning edge costs
+  into \(d_{ij} + \pi_i + \pi_j\).
+- 1-tree subgradient :: \(g_v = \deg_T(v) - 2\). If it is 0, the 1-tree is an
+  optimal tour.
+- Held–Karp bound :: \(\max_\pi L(\pi)\) over 1-trees. Equal to the subtour LP
+  bound, by Geoffrion, since the 1-tree polytope has the integrality property.
+- α-nearness :: An edge's cost in the cheapest 1-tree forced to contain it. LKH
+  builds its candidate edge lists from it.
+- LKH :: Helsgaun's Lin–Kernighan implementation, the best TSP heuristic
+  (unit 26).
+
+* Using the multipliers
+
+- reduced-cost fixing :: If every solution with \(x_e = 1\) has Lagrangian value
+  above the incumbent \(\bar z\), fix \(x_e = 0\). /Slide: Fixing variables, and
+  repairing solutions./
+- 1-tree reduced cost \(\rho_e\) :: \(c_e\) minus the heaviest edge on the tree
+  path between its endpoints: the matroid exchange of unit 13.
+- Lagrangian heuristic :: Repairing the relaxed solution, which violates only the
+  dualised constraints, into a feasible one.
+- regret :: The cost difference between a job's best and second-best placement,
+  used to decide which job to place first in the GAP repair.

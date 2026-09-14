@@ -1,0 +1,94 @@
+#+title: Glossary — unit 18
+#+startup: content latexpreview
+#+options: ^:{}
+
+The terms this unit introduces, in the order the deck meets them. The slides
+stay the definition of record; each entry names the slide it comes from, so a
+term can be looked up here and read properly there.
+
+* Why global
+
+- global constraint :: A constraint over an unbounded number of variables with a
+  dedicated propagator that sees its whole structure.
+- decomposition :: Writing a global constraint as many small ones, such as
+  alldifferent as pairwise \(\ne\). Its arc consistency is at most as strong as
+  the global's GAC, and often weaker. /Slide: What pairwise ≠ cannot see./
+- alldifferent :: All the given variables take different values.
+- generalised arc consistency (GAC) :: Every remaining value belongs to some
+  satisfying tuple of the constraint; unit 17's domain consistency.
+- Hall set :: \(k\) variables whose domains together hold exactly \(k\) values.
+  Those values are used up, so every other variable loses them. By Hall's theorem,
+  alldifferent is satisfiable iff no set has fewer values than members.
+- strength vs cost :: A stronger propagator removes more and costs more per call.
+  It wins only if the nodes saved outweigh the time per node: the one design
+  question in CP.
+
+* alldifferent
+
+- value graph :: The bipartite graph with variables on one side, values on the
+  other, and an edge for each value in each domain. /Slide: Régin 1994:
+  matching-based filtering./
+- Régin's filter :: Find a maximum matching of the value graph (fail if it misses
+  a variable), then remove every edge that lies in no maximum matching. GAC for
+  alldifferent in \(O(m \sqrt n)\).
+- edge in some maximum matching :: By Berge: matched, or on an even alternating
+  cycle, or on an even alternating path from a free value.
+- orientation (Régin) :: Matched edges value → variable, the rest variable →
+  value, so alternating cycles become strongly connected components and alternating
+  paths become reachability to free values.
+- strongly connected component (SCC) :: A maximal set of nodes each reachable from
+  every other.
+- incremental matching :: Repairing the previous matching after a domain change
+  instead of recomputing it.
+- Hall set behind a removal :: The closed set reachable from a removed value's node:
+  its variables have exactly as many values as members. The explanation a
+  propagator gives in unit 21.
+- Hall interval :: A Hall set whose values form an interval; the basis of
+  \(O(n \log n)\) bounds-consistent alldifferent.
+- pigeonhole :: \(n + 1\) variables with \(n\) values under alldifferent. No
+  perfect matching at the root, while pairwise \(\ne\) needs exhaustive search.
+  /Slide: Measured: when it pays, and when it doesn't./
+
+* Scheduling
+
+- cumulative :: \(\text{cumulative}(s, d, r, C)\): tasks with starts \(s_i\),
+  durations \(d_i\) and demands \(r_i\) never use more than \(C\) at once.
+  /Slide: Cumulative, and timetable filtering./
+- compulsory part :: \([\max s_i,\ \min s_i + d_i)\) when non-empty: the time task
+  \(i\) runs whatever start it takes.
+- profile :: The total demand of compulsory parts at each time. Above \(C\) means
+  failure.
+- timetable filtering :: Removing a start of task \(i\) if it would overload a time
+  where the other tasks' compulsory parts already sit. Must subtract the task's own
+  compulsory part. Weak with wide time windows.
+- disjunctive (no-overlap) :: Cumulative with \(C = 1\) and unit demands: one
+  machine, tasks may not overlap.
+- job-shop :: Jobs made of ordered operations, each on one machine, minimizing the
+  finish time. The lab's ft06 has optimum 55.
+- edge-finding :: If a task cannot finish before a set \(\Omega\) of tasks all end,
+  it must end last among them, raising its start. /Slide: Stronger scheduling
+  reasoning./
+- \(\Theta\)-tree :: A balanced tree keyed by earliest start that makes
+  edge-finding \(O(n \log n)\) (Vilím 2004).
+- est, lct :: Earliest start time and latest completion time of a task or set.
+- not-first / not-last :: Detecting that a task cannot come first, or last, among a
+  set.
+- energetic reasoning :: Comparing the minimum energy tasks must spend inside an
+  interval with \(C\) times its length.
+- time-table edge-finding :: Edge-finding that also uses the compulsory-part profile
+  (Vilím 2011).
+
+* The catalogue
+
+- element :: \(\text{element}(i, T, v)\): \(v = T[i]\) with \(i\) a variable.
+  /Slide: A few globals worth knowing./
+- table :: The variables' tuple must be one of an explicit list; filtered by STR,
+  compact tables or MDDs.
+- global cardinality (gcc) :: Each value \(a\) is used between \(l_a\) and \(u_a\)
+  times. Filtered by flow (Régin 1996); alldifferent is the case \(l_a = 0\),
+  \(u_a = 1\).
+- regular :: The sequence of variables spells a word accepted by a finite
+  automaton. Filtered by reachability in a layered graph (Pesant 2004).
+- circuit :: Successor variables form a single Hamiltonian cycle.
+- Global Constraint Catalog :: Beldiceanu, Carlsson & Rampon's reference of 400+
+  constraints with semantics, decompositions and filtering algorithms.

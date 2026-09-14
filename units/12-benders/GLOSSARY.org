@@ -1,0 +1,104 @@
+#+title: Glossary — unit 12
+#+startup: content latexpreview
+#+options: ^:{}
+
+The terms this unit introduces, in the order the deck meets them. The slides
+stay the definition of record; each entry names the slide it comes from, so a
+term can be looked up here and read properly there.
+
+Convention throughout: \(\min_{y \in Y} f^\top y + Q(y)\) with
+\(Q(y) = \min_{x \ge 0}\{c^\top x : Wx \ge h - Ty\}\).
+
+* Splitting
+
+- Benders decomposition :: Fix the complicating variables in a master problem,
+  solve the rest as an LP, and turn its duals into an inequality on the master.
+  Row generation; Benders 1962.
+- complicating variables :: \(y\): few, often integer, and once fixed they leave
+  an easy LP. /Slide: The value function of the easy part./
+- recourse (subproblem) :: The LP in \(x\) solved after \(y\) is fixed.
+- value function \(Q(y)\) :: The recourse optimum as a function of \(y\). By LP
+  duality, \(\max_{\pi \in \Pi} \pi^\top (h - Ty)\): convex and piecewise
+  linear.
+- dual polyhedron \(\Pi\) :: \(\{\pi \ge 0 : W^\top \pi \le c\}\). It does not
+  depend on \(y\), so a dual solution found at one \(y\) is valid at all of them.
+  The fact the whole method rests on.
+- optimality cut :: \(\theta \ge \bar\pi^\top (h - Ty)\) from an optimal dual
+  \(\bar\pi\) at \(\bar y\). Tight at \(\bar y\), valid everywhere by weak
+  duality. /Slide: Optimality and feasibility cuts./
+- feasibility cut :: \(\bar r^\top (h - Ty) \le 0\) from a ray \(\bar r\) of
+  \(\Pi\) when the subproblem at \(\bar y\) is infeasible. Excludes \(\bar y\) and
+  keeps every \(y\) that is feasible.
+- phase-one LP :: \(\min \sum z\) with slack variables, always feasible and
+  bounded; its duals give the feasibility cut without asking the solver for a ray.
+- complete recourse :: Every \(y\) leaves a feasible subproblem, for example via a
+  penalty on unmet demand. Feasibility cuts then never occur.
+- master problem :: \(\min f^\top y + \theta\) subject to the cuts so far and \(y
+  \in Y\). A MIP that grows by a row per iteration. /Slide: The loop, and why it
+  ends./
+- \(\theta\) :: The master's estimate of \(Q(y)\), built from below by the cuts.
+  Needs a starting lower bound, such as \(\theta \ge 0\).
+- Benders bounds :: LB is the master value, rising as cuts are added; UB is the
+  best \(f^\top \bar y + Q(\bar y)\) seen. Stop when they meet.
+- finite convergence :: \(\Pi\) has finitely many vertices and rays, so only
+  finitely many cuts exist.
+
+* The mirror of unit 10
+
+- linking variables vs linking constraints :: Benders splits a problem whose
+  blocks share variables; Dantzig–Wolfe one whose blocks share constraints. /Slide:
+  Benders and Dantzig–Wolfe on one page./
+- Benders–DW duality :: For an LP, Benders on the primal is Dantzig–Wolfe on its
+  dual: the transposed matrix swaps linking variables for linking constraints and
+  generated rows for generated columns.
+- relaxed master vs restricted master :: Benders' master lacks rows, so it gives a
+  lower bound; DW's lacks columns, so it gives an upper bound. The row most often
+  drawn backwards.
+
+* Stochastic programming
+
+- two-stage stochastic program :: Decide \(y\) now, observe a scenario, then take
+  recourse; minimize \(f^\top y + \sum_s p_s Q_s(y)\). /Slide: Two-stage recourse
+  and the L-shaped method./
+- scenario :: One possible realization of the uncertain data, with probability
+  \(p_s\).
+- deterministic equivalent (extensive form) :: One MIP with a copy of the
+  second-stage variables per scenario.
+- L-shaped method :: Benders with one aggregated cut per iteration,
+  \(\theta \ge \sum_s p_s(\cdot)\) (Van Slyke & Wets 1969). Also called
+  /single-cut/.
+- multi-cut :: One \(\theta_s\) and one cut per scenario (Birge & Louveaux 1988).
+  Fewer iterations, bigger master.
+- embarrassingly parallel :: Given \(y\), the scenario LPs are independent and can
+  run at once.
+- sample average approximation (SAA) :: Draw \(S\) scenarios, solve, repeat with
+  fresh samples to estimate the optimality gap statistically.
+- EVPI :: The expected value of perfect information: what knowing the scenario in
+  advance would save.
+- VSS :: The value of the stochastic solution: what solving the stochastic model
+  saves over planning for the average scenario.
+- crossover (Benders vs extensive form) :: The scenario count at which
+  decomposition starts to win. Depends on iterations times cost per iteration, and
+  the instance family controls the iterations. /Slide: The crossover, measured./
+
+* Modern Benders
+
+- branch-and-Benders-cut :: Solving the master once, adding Benders cuts as lazy
+  constraints from a callback whenever branch and bound finds a candidate.
+  /Slide: One tree, and better cuts./
+- LP-first :: Generating cuts at the master's LP relaxation before any integer
+  solves (McDaniel & Devine 1977).
+- dual degeneracy (Benders) :: Many optimal duals at \(\bar y\), so many different
+  cuts are tight there.
+- core point \(y^0\) :: A point in the relative interior of \(\mathrm{conv}(Y)\),
+  used to rank tight cuts.
+- Pareto-optimal cut :: Among the cuts tight at \(\bar y\), one highest at the
+  core point (Magnanti & Wong 1981). Needs one extra LP.
+- combinatorial Benders :: No-good cuts from infeasible subsets (Codato &
+  Fischetti 2006).
+- no-good cut :: A constraint that forbids one specific assignment of the master
+  variables, or a subset of it.
+- logic-based Benders :: Any subproblem, CP or SAT included, that returns an
+  inference about the master's choice (Hooker & Ottosson 2003; unit 21).
+- in-out separation :: Separating at a point between the master solution and a
+  core point, to stabilise the cuts.

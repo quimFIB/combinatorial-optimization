@@ -1,0 +1,105 @@
+#+title: Glossary — unit 20
+#+startup: content latexpreview
+#+options: ^:{}
+
+The terms this unit introduces, in the order the deck meets them. The slides
+stay the definition of record; each entry names the slide it comes from, so a
+term can be looked up here and read properly there.
+
+* From DPLL to CDCL
+
+- literal :: A Boolean variable \(x\) or its negation \(\lnot x\). /Slide: CNF,
+  resolution, and unit propagation./
+- clause :: A disjunction of literals.
+- CNF :: Conjunctive normal form: a conjunction of clauses.
+- SAT :: Deciding whether a CNF has a satisfying assignment. NP-complete (Cook
+  1971); 3-SAT already is.
+- resolution :: From \(C \lor x\) and \(D \lor \lnot x\), derive \(C \lor D\).
+- refutation :: A derivation of the empty clause, proving unsatisfiability.
+  Resolution is refutation-complete.
+- unit clause :: A clause with every literal false but one, which forces that
+  literal.
+- unit propagation :: Repeatedly assigning the literals unit clauses force.
+- conflict :: A clause with every literal false.
+- DPLL :: Branch on a variable, unit-propagate, backtrack chronologically on a
+  conflict (Davis, Logemann & Loveland 1962).
+- two watched literals :: Watch two non-false literals per clause; revisit a clause
+  only when a watched literal becomes false. Backtracking needs no updates (Chaff
+  2001).
+
+* Learning
+
+- CDCL :: Conflict-driven clause learning: DPLL plus learned clauses,
+  non-chronological backjumping, activity-based branching and restarts.
+- decision level :: The number of decisions in force when a literal was assigned.
+- trail :: The assigned literals in order, with their levels and reasons.
+- reason clause :: The clause that forced a propagated literal.
+- implication graph :: A node per assigned literal, with edges from the other
+  literals of its reason clause. /Slide: The implication graph and the first
+  UIP./
+- unique implication point (UIP) :: A current-level node on every path from the
+  decision to the conflict.
+- first UIP :: The UIP closest to the conflict. Computed by resolving the conflict
+  clause with reasons of current-level literals until one remains; gives short
+  clauses that assert the most.
+- learned clause :: The clause derived by conflict analysis, added to the formula.
+- asserting clause :: A learned clause with exactly one literal at the current
+  level, which becomes unit after backjumping.
+- non-chronological backjumping :: Jumping back to the second-highest level in the
+  learned clause, possibly skipping many decisions. /Slide: The rest of the
+  engine./
+- VSIDS :: Bump the activity of variables in each conflict, growing the bump after
+  every conflict so recent ones weigh more; branch on the most active.
+- activity :: The score VSIDS keeps per variable.
+- phase saving :: Re-assigning a variable its last value when branching on it
+  again.
+- restart (CDCL) :: Clearing the trail while keeping learned clauses and
+  activities, so the new search differs.
+- literal block distance (LBD) :: The number of distinct decision levels among a
+  learned clause's literals.
+- glue clause :: A learned clause with LBD at most 2; kept forever.
+- clause deletion :: Periodically removing the worse half of learned clauses by
+  LBD, never a clause that is a current reason (Glucose 2009).
+
+* Proofs and limits
+
+- DRAT proof :: A list of every learned and deleted clause in order, ending with
+  the empty clause, that an independent checker replays. /Slide: DRAT: checkable
+  unsatisfiability./
+- RUP (reverse unit propagation) :: A lemma is RUP if assigning its negation and
+  unit-propagating gives a conflict. Every first-UIP clause is.
+- RAT :: A weaker check than RUP that also admits clauses added by inprocessing,
+  such as blocked clauses.
+- drat-trim :: The standard DRAT proof checker; cake_lpr is a formally verified one.
+- polynomial simulation :: One proof system can reproduce another's proofs with at
+  most polynomial blow-up. CDCL with restarts polynomially simulates resolution.
+  /Slide: CDCL is resolution, and pigeonhole defeats resolution./
+- pigeonhole formula \(\mathrm{PHP}^{n+1}_n\) :: \(n + 1\) pigeons, \(n\) holes, no
+  two pigeons in a hole. Unsatisfiable.
+- Haken's theorem :: Every resolution refutation of \(\mathrm{PHP}^{n+1}_n\) has
+  size \(2^{\Omega(n)}\) (1985), so every CDCL run on it takes exponentially many
+  conflicts.
+- clause width :: The number of literals in a clause. A refutation forced to contain
+  wide clauses must be large (Ben-Sasson & Wigderson 2001).
+- stronger proof systems :: Cutting planes and extended resolution have short
+  pigeonhole proofs; pseudo-Boolean solvers exploit the former.
+
+* Encodings
+
+- encoding :: A translation of a constraint into CNF. /Slide: Tseitin,
+  at-most-one, cardinality./
+- Tseitin transformation :: Naming every subformula with a fresh variable. Linear
+  size and equisatisfiable (1968).
+- equisatisfiable :: Satisfiable exactly when the original is, though not
+  necessarily over the same variables.
+- auxiliary variable :: A fresh variable an encoding introduces.
+- at-most-one (AMO) :: At most one of \(n\) literals is true.
+- pairwise encoding :: \(\binom{n}{2}\) binary clauses forbidding each pair.
+- sequential counter :: An AMO encoding with \(n - 1\) auxiliaries and \(3n - 4\)
+  clauses (Sinz 2005).
+- bitwise encoding :: An AMO encoding with \(\lceil \log n \rceil\) auxiliaries
+  and \(n \lceil \log n \rceil\) clauses. Not arc consistent in general.
+- at-most-\(k\) :: At most \(k\) of \(n\) literals true: sequential counters,
+  sorting and cardinality networks, totalizers.
+- arc consistency (encoding) :: Unit propagation on the encoding prunes as much as
+  the constraint would. More important than clause count.

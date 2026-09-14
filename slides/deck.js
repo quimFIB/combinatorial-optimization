@@ -4,6 +4,12 @@
 //   N   show / hide the notes panel beside the slide (remembered)
 //   R   reading mode: every slide stacked in one page, notes beside each
 //   D   toggle dark / light
+//   G   the unit's glossary, searchable; click a term to jump to its slide
+//
+// Terms: <span class="term">facets</span>, or <span class="term" data-term="tight row">tight</span>
+// when the words on the slide differ from the glossary entry. Clicking one opens its
+// definition. Definitions come from the unit's glossary.js, built from GLOSSARY.org by
+// `co slides` / `co glossary`; this file loads it, so decks need no extra script tag.
 //
 // (No speaker-window plugin: reveal 5.1.0's notes plugin from cdnjs throws on
 // load and aborts initialisation. N and R cover the same need.)
@@ -60,6 +66,142 @@
     document.body.appendChild(el);
   }
 
+  // ---------------------------------------------------------------- glossary
+  // Slide titles are read before KaTeX renders, while math is still source text, so
+  // they compare cleanly with the titles the glossary names.
+  const titleKey = (t) => t.toLowerCase().replace(/\\[a-z]+/g, "").replace(/[^0-9a-z]/g, "");
+  const slideTitles = Array.from(document.querySelectorAll(".reveal .slides > section")).map((s) => {
+    const h = s.querySelector("h2");
+    return h ? titleKey(h.textContent) : "";
+  });
+  // A term's words are read now, before KaTeX turns "$I(x)$" into rendered markup.
+  document.querySelectorAll(".reveal .term:not([data-term])").forEach((t) => { t.dataset.term = t.textContent; });
+  const termKey = (t) => t.replace(/\\\(|\\\)|\$/g, "").replace(/\s+/g, " ").trim().toLowerCase();
+
+  function lookup(ref) {
+    const entries = window.GLOSSARY || [];
+    const k = termKey(ref);
+    const exact = entries.find((e) => e.keys[0] === k);
+    if (exact) return exact;
+    for (const cand of [k, k.replace(/es$/, ""), k.replace(/s$/, "")]) {
+      const hit = entries.find((e) => e.keys.includes(cand));
+      if (hit) return hit;
+    }
+    return null;
+  }
+
+  function renderInline(el) {
+    if (!window.renderMathInElement) return;
+    renderMathInElement(el, {
+      delimiters: [{ left: "\\(", right: "\\)", display: false }, { left: "$", right: "$", display: false }],
+      throwOnError: false,
+    });
+  }
+
+  function goToSlide(title) {
+    const i = slideTitles.indexOf(titleKey(title));
+    if (i < 0) return false;
+    closePop();
+    closeIndex();
+    if (reading) location.hash = "#s" + (i + 1); else Reveal.slide(i);
+    return true;
+  }
+
+  function slideLink(entry) {
+    if (!entry.slide || slideTitles.indexOf(titleKey(entry.slide)) < 0) return "";
+    return `<button class="gl-go" type="button">slide: ${entry.slide.replace(/</g, "&lt;")} →</button>`;
+  }
+
+  let pop = null;
+  function closePop() { if (pop) { pop.remove(); pop = null; } }
+
+  function openPop(termEl) {
+    closePop();
+    const ref = termEl.dataset.term || termEl.textContent;
+    const entry = lookup(ref);
+    pop = document.createElement("div");
+    pop.className = "gl-pop";
+    pop.setAttribute("role", "dialog");
+    pop.innerHTML = entry
+      ? `<div class="gl-term">${entry.term_html}</div><div class="gl-def">${entry.html}</div>` +
+        `<div class="gl-foot">${slideLink(entry)}<span class="gl-hint"><kbd>G</kbd> all terms</span></div>`
+      : `<div class="gl-def">No glossary entry for “${ref}”.</div>`;
+    document.body.appendChild(pop);
+    renderInline(pop);
+    const go = pop.querySelector(".gl-go");
+    if (go) go.addEventListener("click", () => goToSlide(entry.slide));
+    const r = termEl.getBoundingClientRect();
+    const w = pop.offsetWidth, h = pop.offsetHeight;
+    const left = Math.max(12, Math.min(r.left, innerWidth - w - 12));
+    const below = r.bottom + 8 + h < innerHeight - 12;
+    pop.style.left = left + "px";
+    pop.style.top = (below ? r.bottom + 8 : Math.max(12, r.top - h - 8)) + "px";
+  }
+
+  let index = null;
+  function closeIndex() { if (index) { index.remove(); index = null; } }
+
+  function openIndex() {
+    closePop();
+    if (index) { closeIndex(); return; }
+    const entries = window.GLOSSARY || [];
+    index = document.createElement("div");
+    index.className = "gl-index";
+    index.innerHTML =
+      `<div class="gl-index-head"><input type="search" placeholder="filter ${entries.length} terms" ` +
+      `aria-label="filter terms"><span class="gl-hint"><kbd>Esc</kbd> close</span></div><div class="gl-list"></div>`;
+    const list = index.querySelector(".gl-list");
+    let section = null;
+    for (const e of entries) {
+      if (e.section !== section) {
+        section = e.section;
+        const h = document.createElement("h4");
+        h.textContent = section;
+        list.appendChild(h);
+      }
+      const item = document.createElement("div");
+      item.className = "gl-item";
+      item.dataset.search = (e.keys.join(" ") + " " + e.html.replace(/<[^>]+>/g, "")).toLowerCase();
+      item.innerHTML = `<div class="gl-term">${e.term_html}</div><div class="gl-def">${e.html}</div>${slideLink(e)}`;
+      const go = item.querySelector(".gl-go");
+      if (go) go.addEventListener("click", () => goToSlide(e.slide));
+      list.appendChild(item);
+    }
+    if (!entries.length) list.textContent = "This unit has no glossary.js yet: run `uv run co glossary`.";
+    document.body.appendChild(index);
+    renderInline(list);
+    const input = index.querySelector("input");
+    input.addEventListener("input", () => {
+      const q = input.value.trim().toLowerCase();
+      list.querySelectorAll(".gl-item").forEach((it) => { it.hidden = q && !it.dataset.search.includes(q); });
+      list.querySelectorAll("h4").forEach((h) => {
+        let n = h.nextElementSibling, any = false;
+        while (n && n.tagName !== "H4") { if (!n.hidden) any = true; n = n.nextElementSibling; }
+        h.hidden = !any;
+      });
+    });
+    // Focus after this keypress has been delivered, or the G lands in the filter box.
+    setTimeout(() => input.focus(), 0);
+  }
+
+  document.addEventListener("click", (e) => {
+    const t = e.target.closest(".term");
+    if (t) { e.preventDefault(); openPop(t); return; }
+    if (pop && !e.target.closest(".gl-pop")) closePop();
+    if (index && !e.target.closest(".gl-index")) closeIndex();
+  });
+  // Capture phase, so Esc closes a popover before reveal opens its overview.
+  window.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && (pop || index)) {
+      closePop(); closeIndex();
+      e.stopImmediatePropagation(); e.preventDefault();
+    }
+  }, true);
+
+  const glossaryScript = document.createElement("script");
+  glossaryScript.src = "glossary.js";
+  document.head.appendChild(glossaryScript);
+
   renderMath();
 
   // ---------------------------------------------------------------- reading
@@ -89,17 +231,18 @@
       const hl = RevealHighlight();
       if (hl.hljs) document.querySelectorAll("pre code").forEach((el) => hl.hljs.highlightElement(el));
     }
-    help("<kbd>R</kbd> back to slides &nbsp; <kbd>D</kbd> dark");
+    help("<kbd>R</kbd> back to slides &nbsp; <kbd>G</kbd> glossary &nbsp; <kbd>D</kbd> dark");
     document.addEventListener("keydown", (e) => {
       if (e.target.closest("input, textarea")) return;
       if (e.key === "r" || e.key === "R") toggleReading();
       if (e.key === "d" || e.key === "D") toggleDark();
+      if (e.key === "g" || e.key === "G") openIndex();
     });
     return;
   }
 
   // ---------------------------------------------------------------- slides
-  help("<kbd>N</kbd> notes &nbsp; <kbd>R</kbd> reading mode &nbsp; " +
+  help("<kbd>N</kbd> notes &nbsp; <kbd>R</kbd> reading mode &nbsp; <kbd>G</kbd> glossary &nbsp; " +
     "<kbd>D</kbd> dark &nbsp; <kbd>Esc</kbd> overview");
 
   Reveal.initialize({
@@ -122,8 +265,10 @@
       },
       82: toggleReading,                            // R
       68: toggleDark,                               // D
+      71: openIndex,                                // G
     },
   });
+  Reveal.on("slidechanged", () => { closePop(); closeIndex(); });
 
   // ?check=1 — an authoring aid: visit every slide, then cover the page with a list of
   // equations wider than their column and slides taller than the frame.

@@ -1,0 +1,106 @@
+#+title: Glossary — unit 31
+#+startup: content latexpreview
+#+options: ^:{}
+
+The terms this unit introduces, in the order the deck meets them. The slides
+stay the definition of record; each entry names the slide it comes from, so a
+term can be looked up here and read properly there.
+
+* Relax the decision
+
+- Birkhoff polytope \(\mathcal{B}\) :: The doubly stochastic matrices, whose vertices
+  are the permutation matrices (unit 15). /Slide: Sinkhorn: the Hungarian algorithm,
+  softened./
+- entropic regularization :: Adding \(\varepsilon \sum_{ij} P_{ij}(\log P_{ij} -
+  1)\) to \(\langle C, P \rangle\), making the minimizer unique, interior and smooth
+  in \(C\).
+- entropy \(H(P)\) :: \(-\sum_{ij} P_{ij}(\log P_{ij} - 1)\) in this unit's
+  convention.
+- transport plan :: The soft assignment \(P\), with \(P_{ij} = \exp((f_i + g_j -
+  C_{ij})/\varepsilon)\).
+- Sinkhorn iterations :: Alternately rescale rows and columns to sum to 1: choose
+  \(f\) for the rows, then \(g\) for the columns.
+- log domain :: Carrying out Sinkhorn with logsumexp on \(f\) and \(g\) instead of
+  multiplying kernels, which underflow as \(\varepsilon\) shrinks.
+- logsumexp :: \(\log \sum_i e^{a_i}\), computed stably.
+- temperature \(\varepsilon\) :: The regularization weight. As \(\varepsilon \to
+  0\) the plan concentrates on an optimal permutation, and iterations grow like
+  \(1/\varepsilon\).
+- envelope theorem :: The gradient of an optimal value with respect to a parameter is
+  the partial derivative at the optimum: here \(\nabla_C = P^*_\varepsilon\).
+- greedy rounding :: Turning a soft plan into a permutation by repeatedly taking its
+  largest remaining entry.
+- optimal transport :: Moving one distribution onto another at least cost; assignment
+  is the case with uniform marginals.
+- Gumbel-Sinkhorn :: Noise plus Sinkhorn, for learning latent permutations.
+- differentiable sorting :: Soft sorts and ranks via optimal transport or projections
+  onto the permutahedron.
+
+* Sample the decision
+
+- Gumbel noise :: Samples \(G = -\log(-\log U)\) with \(U\) uniform. /Slide:
+  Gumbel, straight-through, REINFORCE./
+- Gumbel-max trick :: \(\arg\max_i (\ell_i + G_i)\) samples exactly from
+  \(\mathrm{softmax}(\ell)\).
+- softmax :: \(p_i = e^{\ell_i} / \sum_j e^{\ell_j}\).
+- logits \(\ell\) :: The unnormalized scores a softmax turns into probabilities.
+- Gumbel-softmax :: \(\mathrm{softmax}((\ell + G)/\tau)\): a differentiable relaxed
+  sample, sharper as \(\tau\) falls.
+- straight-through estimator :: Forward the hard one-hot, backward the soft sample's
+  gradient: ~hard + soft - stop_gradient(soft)~. Biased.
+- ~stop_gradient~ :: An operation that passes values through unchanged but blocks
+  gradients.
+- REINFORCE (score-function estimator) :: \(\nabla_\ell \mathbb{E}[f(k)] =
+  \mathbb{E}[f(k)(e_k - p)]\). Unbiased, needs no derivative of \(f\), high variance.
+- baseline (REINFORCE) :: A running mean subtracted from \(f\) to cut variance without
+  adding bias.
+- bias–variance trade-off :: Lower-variance estimators like straight-through at high
+  \(\tau\) pay with bias; unbiased REINFORCE pays with variance.
+
+* Differentiate the optimum
+
+- argmin layer :: A model component whose output is the solution of an optimization
+  problem, with gradients flowing through it. /Slide: The implicit function theorem
+  on KKT./
+- implicit function theorem :: If equations \(F(x, q) = 0\) define \(x\) as a
+  function of \(q\), its derivative comes from one linear solve with \(\partial F /
+  \partial x\).
+- active set \(S\) :: The constraints holding with equality at the optimum.
+- strict complementarity :: Every active constraint has a positive multiplier. Needed
+  for the active set to stay fixed under small changes.
+- argmin Jacobian :: \(\partial x^* / \partial q\), from differentiating the KKT
+  system with the active set fixed.
+- OptNet :: Differentiable QP layers (Amos & Kolter 2017).
+- cvxpylayers :: Differentiable layers for disciplined parametrized convex programs
+  (Agrawal et al. 2019).
+- unrolling :: Differentiating through a solver's iterations instead of its optimality
+  conditions. Gives the truncated algorithm's gradient.
+- degenerate point :: A constraint active with zero multiplier, where the active set
+  can change and \(x^*(q)\) is not differentiable.
+- perturbed optimizers :: Averaging an argmax over random cost perturbations to get a
+  smooth surrogate (Berthet et al. 2020).
+
+* Learn to optimize
+
+- learning to branch :: Training a cheap model to imitate strong branching's choices
+  inside branch and bound. /Slide: Learned branching, cuts, and neural combinatorial
+  optimisation./
+- imitation learning :: Training a policy to reproduce an expert's decisions, here
+  strong branching.
+- ranker :: A model scoring candidates so the highest-scored one is chosen; the lab's
+  is linear over five features.
+- branching features :: Cheap per-variable descriptors such as fractionality. Strong
+  branching's signal lives in child LP bounds, which the lab's features lack.
+- graph neural network (GNN) :: A network over the variable–constraint bipartite
+  graph; used for learned branching (Gasse et al. 2019).
+- neural combinatorial optimization :: Networks that construct solutions directly:
+  pointer networks, attention models trained with REINFORCE, POMO.
+- pointer network :: A sequence model whose output attends to input positions, used to
+  emit tours (Vinyals et al. 2015).
+- held-out instances :: Test instances not used in training, often larger or from a
+  different distribution to test generalization.
+- imitation accuracy :: How often the learned rule agrees with the expert. Compared
+  with a trivial rule's agreement, it shows whether the features carry the signal.
+  /Slide: Measured: the lab's learned rule, judged by unit 28's method./
+- generalization :: Performing well on instances unlike the training set; the
+  recurring weakness of learned solvers.

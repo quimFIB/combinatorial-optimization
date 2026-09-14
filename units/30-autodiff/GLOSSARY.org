@@ -1,0 +1,92 @@
+#+title: Glossary — unit 30
+#+startup: content latexpreview
+#+options: ^:{}
+
+The terms this unit introduces, in the order the deck meets them. The slides
+stay the definition of record; each entry names the slide it comes from, so a
+term can be looked up here and read properly there.
+
+* Three kinds of derivative
+
+- symbolic differentiation :: Rewriting the formula by the rules of calculus. Suffers
+  expression swell and cannot handle loops or branches. /Slide: Symbolic,
+  numerical, automatic./
+- expression swell :: The blow-up of symbolic derivatives: a product of \(n\)
+  factors has \(n\) terms of \(n - 1\) factors.
+- numerical differentiation :: Finite differences such as \((f(x + h) - f(x - h)) /
+  2h\). Truncation error \(O(h^2)\) against rounding error \(O(\epsilon / h)\); one
+  evaluation pair per input. Used as the test oracle.
+- automatic differentiation (autodiff) :: Applying the chain rule to the operations a
+  program actually executed. Exact up to floating point, at a small constant times
+  the program's cost.
+- dual number :: \(a + b\varepsilon\) with \(\varepsilon^2 = 0\). Arithmetic on dual
+  numbers carries derivatives: \(g(a + b\varepsilon) = g(a) + g'(a)\, b\,
+  \varepsilon\).
+- forward mode :: Seed an input with \(\varepsilon\) part 1, run the program, read the
+  derivative off the \(\varepsilon\) part. One pass per input direction, so \(n\)
+  passes for a gradient.
+- seed :: The \(\varepsilon\) part given to the inputs, choosing which derivative
+  forward mode computes.
+
+* Reverse mode
+
+- Wengert tape :: A record of every operation with its inputs and local derivatives,
+  made during the forward pass. /Slide: The Wengert tape./
+- adjoint \(\bar v\) :: \(\partial f / \partial v\) for an intermediate \(v\),
+  accumulated backwards by \(\bar u \mathrel{+}= \bar v \cdot \partial v / \partial
+  u\).
+- reverse mode :: Record a tape, then sweep backwards in reverse topological order
+  propagating adjoints. One sweep gives the full gradient.
+- backward pass (sweep) :: The reverse traversal of the tape.
+- cheap gradient principle :: A full gradient costs a small constant multiple (about
+  4–5) of one function evaluation, whatever the number of inputs (Griewank).
+- backpropagation :: Reverse mode applied to a neural network (Rumelhart, Hinton &
+  Williams 1986).
+- each node once :: The sweep must visit each node a single time in topological order,
+  not follow paths, or a graph with exponentially many paths explodes.
+
+* Memory and higher order
+
+- tape memory :: The intermediates reverse mode must keep until the backward sweep
+  reaches them. Grows with batch × width × depth. /Slide: What the tape holds, and
+  checkpointing./
+- activation :: An intermediate output of a network layer, such as a tanh output,
+  saved for the backward pass.
+- checkpointing (rematerialization) :: Keeping only some intermediates and recomputing
+  the rest during the backward sweep. Every \(\sqrt L\)-th layer gives \(O(\sqrt L)\)
+  memory for about one extra forward pass.
+- revolve :: Griewank's optimal checkpointing schedule for chains: \(O(\log L)\)
+  memory for \(O(\log L)\) times the compute.
+- in-place mutation :: Overwriting an array that the tape saved, so the backward pass
+  silently uses wrong values.
+- Jacobian :: The matrix of partial derivatives of a vector function.
+- JVP (Jacobian-vector product) :: \(Jv\), one directional derivative. What forward
+  mode computes per pass. /Slide: JVPs, VJPs, and Hessian-vector products./
+- VJP (vector-Jacobian product) :: \(u^\top J\), one weighted row combination. What
+  reverse mode computes per pass; every op in an array tape defines one.
+- Hessian-vector product (HVP) :: \(Hv = \frac{d}{d\varepsilon} \nabla f(x +
+  \varepsilon v)\), computed without forming \(H\).
+- forward over reverse :: Running a reverse-mode tape on dual numbers to get HVPs in
+  one forward and one backward pass.
+- hyper-dual numbers :: Nested dual numbers, giving higher derivatives.
+
+* Real data, and lies
+
+- MLP :: A multilayer perceptron: alternating matrix multiplications, bias additions
+  and nonlinearities. /Slide: An MLP on terrain elevations./
+- tanh :: The hyperbolic tangent, the lab MLP's nonlinearity.
+- SGD :: Stochastic gradient descent on mini-batches.
+- epoch :: One pass over the training data.
+- RMSE :: Root mean squared error.
+- train vs test error :: Error on the data used for fitting, versus on held-out data.
+  The honest measure is the second.
+- baseline :: A simple model (predict the mean, a plane) that a learned model must beat
+  for the claim to mean anything.
+- autodiff lies :: Where the result is a convention, not a derivative: kinks such as
+  ReLU or \(|x|\) at 0, branches on a value, \(\sqrt{x^2}\) at 0 giving nan, and
+  argmax, sorting and rounding, whose derivatives are zero almost everywhere.
+  /Slide: Where autodiff quietly lies./
+- differentiate the program, not the function :: Autodiff sees only the branch that
+  ran; two programs computing the same function can give different gradients.
+- almost everywhere (a.e.) :: Everywhere except a set of measure zero, such as the
+  switching points of an argmax.

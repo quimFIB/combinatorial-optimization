@@ -1,0 +1,104 @@
+#+title: Glossary — unit 14
+#+startup: content latexpreview
+#+options: ^:{}
+
+The terms this unit introduces, in the order the deck meets them. The slides
+stay the definition of record; each entry names the slide it comes from, so a
+term can be looked up here and read properly there.
+
+* Max flow, min cut
+
+- network :: A directed graph with a source \(s\), a sink \(t\), and a capacity
+  \(c\) on every arc. /Slide: Flows, cuts, and weak duality./
+- flow :: An assignment \(0 \le f \le c\) on arcs with conservation at every node
+  except \(s\) and \(t\).
+- flow conservation :: Flow in equals flow out at a node.
+- flow value :: The net flow out of \(s\).
+- \(s\)–\(t\) cut :: A node set \(S\) with \(s \in S\) and \(t \notin S\). Its
+  capacity is the total capacity of arcs leaving \(S\).
+- weak duality (flows) :: Every flow's value is at most every cut's capacity. A
+  cut is a certificate that no flow is larger.
+- max-flow min-cut theorem :: The maximum flow value equals the minimum cut
+  capacity, and integer capacities admit an integral maximum flow (Ford & Fulkerson
+  1956). /Slide: Max-flow min-cut./
+- residual graph :: For each arc, a forward residual arc with capacity \(c - f\)
+  and a backward one with capacity \(f\). Backward arcs let an algorithm undo
+  earlier choices.
+- augmenting path :: An \(s\)–\(t\) path in the residual graph.
+- bottleneck :: The smallest residual capacity on an augmenting path: how much can
+  be pushed along it.
+- saturated arc :: One carrying flow equal to its capacity.
+- minimum cut from the residual graph :: At a maximum flow, the nodes reachable
+  from \(s\) form a minimum cut.
+- Ford–Fulkerson method :: Augment along any path until none remains. Not
+  polynomial; with irrational capacities it may not terminate. /Slide: Choosing
+  paths: Ford–Fulkerson to Edmonds–Karp to Dinic./
+- Edmonds–Karp :: Augment along shortest paths found by BFS. \(O(VE^2)\).
+- Dinic's algorithm :: Phases of all shortest paths at once: a BFS level graph,
+  then a blocking flow. \(O(V^2 E)\), and \(O(E \sqrt V)\) on unit capacities.
+- level graph :: The arcs from BFS level \(i\) to level \(i + 1\).
+- blocking flow :: A flow in the level graph after which every \(s\)–\(t\) path
+  there has a saturated arc.
+- current-edge pointer :: Per node, the next arc to try in a phase; dead arcs are
+  skipped for the rest of the phase.
+- preflow :: A flow that may leave excess at nodes: more in than out. /Slide:
+  Push–relabel, and the heuristics that make it fast./
+- excess :: Inflow minus outflow at a node under a preflow.
+- height (label) :: A number per node with \(h(s) = n\), \(h(t) = 0\) and \(h(u)
+  \le h(v) + 1\) on every residual arc.
+- push :: Move excess from \(u\) to \(v\) along a residual arc with
+  \(h(u) = h(v) + 1\).
+- relabel :: Raise \(u\) to \(1 + \min h(v)\) over its residual neighbours when it
+  cannot push.
+- push–relabel :: Goldberg & Tarjan's algorithm: push and relabel until no excess
+  remains. \(O(V^3)\) with FIFO node order.
+- gap heuristic :: If no node has height \(k\), lift every node above \(k\) at
+  once.
+- global relabelling :: Periodically resetting heights to exact distances by a
+  backward BFS from \(t\).
+- almost-linear-time max flow :: \(E^{1+o(1)}\) for max flow and min-cost flow
+  (Chen et al. 2022), via an interior-point method with graph data structures. Not
+  used in practice. /Slide: The theoretical frontier moved recently./
+
+* Costs
+
+- min-cost flow :: Send \(d\) units from \(s\) to \(t\) minimizing \(\sum_e
+  \text{cost}_e f_e\) within capacities. /Slide: Min-cost flow./
+- negative-cycle optimality :: A feasible flow is minimum-cost iff its residual
+  graph has no negative-cost cycle. Reverse arcs carry cost \(-c\).
+- cycle canceling :: Push flow around negative cycles until none remain (Klein
+  1967).
+- network simplex :: The simplex method specialized to flows, where bases are
+  spanning trees.
+- successive shortest paths :: Repeatedly augment along a cheapest \(s\)–\(t\)
+  path in the residual graph.
+- node potentials \(\pi\) :: Values per node, the dual variables of the
+  min-cost flow LP.
+- reduced cost (flows) :: \(c_\pi(u, v) = c(u, v) + \pi(u) - \pi(v)\). Kept
+  nonnegative by updating \(\pi\) with Dijkstra distances, so Dijkstra stays valid.
+- Bellman–Ford :: Shortest paths with negative arc costs, used once for the initial
+  potentials.
+- Dijkstra's algorithm :: Shortest paths with nonnegative arc costs; run on reduced
+  costs.
+
+* Reductions
+
+- reduction to flow :: Recognizing a problem as max flow or min cut in disguise.
+  The checkpoint skill.
+- closure :: A set of nodes closed under "requires": if \(p\) is in and \(p\)
+  requires \(q\), then \(q\) is in. /Slide: Project selection: a maximum closure is
+  a minimum cut./
+- project selection (maximum-weight closure) :: Choose projects with profits,
+  closed under requirements. \(s \to p\) arcs for profits, \(p \to t\) for costs,
+  infinite arcs for requirements; best profit is the positive profits minus the
+  minimum cut (Picard 1976). Lab step 5.
+- bipartite matching as flow :: Unit capacities from \(s\) to the left side, along
+  edges, and to \(t\). Max flow is max matching; the min cut is König's cover.
+  /Slide: More flows in disguise./
+- baseball elimination :: Can a team still finish first? Game nodes feed team
+  nodes, with team capacities set to the wins each can still afford. Eliminated iff
+  the flow fails to saturate the game arcs, and the cut names the set of teams
+  that proves it.
+- image segmentation (graph cuts) :: Pixels as nodes, \(s\) and \(t\) arcs for how
+  foreground or background each looks, neighbour arcs for similarity. The minimum
+  cut is the best labelling.

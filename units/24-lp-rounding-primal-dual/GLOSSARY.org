@@ -1,0 +1,94 @@
+#+title: Glossary — unit 24
+#+startup: content latexpreview
+#+options: ^:{}
+
+The terms this unit introduces, in the order the deck meets them. The slides
+stay the definition of record; each entry names the slide it comes from, so a
+term can be looked up here and read properly there.
+
+* Rounding
+
+- LP rounding :: Solving the LP relaxation and turning its fractional solution into
+  an integral one whose cost is bounded against the LP.
+- threshold rounding :: Take \(v\) iff \(x_v \ge \tfrac12\) for vertex cover:
+  feasible, and at most \(2 \cdot \mathrm{LP}\) (Hochbaum 1982). /Slide: Vertex
+  cover at ½./
+- half-integrality :: Every vertex of the vertex cover LP has all \(x_v \in \{0,
+  \tfrac12, 1\}\) (Nemhauser & Trotter 1975).
+- persistence :: Some optimal integral cover contains every vertex at 1 and avoids
+  every vertex at 0, so the LP settles part of the instance exactly.
+- frequency \(f\) :: The largest number of sets any element belongs to. Threshold
+  rounding at \(1/f\) is an \(f\)-approximation for set cover.
+- randomized rounding :: Pick each set independently with probability \(x_j\),
+  repeat \(t\) times, take the union (Raghavan & Thompson 1987). /Slide: Randomized
+  rounding for set cover./
+- miss probability :: The chance an element is uncovered in one round:
+  \(\prod_{j \ni e}(1 - x_j) \le e^{-1}\), using \(1 - x \le e^{-x}\).
+- union bound :: \(\Pr[\text{some bad event}] \le \sum \Pr[\text{each}]\); here
+  \(\Pr[\text{not a cover}] \le n e^{-t}\).
+- linearity of expectation :: \(\mathbb{E}[\text{cost}] \le t \cdot \mathrm{LP}\),
+  whatever the dependence between rounds.
+- Markov's inequality :: \(\Pr[X \ge a] \le \mathbb{E}[X]/a\) for nonnegative
+  \(X\); bounds the chance the cost is too high.
+- Chernoff bound :: A tail bound for sums of independent variables; needed when
+  rounding under packing constraints, not for set cover.
+- derandomization :: Turning a randomized algorithm deterministic, here by
+  conditional expectations with a pessimistic estimator.
+
+* Primal–dual
+
+- primal–dual method (approximation) :: Grow a feasible dual solution, set a primal
+  variable when its dual constraint goes tight, stop when the primal is feasible,
+  and bound how often each dual is charged. Never solves an LP. /Slide: The schema,
+  on set cover./
+- tight (dual constraint) :: Holding with equality: the elements in a set have paid
+  its full cost.
+- primal–dual set cover :: For each uncovered element, raise its dual until some
+  set containing it is tight; buy every tight set. An \(f\)-approximation
+  (Bar-Yehuda & Even 1981).
+- relaxed complementary slackness :: Primal CS holds exactly (bought sets are
+  tight), dual CS only up to a factor (an element with positive dual is covered at
+  most \(f\) times). The ratio is that factor.
+- facility location LP dual :: \(\max \sum_j \alpha_j\) subject to \(\sum_j
+  \beta_{ij} \le f_i\), \(\alpha_j - \beta_{ij} \le d_{ij}\), \(\beta \ge 0\).
+  \(\alpha_j\) is what client \(j\) pays. /Slide: Facility location: Jain &
+  Vazirani (2001)./
+- Jain–Vazirani algorithm :: Phase 1: all \(\alpha_j\) grow; clients pay toward
+  facilities within reach; fully paid facilities open temporarily and freeze their
+  clients. Phase 2: keep a maximal non-conflicting set of opened facilities and
+  assign clients to the nearest. A 3-approximation for metric facility location.
+- temporarily open :: A facility whose cost has been fully paid in phase 1, before
+  conflicts are resolved.
+- conflicting facilities :: Two temporarily open facilities that one client pays
+  toward.
+- freeze :: A client stops raising \(\alpha_j\) once it is tight with an open
+  facility, at time \(\min_i \max(t_i, d_{ij})\).
+- Lagrangian-multiplier-preserving (LMP) :: A guarantee where facility cost is paid
+  exactly from the duals: \(\text{connection} + 3 \cdot \text{facility} \le 3 \sum
+  \alpha\). What lets JV give a \(k\)-median algorithm.
+- Steiner forest :: The cheapest edge set connecting every given pair
+  \((s_i, t_i)\). /Slide: Steiner forest, and iterative rounding./
+- active component :: A component still separating some pair, whose dual keeps
+  growing.
+- reverse delete :: After the primal–dual growth, removing unnecessary bought edges
+  in reverse order. What makes Steiner forest's factor 2 work.
+- iterative rounding :: Solve the LP, fix a variable with a large value, update,
+  re-solve (Jain 2001).
+- laminar family :: Sets any two of which are disjoint or nested; the structure of
+  tight constraints in iterative rounding proofs.
+
+* Integrality gaps
+
+- integrality gap (of an LP) :: \(\sup_I \mathrm{OPT}(I) / \mathrm{LP}(I)\) for
+  minimization. No proof of the form \(\mathrm{ALG} \le \rho \cdot \mathrm{LP}\)
+  can give \(\rho\) below it. /Slide: Instances that realise the gap./
+- gap instance :: An instance realising the gap. For vertex cover, \(K_n\): LP
+  \(n/2\), OPT \(n - 1\).
+- GF(2)^k family :: Elements and sets are nonzero vectors of \(\mathrm{GF}(2)^k\);
+  set \(v\) holds \(\{u : u \cdot v = 1\}\). LP below 2, OPT \(k\): a logarithmic
+  gap on which greedy is still optimal.
+- GF(2) :: The field with two elements, arithmetic modulo 2.
+- limit on proofs, not algorithms :: A gap instance shows an LP cannot certify a
+  better ratio; it says nothing about how hard the instance is to solve.
+- Sherali–Adams, Lasserre :: Hierarchies of increasingly strong LP and SDP
+  relaxations obtained by lifting.

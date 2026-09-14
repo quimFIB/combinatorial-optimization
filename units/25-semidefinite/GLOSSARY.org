@@ -1,0 +1,101 @@
+#+title: Glossary — unit 25
+#+startup: content latexpreview
+#+options: ^:{}
+
+The terms this unit introduces, in the order the deck meets them. The slides
+stay the definition of record; each entry names the slide it comes from, so a
+term can be looked up here and read properly there.
+
+* The PSD cone
+
+- positive semidefinite (PSD) :: A symmetric matrix with all eigenvalues \(\ge
+  0\), written \(X \succeq 0\). /Slide: Semidefinite programs are vector
+  programs./
+- PSD cone :: The set of PSD matrices: convex, but not polyhedral.
+- semidefinite program (SDP) :: \(\max \langle C, X \rangle\) subject to
+  \(\langle A_k, X \rangle = b_k\) and \(X \succeq 0\). Linear programming over
+  matrices.
+- \(\langle C, X \rangle\) :: The trace inner product \(\sum_{ij} C_{ij}
+  X_{ij}\).
+- Gram matrix :: \(X = VV^\top\), so \(X_{ij} = v_i \cdot v_j\). Every PSD matrix
+  is one, which makes an SDP an optimization over vectors with linear constraints on
+  their inner products.
+- vector program :: The SDP read as a choice of vectors \(v_1, \dots, v_n\).
+  Restricting \(v_i\) to \(\{\pm 1\}\) gives the integer problem.
+- log-det barrier :: \(-\log\det X\), the barrier interior-point methods use for
+  the PSD cone.
+- Slater point :: A strictly feasible point (\(X \succ 0\)). SDP strong duality
+  needs one, unlike LP.
+- low-rank solution :: Some optimal \(X\) has rank \(r\) with \(r(r+1)/2\) at most
+  the number of constraints (Barvinok 1995; Pataki 1998).
+- Burer–Monteiro method :: Optimizing directly over a low-rank factor \(V\),
+  non-convexly, instead of over \(X\). Scales SDP relaxations to very large \(n\).
+- eigendecomposition :: \(X = Q \Lambda Q^\top\); the lab recovers vectors from it,
+  clipping tiny negative eigenvalues.
+
+* Goemans–Williamson
+
+- Max-Cut SDP :: \(\max \sum_{uv \in E} w_{uv} (1 - v_u \cdot v_v)/2\) with every
+  \(\|v_u\| = 1\). At least OPT. /Slide: The relaxation and the rounding (1995)./
+- hyperplane rounding :: Draw \(r\) with independent \(N(0, 1)\) entries and put
+  \(u\) on the side of \(\mathrm{sign}(v_u \cdot r)\). Gaussians make the direction
+  uniform; uniform \([0, 1)\) coordinates do not.
+- separation probability :: Two unit vectors at angle \(\theta\) are separated by
+  a random hyperplane with probability \(\theta / \pi\).
+- \(\alpha_{GW}\) :: \(\min_\theta \frac{\theta/\pi}{(1 - \cos\theta)/2} \approx
+  0.87856\), attained at about \(133.6°\). The Goemans–Williamson ratio.
+- Goemans–Williamson algorithm :: Solve the Max-Cut SDP, round with a random
+  hyperplane. Expected cut at least \(0.878 \cdot \mathrm{OPT}\).
+- edge LP :: The Max-Cut LP with \(z_e \le x_u + x_v\) and \(z_e \le 2 - x_u -
+  x_v\). Useless: \(x = \tfrac12\) sets every \(z_e = 1\). /Slide: Measured: the
+  bound ladder and the rounded cuts./
+- triangle (metric) LP :: A variable \(z_{ij} \in [0, 1]\) for every pair, and
+  for every triple \(z_{ij} + z_{jk} + z_{ik} \le 2\) and \(z_{ij} \le z_{ik} +
+  z_{jk}\) with its rotations. Strong on small graphs, stuck at \(\tfrac23\) of the weight on large
+  dense ones, and needs \(4\binom{n}{3}\) rows.
+- cut polytope :: The convex hull of cut incidence vectors.
+- three senses of tightness :: The rounding analysis is tight per edge; the SDP
+  itself has integrality gap \(\alpha_{GW}\) (Feige & Schechtman 2002); and no
+  algorithm beats it under UGC (Khot et al. 2007). /Slide: Why 0.878 is
+  nonetheless tight./
+- Majority is Stablest :: The Fourier-analytic theorem behind Max-Cut's UGC
+  hardness (Mossel, O'Donnell & Oleszkiewicz 2010).
+
+* Theta
+
+- independence number \(\alpha(G)\) :: The size of a largest independent set.
+  /Slide: The Lovász theta function (1979)./
+- clique cover number \(\chi(\bar G)\) :: The fewest cliques covering the vertices;
+  the chromatic number of the complement.
+- graph complement \(\bar G\) :: The graph with an edge exactly where \(G\) has
+  none.
+- Lovász theta function \(\vartheta(G)\) :: \(\max \sum_{ij} X_{ij}\) subject to
+  \(\mathrm{tr}\,X = 1\), \(X \succeq 0\), and \(X_{uv} = 0\) on edges.
+- sandwich theorem :: \(\alpha(G) \le \vartheta(G) \le \chi(\bar G)\). Both outer
+  numbers are NP-hard; \(\vartheta\) is computable to any precision.
+- perfect graph :: A graph where \(\alpha = \chi(\bar G)\) for every induced
+  subgraph. There \(\vartheta\) computes both in polynomial time.
+- Shannon capacity :: The zero-error rate of a noisy channel whose confusable symbols
+  form a graph. For \(C_5\) it is \(\sqrt 5 = \vartheta(C_5)\), which is why Lovász
+  invented \(\vartheta\).
+
+* Hierarchies and cost
+
+- Lasserre (sum-of-squares) hierarchy :: Level \(r\) has a variable \(y_S\) for
+  every set of at most \(2r\) variables and requires the moment matrix to be PSD.
+  Level 1 on Max-Cut is GW's SDP; level \(n\) is exact; size \(n^{O(r)}\).
+  /Slide: Lasserre, sum of squares, and lower bounds against them./
+- pseudo-distribution :: The object the \(y_S\) describe: consistent low-degree
+  moments without a true distribution behind them.
+- moment matrix :: \((y_{S \cup T})_{|S|, |T| \le r}\), required to be PSD.
+- sum-of-squares certificate :: A proof of \(f \ge c\) writing \(f - c\) as a sum
+  of squared polynomials modulo the constraints; the dual of the moment relaxation.
+- Sherali–Adams hierarchy :: The same lifting with linear constraints only.
+- hierarchy lower bound :: An instance needing level \(\Omega(n)\) to refute, such as
+  random 3-XOR (Grigoriev 2001). Rules out a whole family of convex relaxations
+  without complexity assumptions.
+- 3-XOR :: Constraints saying the sum of three Boolean variables modulo 2 is a given
+  value.
+- SDP-based branch and bound :: Using SDP bounds inside branch and bound, the state
+  of the art for dense Max-Cut (BiqMac). /Slide: Convex, polynomial, and
+  expensive./

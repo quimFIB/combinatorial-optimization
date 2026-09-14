@@ -1,0 +1,78 @@
+#+title: Glossary — unit 06
+#+startup: content latexpreview
+#+options: ^:{}
+
+The terms this unit introduces, in the order the deck meets them. The slides
+stay the definition of record; each entry names the slide it comes from, so a
+term can be looked up here and read properly there.
+
+* The theorem
+
+- totally unimodular (TU) :: A matrix every square submatrix of which has
+  determinant in \(\{-1, 0, 1\}\). In particular every entry is \(-1\), \(0\) or
+  \(1\). /Slide: Totally unimodular matrices./
+- square submatrix :: The matrix left after choosing \(k\) rows and \(k\)
+  columns, for any \(k\).
+- Hoffman–Kruskal theorem :: For integral \(A\), \(\{x \ge 0 : Ax \le b\}\) has
+  only integral vertices for every integral \(b\) if and only if \(A\) is TU
+  (1956).
+- integral polyhedron :: One whose vertices are all integral, so the LP
+  relaxation solves the integer problem.
+- Cramer's rule :: \(x_B = \mathrm{adj}(B)\, b' / \det B\). With \(\det B = \pm
+  1\) and integral data, the vertex is integral: the whole "if" direction.
+- "for every integral \(b\)" :: The part of the theorem that matters. A non-TU
+  matrix can be integral for one \(b\); TU survives any change of right-hand side,
+  as branching and data changes require.
+- min–max theorem :: A combinatorial "max = min" statement such as König's, which
+  is LP duality with both LPs integral. /Slide: Consequences you already rely on./
+
+* Recognizing TU
+
+- bipartite incidence matrix :: Rows are the vertices of a bipartite graph;
+  each column (edge) has one 1 on each side. TU. /Slide: Three families./
+- directed incidence (network) matrix :: Each column has one \(+1\) and one
+  \(-1\), the tail and head of an arc. TU. Tutte's network matrices generalize it.
+- interval matrix :: Every row (or column) has its ones consecutive, as in
+  interval scheduling. TU.
+- consecutive-ones property :: The defining property of an interval matrix.
+- Ghouila-Houri's theorem :: \(A\) is TU if and only if every subset \(R\) of rows
+  has a signing \(\sigma \in \{\pm 1\}^R\) with \(\sum_{r \in R} \sigma_r a_r \in
+  \{-1, 0, 1\}^n\) (1962).
+- signing :: The \(\pm 1\) choice per row in Ghouila-Houri's test. A row subset
+  with no valid signing is the /witness/ that \(A\) is not TU.
+- TU-preserving operations :: Transposing, negating a row or column, permuting,
+  duplicating or deleting rows and columns, appending a unit row or column, and
+  pivoting. A flow model with bound rows stays TU.
+- Seymour's decomposition :: Every TU matrix is built by 1-, 2- and 3-sums from
+  network matrices, their transposes and two special \(5 \times 5\) matrices
+  (1980). Gives polynomial recognition.
+- TU core with side constraints :: A mostly TU model broken by a few extra rows,
+  such as a flow with a budget row. The setting Lagrangian relaxation exploits
+  (unit 11). /Slide: Testing by brute force, and why nobody does./
+
+* Where it ends
+
+- odd cycle :: A cycle with an odd number of edges. Its incidence matrix has
+  determinant \(\pm 2\), so a graph's incidence matrix is TU exactly when the
+  graph is bipartite. /Slide: The odd cycle./
+- fractional matching polytope :: \(\{x \ge 0 : \sum_{e \ni v} x_e \le 1\}\),
+  the LP relaxation of matching. /Slide: Half-integrality, and Edmonds' fix./
+- half-integral :: Every entry in \(\{0, \tfrac12, 1\}\). Every vertex of the
+  fractional matching polytope is, with the \(\tfrac12\) entries forming
+  vertex-disjoint odd cycles (Balinski 1965).
+- odd-set inequalities :: For every vertex set \(S\) of odd size, \(\sum_{e
+  \subseteq S} x_e \le (|S| - 1)/2\). Adding them all gives the matching polytope
+  for every graph (Edmonds 1965).
+- matching polytope :: The convex hull of the matchings of a graph.
+  Exponentially many facets and no polynomial extended formulation.
+- blossom algorithm :: Edmonds' polynomial matching algorithm, which never writes
+  the exponential LP down (unit 15).
+- balanced matrix :: A 0/1 matrix with no odd submatrix cycle. Set packing,
+  covering and partitioning over one have integral LPs. /Slide: Beyond TU./
+- perfect matrix :: The clique constraints of a perfect graph; the stable-set LP
+  with clique rows is integral.
+- total dual integrality (TDI) :: A system whose dual has integral optima for
+  every integral objective. With integral \(b\) the primal polyhedron is integral,
+  whatever \(A\) is (Edmonds & Giles 1977).
+- polynomial islands :: The rest of the course's pattern: each integral
+  polyhedron comes with a combinatorial algorithm and a min–max theorem.

@@ -1,0 +1,138 @@
+#+title: Glossary — unit 02
+#+startup: content latexpreview
+#+options: ^:{}
+
+The terms this unit introduces, in the order the deck meets them. The slides
+stay the definition of record; each entry names the slide it comes from, so a
+term can be looked up here and read properly there.
+
+Convention throughout: \(\max\{c^\top x : Ax \le b,\ x \ge 0\}\) with
+\(A \in \mathbb{Q}^{m \times n}\) and slacks \(s = b - Ax \ge 0\).
+
+* From vertices to bases
+
+- slack variable :: \(s_i = b_i - a_i x \ge 0\), turning each inequality into an
+  equality so the system reads \(Ax + s = b\) over \(n + m\) variables with
+  matrix \([A \mid I]\). /Slide: Bases and basic solutions./
+- basis :: A set \(B\) of \(m\) linearly independent columns of \([A \mid I]\).
+- basic, nonbasic variables :: The variables whose columns are in \(B\), and the
+  rest (\(N\)). Nonbasic variables sit at 0.
+- basic solution :: Setting the nonbasic variables to 0 and solving:
+  \(x_B = A_B^{-1} b\). /Feasible/ when \(x_B \ge 0\).
+- basic feasible solution (BFS) :: A feasible basic solution. Exactly the
+  vertices of unit 01.
+- degenerate vertex :: A vertex with fewer than \(m\) positive basic variables,
+  so several bases describe it. Common in combinatorial LPs such as assignment and
+  set cover.
+- slack basis :: The basis of all slack columns: \(x = 0,\ s = b\). Feasible
+  when \(b \ge 0\), and the usual starting point.
+- dictionary :: The LP rewritten for one basis: basic variables as constants
+  minus combinations of nonbasic ones, and the objective as a constant plus
+  reduced costs times nonbasic ones. Chvátal's term. /Slide: Reduced costs: the
+  optimality certificate./
+- reduced cost :: \(\bar c_j = c_j - y^\top a_j\), the rate the objective changes
+  as nonbasic \(x_j\) increases from 0.
+- optimality criterion :: A feasible basis with every \(\bar c_j \le 0\) is
+  optimal. Sufficient, not necessary: at a degenerate optimum some bases still
+  show a positive reduced cost.
+- simplex multipliers :: \(y^\top = c_B^\top A_B^{-1}\). At an optimal basis they
+  are an optimal dual solution (unit 03).
+- entering variable :: A nonbasic \(x_j\) with \(\bar c_j > 0\), chosen to
+  increase.
+- ratio test :: How far the entering variable can grow:
+  \(t^* = \min_{i : d_i > 0} \bar b_i / d_i\) with \(\bar b = A_B^{-1} b\) and
+  \(d = A_B^{-1} a_j\). /Slide: The ratio test: how far to move./
+- leaving variable :: The basic variable in the row attaining the ratio-test
+  minimum. It hits 0 and becomes nonbasic.
+- unbounded :: No \(d_i > 0\), so the entering variable grows forever. The ray
+  \(x_B = \bar b - td,\ x_j = t\) is the certificate.
+- degenerate pivot :: A pivot with \(t^* = 0\): the basis changes but the point
+  does not move and the objective does not improve.
+- pivot :: One basis change: an edge step between adjacent vertices, done
+  algebraically as one Gauss–Jordan step.
+- Dantzig's rule :: Enter the variable with the largest reduced cost. /Slide: A
+  walk on the example polygon./
+- shadow price :: How much the optimum rises per unit of loosening a
+  constraint; the negated slack reduced costs at the optimum.
+- tableau :: The dictionary as a matrix, \(A_B^{-1}[A \mid I]\) with rhs
+  \(A_B^{-1} b\). The lab's objective row stores \(-\bar c\), so optimality means
+  no negative entries there. /Slide: The tableau: pivots as row operations./
+- pivot element :: The entry at the entering column and leaving row, turned into
+  1 with the rest of its column cleared.
+- dual values :: The slack columns of the final objective row. The bridge to
+  unit 03.
+
+* How the naive method fails
+
+- cycling :: A sequence of degenerate pivots that returns to an earlier basis and
+  repeats forever. /Slide: Degeneracy and cycling./
+- Beale's example :: A 4-variable LP (1955) on which Dantzig's rule with lowest-row
+  tie-breaking cycles after 6 degenerate pivots.
+- stalling :: A long run of degenerate pivots that does eventually end. The
+  practical form of the cycling problem.
+- Bland's rule :: Enter the lowest-index improving variable; break ratio-test ties
+  by lowest index. Never cycles, and is usually slow. /Slide: Bland's rule./
+- anti-cycling rule :: Any rule that guarantees termination: Bland's, the
+  lexicographic ratio test, or perturbation.
+- lexicographic ratio test :: Breaking ratio-test ties by comparing rows
+  lexicographically (Dantzig, Orden, Wolfe 1955).
+- perturbation :: Adding tiny amounts to \(b\) (or to \(c\) in dual simplex) so
+  ties essentially never occur, then removing them at the end.
+- Klee–Minty cube :: A squashed \(n\)-cube on which Dantzig's rule visits all
+  \(2^n\) vertices, taking \(2^n - 1\) pivots. /Slide: Klee–Minty: exponentially
+  many pivots./
+- Hirsch conjecture :: That a polytope's vertex graph has diameter at most
+  \(m - n\). Disproved by Santos (2012); whether the diameter is polynomial is
+  still open.
+- average-case analysis :: Borgwardt (1982): polynomial expected pivots for the
+  shadow-vertex rule on random LPs. /Slide: So why is simplex the workhorse?/
+- smoothed analysis :: Spielman & Teng (2004): perturb any LP with small Gaussian
+  noise, and shadow-vertex simplex takes polynomial expected time.
+- warm start :: Re-solving a slightly changed LP from the previous optimal basis.
+  Why simplex dominates inside branch-and-bound and cutting planes.
+
+* Starting, and what real codes do
+
+- phase 1 :: Finding a feasible basis: add an artificial variable to each row
+  with \(b_i < 0\) and maximize \(-\sum a_i\). Optimum below 0 means the LP is
+  infeasible. /Slide: Getting started: two phases./
+- artificial variable :: A variable added only to make a starting basis
+  feasible; must be driven to 0 and removed.
+- phase 2 :: Optimizing the real objective from the feasible basis phase 1 found.
+- pricing out :: Making the objective row consistent with the current basis by
+  subtracting basic rows, so basic variables have reduced cost 0. Forgetting it is
+  the most common phase-1 bug.
+- big-M method :: One phase with objective \(c^\top x - M \sum a_i\) for a huge
+  \(M\). Simple and numerically poor.
+- redundant row :: A constraint that is a combination of the others. Shows up as
+  an artificial stuck in the basis at 0 with no nonzero real entries in its row.
+- crash basis :: A heuristic starting basis with as many structural variables as
+  possible, used by real codes instead of the slack basis.
+- revised simplex method :: Simplex that stores a factorization of \(A_B\)
+  instead of the full tableau, computing only the column and row a pivot needs.
+  /Slide: The revised simplex method./
+- BTRAN, FTRAN :: The two triangular solves per iteration: backward for
+  \(y^\top = c_B^\top A_B^{-1}\), forward for \(d = A_B^{-1} a_j\).
+- LU factorization :: \(A_B\) kept as sparse triangular factors (Markowitz
+  ordering), updated each pivot (Forrest–Tomlin) and periodically
+  /refactorized/ to control fill-in and error.
+- pricing :: Choosing the entering column. Can be /partial/: only some columns
+  checked. /Slide: Pricing: which column enters./
+- steepest edge :: Enter the column with the largest improvement per unit of
+  distance along the edge, \(\max_j \bar c_j / \|\eta_j\|\). Far fewer pivots and
+  insensitive to how variables are scaled.
+- Devex :: A cheap approximation to steepest-edge norms (Harris 1973).
+- tolerance :: The threshold below which floating-point simplex treats a number
+  as zero, such as \(10^{-7}\) for feasibility. /Slide: Tolerances, and what they
+  hide./
+- condition number :: How much a linear system amplifies input error. The
+  Hilbert matrix's grows like \(e^{3.5n}\); at \(n = 8\) the solver's value looks
+  right while the point is wrong by more than 1.
+- exact rational LP solver :: A solver that verifies its basis in rational
+  arithmetic, such as QSopt_ex or SoPlex in exact mode.
+
+* In the lab
+
+- ~LPResult~ :: The result type, carrying status, solution, and the final
+  ~tableau~ that unit 03 reads duals from.
+- ~Cycling~ :: The exception the simplex loop raises when a basis repeats.

@@ -1,0 +1,120 @@
+#+title: Glossary — unit 10
+#+startup: content latexpreview
+#+options: ^:{}
+
+The terms this unit introduces, in the order the deck meets them. The slides
+stay the definition of record; each entry names the slide it comes from, so a
+term can be looked up here and read properly there.
+
+* Too many columns
+
+- column generation :: Solving an LP with exponentially many variables by keeping
+  only a few and asking a pricing problem for one with negative reduced cost. The
+  dual picture of unit 09's row generation.
+- cutting stock :: Cut rolls of width \(W\) into items of widths \(w_i\) to meet
+  demands \(d_i\) with the fewest rolls. /Slide: Cutting stock, two ways./
+- Kantorovich model :: The compact cutting-stock model, with a roll-used variable
+  and item copies per roll. LP bound is the trivial area bound, and rolls give
+  \(K!\) symmetric copies.
+- pattern :: A way to cut one roll: \(a \in \mathbb{Z}_{\ge 0}^m\) with
+  \(w^\top a \le W\).
+- Gilmore–Gomory model :: One variable per pattern: \(\min \sum_p x_p\) subject
+  to \(\sum_p a_{ip} x_p \ge d_i\). No symmetry, very strong bound, exponentially
+  many columns.
+- integer round-up property (IRUP) :: The cutting-stock optimum equals
+  \(\lceil z_{LP} \rceil\). Usually true, sometimes false; MIRUP conjectures the
+  optimum is at most \(\lceil z_{LP} \rceil + 1\), still open.
+- master problem :: The LP over all columns.
+- restricted master problem (RMP) :: The master over only the columns generated so
+  far. Its dual is a relaxation of the full dual.
+- pricing problem :: \(\min_{a \in \mathcal{A}}\ c(a) - y^\top a\): find the most
+  negative reduced cost among implicitly defined columns. For cutting stock, a
+  knapsack with the duals as values. /Slide: Pricing is minimising the reduced
+  cost./
+- pricing = dual separation :: The RMP's duals are optimal for the full dual iff
+  no column violates \(y^\top a \le c(a)\). Finding one that does is unit 09's
+  separation problem applied to the dual.
+- column-generation loop :: Solve the RMP, price at its duals, add any
+  negative-reduced-cost columns, repeat until pricing proves none exist. /Slide:
+  The loop./
+- heuristic pricing :: Any method that finds some negative column. Allowed in
+  every iteration except the last, where only exact pricing proves optimality.
+
+* Dantzig–Wolfe
+
+- block-angular structure :: Independent blocks \(x_k \in X_k\) tied together by
+  a few linking constraints \(\sum_k D_k x_k \ge d\). /Slide: Decomposition of
+  block-angular programs./
+- Dantzig–Wolfe decomposition :: Replace each \(X_k\) by \(\mathrm{conv}(X_k)\),
+  written as convex combinations \(\lambda_{kp}\) of its extreme points; the
+  \(\lambda\) are the master's columns.
+- convexification :: That replacement. Strengthens the formulation by taking the
+  hull of a substructure.
+- linking constraints :: The rows that tie the blocks together; they stay in the
+  master.
+- convexity row :: \(\sum_p \lambda_{kp} = 1\), one per block, with dual
+  \(\mu_k\).
+- DW pricing :: For block \(k\), \(\min_{x \in X_k} (c_k - D_k^\top y)^\top x -
+  \mu_k\).
+- Dantzig–Wolfe bound :: \(z_{DW} = \min\{c^\top x : Dx \ge d,\ x_k \in
+  \mathrm{conv}(X_k)\} \ge z_{LP}\). Equal to the Lagrangian dual bound of unit 11
+  (Geoffrion 1974).
+- integrality property :: A block whose LP relaxation is already integral. Then
+  \(z_{DW} = z_{LP}\): no bound gain. The bound improves only when pricing is a
+  hard integer problem. /Slide: A hard pricing problem is a feature./
+- identical blocks (aggregation) :: When every block is the same, as with rolls,
+  they merge into one pricing problem, removing the symmetry.
+- ESPPRC :: The elementary shortest path problem with resource constraints: pricing
+  for vehicle routing. Strongly NP-hard.
+- ng-routes :: A relaxation of elementarity that forbids cycles only within small
+  neighbourhoods. A weaker bound for a far cheaper pricer.
+
+* Bounds and stability
+
+- Lagrangian bound (Lasdon) :: If some optimum uses at most \(\kappa\) columns,
+  \(z_{RMP} + \kappa \min_a \bar c(a) \le z_{LP}\). A lower bound at every
+  iteration. /Slide: A lower bound at every iteration./
+- Farley bound :: For unit column costs and any \(y \ge 0\) with \(v =
+  \max_a y^\top a\), \(y/v\) is dual feasible, so \(z_{LP} \ge d^\top y / v\).
+  Lab step 2.
+- early termination :: Stopping when \(\lceil \text{bound} \rceil = \lceil
+  z_{RMP} \rceil\), since the integer optimum is then known.
+- dual degeneracy :: The RMP has many dual optima, so its duals jump between them.
+  /Slide: Dual oscillation, and smoothing./
+- dual oscillation :: Those jumps, which generate columns useless later and make
+  up most of the slow tail.
+- stabilisation :: Keeping duals near a good centre: boxstep (a box around it),
+  penalties (a cost for leaving it), or smoothing.
+- stability centre \(\hat y\) :: The best dual point found so far, around which
+  stabilisation works.
+- Wentges smoothing :: Price at \(\alpha \hat y + (1 - \alpha) y\) instead of the
+  master duals.
+- mis-price :: A smoothed pricing call that finds no column useful at the master
+  duals. Must fall back to pricing at the master duals, the only place optimality
+  can be certified.
+
+* Branch-and-price
+
+- branch-and-price :: Branch and bound with column generation at every node.
+  /Slide: Why naive branching destroys pricing./
+- price-and-branch :: Generating columns at the root only, then solving the
+  restricted master as an IP. No optimality guarantee.
+- restricted master IP :: The RMP with integrality restored, over the columns
+  generated so far.
+- branching on master variables :: Fixing \(x_p = 0\) is invisible to pricing,
+  which regenerates the same column, and barely moves the bound.
+- Ryan–Foster branching :: Pick two items fractionally together; one branch forces
+  them together, the other apart. Both are easy for pricing to respect.
+- branch on original structure :: The general principle: branch on something the
+  pricing problem can see, such as arcs in routing.
+- set partitioning over routes :: The CVRP master: every customer on exactly one
+  chosen route. /Slide: Vehicle routing: where column generation stops being a
+  toy./
+- CVRP :: The capacitated vehicle routing problem.
+- labelling algorithm :: A DP for resource-constrained paths: labels of cost,
+  load and visited set at each vertex, extended forward and pruned by dominance.
+- dominance :: A label dominates another at the same vertex if it is no worse in
+  cost and load and its visited set is a subset. Dropping the subset condition
+  loses optimal routes.
+- branch-price-and-cut :: Column generation, cuts and branching together; the
+  state of the art for vehicle routing and crew scheduling.

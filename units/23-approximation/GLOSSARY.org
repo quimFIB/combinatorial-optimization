@@ -1,0 +1,96 @@
+#+title: Glossary — unit 23
+#+startup: content latexpreview
+#+options: ^:{}
+
+The terms this unit introduces, in the order the deck meets them. The slides
+stay the definition of record; each entry names the slide it comes from, so a
+term can be looked up here and read properly there.
+
+* The shape of a guarantee
+
+- approximation algorithm :: A polynomial algorithm with a proved worst-case ratio
+  \(\rho\) to the optimum.
+- \(\rho\)-approximation :: For minimization, \(\mathrm{ALG} \le \rho \cdot
+  \mathrm{OPT}\) on every instance, with \(\rho \ge 1\). For maximization written
+  as a fraction of OPT, like 0.878.
+- lower bound LB :: A computable quantity with \(\mathrm{LB} \le \mathrm{OPT}\).
+  Every proof here shows \(\mathrm{ALG} \le \rho \cdot \mathrm{LB}\). /Slide: Every
+  proof in this unit has one shape./
+- limit of a lower bound :: If some instance has \(\mathrm{OPT}/\mathrm{LB} = r\),
+  no analysis against that bound proves a ratio below \(r\): an integrality gap
+  for bounds that are not LPs.
+- tight family :: Instances on which the algorithm attains its guarantee exactly,
+  showing the analysis cannot be improved.
+- price (set cover) :: The cost per newly covered element of the set greedy buys,
+  charged to each element it covers. /Slide: Greedy set cover and its prices./
+- greedy set cover :: Repeatedly buy the set with the least cost per newly covered
+  element.
+- price lemma :: For every set \(S\), \(\sum_{e \in S} \mathrm{price}_e \le
+  H_{|S|} c_S\). Applied to an optimal cover it gives \(\mathrm{ALG} \le H_d \cdot
+  \mathrm{OPT}\), with \(d\) the largest set size.
+- dual fitting :: Scaling a primal algorithm's charges into a feasible LP dual, so
+  the guarantee holds against the LP. What the price lemma really is.
+
+* Packings
+
+- maximal matching :: A matching no edge can be added to; built by scanning edges
+  and keeping those with both ends free. /Slide: Vertex cover by matching; k-center
+  by farthest-first./
+- matching-based vertex cover :: Take both endpoints of every edge in a maximal
+  matching. A 2-approximation, tight on \(K_{n,n}\).
+- \(k\)-center :: Choose \(k\) centres to minimize the largest distance from any
+  point to its nearest centre.
+- farthest-first traversal :: Start anywhere, repeatedly add the point farthest from
+  the chosen centres. A 2-approximation for \(k\)-center (Gonzalez 1985).
+- packing witness :: \(k + 1\) points pairwise at least \(r\) apart; two share an
+  optimal centre, so \(r \le 2 \cdot \mathrm{OPT}\).
+
+* Metric TSP
+
+- metric TSP :: TSP whose distances satisfy the triangle inequality. /Slide: The
+  double tree: 2./
+- triangle inequality :: \(d(a, c) \le d(a, b) + d(b, c)\). Makes every shortcut no
+  longer.
+- metric closure :: Replacing each distance by the shortest-path distance, which
+  forces the triangle inequality.
+- minimum spanning tree (MST) :: A lower bound on OPT: removing one edge of the
+  optimal tour leaves a spanning path.
+- Prim's algorithm :: Grow a spanning tree from one vertex by repeatedly adding the
+  cheapest edge leaving it.
+- shortcutting :: Skipping already-visited vertices in a walk, replacing a path by
+  one direct edge.
+- double-tree algorithm :: Walk around the MST using every edge twice, then shortcut
+  (a preorder of the tree). A 2-approximation.
+- odd vertices :: The odd-degree vertices of the MST; always an even number, by the
+  handshake lemma. /Slide: Christofides: 3/2./
+- handshake lemma :: The sum of degrees is twice the number of edges, so the number
+  of odd-degree vertices is even.
+- minimum-weight perfect matching :: A perfect matching of least total weight; on
+  the odd vertices it costs at most \(\mathrm{OPT}/2\).
+- Euler circuit :: A closed walk using every edge exactly once; exists when every
+  degree is even.
+- Hierholzer's algorithm :: Builds an Euler circuit by splicing together closed
+  walks.
+- Christofides' algorithm :: MST, plus a minimum-weight perfect matching on its odd
+  vertices, then an Euler circuit, shortcut. A \(3/2\)-approximation (Christofides
+  1976; Serdyukov 1978).
+- Karlin–Klein–Oveis Gharan :: A \(3/2 - 10^{-36}\) approximation for metric TSP
+  (2021), from a max-entropy random spanning tree fitted to the Held–Karp LP.
+
+* Scheduling
+
+- identical machines makespan :: Assign \(n\) jobs with times \(p_j\) to \(m\)
+  identical machines, minimizing the largest total load. /Slide: List scheduling
+  and LPT (Graham 1966, 1969)./
+- makespan lower bounds :: \(\mathrm{OPT} \ge \sum_j p_j / m\) and \(\mathrm{OPT}
+  \ge \max_j p_j\).
+- list scheduling :: Assign each job, in the given order, to the least-loaded
+  machine. \((2 - 1/m)\)-approximation.
+- LPT (longest processing time first) :: Sort jobs longest first, then list
+  schedule. \((4/3 - 1/(3m))\)-approximation.
+- \(k\)-median :: Open \(k\) facilities minimizing the sum of distances from clients
+  to their nearest open one. /Slide: Local search as an approximation algorithm:
+  k-median./
+- local search with a guarantee :: Swapping up to \(p\) facilities until no swap
+  improves gives a \((3 + 2/p)\)-approximation for \(k\)-median (Arya et al. 2004).
+- local optimum :: A solution no move in the neighbourhood improves.
