@@ -18,7 +18,7 @@
   <div class="unit-no">21</div>
   <h1>Lazy clause generation, or what CP-SAT actually is</h1>
   <p class="lede">Propagators that explain themselves as clauses, a CDCL engine that learns from them, and a linear relaxation running alongside: the hybrid that ate the field.</p>
-  <p class="meta"><span>needs 19, 20</span><span>~1 h slides + 2½ h lab</span><span>lab: <code>uv run co lab 21</code></span></p>
+  <p class="meta"><span>needs 19, 20</span><span>~1½ h slides + 2½ h lab</span><span>lab: <code>uv run co lab 21</code></span></p>
   <aside class="notes">
     <p>Lazy clause generation was developed at the University of Melbourne (Ohrimenko, Stuckey &amp;
     Codish 2007–09) and quickly dominated the MiniZinc Challenge. Google's CP-SAT is built on the same
@@ -26,6 +26,11 @@
     Challenge's gold medals since 2018.</p>
     <p>The unit is short because it assembles pieces you already have: unit 18's propagators, unit 20's
     CDCL, unit 19's LNS, Part II's LP. The one new idea is the explanation.</p>
+    <h4>How to read this deck</h4>
+    <p>Two example slides make the new idea concrete: the order encoding of a variable with four
+    values, written out in full, and a precedence $x + 3 \le y$ whose propagations come with
+    their explanation clauses, ending in a learned clause that mixes a Boolean with a bound.
+    Every clause was produced by the lab's reference solution.</p>
   </aside>
 </section>
 
@@ -43,6 +48,9 @@
       <p class="small">LCG + LP relaxation + LNS portfolio, read off its log.</p></div>
     <div class="box def"><span class="label">4 · choosing a solver</span>
       <p class="small">MIP, CP, SAT, CP-SAT: a decision table with reasons.</p></div>
+  </div>
+  <div class="box good"><span class="label">getting around</span>
+    <p class="small">Words with a <span class="term" data-term="explanation">dotted underline</span> are glossary terms: click one for its definition. <kbd>G</kbd> lists every term in the unit, <kbd>N</kbd> shows the notes.</p>
   </div>
   <aside class="notes">
     <p>The checkpoint is a judgement: for an unseen problem, which paradigm first, and why. The last
@@ -62,18 +70,18 @@
   <h2>Integers as Booleans: the order encoding</h2>
   <div class="cols">
     <div>
-      <p class="small">For $x \in [\ell, u]$, one Boolean per threshold:</p>
+      <p class="small">The <span class="term">order encoding</span>: for $x \in [\ell, u]$, one Boolean (a <span class="term" data-term="bound literal">bound literal</span>) per threshold:</p>
       $$[x \le \ell],\ [x \le \ell + 1],\ \dots,\ [x \le u - 1]$$
       $$[x \le v] \rightarrow [x \le v + 1]$$
       <ul class="small">
         <li>A bound change is a <b>single literal</b>: $x \ge 5$ is $\lnot[x \le 4]$.</li>
         <li>Each integer value corresponds to exactly one Boolean assignment (lab step 1's test: 6 models for $x \in 0..5$).</li>
-        <li>Variables are created <b>lazily</b> in real solvers, only for thresholds propagation actually uses.</li>
+        <li>Variables are created <span class="term" data-term="lazy literal creation">lazily</span> in real solvers, only for thresholds propagation actually uses.</li>
       </ul>
     </div>
     <div>
       <div class="box def"><span class="label">other encodings</span>
-        <p class="small"><b>Direct</b> $[x = v]$: good for ≠ and tables, and bad for bounds. <b>Log</b> (binary digits): compact, and propagation is weak. The order encoding is what makes <b>bounds</b> reasoning into unit propagation. It's the right choice for scheduling and arithmetic, and LCG solvers often keep both $[x \le v]$ and $[x = v]$, linked by clauses.</p>
+        <p class="small"><b><span class="term" data-term="direct encoding">Direct</span></b> $[x = v]$: good for ≠ and tables, and bad for bounds. <b><span class="term" data-term="log encoding">Log</span></b> (binary digits): compact, and propagation is weak. The order encoding is what makes <b>bounds</b> reasoning into unit propagation. It's the right choice for scheduling and arithmetic, and LCG solvers often keep both $[x \le v]$ and $[x = v]$, linked by clauses.</p>
       </div>
       <p class="small muted">Tamura et al.'s Sugar (2009) showed the order encoding makes pure SAT competitive on scheduling. LCG keeps the encoding and removes the need to write out the constraints.</p>
     </div>
@@ -87,37 +95,115 @@
 </section>
 
 <section>
+  <p class="eyebrow">21 · explanations · example</p>
+  <h2>The order encoding, on four values</h2>
+  <div class="cols">
+    <div>
+      <p class="small">$x \in \{0, 1, 2, 3\}$: three literals $[x \le 0]$, $[x \le 1]$, $[x \le 2]$, and two clauses</p>
+      <p class="small">$\lnot[x \le 0] \lor [x \le 1], \qquad \lnot[x \le 1] \lor [x \le 2]$</p>
+      <table>
+        <thead><tr><th>$x$</th><th>$[x \le 0]$</th><th>$[x \le 1]$</th><th>$[x \le 2]$</th></tr></thead>
+        <tbody>
+          <tr><td>0</td><td>true</td><td>true</td><td>true</td></tr>
+          <tr><td>1</td><td>false</td><td>true</td><td>true</td></tr>
+          <tr><td>2</td><td>false</td><td>false</td><td>true</td></tr>
+          <tr><td>3</td><td>false</td><td>false</td><td>false</td></tr>
+        </tbody>
+      </table>
+      <p class="small">Of the $2^3 = 8$ assignments, the two clauses allow exactly these <b>4</b>: one per value.</p>
+    </div>
+    <div>
+      <div class="box ex"><span class="label">bounds become single literals</span>
+        <p class="small">$x \ge 2$ is $\lnot[x \le 1]$: set $[x \le 1]$ false. Unit propagation on the first clause then makes $[x \le 0]$ false too: $x \ge 1$ follows for free.</p>
+        <p class="small">$x \le 2$ is $[x \le 2]$ itself. Both together leave only the row $x = 2$.</p>
+        <p class="small">A domain with a hole, $x \ne 1$, is <b>not</b> one literal here: that is what the direct encoding's $[x = 1]$ is for.</p>
+      </div>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>The reference <code>IntVar(model, 0, 3)</code> creates exactly three Boolean variables and
+    the two implication clauses above. Enumerating all eight assignments against those clauses
+    leaves four, the rows of the table: the literals read as a "staircase", false up to the
+    value and true from it on.</p>
+    <p>The propagation in the box: setting $[x \le 1]$ false makes the clause
+    $\lnot[x \le 0] \lor [x \le 1]$ unit on $\lnot[x \le 0]$. Bounds reasoning in the integer view
+    ("$x \ge 2$ implies $x \ge 1$") is unit propagation in the Boolean view, which is the whole
+    reason the encoding is chosen.</p>
+  </aside>
+</section>
+
+<section>
   <p class="eyebrow">21 · explanations</p>
   <h2>A propagator's inference, as a clause</h2>
   <div class="cols">
     <div>
-      <p class="small">A propagator narrows a bound. LCG requires it to also return an <b>explanation</b>: a clause</p>
+      <p class="small">A propagator narrows a bound. <span class="term" data-term="lazy clause generation (LCG)">LCG</span> requires it to also return an <span class="term">explanation</span>: a clause</p>
       <ul class="small">
         <li>that holds in <b>every solution</b> of the constraint (so it can be kept forever),</li>
         <li>whose literals are all false now except the new one (so it propagates it).</li>
       </ul>
-      <div class="box def"><span class="label">precedence $x + d \le y$</span>
+      <div class="box def"><span class="label"><span class="term">precedence</span></span>
         $$\begin{aligned} & [x \ge a] \rightarrow [y \ge a + d] \\ \equiv\ & \lnot[x \ge a] \lor [y \ge a + d] \end{aligned}$$
       </div>
-      <div class="box def"><span class="label">unary resource, compulsory part $[lst, ect)$ of task $i$</span>
+      <div class="box def"><span class="label"><span class="term">unary resource</span>, and one task's compulsory part</span>
+        <p class="small">Task $i$ surely runs during $[lst, ect)$ (<span class="term" data-term="lst, ect">latest start, earliest completion</span>), so task $j$ can't overlap it:</p>
         <p class="small">$[s_i \le lst] \land [s_i \ge ect - d_i] \land [s_j \ge lst - d_j + 1] \rightarrow [s_j \ge ect]$</p>
       </div>
     </div>
     <div>
-      <p class="small">CDCL treats explanation clauses exactly like input clauses: as <b>reasons</b> in the implication graph. Conflict analysis resolves through them, and a learned clause mixes Boolean decisions with integer bounds, in this shape:</p>
+      <p class="small">CDCL treats explanation clauses exactly like input clauses (an <span class="term" data-term="explained propagator">explained propagator</span> is just a clause source): as <b>reasons</b> in the implication graph. Conflict analysis resolves through them, and a learned clause mixes Boolean decisions with integer bounds, in this shape:</p>
       <p class="mono small" style="font-size:.6em">¬[s₃ ≥ 12] ∨ ¬b₃,₇ ∨ [makespan ≥ 58]</p>
       <p class="small">"If operation 3 starts at 12 or later and precedes operation 7 on their machine, the makespan is at least 58." A nogood like that would take unit 17's engine an entire subtree to rediscover, every time.</p>
       <p class="small muted">Lab steps 2–3's tests decode every returned clause back to integers and check it against every feasible assignment.</p>
     </div>
   </div>
   <aside class="notes">
-    <p>Explanation quality matters. The most general explanation (fewest, weakest literals) produces
+    <p><b>Explanation quality</b> matters. The most general explanation (fewest, weakest literals) produces
     learned clauses that prune the most. The lab's timetable explanation uses the bounds that justify
     the compulsory part, not the current bounds. A lazy implementation that explains with "all current
     bounds of all tasks" would be valid but would learn clauses that almost never fire again.</p>
-    <p>That's also why explanations are generated lazily in real solvers: a propagator records only
+    <p>That's also why explanations are generated lazily in real solvers (<b>lazy explanation</b>): a propagator records only
     enough to reconstruct the explanation, and builds the clause only if conflict analysis actually
     resolves through that literal. Most propagated literals never are.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">21 · explanations · example</p>
+  <h2>Explanations, on one precedence</h2>
+  <div class="cols">
+    <div>
+      <p class="small">$x + 3 \le y$ with $x \in 0..3$, $y \in 0..6$.</p>
+      <table>
+        <thead><tr><th>moment</th><th>propagation</th><th>explanation clause</th></tr></thead>
+        <tbody>
+          <tr><td>root</td><td>$y \ge 3$</td><td>$[y \ge 3]$ alone: true in every solution, since $x \ge 0$</td></tr>
+          <tr><td>decide $x \ge 2$</td><td>$y \ge 5$</td><td>$\lnot[x \ge 2] \lor [y \ge 5]$</td></tr>
+        </tbody>
+      </table>
+      <p class="small">In order-encoding literals the second clause is $[x \le 1] \lor \lnot[y \le 4]$. It mentions only $x$'s bound that caused the push, not the decision's history, so it is valid forever and can be learned from.</p>
+    </div>
+    <div>
+      <div class="box ex"><span class="label">a learned clause mixing a Boolean and a bound</span>
+        <p class="small">Two tasks of length 3, starts $a, c \in 0..4$, on one machine. A Boolean $b$ picks the order: $b \Rightarrow a + 3 \le c$, and $\lnot b \Rightarrow c + 3 \le a$.</p>
+        <p class="small"><b>Level 1:</b> decide $a \ge 2$. <b>Level 2:</b> decide $b$. The precedence needs $c \ge 5$, but $c \le 4$: its explanation $\lnot b \lor \lnot[a \ge 2]$ is <b>all false</b>, a conflict.</p>
+        <p class="small">Learned: $\lnot b \lor [a \le 1]$, "if $a$ starts at 2 or later, $a$ can't go first". Backjump to level 1, where it forces $\lnot b$.</p>
+      </div>
+    </div>
+  </div>
+  <aside class="notes">
+    <p><b>The table</b> is the reference <code>Precedence.propagate</code>. At the root, $x$'s lower
+    bound is its initial bound 0, so the reason part of the clause is empty and the clause is just
+    the new literal $[y \ge 3] = \lnot[y \le 2]$. After enqueuing $\lnot[x \le 1]$ at level 1, the
+    propagator returns $[x \le 1] \lor \lnot[y \le 4]$, and after unit propagation $y$'s bounds are
+    $[5, 6]$.</p>
+    <p><b>The learned clause</b> is from a traced <code>LCGSolver</code>: decide $\lnot[a \le 1]$
+    (level 1; unit propagation also sets $\lnot[a \le 0]$), decide $b$ (level 2). The enabled
+    precedence computes $a_{lo} + 3 = 5 &gt; c$'s upper bound 4, so its clause has no head literal
+    and is entirely false. First-UIP analysis stops at once (one level-2 literal, $\lnot b$) and
+    returns $\lnot b \lor [a \le 1]$ with backjump level 1 and LBD 2. On a real job-shop, the same
+    kind of clause relates an order Boolean to start-time bounds, and it prunes every subtree
+    that repeats that combination.</p>
   </aside>
 </section>
 
@@ -138,7 +224,7 @@
       </table>
     </div>
     <div>
-      <p class="small">Ablation on ft06:</p>
+      <p class="small"><span class="term">Ablation</span> on ft06:</p>
       <table class="dense">
         <thead><tr><th>variant</th><th class="num">conflicts</th><th class="num">s</th></tr></thead>
         <tbody>
@@ -170,17 +256,17 @@
   <h2>SMT, DPLL(T), and logic-based Benders</h2>
   <div class="cols">
     <div>
-      <div class="box def"><span class="label">DPLL(T) (Nieuwenhuis, Oliveras & Tinelli 2006)</span>
-        <p class="small">A CDCL solver over Boolean abstractions of theory atoms ($x - y \le 3$, $f(a) = b$). A <b>theory solver</b> checks the current atoms for consistency and returns a <b>theory explanation</b> (a clause) on conflict or propagation. Z3, CVC5 and Yices work this way.</p>
+      <div class="box def"><span class="label"><span class="term">DPLL(T)</span> (Nieuwenhuis, Oliveras & Tinelli 2006)</span>
+        <p class="small">A CDCL solver over Boolean abstractions of theory atoms ($x - y \le 3$, $f(a) = b$). A <span class="term">theory solver</span> checks the current atoms for consistency and returns a <b>theory explanation</b> (a clause) on conflict or propagation. Z3, CVC5 and Yices work this way.</p>
       </div>
-      <p class="small">LCG is DPLL(T) with CP propagators as the theory, arriving from the CP side. SMT is the same idea arriving from verification.</p>
+      <p class="small">LCG is DPLL(T) with CP propagators as the theory, arriving from the CP side. <span class="term">SMT</span> is the same idea arriving from verification.</p>
     </div>
     <div>
-      <div class="box def"><span class="label">logic-based Benders (Hooker & Ottosson 2003)</span>
+      <div class="box def"><span class="label"><span class="term">logic-based Benders</span> (Hooker & Ottosson 2003)</span>
         <p class="small">Unit 12's Benders with any subproblem solver: the subproblem returns an <b>inference</b>, a no-good or bound cut, about the master's decision. Same shape: one solver decides, another explains, and the first learns.</p>
       </div>
       <div class="box good"><span class="label">the common pattern</span>
-        <p class="small">Decide in one representation. Check or propagate in a richer one. Hand back a <b>certificate of why</b> in the first representation. Units 09 (separation), 10 (pricing), 12 (Benders cuts) and 21 are all this pattern.</p>
+        <p class="small"><span class="term" data-term="decide, check, explain">Decide, check, explain</span>: decide in one representation. Check or propagate in a richer one. Hand back a <b>certificate of why</b> in the first representation. Units 09 (separation), 10 (pricing), 12 (Benders cuts) and 21 are all this pattern.</p>
       </div>
     </div>
   </div>
@@ -219,9 +305,9 @@
     </div>
     <div>
       <ul class="small">
-        <li><b>LCG core</b>: integer variables with lazily created literals, and propagators (no-overlap, cumulative, linear) that explain.</li>
-        <li><b>LP relaxation</b> in some workers (<code>max_lp</code>, <code>reduced_costs</code>), cutting planes included, used for bounds and reduced-cost fixing (unit 11's idea).</li>
-        <li><b>Portfolio</b>: different workers with different heuristics, restart policies and LP levels, sharing incumbents, bounds and (optionally) clauses.</li>
+        <li><b><span class="term">CP-SAT</span>'s LCG core</b>: integer variables with lazily created literals, and propagators (no-overlap, cumulative, linear) that explain.</li>
+        <li><b>LP relaxation</b> in some workers (<span class="term" data-term="LP worker">LP workers</span>) (<code>max_lp</code>, <code>reduced_costs</code>), cutting planes included, used for bounds and reduced-cost fixing (unit 11's idea).</li>
+        <li><b>Portfolio</b>: different <span class="term" data-term="subsolver (worker)">workers</span> with different heuristics, restart policies and LP levels, sharing incumbents (a <span class="term">shared incumbent</span>), bounds and (optionally) clauses.</li>
         <li><b>LNS</b> workers improving the incumbent: unit 19 at industrial scale.</li>
       </ul>
       <p class="small muted">Makespan 1211 against a bound of 1162 after 5 s: not proven, which is typical for 15×15 job-shops.</p>
@@ -255,12 +341,12 @@
           <tr><td>pure feasibility, Boolean structure, verification</td><td>SAT</td><td>CDCL, proofs, and preprocessing (unit 20)</td></tr>
           <tr><td>huge instances, need good solutions not proofs</td><td>CP-SAT LNS, or a metaheuristic</td><td>unit 19; unit 26</td></tr>
           <tr><td>counting / cardinality at the core (pigeonhole-like)</td><td>MIP or a global constraint, not plain SAT</td><td>resolution can't count (unit 20)</td></tr>
-          <tr><td>nonlinear continuous parts</td><td>MINLP / a spatial B&amp;B solver</td><td>outside this course's solvers</td></tr>
+          <tr><td>nonlinear continuous parts</td><td><span class="term">MINLP</span> / a spatial B&amp;B solver</td><td>outside this course's solvers</td></tr>
         </tbody>
       </table>
     </div>
     <div>
-      <div class="box good"><span class="label">the three questions</span>
+      <div class="box good"><span class="label"><span class="term">the three questions</span></span>
         <ol class="small">
           <li>What does the <b>LP relaxation</b> see? If its bound is close to the optimum, MIP proves quickly.</li>
           <li>What does <b>propagation</b> see? If the constraints are global and combinatorial, CP propagators prune early.</li>
@@ -271,7 +357,7 @@
     </div>
   </div>
   <aside class="notes">
-    <p>A worked example of the checkpoint. Nurse rostering (shifts, coverage per day, rest rules,
+    <p>A worked example of the checkpoint. <b>Nurse rostering</b> (shifts, coverage per day, rest rules,
     fairness): the coverage constraints are LP-friendly, but the rest rules are sequence patterns
     (regular constraints) and big-M-hostile, and fairness is a min-max. The first reach is CP-SAT: native
     sequence and linear constraints, learning for recurring rule conflicts, and an LP worker for the
@@ -299,7 +385,7 @@ uv run co then 21                # learning vs not · ablation · CP-SAT's log b
   <aside class="notes">
     <p>A note on proofs. Unit 20's DRAT proofs don't carry over directly: an explanation clause is not
     implied by the CNF (it follows from the integer constraint), so a RUP checker rejects it. Certifying
-    LCG needs proof formats that can justify theory lemmas, such as VeriPB for cutting-planes reasoning.
+    LCG needs proof formats that can justify theory lemmas, such as <b>VeriPB</b> for cutting-planes reasoning.
     That's an active research area.</p>
   </aside>
 </section>

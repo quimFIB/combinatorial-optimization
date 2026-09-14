@@ -18,7 +18,7 @@
   <div class="unit-no">20</div>
   <h1>SAT and the CDCL engine</h1>
   <p class="lede">Unit propagation, conflict analysis, backjumping, activity, restarts — resolution with a very good heuristic, and a proof system with limits you can state precisely.</p>
-  <p class="meta"><span>needs 17</span><span>~1½ h slides + 3½ h lab</span><span>lab: <code>uv run co lab 20</code></span></p>
+  <p class="meta"><span>needs 17</span><span>~2 h slides + 3½ h lab</span><span>lab: <code>uv run co lab 20</code></span></p>
   <aside class="notes">
     <p>SAT solvers went from toy to industrial in about five years, around 1996–2001: GRASP (clause
     learning), Chaff (watched literals, VSIDS), then MiniSat's clean re-implementation. They now
@@ -27,6 +27,12 @@
     <p>The unit has two halves that belong together. How CDCL works: every component the lab builds.
     What CDCL can't do: pigeonhole, and the resolution lower bound behind it. The second half is
     what turns "SAT solvers are magic" into a precise statement.</p>
+    <h4>How to read this deck</h4>
+    <p>Four clauses on five variables run through the engine half: their watched-literal
+    propagation, the conflict, the learned clause by resolution, and the RUP check that a proof
+    checker would do. The encodings half writes out a two-gate Tseitin transformation and
+    at-most-one of four literals two ways. Every trace was produced by the lab's reference
+    solver. Haken's lower bound is given as an idea; the argument is sketched in the notes.</p>
   </aside>
 </section>
 
@@ -45,6 +51,9 @@
     <div class="box def"><span class="label">4 · encodings</span>
       <p class="small">Tseitin, at-most-one, cardinality networks: why the smallest CNF is not the best.</p></div>
   </div>
+  <div class="box good"><span class="label">getting around</span>
+    <p class="small">Words with a <span class="term" data-term="CDCL">dotted underline</span> are glossary terms: click one for its definition. <kbd>G</kbd> lists every term in the unit, <kbd>N</kbd> shows the notes.</p>
+  </div>
   <aside class="notes">
     <p>Checkpoint: a DRAT proof from your own solver that an external checker accepts, and an
     explanation of pigeonhole's hardness in terms of resolution lower bounds.</p>
@@ -62,15 +71,15 @@
   <h2>CNF, resolution, and unit propagation</h2>
   <div class="cols">
     <div>
-      <p class="small"><b>CNF</b>: a conjunction of clauses, each a disjunction of literals. Satisfiability is NP-complete (Cook 1971); 3-SAT already is.</p>
-      <div class="box def"><span class="label">resolution</span>
+      <p class="small"><span class="term">CNF</span>: a conjunction of <span class="term" data-term="clause">clauses</span>, each a disjunction of <span class="term" data-term="literal">literals</span>. <span class="term">SAT</span> is NP-complete (Cook 1971); 3-SAT already is.</p>
+      <div class="box def"><span class="label"><span class="term">resolution</span></span>
         $$\frac{(C \lor x) \qquad (D \lor \lnot x)}{C \lor D}$$
-        <p class="small">Sound and refutation-complete: $F$ is unsatisfiable iff the empty clause can be derived.</p>
+        <p class="small">Sound and complete for <span class="term" data-term="refutation">refutation</span>: $F$ is unsatisfiable iff the empty clause can be derived.</p>
       </div>
-      <p class="small"><b>DPLL</b> (Davis, Logemann & Loveland 1962): branch on a variable, apply <b>unit propagation</b> (a clause with all literals false but one forces it), and backtrack chronologically on a conflict.</p>
+      <p class="small"><span class="term">DPLL</span> (Davis, Logemann & Loveland 1962): branch on a variable, apply <span class="term">unit propagation</span> (a <span class="term" data-term="unit clause">clause with all literals false but one</span> forces it), and backtrack chronologically on a <span class="term">conflict</span>.</p>
     </div>
     <div>
-      <div class="box good"><span class="label">two watched literals (Chaff 2001)</span>
+      <div class="box good"><span class="label"><span class="term" data-term="two watched literals">two watched literals</span> (Chaff 2001)</span>
         <p class="small">Watch two non-false literals per clause. A clause needs attention only when a watched literal becomes false: find a replacement, or the clause is unit or conflicting.</p>
         <p class="small"><b>Backtracking costs nothing</b>: unassigning variables never invalidates a watch. No counters to restore.</p>
       </div>
@@ -82,6 +91,39 @@
     much. Before watched literals, solvers kept counters of false literals per clause and had to
     update them on every assignment and every backtrack. Watched literals made the backtrack free and
     most assignments cheap. That's the imperative core the functional reference keeps as it is.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">20 · DPLL · example</p>
+  <h2>Watched literals, on four clauses</h2>
+  <div class="cols wide-left">
+    <div>
+      <p class="small">$c_1 = (\lnot x_1 \lor x_3)$, $\ c_2 = (\lnot x_2 \lor \lnot x_3 \lor x_4)$, $\ c_3 = (\lnot x_2 \lor \lnot x_4 \lor x_5)$, $\ c_4 = (\lnot x_4 \lor \lnot x_5)$. Each clause watches its first two literals. Decide $x_1$, then $x_2$.</p>
+      <table class="dense">
+        <thead><tr><th>just assigned</th><th>visit clauses watching</th><th>what happens</th></tr></thead>
+        <tbody>
+          <tr><td>$x_1$ (decision, level 1)</td><td>$\lnot x_1$: $c_1$</td><td>no replacement, other watch $x_3$ free: <b>unit</b>, $x_3$</td></tr>
+          <tr><td>$x_3$</td><td>$\lnot x_3$: $c_2$</td><td>replacement $x_4$ is free: <b>watch moves</b> to $x_4$</td></tr>
+          <tr><td>$x_2$ (decision, level 2)</td><td>$\lnot x_2$: $c_2$, $c_3$</td><td>$c_2$: only $\lnot x_3$ left, false: <b>unit</b>, $x_4$. $\ c_3$: watch moves to $x_5$</td></tr>
+          <tr><td>$x_4$</td><td>$\lnot x_4$: $c_3$, $c_4$</td><td>$c_3$: <b>unit</b>, $x_5$. $\ c_4$: both literals false: <b>conflict</b></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="box ex"><span class="label">what the watches saved</span>
+      <p class="small">$x_1$ touched one clause, $x_3$ one. $c_4$ was not looked at until $x_4$ was set: before that it had two unassigned watches, so it could not be unit.</p>
+      <p class="small">Undoing level 2 unassigns $x_2, x_4, x_5$ and <b>moves no watch back</b>: $c_2$ still watches $x_4$ and $\lnot x_2$, both unassigned again, which is a valid state.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>The trace is the reference <code>propagate</code>, instrumented to print each visit. One
+    detail it shows: when a watched literal becomes false the solver first swaps it into
+    position 1, looks at position 0 (the other watch), then scans positions 2 onward for a
+    literal that is not false. For $c_2$ at $x_3$, the scan found $x_4$; for $c_2$ at $x_2$ the
+    scan found only $\lnot x_3$, false, so $c_2$ became unit on $x_4$.</p>
+    <p>The final trail is $x_1$ (level 1), $x_3$ (level 1), $x_2$ (level 2), $x_4$ (level 2),
+    $x_5$ (level 2), with the conflict in $c_4$. That is the implication graph of the next
+    section's slide.</p>
   </aside>
 </section>
 
@@ -122,11 +164,11 @@
       <p class="cap">Lab step 2's textbook example. Clauses (¬x₁∨x₃), (¬x₂∨¬x₃∨x₄), (¬x₂∨¬x₄∨x₅), (¬x₄∨¬x₅). Decisions x₁, then x₂.</p>
     </div>
     <div>
-      <p class="small"><b>Implication graph</b>: a node per assigned literal, with edges from the reason clause's other literals. A conflict is a clause with every literal false.</p>
-      <div class="box def"><span class="label">first unique implication point</span>
-        <p class="small">A <b>UIP</b> is a current-level node on <b>every</b> path from the decision to the conflict. The <b>first</b> UIP is the one closest to the conflict.</p>
+      <p class="small"><span class="term">Implication graph</span>: a node per assigned literal (at its <span class="term">decision level</span>, on the <span class="term">trail</span>), with edges from the <span class="term" data-term="reason clause">reason clause</span>'s other literals. A conflict is a clause with every literal false.</p>
+      <div class="box def"><span class="label"><span class="term">first UIP</span></span>
+        <p class="small">A <span class="term" data-term="unique implication point (UIP)">UIP</span> is a current-level node on <b>every</b> path from the decision to the conflict. The <b>first</b> UIP is the one closest to the conflict.</p>
       </div>
-      <p class="small">Here x₄ is not a UIP: x₂ → x₅ bypasses it. The first UIP is <b>x₂</b>, and the learned clause is <b>¬x₂ ∨ ¬x₃</b>: backjump to level 1 and assert ¬x₂.</p>
+      <p class="small">Here x₄ is not a UIP: x₂ → x₅ bypasses it. The first UIP is <b>x₂</b>, and the <span class="term">learned clause</span> is <b>¬x₂ ∨ ¬x₃</b>: backjump to level 1 and assert ¬x₂. The next slide derives it.</p>
       <p class="small muted">Computing it is resolution: resolve the conflict clause with the reason of the latest current-level literal until one current-level literal remains.</p>
     </div>
   </div>
@@ -143,20 +185,61 @@
 </section>
 
 <section>
+  <p class="eyebrow">20 · learning · example</p>
+  <h2>The learned clause, by resolution, and checked</h2>
+  <div class="cols">
+    <div>
+      <div class="box ex"><span class="label">analysis: resolve backwards along the trail</span>
+        <table style="margin:0">
+          <thead><tr><th>clause so far</th><th>level-2 literals</th><th>resolve with</th></tr></thead>
+          <tbody>
+            <tr><td>$c_4 = (\lnot x_4 \lor \lnot x_5)$</td><td class="num">2</td><td>reason of $x_5$: $c_3$</td></tr>
+            <tr><td>$(\lnot x_2 \lor \lnot x_4)$</td><td class="num">2</td><td>reason of $x_4$: $c_2$</td></tr>
+            <tr><td>$(\lnot x_2 \lor \lnot x_3)$</td><td class="num"><b>1</b></td><td>stop</td></tr>
+          </tbody>
+        </table>
+        <p class="small">One level-2 literal left, $\lnot x_2$: the first UIP. The clause's other literal, $\lnot x_3$, is from level 1, so backjump to level 1. There the clause is unit and <b>asserts</b> $\lnot x_2$ (an <span class="term">asserting clause</span>). Its <span class="term" data-term="literal block distance (LBD)">LBD</span> is 2: levels 1 and 2.</p>
+      </div>
+    </div>
+    <div>
+      <div class="box ex"><span class="label">the RUP check a proof checker does</span>
+        <p class="small">To accept $(\lnot x_2 \lor \lnot x_3)$ as a lemma, assume its negation, $x_2$ and $x_3$, and propagate over the clauses so far:</p>
+        <p class="small">$c_2$ gives $x_4$. $\ c_3$ gives $x_5$. $\ c_4$ is now false: <b>conflict</b>, so the lemma is implied. ✓</p>
+        <p class="small">No search, no heuristics: two unit propagations. That is why checking a <span class="term" data-term="DRAT proof">DRAT proof</span> is cheap even when finding it wasn't.</p>
+      </div>
+      <p class="small">The backjump skipped nothing here, but with ten decisions between level 1 and the conflict it would skip all of them: <span class="term">non-chronological backjumping</span>.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p><b>The two resolution steps.</b> $(\lnot x_4 \lor \lnot x_5)$ and $(\lnot x_2 \lor \lnot x_4 \lor x_5)$
+    clash on $x_5$; the resolvent keeps everything else, $(\lnot x_2 \lor \lnot x_4)$. That still has
+    two level-2 literals. Resolving on $x_4$ with $(\lnot x_2 \lor \lnot x_3 \lor x_4)$ gives
+    $(\lnot x_2 \lor \lnot x_3)$, with a single level-2 literal.</p>
+    <p>The reference <code>analyze</code> returns this clause with the asserting literal first, the
+    backjump level 1 and LBD 2. After backjumping, the trail is $x_1, x_3$ at level 1, and the
+    new clause immediately propagates $\lnot x_2$ at level 1: the solver will never try
+    $x_2$ with $x_3$ again.</p>
+    <p>RUP stands for reverse unit propagation: the lemma is checked by propagating its
+    negation. A first-UIP clause always passes, because the propagations that produced the
+    conflict are exactly the ones the check replays.</p>
+  </aside>
+</section>
+
+<section>
   <p class="eyebrow">20 · learning</p>
   <h2>The rest of the engine</h2>
   <div class="cols">
     <div>
       <ul class="small">
         <li><b>Non-chronological backjumping</b>: jump to the second-highest level in the learned clause, where it becomes unit. It can skip many levels of irrelevant decisions.</li>
-        <li><b>VSIDS</b> (Chaff): bump the activity of variables in each conflict, and grow the bump by 1/decay after every conflict, so recent conflicts weigh exponentially more. Branch on the most active.</li>
-        <li><b>Phase saving</b> (Pipatsrisawat & Darwiche 2007): re-assign a variable its last value, so backjumps don't discard satisfied sub-problems.</li>
-        <li><b>Restarts</b> (unit 19's Luby, or adaptive): cheap, because learned clauses and activities survive.</li>
+        <li><b><span class="term">VSIDS</span></b> (Chaff): bump the <span class="term">activity</span> of variables in each conflict, and grow the bump by 1/decay after every conflict, so recent conflicts weigh exponentially more. Branch on the most active.</li>
+        <li><b><span class="term">Phase saving</span></b> (Pipatsrisawat & Darwiche 2007): re-assign a variable its last value, so backjumps don't discard satisfied sub-problems.</li>
+        <li><b><span class="term" data-term="restart (CDCL)">Restarts</span></b> (unit 19's Luby, or adaptive): cheap, because learned clauses and activities survive.</li>
       </ul>
     </div>
     <div>
-      <div class="box def"><span class="label">clause deletion by LBD (Glucose, 2009)</span>
-        <p class="small"><b>Literal block distance</b>: the number of distinct decision levels in a learned clause. "Glue" clauses (LBD ≤ 2) link two blocks of propagation and are kept forever. Periodically delete the worse half of the rest, never a clause that is a current reason.</p>
+      <div class="box def"><span class="label"><span class="term">clause deletion</span> by LBD (Glucose, 2009)</span>
+        <p class="small"><b>Literal block distance</b>: the number of distinct decision levels in a learned clause. <span class="term" data-term="glue clause">"Glue" clauses</span> (LBD ≤ 2) link two blocks of propagation and are kept forever. Periodically delete the worse half of the rest, never a clause that is a current reason.</p>
       </div>
       <p class="small">Lab <code>then</code>, random 3-SAT at the threshold:</p>
       <table class="dense">
@@ -187,11 +270,11 @@
   <h2>DRAT: checkable unsatisfiability</h2>
   <div class="cols">
     <div>
-      <p class="small">A <b>DRAT</b> proof lists every learned clause (and every deletion) in order. A checker replays it: each lemma must be <b>RUP</b>, meaning that assigning its negation and unit-propagating over the clauses so far gives a conflict. It ends with the empty clause.</p>
+      <p class="small">A DRAT proof lists every learned clause (and every deletion) in order. A checker replays it: each lemma must be <span class="term" data-term="RUP (reverse unit propagation)">RUP</span>, meaning that assigning its negation and unit-propagating over the clauses so far gives a conflict. It ends with the empty clause.</p>
       <ul class="small">
         <li>A first-UIP clause is always RUP: that's what analysis just showed.</li>
-        <li>RAT extends RUP to cover inprocessing techniques that add non-implied clauses (such as blocked clauses).</li>
-        <li>SAT competitions require verified proofs; drat-trim and the formally verified cake_lpr check them.</li>
+        <li><span class="term">RAT</span> extends RUP to cover inprocessing techniques that add non-implied clauses (such as blocked clauses).</li>
+        <li>SAT competitions require verified proofs; <span class="term">drat-trim</span> and the formally verified cake_lpr check them.</li>
       </ul>
     </div>
     <div>
@@ -219,10 +302,11 @@
   <div class="cols">
     <div>
       <div class="box thm"><span class="label">Pipatsrisawat & Darwiche 2011; Atserias, Fichte & Thurley 2011</span>
-        <p class="small">CDCL with restarts <b>polynomially simulates</b> general resolution, and every CDCL run yields a resolution refutation of similar size. So a resolution lower bound is a CDCL lower bound.</p>
+        <p class="small">CDCL with restarts <span class="term" data-term="polynomial simulation">polynomially simulates</span> general resolution, and every CDCL run yields a resolution refutation of similar size. So a resolution lower bound is a CDCL lower bound.</p>
       </div>
-      <div class="box thm"><span class="label">Haken 1985</span>
-        <p class="small">Every resolution refutation of the pigeonhole formula $\mathrm{PHP}^{n+1}_n$ has size $2^{\Omega(n)}$.</p>
+      <div class="box thm"><span class="label"><span class="term" data-term="Haken's theorem">Haken 1985</span></span>
+        <p class="small">Every resolution refutation of the <span class="term" data-term="pigeonhole formula \(\mathrm{PHP}^{n+1}_n\)">pigeonhole formula</span> $\mathrm{PHP}^{n+1}_n$ has size $2^{\Omega(n)}$.</p>
+        <p class="small muted"><b>Why, in one line:</b> any refutation must at some point hold a clause about a third of all the pigeons at once, and building clauses that wide one resolution at a time takes exponentially many steps. <span class="proof-pointer">sketch in the notes (N)</span></p>
       </div>
       <p class="small">Counting ("$n+1$ objects don't fit in $n$ places") can't be expressed compactly in clause-by-clause reasoning. Unit 18's alldifferent does it in <b>one matching</b>.</p>
     </div>
@@ -237,11 +321,12 @@
           <tr><td>11 into 10</td><td class="num">—</td><td class="num">10.7 M</td><td class="num">2.2 M</td><td class="num">3.2</td></tr>
         </tbody>
       </table>
-      <p class="small">Better engineering shifts the curve; it doesn't change its shape. Stronger proof systems (cutting planes, extended resolution) have short pigeonhole proofs, and pseudo-Boolean solvers exploit that.</p>
+      <p class="small">Better engineering shifts the curve; it doesn't change its shape. <span class="term">Stronger proof systems</span> (cutting planes, extended resolution) have short pigeonhole proofs, and pseudo-Boolean solvers exploit that.</p>
     </div>
   </div>
   <aside class="notes">
-    <p>The intuition behind Haken's bound, via Ben-Sasson & Wigderson's width method (2001): any
+    <h4>Proof sketch</h4>
+    <p>The intuition behind Haken's bound, via Ben-Sasson & Wigderson's width method (2001), using <b>clause width</b>: any
     refutation must contain a clause of large width, about $n/3$ literals, and a wide clause forces
     exponential size. Pigeonhole's clauses mention one pigeon or one hole each, but refuting them
     requires reasoning about many pigeons at once, and resolution can only do that by building wide
@@ -264,11 +349,11 @@
   <div class="cols">
     <div>
       <ul class="small">
-        <li><b>Tseitin</b> (1968): name every subformula with a fresh variable. Linear size, equisatisfiable. Arbitrary circuits become CNF.</li>
-        <li><b>At most one</b> of $n$: pairwise ($\binom n2$ clauses), <b>sequential counter</b> (Sinz 2005, $3n - 4$ clauses, $n - 1$ variables), <b>bitwise</b> ($n \lceil\log n\rceil$ clauses), commander, product.</li>
-        <li><b>At most $k$</b>: sequential counters, sorting and cardinality networks (Asín et al. 2011), totalizers.</li>
+        <li><b><span class="term" data-term="Tseitin transformation">Tseitin</span></b> (1968): name every subformula with a fresh <span class="term" data-term="auxiliary variable">variable</span>. Linear size, <span class="term">equisatisfiable</span>. Arbitrary circuits become CNF.</li>
+        <li><b><span class="term" data-term="at-most-one (AMO)">At most one</span></b> of $n$: <span class="term" data-term="pairwise encoding">pairwise</span> ($\binom n2$ clauses), <span class="term">sequential counter</span> (Sinz 2005, $3n - 4$ clauses, $n - 1$ variables), <span class="term" data-term="bitwise encoding">bitwise</span> ($n \lceil\log n\rceil$ clauses), commander, product.</li>
+        <li><b><span class="term" data-term="at-most-\(k\)">At most $k$</span></b>: sequential counters, sorting and cardinality networks (Asín et al. 2011), totalizers.</li>
       </ul>
-      <p class="small"><b>Arc consistency</b> is the property that matters: does unit propagation on the encoding prune as much as the constraint would? Pairwise and the sequential counter both have it.</p>
+      <p class="small"><b><span class="term" data-term="arc consistency (encoding)">Arc consistency</span></b> is the property that matters: does unit propagation on the encoding prune as much as the constraint would? Pairwise and the sequential counter both have it.</p>
     </div>
     <div>
       <p class="small">Lab <code>then</code>, n-queens with your solver (clauses / seconds):</p>
@@ -290,6 +375,46 @@
     <p>At industrial scale, 10⁵-literal cardinality constraints make pairwise impossible, and the
     choice between counters and networks becomes a real trade-off. It's also where pseudo-Boolean and
     CP-SAT's native linear constraints (unit 21) take over.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">20 · encodings · example</p>
+  <h2>Two encodings, written out</h2>
+  <div class="cols">
+    <div>
+      <div class="box ex"><span class="label">Tseitin on a two-gate circuit</span>
+        <p class="small">Circuit $o = (a \land b) \lor c$, asserted true. Name the gates $g = a \land b$ and $o = g \lor c$:</p>
+        <table style="margin:0">
+          <thead><tr><th>gate</th><th>clauses</th></tr></thead>
+          <tbody>
+            <tr><td>$g \leftrightarrow a \land b$</td><td>$(\lnot g \lor a)$, $(\lnot g \lor b)$, $(g \lor \lnot a \lor \lnot b)$</td></tr>
+            <tr><td>$o \leftrightarrow g \lor c$</td><td>$(\lnot o \lor g \lor c)$, $(o \lor \lnot g)$, $(o \lor \lnot c)$</td></tr>
+            <tr><td>output</td><td>$(o)$</td></tr>
+          </tbody>
+        </table>
+        <p class="small">7 clauses. The circuit has 5 satisfying inputs $(a,b,c)$, and each extends to <b>exactly one</b> value of $g, o$: same count, so equisatisfiable, and models map back.</p>
+      </div>
+    </div>
+    <div>
+      <div class="box ex"><span class="label">at most one of four, two ways</span>
+        <p class="small"><b>Pairwise</b>, 6 clauses: $(\lnot x_1 \lor \lnot x_2)$, $(\lnot x_1 \lor \lnot x_3)$, $(\lnot x_1 \lor \lnot x_4)$, $(\lnot x_2 \lor \lnot x_3)$, $(\lnot x_2 \lor \lnot x_4)$, $(\lnot x_3 \lor \lnot x_4)$.</p>
+        <p class="small"><b>Sequential counter</b>, 8 clauses and 3 new variables $s_1, s_2, s_3$ ("one of the first $i$ is true"): $(\lnot x_1 \lor s_1)$, $(\lnot x_2 \lor s_2)$, $(\lnot s_1 \lor s_2)$, $(\lnot x_2 \lor \lnot s_1)$, $(\lnot x_3 \lor s_3)$, $(\lnot s_2 \lor s_3)$, $(\lnot x_3 \lor \lnot s_2)$, $(\lnot x_4 \lor \lnot s_3)$.</p>
+        <p class="small"><b>Set $x_1$ true.</b> Pairwise: one round gives $\lnot x_2, \lnot x_3, \lnot x_4$. Counter: $s_1$, then $\lnot x_2$ and $s_2$, then $\lnot x_3$ and $s_3$, then $\lnot x_4$. Same result, after a chain of six propagations.</p>
+      </div>
+    </div>
+  </div>
+  <aside class="notes">
+    <p><b>Tseitin check.</b> Brute force over all assignments of the seven clauses' variables
+    gives 5 models in the variables that occur, one per satisfying input of the circuit; for
+    example $a = b = 0$, $c = 1$ forces $g = 0$ (by $(\lnot g \lor a)$) and $o = 1$. The reference
+    solver finds $c = o = 1$, everything else false. Only the "$\to$" half of each gate is
+    needed for equisatisfiability (Plaisted–Greenbaum); both halves keep the model count equal.</p>
+    <p><b>AMO clauses</b> are exactly what the reference <code>amo_pairwise</code> and
+    <code>amo_sequential</code> return for literals 1–4, with auxiliaries numbered 6, 7, 8. For
+    $n = 4$ the counter is not smaller (8 against 6); it wins from $n = 6$ on ($14$ against $15$),
+    and by $n = 40$ it is $116$ clauses against $780$. The queens table on the previous slide
+    shows what the longer propagation chains cost.</p>
   </aside>
 </section>
 

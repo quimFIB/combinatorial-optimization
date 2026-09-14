@@ -18,7 +18,7 @@
   <div class="unit-no">19</div>
   <h1>Search, restarts, and large neighbourhood search</h1>
   <p class="lede">Which variable next, which value first, when to give up and start again — and how destroy-and-repair turns an exact engine into a heuristic that scales.</p>
-  <p class="meta"><span>needs 18</span><span>~1¼ h slides + 2½ h lab</span><span>lab: <code>uv run co lab 19</code></span></p>
+  <p class="meta"><span>needs 18</span><span>~1¾ h slides + 2½ h lab</span><span>lab: <code>uv run co lab 19</code></span></p>
   <aside class="notes">
     <p>Units 17 and 18 were about inference, what propagation can deduce. This unit is about
     decisions: where the tree branches, and when a search should abandon its tree entirely. The
@@ -28,6 +28,12 @@
     <p>The second half, large neighbourhood search, is the bridge to Part V. It uses the exact
     engine as a subroutine inside a heuristic loop, and it's how CP solvers find good solutions to
     problems they cannot prove optimal.</p>
+    <h4>How to read this deck</h4>
+    <p>Three small worked examples sit next to the lab's measurements: dom/wdeg's weights
+    changing over three failures on four variables, the first fifteen Luby cutoffs, and one
+    destroy-and-repair step on a three-job shop drawn as a Gantt chart. All three were computed
+    with the lab's reference solution. The Luby optimality theorem is stated as an idea, with the
+    precise statement in the notes.</p>
   </aside>
 </section>
 
@@ -45,6 +51,9 @@
       <p class="small">Luby's universal schedule; what to remember across restarts.</p></div>
     <div class="box def"><span class="label">4 · LNS</span>
       <p class="small">Destroy and repair with the propagator as the repair engine.</p></div>
+  </div>
+  <div class="box good"><span class="label">getting around</span>
+    <p class="small">Words with a <span class="term" data-term="heavy tail">dotted underline</span> are glossary terms: click one for its definition. <kbd>G</kbd> lists every term in the unit, <kbd>N</kbd> shows the notes.</p>
   </div>
   <aside class="notes">
     <p>The checkpoint is a histogram from your own solver, and a demonstration that restarts move its
@@ -64,21 +73,21 @@
   <h2>Variable and value ordering</h2>
   <div class="cols">
     <div>
-      <p class="small"><b>Variables: fail first</b> (Haralick & Elliott 1980). Branch where a dead end is most likely, so it is found near the root.</p>
+      <p class="small"><b><span class="term" data-term="variable ordering">Variables</span>: <span class="term" data-term="fail first">fail first</span></b> (Haralick & Elliott 1980). Branch where a dead end is most likely, so it is found near the root.</p>
       <ul class="small">
-        <li><b>first-fail</b>: smallest domain.</li>
-        <li><b>dom/deg</b>: domain size over degree.</li>
-        <li><b>dom/wdeg</b> (Boussemart et al. 2004): each constraint's weight counts its failures, so search is drawn to the <b>hard core</b> of the problem.</li>
-        <li><b>impact-based</b> (Refalo 2004): prefer variables whose assignments shrank the search space most in the past.</li>
-        <li><b>activity-based</b> (Michel & Van Hentenryck 2012): a VSIDS-like count of how often each variable's domain changes.</li>
+        <li><b><span class="term">first-fail</span></b>: smallest domain.</li>
+        <li><b><span class="term">dom/deg</span></b>: domain size over degree.</li>
+        <li><b><span class="term">dom/wdeg</span></b> (Boussemart et al. 2004): each constraint's weight counts its failures, so search is drawn to the <span class="term">hard core</span> of the problem.</li>
+        <li><b><span class="term" data-term="impact-based search">impact-based</span></b> (Refalo 2004): prefer variables whose assignments shrank the search space most in the past.</li>
+        <li><b><span class="term" data-term="activity-based search">activity-based</span></b> (Michel & Van Hentenryck 2012): a VSIDS-like count of how often each variable's domain changes.</li>
       </ul>
     </div>
     <div>
-      <p class="small"><b>Values: succeed first.</b> Try the value most likely to lead to a solution. It matters only for satisfiable subtrees; for proofs, every value is tried anyway.</p>
+      <p class="small"><b><span class="term" data-term="value ordering">Values</span>: <span class="term" data-term="succeed first">succeed first</span>.</b> Try the value most likely to lead to a solution. It matters only for satisfiable subtrees; for proofs, every value is tried anyway.</p>
       <div class="box good"><span class="label">lab step 2: a hidden core</span>
         <p class="small">14 easy three-valued variables in a chain, plus 5 variables that must all differ over 4 values. <b>first-fail</b> branches on the chain (smaller domains): more than 20 000 nodes, unfinished. <b>dom/wdeg</b> learns from the first failures that the ≠ clique is where they come from: <b>under 500 nodes</b> to prove infeasibility.</p>
       </div>
-      <p class="small muted">On QCP, where all constraints look alike, dom/wdeg is worse than randomised first-fail (lab <code>then</code>). Heuristics are instance-family bets.</p>
+      <p class="small muted">On QCP, where all constraints look alike, dom/wdeg is worse than randomised first-fail (lab <code>then</code>). <span class="term" data-term="heuristics as bets">Heuristics are instance-family bets.</span></p>
     </div>
   </div>
   <aside class="notes">
@@ -89,6 +98,43 @@
     failed branch, constraints excluding the symmetric images of that subtree. The static
     alternative adds lexicographic ordering constraints to the model. Both prevent the search from
     rediscovering the same failure in a symmetric disguise.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">19 · heuristics · example</p>
+  <h2>dom/wdeg, on four variables</h2>
+  <div class="cols">
+    <div>
+      <p class="small">Four variables on a cycle of $\ne$ constraints: $c_1: x \ne y$, $c_2: y \ne z$, $c_3: z \ne w$, $c_4: x \ne w$. Domains: $x, y \in \{0,1,2\}$, $z, w \in \{0,1\}$. Every weight starts at 1.</p>
+      <p class="small">Score $= |D| / \text{wdeg}$, where wdeg adds the weights of the variable's constraints. Branch on the <b>smallest</b> score (ties: lowest index).</p>
+      <div class="box ex"><span class="label">what changes, and what doesn't</span>
+        <p class="small">At the start plain first-fail and dom/wdeg agree: $z$, the smallest domain. After failures in $c_1$, the two variables of $c_1$ get cheaper to pick, and by the second failure $x$ wins outright. The variables far from the failures, $z$ and $w$, never move.</p>
+      </div>
+    </div>
+    <div>
+      <table>
+        <thead><tr><th>moment</th><th>weight of $c_1$</th><th class="num">$x$</th><th class="num">$y$</th><th class="num">$z$</th><th class="num">$w$</th><th>branch on</th></tr></thead>
+        <tbody>
+          <tr><td>start</td><td class="num">1</td><td class="num">3/2</td><td class="num">3/2</td><td class="num"><b>2/2</b></td><td class="num">2/2</td><td>$z$</td></tr>
+          <tr><td>$c_1$ fails once</td><td class="num">2</td><td class="num"><b>3/3</b></td><td class="num">3/3</td><td class="num">2/2</td><td class="num">2/2</td><td>$x$ (4-way tie)</td></tr>
+          <tr><td>twice</td><td class="num">3</td><td class="num"><b>3/4</b></td><td class="num">3/4</td><td class="num">2/2</td><td class="num">2/2</td><td>$x$</td></tr>
+          <tr><td>three times</td><td class="num">4</td><td class="num"><b>3/5</b></td><td class="num">3/5</td><td class="num">2/2</td><td class="num">2/2</td><td>$x$</td></tr>
+        </tbody>
+      </table>
+      <p class="small">Three failures turn a variable with a <em>larger</em> domain into the preferred branch: search moves to where the conflicts are.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p><b>The arithmetic.</b> $x$ sits in $c_1$ and $c_4$, so its wdeg is $w(c_1) + w(c_4)$:
+    $1 + 1 = 2$ at the start, then 3, 4, 5 as $c_1$'s weight grows. Its domain has 3 values, so
+    its score goes $1.5 \to 1 \to 0.75 \to 0.6$. $y$ is in $c_1$ and $c_2$ and follows the same
+    numbers. $z$ is in $c_2$ and $c_3$, $w$ in $c_3$ and $c_4$: neither touches $c_1$, so both stay
+    at $2/2 = 1$.</p>
+    <p>Computed with the reference <code>DomWDeg</code>, calling its <code>on_failure</code> hook
+    with $c_1$ three times and reading its <code>choose</code> after each. In a real search the
+    domains shrink too, and a constraint only counts toward wdeg while another of its variables
+    is unfixed.</p>
   </aside>
 </section>
 
@@ -103,19 +149,19 @@
   <h2>The runtime distribution of one instance</h2>
   <div class="cols">
     <div>
-      <p class="small">Lab <code>then</code>: quasigroup completion, order 12, 55% holes, 100 seeds of randomised first-fail (ties broken at random), nodes to a solution:</p>
+      <p class="small">Lab <code>then</code>: <span class="term" data-term="quasigroup completion (QCP)">quasigroup completion</span>, order 12, 55% holes, 100 seeds of <span class="term" data-term="randomised first-fail">randomised first-fail</span>, nodes to a solution (its <span class="term">runtime distribution</span>):</p>
 <pre class="small" style="font-size:.52em"><code>      16–31 ███████████████████████████████████ 51
       32–63 ████████████████ 24
      64–127 ████████ 12
     128–255 █████ 8
    512–1023 █ 2
    cap 3000 ██ 3</code></pre>
-      <p class="small">Median 31, p90 174, and 3 runs never finished within 3 000 nodes. The only difference between runs is tie-breaking.</p>
+      <p class="small"><span class="term" data-term="median, p90">Median 31, p90 174</span>, and 3 runs never finished within 3 000 nodes. The only difference between runs is tie-breaking.</p>
     </div>
     <div>
       <div class="box thm"><span class="label">Gomes, Selman, Crato & Kautz 2000</span>
-        <p class="small">Backtracking search on many CSP and SAT families has runtimes with <b>Pareto-like tails</b>: $P(T &gt; t) \sim C t^{-\alpha}$, often with $\alpha &lt; 1$, which means <b>infinite mean</b> in the limit.</p>
-        <p class="small">Cause: an early wrong decision puts search in a subtree with no solution that it must exhaust. Its size is exponential in how early the mistake happened.</p>
+        <p class="small">Backtracking search on many CSP and SAT families has runtimes with <span class="term" data-term="Pareto (power-law) tail">Pareto-like tails</span>, a <span class="term">heavy tail</span>: $P(T &gt; t) \sim C t^{-\alpha}$, often with $\alpha &lt; 1$, which means <b>infinite mean</b> in the limit.</p>
+        <p class="small">Cause: an <span class="term">early mistake</span> puts search in a subtree with no solution that it must exhaust. Its size is exponential in how early the mistake happened.</p>
       </div>
       <p class="small">A heavy tail makes the <b>mean</b> a poor summary and a single run a lottery ticket. It also points to the fix: <b>don't wait</b>.</p>
     </div>
@@ -142,10 +188,11 @@
   <div class="cols">
     <div>
       $$1, 1, 2, 1, 1, 2, 4, 1, 1, 2, 1, 1, 2, 4, 8, \dots$$
-      <div class="box thm"><span class="label">Luby, Sinclair & Zuckerman 1993</span>
-        <p class="small">For a Las Vegas algorithm with an <b>unknown</b> runtime distribution, running with cutoffs $c \cdot \text{luby}(i)$ is within $O(\log)$ of the best fixed-cutoff strategy, which knows the distribution. No universal strategy can do better by more than a constant factor.</p>
+      <div class="box thm"><span class="label">why this sequence (Luby, Sinclair & Zuckerman 1993)</span>
+        <p class="small">You don't know the right <span class="term">cutoff</span>. The <span class="term">Luby sequence</span> tries every power of two, and spends about the same total effort on each, so whichever cutoff was right, it is used often enough. Nothing that doesn't know the distribution does much better.</p>
+        <p class="proof-pointer">precise statement in the notes (N)</p>
       </div>
-      <p class="small">Geometric schedules ($c \cdot r^i$) are the common alternative. SAT solvers now also restart <b>adaptively</b>, when recent conflicts look worse than average (Audemard & Simon 2012).</p>
+      <p class="small"><span class="term" data-term="geometric restarts">Geometric schedules</span> ($c \cdot r^i$) are the common alternative. SAT solvers now also <span class="term" data-term="adaptive restarts">restart adaptively</span>, when recent conflicts look worse than average (Audemard & Simon 2012).</p>
     </div>
     <div>
       <p class="small">Lab <code>then</code>, 100 seeds, base 30:</p>
@@ -158,10 +205,16 @@
           <tr><td></td><td>Luby</td><td class="num">92.3</td><td class="num">93</td><td class="num">217</td></tr>
         </tbody>
       </table>
-      <p class="small">Restarts <b>cut the tail</b>, and with it the (capped) mean, but only where there is a tail to cut. On the light instance they double the mean. <span class="muted">Corrected after unit 28: the median difference on the heavy instance is within its bootstrap interval.</span></p>
+      <p class="small">A <span class="term">restart</span> <b>cuts the tail</b>, and with it the (capped) mean, but only where there is a tail to cut: <span class="term" data-term="restarts hurt without a tail">without one, restarts hurt</span>. On the light instance they double the mean. <span class="muted">Corrected after unit 28: the median difference on the heavy instance is within its bootstrap interval.</span></p>
     </div>
   </div>
   <aside class="notes">
+    <h4>The theorem, precisely</h4>
+    <p>For a <b>Las Vegas algorithm</b> (always correct, random running time) with an
+    <em>unknown</em> runtime distribution, running it with cutoffs $c \cdot \text{luby}(i)$, restarting
+    after each, has expected total running time within an $O(\log)$ factor of the best fixed-cutoff
+    strategy, which knows the distribution. No universal strategy can do better by more than a
+    constant factor.</p>
     <p>Why restarts need randomisation, or learning: an identical deterministic restart repeats the
     same search. The lab's restarts vary through random tie-breaking or through dom/wdeg's weights,
     which change with every failure. SAT solvers restart deterministically but keep their VSIDS
@@ -172,20 +225,54 @@
 </section>
 
 <section>
+  <p class="eyebrow">19 · restarts · example</p>
+  <h2>Luby cutoffs, term by term</h2>
+  <table class="dense">
+    <thead><tr><th>run $i$</th><th class="num">1</th><th class="num">2</th><th class="num">3</th><th class="num">4</th><th class="num">5</th><th class="num">6</th><th class="num">7</th><th class="num">8</th><th class="num">9</th><th class="num">10</th><th class="num">11</th><th class="num">12</th><th class="num">13</th><th class="num">14</th><th class="num">15</th></tr></thead>
+    <tbody>
+      <tr><td>luby($i$)</td><td class="num">1</td><td class="num">1</td><td class="num">2</td><td class="num">1</td><td class="num">1</td><td class="num">2</td><td class="num">4</td><td class="num">1</td><td class="num">1</td><td class="num">2</td><td class="num">1</td><td class="num">1</td><td class="num">2</td><td class="num">4</td><td class="num">8</td></tr>
+      <tr><td>cutoff (base 30)</td><td class="num">30</td><td class="num">30</td><td class="num">60</td><td class="num">30</td><td class="num">30</td><td class="num">60</td><td class="num">120</td><td class="num">30</td><td class="num">30</td><td class="num">60</td><td class="num">30</td><td class="num">30</td><td class="num">60</td><td class="num">120</td><td class="num">240</td></tr>
+      <tr><td>total so far</td><td class="num">30</td><td class="num">60</td><td class="num">120</td><td class="num">150</td><td class="num">180</td><td class="num">240</td><td class="num">360</td><td class="num">390</td><td class="num">420</td><td class="num">480</td><td class="num">510</td><td class="num">540</td><td class="num">600</td><td class="num">720</td><td class="num">960</td></tr>
+    </tbody>
+  </table>
+  <p class="small"><b>How it grows:</b> the first $2^k - 1$ terms are two copies of the first $2^{k-1} - 1$ terms, then $2^{k-1}$. Runs 1–7 repeat as runs 8–14, then 8 appears.</p>
+  <div class="box ex"><span class="label">reading it against the histogram</span>
+    <div class="cols">
+      <div>
+      <p class="small">On the heavy instance, half the runs finish within 31 nodes. A cutoff of 30 or 60 catches those, and twelve of the first fifteen runs have one of those cutoffs.</p>
+      <p class="small">The rare long runs never get to run long: the biggest cutoff in 960 nodes of work is 240, where plain search once spent over 3 000.</p>
+      </div>
+      <div>
+      <p class="small">Each cutoff size gets about equal total effort: runs of 30 use 240 nodes, runs of 60 use 240, runs of 120 use 240, and the single 240.</p>
+      </div>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>The terms are from the reference <code>luby</code>; the cutoffs are what
+    <code>solve_with_restarts</code> uses with <code>base=30</code>, the <code>then</code> step's
+    setting. The recursive definition: luby($i$) $= 2^{k-1}$ if $i = 2^k - 1$, and otherwise
+    luby($i - 2^{k-1} + 1$) for the $k$ with $2^{k-1} \le i &lt; 2^k - 1$.</p>
+    <p>Effort per size among the first 15 runs: eight runs of 30 (240), four of 60 (240), two of
+    120 (240), one of 240 (240). That balance is the whole idea behind the theorem's
+    guarantee.</p>
+  </aside>
+</section>
+
+<section>
   <p class="eyebrow">19 · restarts</p>
   <h2>What to remember across restarts</h2>
   <div class="cols">
     <div>
       <ul class="small">
         <li><b>Heuristic state</b>: dom/wdeg weights, activity, impacts. The next search branches differently because it learned.</li>
-        <li><b>Nogoods</b>: a set of decisions proved to have no solution below it. Record it as a constraint and the next search never enters that subtree again.</li>
-        <li><b>Nogoods from restarts</b> (Lecoutre et al. 2007): at each restart, extract the nogoods implied by the current partial tree's refuted branches.</li>
+        <li><b><span class="term" data-term="nogood">Nogoods</span></b>: a set of decisions proved to have no solution below it. Record it as a constraint and the next search never enters that subtree again.</li>
+        <li><b><span class="term" data-term="nogoods from restarts">Nogoods from restarts</span></b> (Lecoutre et al. 2007): at each restart, extract the nogoods implied by the current partial tree's refuted branches.</li>
         <li><b>The incumbent</b>, for optimisation: the objective bound carries over.</li>
       </ul>
     </div>
     <div>
       <div class="box def"><span class="label">nogoods, done right</span>
-        <p class="small">A decision nogood such as "$x_1 = 3 \wedge x_4 = 1$ fails" is weak: it mentions decisions, not reasons. The strong form records <b>why</b> it failed, the propagators and removed values responsible. That's clause learning, the core of CDCL SAT solvers (unit 20), and lazy clause generation brings it to CP (unit 21).</p>
+        <p class="small">A <span class="term" data-term="decision nogood">decision nogood</span> such as "$x_1 = 3 \wedge x_4 = 1$ fails" is weak: it mentions decisions, not reasons. The strong form records <b>why</b> it failed, the propagators and removed values responsible. That's clause learning, the core of CDCL SAT solvers (unit 20), and lazy clause generation brings it to CP (unit 21).</p>
       </div>
       <p class="small muted">Lab <code>then</code>'s 3-colouring in unit 17 was that difference: 120 334 nodes without learning, 3 106 branches with.</p>
     </div>
@@ -210,15 +297,15 @@
   <div class="cols">
     <div>
       <ol class="small">
-        <li>Start from a solution (lab: a greedy dispatch schedule).</li>
-        <li><b>Destroy</b>: free a part of it. Lab: a random 30% of the jobs; the other jobs keep their order on every machine.</li>
-        <li><b>Repair</b>: search the freed part with the full propagation engine and <b>objective &lt; best</b>, under a small node limit.</li>
+        <li>Start from a solution (lab: a <span class="term">greedy dispatch</span> schedule).</li>
+        <li><b><span class="term" data-term="destroy operator">Destroy</span></b>: free a part of it. Lab: a random 30% of the jobs; the other jobs keep their order on every machine.</li>
+        <li><b><span class="term">Repair</span></b>: search the freed part with the full propagation engine and <b>objective &lt; best</b>, under a small node limit.</li>
         <li>Accept an improvement and repeat.</li>
       </ol>
-      <p class="small">Shaw (1998) introduced it for vehicle routing with CP repair. <b>ALNS</b> (Ropke & Pisinger 2006) chooses among several destroy operators adaptively.</p>
+      <p class="small"><span class="term" data-term="large neighbourhood search (LNS)">Large neighbourhood search</span>: Shaw (1998) introduced it for vehicle routing with CP repair. <b><span class="term">ALNS</span></b> (Ropke & Pisinger 2006) chooses among several destroy operators adaptively.</p>
     </div>
     <div>
-      <p class="small">Lab <code>then</code>, random job-shops, 22 500 nodes each:</p>
+      <p class="small">Lab <code>then</code>, random job-shops, 22 500 nodes each, <span class="term">makespan</span>:</p>
       <table class="dense">
         <thead><tr><th>instance</th><th class="num">greedy</th><th class="num">LNS</th><th class="num">branch-and-bound</th></tr></thead>
         <tbody>
@@ -236,9 +323,95 @@
     insertions. The neighbourhood is exponentially large, but it's explored by propagation-guided
     search rather than enumerated. That's the difference from classical local search (unit 26),
     whose neighbourhoods are small enough to scan.</p>
-    <p>The choice of what to destroy matters as much as the repair. Related jobs (those sharing
-    machines around the critical path) usually beat random ones. Neighbourhood design is where
+    <p>The choice of what to destroy matters as much as the repair. <b>Related destroy</b>, jobs sharing
+    machines around the critical path, usually beat random ones. Neighbourhood design is where
     domain knowledge enters LNS.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">19 · LNS · example</p>
+  <h2>One LNS step, on a 3 × 3 job-shop</h2>
+  <div class="cols wide-right">
+    <div>
+      <table class="dense">
+        <thead><tr><th>job</th><th>operations (machine, duration)</th></tr></thead>
+        <tbody>
+          <tr><td>J0</td><td>M1 5, then M0 2, then M2 4</td></tr>
+          <tr><td>J1</td><td>M2 3, then M0 2, then M1 2</td></tr>
+          <tr><td>J2</td><td>M0 1, then M2 4, then M1 5</td></tr>
+        </tbody>
+      </table>
+      <div class="box ex"><span class="label">destroy, then repair</span>
+        <p class="small"><b>Destroy:</b> free job J1. On every machine, J0 and J2 keep their order: M0 J2 before J0, M1 J0 before J2, M2 J2 before J0.</p>
+        <p class="small"><b>Repair:</b> search where J1 goes, with makespan $\le 15$. Propagation places it in the gaps: M0 at 3–5, M1 at 5–7. J2's last operation moves up to 7–12.</p>
+        <p class="small">Makespan <b>16 → 12</b>, which brute force confirms is optimal.</p>
+      </div>
+    </div>
+    <div class="fig">
+      <svg viewBox="-4 0 400 250" width="440" role="img" aria-label="Gantt charts before and after one LNS step: makespan 16 then 12">
+        <text x="0" y="16" font-size="13" font-weight="600">greedy dispatch: makespan 16</text>
+        <text x="0" y="39" font-size="12" class="mono soft">M0</text>
+        <text x="0" y="65" font-size="12" class="mono soft">M1</text>
+        <text x="0" y="91" font-size="12" class="mono soft">M2</text>
+        <rect x="34" y="48" width="110" height="22" rx="3" class="fill-ground unit" stroke-width="2.5"/>
+        <text x="89" y="64" font-size="12" class="mono" text-anchor="middle">J0</text>
+        <rect x="144" y="22" width="44" height="22" rx="3" class="fill-ground unit" stroke-width="2.5"/>
+        <text x="166" y="38" font-size="12" class="mono" text-anchor="middle">J0</text>
+        <rect x="188" y="74" width="88" height="22" rx="3" class="fill-ground unit" stroke-width="2.5"/>
+        <text x="232" y="90" font-size="12" class="mono" text-anchor="middle">J0</text>
+        <rect x="34" y="74" width="66" height="22" rx="3" class="fill-ground warn" stroke-width="2.5"/>
+        <text x="67" y="90" font-size="12" class="mono" text-anchor="middle">J1</text>
+        <rect x="188" y="22" width="44" height="22" rx="3" class="fill-ground warn" stroke-width="2.5"/>
+        <text x="210" y="38" font-size="12" class="mono" text-anchor="middle">J1</text>
+        <rect x="232" y="48" width="44" height="22" rx="3" class="fill-ground warn" stroke-width="2.5"/>
+        <text x="254" y="64" font-size="12" class="mono" text-anchor="middle">J1</text>
+        <rect x="34" y="22" width="22" height="22" rx="3" class="fill-ground good" stroke-width="2.5"/>
+        <text x="45" y="38" font-size="12" class="mono" text-anchor="middle">J2</text>
+        <rect x="100" y="74" width="88" height="22" rx="3" class="fill-ground good" stroke-width="2.5"/>
+        <text x="144" y="90" font-size="12" class="mono" text-anchor="middle">J2</text>
+        <rect x="276" y="48" width="110" height="22" rx="3" class="fill-ground good" stroke-width="2.5"/>
+        <text x="331" y="64" font-size="12" class="mono" text-anchor="middle">J2</text>
+        <text x="0" y="140" font-size="13" font-weight="600">after freeing J1 and repairing: makespan 12</text>
+        <text x="0" y="163" font-size="12" class="mono soft">M0</text>
+        <text x="0" y="189" font-size="12" class="mono soft">M1</text>
+        <text x="0" y="215" font-size="12" class="mono soft">M2</text>
+        <rect x="34" y="172" width="110" height="22" rx="3" class="fill-ground unit" stroke-width="2.5"/>
+        <text x="89" y="188" font-size="12" class="mono" text-anchor="middle">J0</text>
+        <rect x="144" y="146" width="44" height="22" rx="3" class="fill-ground unit" stroke-width="2.5"/>
+        <text x="166" y="162" font-size="12" class="mono" text-anchor="middle">J0</text>
+        <rect x="188" y="198" width="88" height="22" rx="3" class="fill-ground unit" stroke-width="2.5"/>
+        <text x="232" y="214" font-size="12" class="mono" text-anchor="middle">J0</text>
+        <rect x="34" y="198" width="66" height="22" rx="3" class="fill-ground warn" stroke-width="2.5"/>
+        <text x="67" y="214" font-size="12" class="mono" text-anchor="middle">J1</text>
+        <rect x="100" y="146" width="44" height="22" rx="3" class="fill-ground warn" stroke-width="2.5"/>
+        <text x="122" y="162" font-size="12" class="mono" text-anchor="middle">J1</text>
+        <rect x="144" y="172" width="44" height="22" rx="3" class="fill-ground warn" stroke-width="2.5"/>
+        <text x="166" y="188" font-size="12" class="mono" text-anchor="middle">J1</text>
+        <rect x="34" y="146" width="22" height="22" rx="3" class="fill-ground good" stroke-width="2.5"/>
+        <text x="45" y="162" font-size="12" class="mono" text-anchor="middle">J2</text>
+        <rect x="100" y="198" width="88" height="22" rx="3" class="fill-ground good" stroke-width="2.5"/>
+        <text x="144" y="214" font-size="12" class="mono" text-anchor="middle">J2</text>
+        <rect x="188" y="172" width="110" height="22" rx="3" class="fill-ground good" stroke-width="2.5"/>
+        <text x="243" y="188" font-size="12" class="mono" text-anchor="middle">J2</text>
+        <text x="34" y="246" font-size="11" class="mono soft">0</text><text x="140" y="246" font-size="11" class="mono soft">5</text><text x="250" y="246" font-size="11" class="mono soft">10</text><text x="360" y="246" font-size="11" class="mono soft">15</text>
+      </svg>
+      <p class="cap">Outline colour is the job; J1, red, is the freed job. In the greedy schedule J1 waits for M0 until time 7, which pushes J2's M1 operation to 11–16.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p><b>The greedy schedule</b> (reference <code>greedy_schedule</code>, round-robin over jobs):
+    first operations J0 on M1 at 0, J1 on M2 at 0, J2 on M0 at 0; second round J0 on M0 at 5,
+    J1 on M0 at 7 (M0 busy until 7), J2 on M2 at 3; third round J0 on M2 at 7, J1 on M1 at 9,
+    J2 on M1 at 11 (after J1). Makespan 16.</p>
+    <p><b>The step</b> is the reference <code>lns_jobshop</code> with seed 0, one iteration,
+    relax 0.34: it frees exactly one job, J1, keeps the other jobs' machine orders as
+    precedences, and asks for makespan at most 15. The repaired schedule: J1 on M2 0–3, M0 3–5,
+    M1 5–7; J2's last operation 7–12. Kept orders check: M0 has J2 (0–1) before J0 (5–7), M1 has
+    J0 (0–5) before J2 (7–12), M2 has J2 (3–7) before J0 (7–11). The optimum over all $3!^3 = 216$
+    machine orders, by brute force, is 12.</p>
+    <p>The greedy schedule's weakness is typical: dispatch commits J1's M0 operation to after J0's
+    without looking ahead, and one freed job was enough to undo it.</p>
   </aside>
 </section>
 
@@ -247,7 +420,7 @@
   <h2>In the tools</h2>
   <div class="cols">
     <div>
-      <div class="box def"><span class="label">CP-SAT's portfolio</span>
+      <div class="box def"><span class="label">CP-SAT's <span class="term">portfolio</span></span>
         <p class="small">Several workers in parallel: different search strategies, restarts, and many LNS workers (random, graph-based, relaxation-induced, scheduling-specific) sharing one incumbent.</p>
       </div>
       <p class="small">Lab <code>then</code>, 30 × 15 job-shop (durations 1–99), 10 s:</p>
@@ -263,7 +436,7 @@
     </div>
     <div>
       <div class="box def"><span class="label">OR-Tools routing</span>
-        <p class="small">A local search engine with a CP core: a first solution, then guided local search over routing neighbourhoods.</p>
+        <p class="small">A local search engine with a CP core: a first solution, then <span class="term">guided local search</span> over routing <span class="term" data-term="neighbourhood">neighbourhoods</span>.</p>
       </div>
       <table class="dense">
         <thead><tr><th class="num">n</th><th class="num">unit 10 LP bound</th><th class="num">routing, 5 s</th><th class="num">gap</th></tr></thead>

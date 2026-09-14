@@ -18,7 +18,7 @@
   <div class="unit-no">18</div>
   <h1>Global constraints and their filtering algorithms</h1>
   <p class="lede">One constraint that sees the whole structure beats many that each see a pair. Matching filters alldifferent; compulsory parts filter cumulative; the price is paid per call.</p>
-  <p class="meta"><span>needs 17, 15</span><span>~1¼ h slides + 3 h lab</span><span>lab: <code>uv run co lab 18</code></span></p>
+  <p class="meta"><span>needs 17, 15</span><span>~1¾ h slides + 3 h lab</span><span>lab: <code>uv run co lab 18</code></span></p>
   <aside class="notes">
     <p>A global constraint is a constraint over an unbounded number of variables with a dedicated
     propagator. The idea that made CP competitive in scheduling and timetabling in the 1990s was
@@ -28,6 +28,11 @@
     <p>This unit is also where the course's traditions start trading. Unit 15's Hopcroft–Karp
     becomes the inner loop of a CP propagator. In unit 21 the same propagators will explain
     themselves to a SAT solver.</p>
+    <h4>How to read this deck</h4>
+    <p>The four-variable alldifferent of "What pairwise ≠ cannot see" is the running example: its
+    value graph, orientation and strongly connected components are worked on one slide. Scheduling
+    gets two small traces, a compulsory-part profile for three tasks and one edge-finding deduction
+    with numbers. Every result was produced by the lab's reference propagators.</p>
   </aside>
 </section>
 
@@ -45,6 +50,9 @@
       <p class="small">Cumulative: timetable, edge-finding, disjunctive.</p></div>
     <div class="box def"><span class="label">4 · the catalogue</span>
       <p class="small">element, table, circuit, gcc — and the one design question.</p></div>
+  </div>
+  <div class="box good"><span class="label">getting around</span>
+    <p class="small">Words with a <span class="term" data-term="global constraint">dotted underline</span> are glossary terms: click one for its definition. <kbd>G</kbd> lists every term in the unit, <kbd>N</kbd> shows the notes.</p>
   </div>
   <aside class="notes">
     <p>The checkpoint asks for a measured pair of models with the same answer and very different
@@ -66,17 +74,17 @@
     <div>
       $$x_1, x_2 \in \{1, 2\}, \quad x_3 \in \{1, 2, 3\}, \quad x_4 \in \{2, 3, 4\}$$
       <ul class="small">
-        <li><b>Pairwise ≠</b> (arc consistent): no variable is fixed, so nothing is pruned.</li>
-        <li><b>alldifferent</b> (generalised arc consistent): $\{x_1, x_2\}$ use up $\{1, 2\}$, so $x_3 = 3$, so $x_4 = 4$.</li>
+        <li><b>Pairwise ≠</b> (the <span class="term">decomposition</span>, arc consistent): no variable is fixed, so nothing is pruned.</li>
+        <li><b><span class="term">alldifferent</span></b> (<span class="term" data-term="generalised arc consistency (GAC)">generalised arc consistent</span>): $\{x_1, x_2\}$ use up $\{1, 2\}$, so $x_3 = 3$, so $x_4 = 4$.</li>
       </ul>
-      <p class="small">$\{x_1, x_2\}$ is a <b>Hall set</b>: $k$ variables whose domains together hold exactly $k$ values. By Hall's theorem (unit 15), alldifferent is satisfiable iff no set of variables has fewer values than members.</p>
+      <p class="small">$\{x_1, x_2\}$ is a <span class="term">Hall set</span>: $k$ variables whose domains together hold exactly $k$ values. By Hall's theorem (unit 15), alldifferent is satisfiable iff no set of variables has fewer values than members.</p>
     </div>
     <div>
       <div class="box thm"><span class="label">the general fact</span>
         <p class="small">Arc consistency on a decomposition is at most as strong as generalised arc consistency on the global constraint, and often strictly weaker. For alldifferent, pairwise AC equals GAC only in the trivial case of fixed variables.</p>
       </div>
       <div class="box warn"><span class="label">the design question</span>
-        <p class="small">A stronger propagator removes more and costs more per call. It wins only if the nodes saved outweigh the time per node. That trade-off is <b>the only design question in CP</b>, and lab <code>then</code> shows both outcomes.</p>
+        <p class="small">A stronger propagator removes more and costs more per call. It wins only if the nodes saved outweigh the time per node. That trade-off (<span class="term" data-term="strength vs cost">strength vs cost</span>) is <b>the only design question in CP</b>, and lab <code>then</code> shows both outcomes.</p>
       </div>
     </div>
   </div>
@@ -123,27 +131,72 @@
           <text x="220" y="44">1</text><text x="220" y="94">2</text><text x="220" y="144">3</text><text x="220" y="194">4</text>
         </g>
       </svg>
-      <p class="cap">Thick: a maximum matching. Dashed: edges in no maximum matching, removed. {x₁, x₂} ↔ {1, 2} is an alternating cycle, so those edges stay.</p>
+      <p class="cap">Thick: a maximum matching. Dashed: edges in no maximum matching, removed. {x₁, x₂} ↔ {1, 2} is an alternating cycle, so those edges stay. The next slide works it out.</p>
     </div>
     <div>
       <ol class="small">
-        <li>Build the <b>value graph</b> and find a maximum matching (Hopcroft–Karp). If it doesn't cover every variable: <b>fail</b>.</li>
+        <li>Build the <span class="term">value graph</span> and find a maximum matching (Hopcroft–Karp). If it doesn't cover every variable: <b>fail</b>.</li>
         <li>By Berge, an edge lies in <b>some</b> maximum matching iff it is matched, or on an even alternating cycle, or on an even alternating path from a free value.</li>
-        <li>Orient matched edges value → variable and the rest variable → value. Cycles are <b>SCCs</b>, and paths are <b>reachability to free values</b>. Remove every other edge.</li>
+        <li><span class="term" data-term="orientation (Régin)">Orient</span> matched edges value → variable and the rest variable → value. Cycles are <span class="term" data-term="strongly connected component (SCC)">SCCs</span>, and paths are <b>reachability to free values</b>. Remove every other edge.</li>
       </ol>
-      <p class="small">$O(m \sqrt n)$ for the matching and $O(m)$ for the rest. Incrementally, the old matching is repaired rather than recomputed.</p>
+      <p class="small">$O(m \sqrt n)$ for the matching and $O(m)$ for the rest: <span class="term">Régin's filter</span>. Incrementally, the old matching is repaired rather than recomputed (<span class="term">incremental matching</span>).</p>
       <p class="small muted">Lab step 2's test: on 80 random instances, the kept values equal brute-force supports exactly.</p>
     </div>
   </div>
   <aside class="notes">
-    <p>Why the Hall set falls out of the same graph (lab's <code>hall_set</code>). A removed edge
+    <p>Why the Hall set falls out of the same graph (lab's <code>hall_set</code>, the <b>Hall set behind a removal</b>). A removed edge
     $(x, a)$ has $a$'s node unable to reach a free value, and $x$ outside $a$'s component.
     Everything reachable from $a$ is a closed set: its values are all matched to variables in
     it, and its variables' edges all lead back into it. So those variables have exactly as many
     values as members, and they include $a$. That's the explanation a propagator gives in unit 21.</p>
     <p>Cheaper alternatives. <b>Bounds consistency</b> for alldifferent (Puget 1998;
-    López-Ortiz et al. 2003) runs in $O(n \log n)$ using Hall <em>intervals</em>. It is what most
+    López-Ortiz et al. 2003) runs in $O(n \log n)$ using <b>Hall intervals</b>. It is what most
     solvers use by default on large domains, keeping Régin's GAC for small ones.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">18 · alldifferent · example</p>
+  <h2>Régin's filter, on the example</h2>
+  <div class="cols">
+    <div>
+      <p class="small">$x_1, x_2 \in \{1,2\}$, $x_3 \in \{1,2,3\}$, $x_4 \in \{2,3,4\}$. Ten edges in the value graph.</p>
+      <table>
+        <thead><tr><th>step</th><th>result</th></tr></thead>
+        <tbody>
+          <tr><td>1. maximum matching</td><td>$x_1\!-\!1$, $x_2\!-\!2$, $x_3\!-\!3$, $x_4\!-\!4$: covers every variable, no free value</td></tr>
+          <tr><td>2. orient</td><td>matched: $1 \to x_1$, $2 \to x_2$, $3 \to x_3$, $4 \to x_4$; others: $x_1 \to 2$, $x_2 \to 1$, $x_3 \to 1$, $x_3 \to 2$, $x_4 \to 2$, $x_4 \to 3$</td></tr>
+          <tr><td>3. SCCs</td><td>$\{x_1, x_2, 1, 2\}$ (cycle $x_1 \to 2 \to x_2 \to 1 \to x_1$); every other node alone</td></tr>
+          <tr><td>4. keep</td><td>matched edges, and edges inside an SCC</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div>
+      <div class="box ex"><span class="label">what is removed, and why</span>
+        <table style="margin:0">
+          <thead><tr><th>edge</th><th>Hall set behind it</th></tr></thead>
+          <tbody>
+            <tr><td>$x_3 = 1$, $x_3 = 2$</td><td>$\{x_1, x_2\}$ own values $\{1, 2\}$</td></tr>
+            <tr><td>$x_4 = 2$</td><td>$\{x_1, x_2\}$ own values $\{1, 2\}$</td></tr>
+            <tr><td>$x_4 = 3$</td><td>$\{x_1, x_2, x_3\}$ own values $\{1, 2, 3\}$</td></tr>
+          </tbody>
+        </table>
+        <p class="small">Result: $x_3 = 3$, $x_4 = 4$, and $x_1, x_2$ keep $\{1, 2\}$: one matching, one SCC pass, all four removals at once.</p>
+      </div>
+      <p class="small muted">Edge $x_3\!-\!1$ is not on any alternating cycle: from $x_3$ you reach 1 and 2 and their cycle, but the only arc into $x_3$ comes from value 3, and that cycle never reaches 3.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p><b>Why the SCC test is right.</b> An unmatched edge $x \to a$ is in some maximum matching iff you
+    can swap along an alternating cycle through it: from $a$ follow its matched edge back to a
+    variable, and so on, until you return to $x$. That is exactly "$x$ and $a$ in the same strongly
+    connected component". With no free values (step 1), the path case never applies.</p>
+    <p><b>The Hall sets</b> are what the reference <code>hall_set</code> returns for each removal:
+    positions $[0, 1]$ for $x_3 = 1$, $x_3 = 2$ and $x_4 = 2$, and $[0, 1, 2]$ for $x_4 = 3$. The last
+    one only exists because $x_3$ is itself squeezed to value 3.</p>
+    <p>The matching, oriented graph and components are the reference <code>maximum_matching</code>,
+    <code>_digraph</code> and <code>_sccs</code>; <code>AllDifferent.prune</code> returns
+    $x_3 \in \{3\}$, $x_4 \in \{4\}$.</p>
   </aside>
 </section>
 
@@ -173,7 +226,7 @@
       <ul class="small">
         <li><b>Queens:</b> a Hall set rarely forms before a variable is fixed, so alldifferent saves 18% of nodes and costs a matching per call. Slower.</li>
         <li><b>Sudoku:</b> rows, columns and boxes create Hall sets constantly. 35× fewer nodes.</li>
-        <li><b>Pigeonhole:</b> no perfect matching at the root. Pairwise ≠ can only discover this by enumeration.</li>
+        <li><b><span class="term">Pigeonhole</span>:</b> no perfect matching at the root. Pairwise ≠ can only discover this by enumeration.</li>
       </ul>
     </div>
   </div>
@@ -212,13 +265,13 @@
       <p class="cap">Duration 3, start ∈ {2, 3}: whatever it chooses, the task runs during [3, 5). Lab test: with capacity 1, a second task of duration 3 loses starts 1–4.</p>
     </div>
     <div>
-      <p class="small">$\text{cumulative}(s, d, r, C)$: tasks with start variables $s_i$, durations $d_i$ and demands $r_i$ never use more than $C$ at once.</p>
+      <p class="small"><span class="term">cumulative</span>$(s, d, r, C)$: tasks with start variables $s_i$, durations $d_i$ and demands $r_i$ never use more than $C$ at once.</p>
       <ul class="small">
-        <li><b>Compulsory part</b> of task $i$: $[\max s_i,\ \min s_i + d_i)$ when non-empty.</li>
-        <li><b>Profile</b>: the sum of demands of compulsory parts at each time. Above $C$ means fail.</li>
-        <li><b>Filter</b>: remove a start $t$ of task $i$ if it would overload a time where the others' compulsory parts already sit.</li>
+        <li><span class="term">Compulsory part</span> of task $i$: $[\max s_i,\ \min s_i + d_i)$ when non-empty.</li>
+        <li><span class="term">Profile</span>: the sum of demands of compulsory parts at each time. Above $C$ means fail.</li>
+        <li><span class="term" data-term="timetable filtering">Filter</span>: remove a start $t$ of task $i$ if it would overload a time where the others' compulsory parts already sit.</li>
       </ul>
-      <p class="small">Disjunctive scheduling (one machine) is cumulative with $C = 1$ and every $r_i = 1$. Lab step 4's job-shop uses one per machine.</p>
+      <p class="small"><span class="term" data-term="disjunctive (no-overlap)">Disjunctive</span> scheduling (one machine) is cumulative with $C = 1$ and every $r_i = 1$. Lab step 4's <span class="term">job-shop</span> uses one per machine.</p>
     </div>
   </div>
   <aside class="notes">
@@ -231,15 +284,54 @@
 </section>
 
 <section>
+  <p class="eyebrow">18 · scheduling · example</p>
+  <h2>A profile for three tasks</h2>
+  <div class="cols">
+    <div>
+      <p class="small">Capacity $C = 2$, every demand 1.</p>
+      <table>
+        <thead><tr><th>task</th><th class="num">duration</th><th>start in</th><th>compulsory part</th></tr></thead>
+        <tbody>
+          <tr><td>A</td><td class="num">4</td><td>$\{0, 1, 2\}$</td><td>$[2, 4)$: latest start 2, earliest end 4</td></tr>
+          <tr><td>B</td><td class="num">3</td><td>$\{1, 2\}$</td><td>$[2, 4)$: latest start 2, earliest end 4</td></tr>
+          <tr><td>C</td><td class="num">2</td><td>$\{0, \dots, 5\}$</td><td>empty: latest start 5 &gt; earliest end 2</td></tr>
+        </tbody>
+      </table>
+      <table>
+        <thead><tr><th>time</th><th class="num">0</th><th class="num">1</th><th class="num">2</th><th class="num">3</th><th class="num">4</th><th class="num">5</th><th class="num">6</th></tr></thead>
+        <tbody><tr><td>profile</td><td class="num">0</td><td class="num">0</td><td class="num"><b>2</b></td><td class="num"><b>2</b></td><td class="num">0</td><td class="num">0</td><td class="num">0</td></tr></tbody>
+      </table>
+    </div>
+    <div>
+      <div class="box ex"><span class="label">filtering task C</span>
+        <p class="small">C runs $[t, t+2)$. Times 2 and 3 are already full (2 of 2).</p>
+        <p class="small">$t = 1$ covers time 2; $t = 2$ covers 2 and 3; $t = 3$ covers 3. All three <b>removed</b>. $t = 0$, 4, 5 miss the full times and stay.</p>
+        <p class="small">C's starts: $\{0, 4, 5\}$.</p>
+      </div>
+      <div class="box warn"><span class="label">and A, B?</span>
+        <p class="small">Their own compulsory parts are what fill times 2 and 3, so each must subtract itself before checking. Doing that, neither loses a start: the profile without A is 1 at times 2–3, and A fits.</p>
+      </div>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>The reference <code>Cumulative([A, B, C], [4, 3, 2], [1, 1, 1], 2)</code> computes compulsory parts
+    $[2, 3]$, $[2, 3]$ and empty, and its <code>prune</code> narrows only C, to $\{0, 4, 5\}$.</p>
+    <p>A start is removed when, for some time $u$ it would occupy, the profile minus the task's own
+    compulsory demand, plus its demand, exceeds $C$. For C at $t = 1$: at $u = 2$, $2 - 0 + 1 = 3 &gt; 2$.
+    For A at $t = 0$: at $u = 2$, $2 - 1 + 1 = 2 \le 2$, fine, and the same at every other time.</p>
+  </aside>
+</section>
+
+<section>
   <p class="eyebrow">18 · scheduling</p>
   <h2>Stronger scheduling reasoning</h2>
   <div class="cols">
     <div>
       <ul class="small">
-        <li><b>Edge-finding</b> (Carlier & Pinson 1989; $O(n \log n)$ with Θ-trees, Vilím 2004): if a task can't finish before a set $\Omega$ of tasks all end, given their total duration, it must end last, which raises its start.</li>
-        <li><b>Not-first / not-last</b>: a task cannot be scheduled first (or last) among a set.</li>
-        <li><b>Energetic reasoning</b>: the minimum energy each task must spend inside an interval, compared with $C \times$ interval length.</li>
-        <li><b>Time-table edge-finding</b> (Vilím 2011), combining profile and edge-finding.</li>
+        <li><b><span class="term">Edge-finding</span></b> (Carlier & Pinson 1989; $O(n \log n)$ with <span class="term" data-term="\(\Theta\)-tree">Θ-trees</span>, Vilím 2004): if a task can't finish before a set $\Omega$ of tasks all end, given their total duration, it must end last, which raises its start.</li>
+        <li><b><span class="term" data-term="not-first / not-last">Not-first / not-last</span></b>: a task cannot be scheduled first (or last) among a set.</li>
+        <li><b><span class="term">Energetic reasoning</span></b>: the minimum energy each task must spend inside an interval, compared with $C \times$ interval length.</li>
+        <li><b><span class="term">Time-table edge-finding</span></b> (Vilím 2011), combining profile and edge-finding.</li>
       </ul>
     </div>
     <div>
@@ -265,6 +357,45 @@
   </aside>
 </section>
 
+<section>
+  <p class="eyebrow">18 · scheduling · example</p>
+  <h2>One edge-finding deduction</h2>
+  <div class="cols">
+    <div>
+      <p class="small">One machine (capacity 1). Times as <span class="term" data-term="est, lct">est</span> = earliest start, lct = latest completion.</p>
+      <table>
+        <thead><tr><th>task</th><th class="num">duration</th><th class="num">est</th><th class="num">lct</th></tr></thead>
+        <tbody>
+          <tr><td>A</td><td class="num">2</td><td class="num">0</td><td class="num">5</td></tr>
+          <tr><td>B</td><td class="num">3</td><td class="num">0</td><td class="num">5</td></tr>
+          <tr><td>C</td><td class="num">3</td><td class="num">1</td><td class="num">10</td></tr>
+        </tbody>
+      </table>
+      <div class="box ex"><span class="label">edge-finding</span>
+        <p class="small">$\Omega = \{A, B\}$: $\text{est}_\Omega = 0$, $\text{lct}_\Omega = 5$, total duration 5.</p>
+        <p class="small">Add C: $\text{est}_{\Omega \cup C} + d_{\Omega \cup C} = 0 + 8 = 8 &gt; 5 = \text{lct}_\Omega$. C cannot fit before either task ends, so C <b>ends after all of $\Omega$</b>.</p>
+        <p class="small">A and B need all of $[0, 5)$, so C starts at <b>5 or later</b>.</p>
+      </div>
+    </div>
+    <div>
+      <div class="box warn"><span class="label">timetable, on the same tasks</span>
+        <p class="small">A (start 0–3, duration 2): compulsory part empty. B (start 0–2, duration 3): compulsory $[2, 3)$. C: empty.</p>
+        <p class="small">So timetable only knows time 2 is taken. C loses starts 1 and 2: <b>C ≥ 3</b>. (A loses starts 1 and 2 too.)</p>
+      </div>
+      <p class="small">Edge-finding reasons about the <b>total duration</b> of a set of tasks inside a window, which no single time point shows. Here it moves C's earliest start from 3 to 5.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p><b>The timetable column</b> is the reference <code>Cumulative</code> with capacity 1: starts
+    $A \in \{0,\dots,3\}$, $B \in \{0,1,2\}$, $C \in \{1,\dots,7\}$ are narrowed to $A \in \{0, 3\}$ and
+    $C \in \{3, \dots, 7\}$. The lab has no edge-finding propagator; that deduction is by hand, using the
+    rule in the previous slide's notes.</p>
+    <p><b>Why 5 is right.</b> A and B have total duration 5 and must both finish by 5, starting no earlier
+    than 0: they fill $[0, 5)$ exactly. Any start of C before 5 would overlap one of them. Edge-finding
+    with the full update rule sets C's earliest start to $\max_{\Omega' \subseteq \Omega} (\text{est}_{\Omega'} + d_{\Omega'}) = 0 + 5 = 5$.</p>
+  </aside>
+</section>
+
 <section class="divider">
   <p class="eyebrow">section 4</p>
   <h2>The catalogue</h2>
@@ -279,11 +410,11 @@
       <table class="dense">
         <thead><tr><th>constraint</th><th>means</th><th>filtering</th></tr></thead>
         <tbody>
-          <tr><td>element$(i, T, v)$</td><td>$v = T[i]$</td><td>GAC by supports, $O(|D_i|)$</td></tr>
-          <tr><td>table$(x, \mathcal T)$</td><td>$x \in \mathcal T$</td><td>STR, compact tables, MDDs</td></tr>
-          <tr><td>gcc$(x, [l_a, u_a])$</td><td>value $a$ used $l_a$..$u_a$ times</td><td><b>flow</b> (Régin 1996), unit 14</td></tr>
-          <tr><td>regular$(x, \mathcal A)$</td><td>$x$ spells a word of automaton $\mathcal A$</td><td>layered graph reachability (Pesant 2004)</td></tr>
-          <tr><td>circuit$(\text{succ})$</td><td>successors form one Hamiltonian cycle</td><td>alldifferent + subtour pruning</td></tr>
+          <tr><td><span class="term">element</span>$(i, T, v)$</td><td>$v = T[i]$</td><td>GAC by supports, $O(|D_i|)$</td></tr>
+          <tr><td><span class="term">table</span>$(x, \mathcal T)$</td><td>$x \in \mathcal T$</td><td>STR, compact tables, MDDs</td></tr>
+          <tr><td><span class="term" data-term="global cardinality (gcc)">gcc</span>$(x, [l_a, u_a])$</td><td>value $a$ used $l_a$..$u_a$ times</td><td><b>flow</b> (Régin 1996), unit 14</td></tr>
+          <tr><td><span class="term">regular</span>$(x, \mathcal A)$</td><td>$x$ spells a word of automaton $\mathcal A$</td><td>layered graph reachability (Pesant 2004)</td></tr>
+          <tr><td><span class="term">circuit</span>$(\text{succ})$</td><td>successors form one Hamiltonian cycle</td><td>alldifferent + subtour pruning</td></tr>
           <tr><td>cumulative / no-overlap</td><td>resource capacity</td><td>timetable, edge-finding, energy</td></tr>
         </tbody>
       </table>
@@ -292,7 +423,7 @@
       <div class="box good"><span class="label">the pattern</span>
         <p class="small">Each strong filter is an algorithm from Parts I–III wearing a CP interface: matching (alldifferent), flow (gcc), DP over an automaton (regular), shortest paths and assignment bounds (circuit, the TSP relaxations of unit 09). Global constraints are where the traditions first cooperate.</p>
       </div>
-      <p class="small muted">Beldiceanu, Carlsson & Rampon's Global Constraint Catalog lists 400+ constraints with semantics, decompositions and filtering algorithms.</p>
+      <p class="small muted">Beldiceanu, Carlsson & Rampon's <span class="term">Global Constraint Catalog</span> lists 400+ constraints with semantics, decompositions and filtering algorithms.</p>
     </div>
   </div>
   <aside class="notes">
