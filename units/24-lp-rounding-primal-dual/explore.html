@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>24 · Explore: rounding and primal–dual</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+<link rel="stylesheet" href="../../slides/deck.css">
+<link rel="stylesheet" href="../../slides/viz/viz.css">
+<link rel="stylesheet" href="../../slides/viz/widgets/approx.css">
+</head>
+<body data-trunk="apx">
+<div class="reveal"><div class="slides">
+
+<section class="title-slide">
+  <p class="eyebrow">optional · interactive figures</p>
+  <div class="unit-no">24</div>
+  <h1>Explore: rounding and primal–dual</h1>
+  <p class="lede">Threshold rounding with the threshold in your hands, primal–dual set cover raising one dual at a time, and Jain–Vazirani's clock on a line.</p>
+  <p class="meta"><span>optional: nothing in the lab depends on it</span><span><a href="slides.html">back to the slides</a></span></p>
+  <aside class="notes">
+    <p>These figures support the slides; they don't replace them, and the unit is complete
+    without them. Each one is computed from the unit's own data or reference solution, so
+    what you see agrees with the numbers on the slides.</p>
+    <p>Inside a figure, the arrow keys and drags belong to the figure; click outside it (or
+    press Esc) to use them for the slides again.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">24 · explore</p>
+  <h2>Threshold rounding, with t on a slider</h2>
+  <div class="viz" data-viz="threshold" data-key="rounding"></div>
+  <p class="small muted">Try: raise t just above ½ on each instance; switch to the triangle with a tail, whose LP mixes 0, ½ and 1. Static version: <a href="slides.html#/4">rounding a weighted 5-cycle</a>.</p>
+  <aside class="notes">
+    <p><b>What it shows.</b> Weighted vertex cover: the LP value of each vertex (from the reference
+    <code>vertex_cover_lp</code>, half-integral), and the vertices with $x_v \ge t$. At $t = \tfrac12$ the
+    result is always a cover of weight at most $2 \cdot$ LP; above $\tfrac12$ edges with both ends at
+    $\tfrac12$ lose their cover.</p>
+    <ul>
+      <li><b>The deck's 5-cycle</b>: all halves, LP 7, rounding pays 14, optimum 8.</li>
+      <li><b>A triangle with a tail</b>: the triangle sits at ½, one tail vertex at 1, the other at 0.</li>
+      <li><b>An integral LP</b>: every value is 0 or 1, rounding returns the optimum at any $t \le 1$.</li>
+    </ul>
+    <p>Data: <code>slides/viz/traces/u24.py</code>; optima by brute force.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">24 · explore</p>
+  <h2>Primal–dual set cover, one raise at a time</h2>
+  <div class="viz" data-viz="primaldual" data-key="primaldual"></div>
+  <p class="small muted">Try: step through and watch each raise stop exactly when some set's bar is full. Static version: <a href="slides.html#/9">primal–dual set cover, traced</a>.</p>
+  <aside class="notes">
+    <p><b>What it shows.</b> The deck's four elements on a cycle, each pair of neighbours forming a set
+    ($S_0 = \{0,1\}$ cost 3, $S_1 = \{1,2\}$ cost 2, $S_2 = \{2,3\}$ cost 3, $S_3 = \{3,0\}$ cost 2). For
+    each uncovered element in turn, its dual $y_e$ rises until a set containing it is fully paid; that
+    set is bought. The bars show paid over cost.</p>
+    <p>Data: <code>slides/viz/traces/u24.py</code> runs the loop of the reference
+    <code>primal_dual_set_cover</code> step by step and asserts the same $x = (1,1,0,1)$ and
+    $y = (2,1,1,0)$.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">24 · explore</p>
+  <h2>Jain–Vazirani's clock, on a line</h2>
+  <div class="viz" data-viz="jv" data-key="jv"></div>
+  <p class="small muted">Try: drag the time slider from 0 to 6 and watch A open at 3.5 and B at 5. Static version: <a href="slides.html#/11">Jain–Vazirani on a line</a>.</p>
+  <aside class="notes">
+    <p><b>What it shows.</b> Facilities A (at 0) and B (at 10), opening cost 4 each, clients at 1, 2, 9.
+    Each client's $\alpha$ grows with time until it freezes; its bar shows how far it reaches. A
+    facility's receipts are $\sum_j \max(0, \alpha_j - d_{ij})$, drawn as a bar that fills to its
+    cost.</p>
+    <p>Data: the freeze times $\alpha = (\tfrac72, \tfrac72, 5)$ and opening times $\tfrac72$, 5 are from the
+    reference <code>jv_dual_ascent</code>; the receipts at intermediate times are computed in the page
+    from those. The kept facilities and the cost 12 are from <code>jain_vazirani</code>, and the
+    brute-force costs from <code>FacilityLocation.cost</code>.</p>
+  </aside>
+</section>
+
+</div></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/plugin/highlight/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<script src="../../slides/deck.js"></script>
+<script src="../../slides/viz/viz.js"></script>
+<script src="../../slides/viz/widgets/approx.js"></script>
+<script src="viz-data.js"></script>
+</body>
+</html>

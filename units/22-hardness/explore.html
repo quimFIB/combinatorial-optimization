@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>22 · Explore: reductions and the FPTAS</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+<link rel="stylesheet" href="../../slides/deck.css">
+<link rel="stylesheet" href="../../slides/viz/viz.css">
+<link rel="stylesheet" href="../../slides/viz/widgets/approx.css">
+</head>
+<body data-trunk="apx">
+<div class="reveal"><div class="slides">
+
+<section class="title-slide">
+  <p class="eyebrow">optional · interactive figures</p>
+  <div class="unit-no">22</div>
+  <h1>Explore: reductions and the FPTAS</h1>
+  <p class="lede">The deck's 3-SAT gadget with the assignment in your hands, and the knapsack FPTAS with ε on a slider.</p>
+  <p class="meta"><span>optional: nothing in the lab depends on it</span><span><a href="slides.html">back to the slides</a></span></p>
+  <aside class="notes">
+    <p>These figures support the slides; they don't replace them, and the unit is complete
+    without them. Each one is computed from the unit's own data or reference solution, so
+    what you see agrees with the numbers on the slides.</p>
+    <p>Inside a figure, the arrow keys and drags belong to the figure; click outside it (or
+    press Esc) to use them for the slides again.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">22 · explore</p>
+  <h2>The gadget, with your assignment</h2>
+  <div class="viz" data-viz="gadget" data-key="gadget"></div>
+  <p class="small muted">Try: set x₂ = false with x₁ = true, x₃ = true, then flip x₃. Static versions: <a href="slides.html#/4">the reduction</a>, <a href="slides.html#/5">the gadget on the example</a>.</p>
+  <aside class="notes">
+    <p><b>What it shows.</b> The graph the reference <code>sat_to_vertex_cover</code> builds for
+    $(x_1 \lor \lnot x_2 \lor x_3) \land (\lnot x_1 \lor x_2 \lor \lnot x_3)$: a top edge per
+    variable, a triangle per clause, and a thin link from each corner to its literal. For each of
+    the 8 assignments the page shows the vertex set the forward rule takes: the true literals, and
+    in each triangle every corner but one whose literal is true.</p>
+    <ul>
+      <li>For the 6 satisfying assignments this is the reference <code>cover_from_assignment</code>:
+      7 vertices, every edge covered.</li>
+      <li>For the 2 others (x₁ true, x₂ false, x₃ true; and x₁ false, x₂ true, x₃ false) one clause
+      has no true literal. The same rule still takes 7 vertices, and one link is left uncovered, in
+      red: no choice of 7 vertices can cover this graph along those lines.</li>
+    </ul>
+    <p>Data: <code>slides/viz/traces/u22.py</code>; the minimum cover (7, over 4096 sets) is unit 00's
+    <code>brute_force</code>.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">22 · explore</p>
+  <h2>The FPTAS, with ε on a slider</h2>
+  <div class="viz" data-viz="fptas" data-key="fptas"></div>
+  <p class="small muted">Try: slide ε from 0.05 up to 2 and watch which items are picked and how small the value table gets. Static version: <a href="slides.html#/10">the FPTAS on four items</a>.</p>
+  <aside class="notes">
+    <p><b>What it shows.</b> The deck's four items (capacity 24) through the reference
+    <code>knapsack_fptas</code> at 22 values of ε, against the exact <code>knapsack_by_value</code>
+    (57, items 0, 2, 3). For each ε: the scale $K = \varepsilon v_{\max}/n$, the rounded values, the
+    items the DP returns, the true value, the size of the rounded value table, and the proof's floor
+    $\mathrm{OPT} - nK$.</p>
+    <ul>
+      <li>Up to ε = 0.45 the rounding is fine enough to keep the optimum.</li>
+      <li>At ε = 0.5 (the deck's slide) rounding ties $\{0,2,3\}$ with $\{1,3\}$ and the DP returns the lighter one, 53.</li>
+      <li>At ε = 0.55 it is back to 57: rounding is not monotone, only the guarantee is.</li>
+      <li>From ε = 1 on the guarantee says nothing ($\mathrm{OPT} - nK \le 0$), yet the answer stays decent.</li>
+    </ul>
+  </aside>
+</section>
+
+</div></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/plugin/highlight/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<script src="../../slides/deck.js"></script>
+<script src="../../slides/viz/viz.js"></script>
+<script src="../../slides/viz/widgets/approx.js"></script>
+<script src="viz-data.js"></script>
+</body>
+</html>

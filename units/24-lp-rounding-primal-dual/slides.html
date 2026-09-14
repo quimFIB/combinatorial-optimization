@@ -51,7 +51,7 @@
       <p class="small">LP, optimum, algorithm on the same instances, and where greedy wins.</p></div>
   </div>
   <div class="box good"><span class="label">getting around</span>
-    <p class="small">Words with a <span class="term" data-term="LP rounding">dotted underline</span> are glossary terms: click one for its definition. <kbd>G</kbd> lists every term in the unit, <kbd>N</kbd> shows the notes.</p>
+    <p class="small">Words with a <span class="term" data-term="LP rounding">dotted underline</span> are glossary terms: click one for its definition. <kbd>G</kbd> lists every term in the unit, <kbd>N</kbd> shows the notes. Optional extra: <a href="explore.html" target="_blank" rel="noopener">interactive figures</a>, linked from the slides they support by a small ▸ chip; skip them freely.</p>
   </div>
   <aside class="notes">
     <p>The checkpoint is section 3: exhibit an instance realising an LP's integrality gap. The lab
@@ -158,6 +158,7 @@
       </div>
     </div>
   </div>
+  <p class="viz-link-row"><a class="viz-link" href="explore.html#/1" target="_blank" rel="noopener">explore interactively</a></p>
   <aside class="notes">
     <p><b>Why all halves is optimal for the LP.</b> Each edge needs $x_u + x_v \ge 1$. Summing over the
     5 edges counts every vertex twice, so $\sum_v x_v \ge 2.5$. All halves costs half the total weight,
@@ -325,6 +326,7 @@
       <p class="small">$S_0$ was bought and turned out redundant: $S_3$ and $S_1$ already cover 0 and 1. Primal–dual has no clean-up step here; Steiner forest's reverse delete is exactly such a step.</p>
     </div>
   </div>
+  <p class="viz-link-row"><a class="viz-link" href="explore.html#/2" target="_blank" rel="noopener">explore interactively</a></p>
   <aside class="notes">
     <p><b>Step by step.</b> Element 0 is in $S_0$ (unpaid 3) and $S_3$ (unpaid 2): raise $y_0$ by 2,
     $S_3$ is tight, buy it. $S_0$ now has 1 unpaid. Element 1 is in $S_0$ (1 unpaid) and $S_1$ (2):
@@ -414,6 +416,7 @@
       </div>
     </div>
   </div>
+  <p class="viz-link-row"><a class="viz-link" href="explore.html#/3" target="_blank" rel="noopener">explore interactively</a></p>
   <aside class="notes">
     <p><b>The ascent.</b> Every $\alpha$ grows with time $t$ until it freezes. A client pays a
     facility $\max(0, \alpha_j - d_{ij})$. A's receipts after time 2 are $(t - 1) + (t - 2) = 2t - 3$,

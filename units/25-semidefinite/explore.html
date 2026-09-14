@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>25 · Explore: PSD matrices and Goemans–Williamson</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+<link rel="stylesheet" href="../../slides/deck.css">
+<link rel="stylesheet" href="../../slides/viz/viz.css">
+<link rel="stylesheet" href="../../slides/viz/widgets/approx.css">
+</head>
+<body data-trunk="apx">
+<div class="reveal"><div class="slides">
+
+<section class="title-slide">
+  <p class="eyebrow">optional · interactive figures</p>
+  <div class="unit-no">25</div>
+  <h1>Explore: PSD matrices and Goemans–Williamson</h1>
+  <p class="lede">A 2×2 matrix and the two vectors it describes, and the Goemans–Williamson vectors with a hyperplane you can turn.</p>
+  <p class="meta"><span>optional: nothing in the lab depends on it</span><span><a href="slides.html">back to the slides</a></span></p>
+  <aside class="notes">
+    <p>These figures support the slides; they don't replace them, and the unit is complete
+    without them. Each one is computed from the unit's own data or reference solution, so
+    what you see agrees with the numbers on the slides.</p>
+    <p>Inside a figure, the arrow keys and drags belong to the figure; click outside it (or
+    press Esc) to use them for the slides again.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">25 · explore</p>
+  <h2>A 2×2 matrix is two vectors</h2>
+  <div class="viz" data-viz="psd2"></div>
+  <p class="small muted">Try: slide the entry from −½ (120°) to −1 (opposite) and past it. Static version: <a href="slides.html#/4">PSD on 2×2 matrices</a>.</p>
+  <aside class="notes">
+    <p><b>What it shows.</b> The matrix with 1 on the diagonal and $c$ off it. Its eigenvalues are
+    $1 \pm c$, both nonnegative exactly when $|c| \le 1$; then it is the Gram matrix of two unit vectors
+    at angle $\arccos c$. Computed in the page; no recorded data.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">25 · explore</p>
+  <h2>Goemans–Williamson, with a hyperplane you can turn</h2>
+  <div class="viz" data-viz="gw" data-key="gw"></div>
+  <p class="small muted">Try: turn the hyperplane on the 5-cycle (every position cuts 4), then on the random weighted graph, where positions differ. Static version: <a href="slides.html#/7">GW on the 5-cycle</a>.</p>
+  <aside class="notes">
+    <p><b>What it shows.</b> The SDP vectors, one per vertex, drawn in their plane; a hyperplane through
+    the centre (drag its normal); the two sides; and which edges it cuts (green) or not (red, dashed).
+    On the right: the SDP bound, the exact expected cut, the optimum, and a histogram of the cut weights
+    of 2000 recorded random hyperplanes, with the expected cut and the SDP bound marked.</p>
+    <ul>
+      <li><b>Odd cycles</b>: neighbours sit far apart, every hyperplane cuts all but one edge, and the
+      rounding always finds the optimum. The loss is all between the SDP and the integers.</li>
+      <li><b>A random weighted graph on 8 vertices</b>: its optimal vectors happen to lie in a plane too,
+      and hyperplanes now give different cuts; the average stays above 0.878 of the SDP bound.</li>
+    </ul>
+    <p>Data: <code>slides/viz/traces/u25.py</code>, from the reference <code>maxcut_sdp</code>,
+    <code>vectors_from_gram</code>, <code>expected_cut</code>, <code>hyperplane_round</code> (seeded) and
+    <code>gw_constant</code>; optima by brute force. The vectors are drawn in the plane of the Gram matrix's
+    top two eigenvectors, which holds them exactly (rank 2).</p>
+  </aside>
+</section>
+
+</div></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/plugin/highlight/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<script src="../../slides/deck.js"></script>
+<script src="../../slides/viz/viz.js"></script>
+<script src="../../slides/viz/widgets/approx.js"></script>
+<script src="viz-data.js"></script>
+</body>
+</html>

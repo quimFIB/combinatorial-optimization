@@ -1,0 +1,35 @@
+/* Part V figures (widgets/approx.js). Only deck.css colour tokens. */
+
+.viz-onfill { fill: var(--surface); }
+.viz-hot-circle { stroke: var(--accent) !important; stroke-width: 4 !important; }
+
+/* greedy set cover */
+.viz-set { fill: none; stroke: var(--rule); stroke-width: 2; }
+.viz-set-bought { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 2; }
+.viz-set-pick { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 4; }
+
+/* primal–dual */
+.viz-set-line { stroke: var(--rule); stroke-width: 10; stroke-linecap: round; }
+.viz-set-line-bought { stroke: var(--accent); stroke-width: 10; stroke-linecap: round; opacity: .55; }
+.viz-bar-bg { fill: var(--surface-sunk); stroke: var(--rule); }
+.viz-bar { fill: var(--ink-faint); }
+.viz-bar-full { fill: var(--accent); }
+
+/* Jain–Vazirani */
+.viz-reach { stroke: var(--accent); stroke-width: 4; stroke-linecap: round; opacity: .6; }
+.viz-reach-frozen { stroke: var(--ink-soft); stroke-width: 4; stroke-linecap: round; opacity: .6; }
+.viz-fac { fill: var(--surface); stroke: var(--ink); stroke-width: 2; }
+.viz-fac-open { fill: var(--good); stroke: var(--good); stroke-width: 2; }
+
+/* Goemans–Williamson */
+.viz-halfplane { fill: var(--accent-soft); opacity: .55; }
+.viz-cutedge { stroke: var(--good); stroke-width: 3; }
+.viz-samedge { stroke: var(--warn); stroke-width: 3; stroke-dasharray: 5 4; }
+.viz-vec-a { stroke: var(--accent); stroke-width: 2.5; }
+.viz-vec-b { stroke: var(--ink-faint); stroke-width: 2.5; stroke-dasharray: 4 3; }
+.viz-vec-dot-a { fill: var(--accent); }
+.viz-vec-dot-b { fill: var(--surface); stroke: var(--ink); stroke-width: 2; }
+.viz-mark-exp { stroke: var(--good); stroke-width: 2; stroke-dasharray: 4 3; }
+.viz-mark-sdp { stroke: var(--warn); stroke-width: 2; stroke-dasharray: 4 3; }
+.viz-gw-svg { max-width: 400px; }
+.viz-hist { max-width: 400px; margin-top: 4px; }

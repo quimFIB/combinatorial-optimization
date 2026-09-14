@@ -51,7 +51,7 @@
       <p class="small">Best ratio, best hardness, and the open gap, for each of unit 00's problems.</p></div>
   </div>
   <div class="box good"><span class="label">getting around</span>
-    <p class="small">Words with a <span class="term" data-term="gadget">dotted underline</span> are glossary terms: click one for its definition. <kbd>G</kbd> lists every term in the unit, <kbd>N</kbd> shows the notes.</p>
+    <p class="small">Words with a <span class="term" data-term="gadget">dotted underline</span> are glossary terms: click one for its definition. <kbd>G</kbd> lists every term in the unit, <kbd>N</kbd> shows the notes. Optional extra: <a href="explore.html" target="_blank" rel="noopener">interactive figures</a>, linked from the slides they support by a small ▸ chip; skip them freely.</p>
   </div>
   <aside class="notes">
     <p>The checkpoint is section 4's table. Try to fill it in yourself before looking. Some rows you can
@@ -175,6 +175,7 @@
       <p class="small muted">Lab <code>then</code>: both sides solved by CP-SAT; 6 of 6 agree.</p>
     </div>
   </div>
+  <p class="viz-link-row"><a class="viz-link" href="explore.html#/1" target="_blank" rel="noopener">explore interactively</a></p>
   <aside class="notes">
     <p>The reduction needs <em>exactly</em> three literals per clause, which is why lab step 2 (<b>clause
     splitting</b>) exists. With a clause of width 2 the gadget is an edge, not a triangle, and $k$ changes
@@ -214,6 +215,7 @@
       <p class="small">The <span class="term" data-term="solution map">solution map</span> never needed the cover to be the one we built: any cover of size $k$ has one vertex per variable edge and two per triangle, and that is enough.</p>
     </div>
   </div>
+  <p class="viz-link-row"><a class="viz-link" href="explore.html#/1" target="_blank" rel="noopener">explore interactively</a></p>
   <aside class="notes">
     <p><b>Why a size-7 cover has exactly that shape.</b> The 3 variable edges share no vertex, so
     they need 3 distinct cover vertices; each triangle needs 2 of its own corners. That already
@@ -380,6 +382,7 @@
       <p class="small muted">Rounding by $K$ loses less than $K$ per item, at most $nK = \varepsilon\,v_{\max}$ in all. That is the whole proof on the previous slide.</p>
     </div>
   </div>
+  <p class="viz-link-row"><a class="viz-link" href="explore.html#/2" target="_blank" rel="noopener">explore interactively</a></p>
   <aside class="notes">
     <p><b>The rounded DP.</b> Rounded values sum to 23, so the value table has 24 entries instead of
     86 for the exact values: that shrinkage is where the speed comes from. Among sets fitting in
