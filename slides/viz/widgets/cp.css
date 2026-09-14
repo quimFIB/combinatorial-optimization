@@ -1,0 +1,56 @@
+/* Constraint-programming and SAT figures (cp.js, sat.js). Colours from deck.css tokens. */
+.cp-cell { fill: var(--surface); stroke: var(--ink-soft); stroke-width: 1.2; }
+.cp-cell-gone { fill: var(--surface-sunk); stroke: var(--rule); }
+.cp-cell-fresh { fill: var(--warn-soft); stroke: var(--warn); stroke-width: 2; }
+.cp-cell-text { font: 600 14px var(--f-mono); fill: var(--ink); }
+.cp-cell-text-gone { fill: var(--ink-faint); font-weight: 400; }
+.cp-strike { stroke: var(--warn); stroke-width: 1.5; }
+.cp-var { font: 600 18px var(--f-mono); fill: var(--ink); }
+.cp-removed { font: 13px var(--f-mono); fill: var(--warn); }
+.cp-restored { font: 13px var(--f-mono); fill: var(--good); }
+.cp-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+.cp-chip { font: 14px var(--f-mono); border: 1px solid var(--rule); border-radius: 10px; padding: 1px 8px; background: var(--surface); }
+.cp-chip-new { border-color: var(--accent); background: var(--accent-soft); }
+.cp-chip-empty { color: var(--ink-faint); }
+.cp-soft { color: var(--ink-faint); }
+.cp-bad { color: var(--warn); }
+.viz-tab .cp-markrow { border-top: 2px dashed var(--accent); }
+.cp-window { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1; stroke-dasharray: 4 3; }
+.cp-part { fill: var(--accent); opacity: .85; }
+.cp-bar { fill: var(--accent); opacity: .7; }
+.cp-bar-top { fill: var(--accent); }
+.cp-over { fill: var(--warn); }
+.cp-controls { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+.cp-luby-out { font-size: 16px; }
+.cp-op { stroke-width: 2; }
+.cp-op-kept { opacity: .35; }
+.cp-op-freed { stroke-width: 3.5; }
+.cp-op-text { font: 600 12px var(--f-mono); fill: var(--ink); text-anchor: middle; dominant-baseline: middle; pointer-events: none; }
+.cp-job0 { fill: var(--accent-soft); stroke: var(--accent); }
+.cp-job1 { fill: var(--warn-soft); stroke: var(--warn); }
+.cp-job2 { fill: var(--good-soft); stroke: var(--good); }
+.cp-job3 { fill: var(--surface-sunk); stroke: var(--ink); }
+.cp-job4 { fill: var(--accent-soft); stroke: var(--c-cp); }
+.cp-job5 { fill: var(--warn-soft); stroke: var(--c-ip); }
+/* implication graphs and clause lists (sat.js) */
+.sat-level { font: 12px var(--f-mono); fill: var(--ink-faint); }
+.sat-clauses { font: 14px var(--f-mono); display: grid; gap: 2px; margin-bottom: 8px; }
+.sat-clause { padding: 1px 6px; border-radius: 3px; }
+.sat-clause.sat-learnt { background: var(--accent-soft); }
+.sat-clause.sat-conflict { background: var(--warn-soft); outline: 1px solid var(--warn); }
+.sat-clause.sat-reason { outline: 1px dashed var(--accent); }
+.sat-lit { padding: 0 1px; }
+.sat-lit.sat-true { color: var(--good); font-weight: 600; }
+.sat-lit.sat-false { color: var(--ink-faint); text-decoration: line-through; }
+.sat-lit.sat-watch { border-bottom: 2px solid var(--accent); }
+.sat-num { color: var(--ink-faint); margin-right: 6px; }
+.sat-stair td.sat-t { background: var(--good-soft); color: var(--good); }
+.sat-stair td.sat-f { background: var(--surface-sunk); color: var(--ink-faint); }
+.sat-stair td.sat-u { color: var(--ink-soft); }
+
+/* thinner graph strokes where arrowheads would otherwise swamp small nodes (Régin, CDCL) */
+.cp-thin .viz-g-edge .viz-g-line { stroke-width: 1.5; }
+.cp-thin .viz-g-edge.chosen .viz-g-line { stroke-width: 2.6; }
+.cp-thin .viz-g-edge.good .viz-g-line, .cp-thin .viz-g-edge.warn .viz-g-line { stroke-width: 2.4; }
+.cp-thin .viz-g-edge.hot .viz-g-line { stroke-width: 2.2; }
+.sat-long .viz-g-nlabel { font-size: 11px; }

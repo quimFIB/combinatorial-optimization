@@ -52,7 +52,7 @@
       <p class="small">element, table, circuit, gcc — and the one design question.</p></div>
   </div>
   <div class="box good"><span class="label">getting around</span>
-    <p class="small">Words with a <span class="term" data-term="global constraint">dotted underline</span> are glossary terms: click one for its definition. <kbd>G</kbd> lists every term in the unit, <kbd>N</kbd> shows the notes.</p>
+    <p class="small">Words with a <span class="term" data-term="global constraint">dotted underline</span> are glossary terms: click one for its definition. <kbd>G</kbd> lists every term in the unit, <kbd>N</kbd> shows the notes. Optional extra: <a href="explore.html" target="_blank" rel="noopener">interactive figures</a>, linked from the slides they support by a small ▸ chip; skip them freely.</p>
   </div>
   <aside class="notes">
     <p>The checkpoint asks for a measured pair of models with the same answer and very different
@@ -143,6 +143,7 @@
       <p class="small muted">Lab step 2's test: on 80 random instances, the kept values equal brute-force supports exactly.</p>
     </div>
   </div>
+  <p class="viz-link-row"><a class="viz-link" href="explore.html#/1" target="_blank" rel="noopener">explore interactively</a></p>
   <aside class="notes">
     <p>Why the Hall set falls out of the same graph (lab's <code>hall_set</code>, the <b>Hall set behind a removal</b>). A removed edge
     $(x, a)$ has $a$'s node unable to reach a free value, and $x$ outside $a$'s component.
@@ -186,6 +187,7 @@
       <p class="small muted">Edge $x_3\!-\!1$ is not on any alternating cycle: from $x_3$ you reach 1 and 2 and their cycle, but the only arc into $x_3$ comes from value 3, and that cycle never reaches 3.</p>
     </div>
   </div>
+  <p class="viz-link-row"><a class="viz-link" href="explore.html#/1" target="_blank" rel="noopener">explore interactively</a></p>
   <aside class="notes">
     <p><b>Why the SCC test is right.</b> An unmatched edge $x \to a$ is in some maximum matching iff you
     can swap along an alternating cycle through it: from $a$ follow its matched edge back to a
@@ -274,6 +276,7 @@
       <p class="small"><span class="term" data-term="disjunctive (no-overlap)">Disjunctive</span> scheduling (one machine) is cumulative with $C = 1$ and every $r_i = 1$. Lab step 4's <span class="term">job-shop</span> uses one per machine.</p>
     </div>
   </div>
+  <p class="viz-link-row"><a class="viz-link" href="explore.html#/2" target="_blank" rel="noopener">explore interactively</a></p>
   <aside class="notes">
     <p>The own-compulsory-part subtraction in the filter rule (lab hint) is the usual first bug: a
     task that sees its own demand at its own compulsory times rejects every start value it has.</p>
@@ -313,6 +316,7 @@
       </div>
     </div>
   </div>
+  <p class="viz-link-row"><a class="viz-link" href="explore.html#/2" target="_blank" rel="noopener">explore interactively</a></p>
   <aside class="notes">
     <p>The reference <code>Cumulative([A, B, C], [4, 3, 2], [1, 1, 1], 2)</code> computes compulsory parts
     $[2, 3]$, $[2, 3]$ and empty, and its <code>prune</code> narrows only C, to $\{0, 4, 5\}$.</p>

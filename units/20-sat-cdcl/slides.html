@@ -52,7 +52,7 @@
       <p class="small">Tseitin, at-most-one, cardinality networks: why the smallest CNF is not the best.</p></div>
   </div>
   <div class="box good"><span class="label">getting around</span>
-    <p class="small">Words with a <span class="term" data-term="CDCL">dotted underline</span> are glossary terms: click one for its definition. <kbd>G</kbd> lists every term in the unit, <kbd>N</kbd> shows the notes.</p>
+    <p class="small">Words with a <span class="term" data-term="CDCL">dotted underline</span> are glossary terms: click one for its definition. <kbd>G</kbd> lists every term in the unit, <kbd>N</kbd> shows the notes. Optional extra: <a href="explore.html" target="_blank" rel="noopener">interactive figures</a>, linked from the slides they support by a small ▸ chip; skip them freely.</p>
   </div>
   <aside class="notes">
     <p>Checkpoint: a DRAT proof from your own solver that an external checker accepts, and an
@@ -115,6 +115,7 @@
       <p class="small">Undoing level 2 unassigns $x_2, x_4, x_5$ and <b>moves no watch back</b>: $c_2$ still watches $x_4$ and $\lnot x_2$, both unassigned again, which is a valid state.</p>
     </div>
   </div>
+  <p class="viz-link-row"><a class="viz-link" href="explore.html#/1" target="_blank" rel="noopener">explore interactively</a></p>
   <aside class="notes">
     <p>The trace is the reference <code>propagate</code>, instrumented to print each visit. One
     detail it shows: when a watched literal becomes false the solver first swaps it into
@@ -172,6 +173,7 @@
       <p class="small muted">Computing it is resolution: resolve the conflict clause with the reason of the latest current-level literal until one current-level literal remains.</p>
     </div>
   </div>
+  <p class="viz-link-row"><a class="viz-link" href="explore.html#/1" target="_blank" rel="noopener">explore interactively</a></p>
   <aside class="notes">
     <p>Resolution trace for the example. Conflict (¬x₄∨¬x₅). Resolve with x₅'s reason (¬x₂∨¬x₄∨x₅)
     to get (¬x₂∨¬x₄): two current-level literals, x₂ and x₄. Resolve with x₄'s reason
@@ -210,6 +212,7 @@
       <p class="small">The backjump skipped nothing here, but with ten decisions between level 1 and the conflict it would skip all of them: <span class="term">non-chronological backjumping</span>.</p>
     </div>
   </div>
+  <p class="viz-link-row"><a class="viz-link" href="explore.html#/1" target="_blank" rel="noopener">explore interactively</a></p>
   <aside class="notes">
     <p><b>The two resolution steps.</b> $(\lnot x_4 \lor \lnot x_5)$ and $(\lnot x_2 \lor \lnot x_4 \lor x_5)$
     clash on $x_5$; the resolvent keeps everything else, $(\lnot x_2 \lor \lnot x_4)$. That still has
@@ -324,6 +327,7 @@
       <p class="small">Better engineering shifts the curve; it doesn't change its shape. <span class="term">Stronger proof systems</span> (cutting planes, extended resolution) have short pigeonhole proofs, and pseudo-Boolean solvers exploit that.</p>
     </div>
   </div>
+  <p class="viz-link-row"><a class="viz-link" href="explore.html#/1" target="_blank" rel="noopener">explore interactively</a></p>
   <aside class="notes">
     <h4>Proof sketch</h4>
     <p>The intuition behind Haken's bound, via Ben-Sasson & Wigderson's width method (2001), using <b>clause width</b>: any

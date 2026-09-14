@@ -52,7 +52,7 @@
       <p class="small">The CP loop, first-fail, and the two numbers that describe everything.</p></div>
   </div>
   <div class="box good"><span class="label">getting around</span>
-    <p class="small">Words with a <span class="term" data-term="propagator">dotted underline</span> are glossary terms: click one for its definition. <kbd>G</kbd> lists every term in the unit, <kbd>N</kbd> shows the notes.</p>
+    <p class="small">Words with a <span class="term" data-term="propagator">dotted underline</span> are glossary terms: click one for its definition. <kbd>G</kbd> lists every term in the unit, <kbd>N</kbd> shows the notes. Optional extra: <a href="explore.html" target="_blank" rel="noopener">interactive figures</a>, linked from the slides they support by a small ▸ chip; skip them freely.</p>
   </div>
   <aside class="notes">
     <p>The checkpoint has two parts. Trace a fixpoint by hand on a 4×4 sudoku. Explain why arc
@@ -178,6 +178,7 @@
       <p class="small muted">This constraint graph is a path, a tree, so Freuder's theorem already promised no search would be needed.</p>
     </div>
   </div>
+  <p class="viz-link-row"><a class="viz-link" href="explore.html#/1" target="_blank" rel="noopener">explore interactively</a></p>
   <aside class="notes">
     <p><b>The push rule.</b> When revise changes $D_x$, every arc $(w, x)$ that reads $x$ is
     rechecked, because $w$'s supports may have lived in the values just removed. In this run arc
@@ -209,6 +210,7 @@
       <p class="small muted">Search fills the gap between "consistent" and "solved". Stronger propagation shrinks the tree, at a price per node.</p>
     </div>
   </div>
+  <p class="viz-link-row"><a class="viz-link" href="explore.html#/1" target="_blank" rel="noopener">explore interactively</a></p>
   <aside class="notes">
     <p>Tracing the 4×4 by hand, which is the checkpoint: start with the givens as singletons.
     Each NotEqual with a fixed side removes that value from the other cell. Cell (0, 1) loses 1
@@ -381,6 +383,7 @@
       <p class="small">Undo pops in reverse order, so $y$ is restored to 23 before being restored to 123. Search needs only the marks: "the branch $y = 2$ failed" is <code>undo(m₁)</code>, then try $y \ne 2$.</p>
     </div>
   </div>
+  <p class="viz-link-row"><a class="viz-link" href="explore.html#/2" target="_blank" rel="noopener">explore interactively</a></p>
   <aside class="notes">
     <p>Every line of the table was printed by the reference <code>Store</code>: <code>assign</code>,
     <code>fixpoint</code> with the two <code>NotEqual</code> propagators, <code>mark</code> and
