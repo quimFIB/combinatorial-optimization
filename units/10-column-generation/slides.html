@@ -18,7 +18,7 @@
   <div class="unit-no">10</div>
   <h1>Column generation, Dantzig–Wolfe, branch-and-price</h1>
   <p class="lede">LPs with more columns than atoms, solved by asking a pricing problem one question at a time. The duals of unit 03 become the objective of a combinatorial subproblem.</p>
-  <p class="meta"><span>needs 08, 16</span><span>~1½ h slides + 3 h lab</span><span>lab: <code>uv run co lab 10</code></span></p>
+  <p class="meta"><span>needs 08, 16</span><span>~2 h slides + 3 h lab</span><span>lab: <code>uv run co lab 10</code></span></p>
   <aside class="notes">
     <p>Unit 09 handled exponentially many <em>rows</em> by separation: add a violated
     inequality when you find one. This unit is the dual picture, exponentially many
@@ -29,6 +29,11 @@
     <p>The lab's <code>then</code> step makes the argument concrete. On a 10-item cutting-stock
     instance, 30 seconds of HiGHS on the compact model finds no feasible solution at all.
     Column generation plus a restricted IP solves it to proven optimality in 0.02 s.</p>
+    <h4>How to read this deck</h4>
+    <p>A cutting-stock instance with three item sizes runs through it: every restricted
+    master, dual vector, pricing knapsack and Farley bound of its three iterations is on one
+    slide, computed with the lab's reference solution. Ryan–Foster branching is shown on
+    three items. Bound derivations are in the notes.</p>
   </aside>
 </section>
 
@@ -47,6 +52,9 @@
     <div class="box def"><span class="label">4 · branch-and-price</span>
       <p class="small">Why naive branching breaks pricing; Ryan–Foster; routes and ESPPRC.</p></div>
   </div>
+  <div class="box good"><span class="label">getting around</span>
+    <p class="small">Words with a <span class="term" data-term="column generation">dotted underline</span> are glossary terms: click one for its definition. <kbd>G</kbd> lists every term in the unit, <kbd>N</kbd> shows the notes.</p>
+  </div>
   <aside class="notes">
     <p>Keep one sentence in mind all unit: <b>the reduced cost of a column is its cost minus
     what the current duals say its resources are worth</b>. Everything else, from pricing
@@ -64,17 +72,18 @@
 <section>
   <p class="eyebrow">10 · too many columns</p>
   <h2>Cutting stock, two ways</h2>
+  <p class="small"><span class="term">Cutting stock</span>: cut rolls of width $W$ into $d_i$ pieces of width $w_i$, using as few rolls as possible.</p>
   <div class="cols">
     <div>
-      <div class="box def"><span class="label">Kantorovich 1939 · compact</span>
+      <div class="box def"><span class="label"><span class="term" data-term="Kantorovich model">Kantorovich</span> 1939 · compact</span>
         <p class="small">$y_k$: roll $k$ used. $x_{ik}$: copies of item $i$ from roll $k$.</p>
         $$\begin{aligned} \min\ & \textstyle\sum_k y_k \\ & \textstyle\sum_i w_i x_{ik} \le W y_k \\ & \textstyle\sum_k x_{ik} \ge d_i \end{aligned}$$
         <p class="small">LP bound $= \sum_i w_i d_i / W$: the trivial area bound. Rolls are interchangeable, giving $K!$ symmetric copies of every solution.</p>
       </div>
     </div>
     <div>
-      <div class="box def"><span class="label">Gilmore–Gomory 1961 · extended</span>
-        <p class="small">One variable per <b>pattern</b> $a \in \mathbb Z_{\ge 0}^m$ with $w^\top a \le W$.</p>
+      <div class="box def"><span class="label"><span class="term" data-term="Gilmore–Gomory model">Gilmore–Gomory</span> 1961 · extended</span>
+        <p class="small">One variable per <span class="term">pattern</span> $a \in \mathbb Z_{\ge 0}^m$ with $w^\top a \le W$. Rolls of 10, pieces 3, 4, 6: $(3,0,0)$ is three 3s, $(2,1,0)$ is two 3s and a 4.</p>
         $$\min \textstyle\sum_p x_p \quad \text{s.t.}\ \sum_p a_{ip} x_p \ge d_i,\ x \ge 0$$
         <p class="small">No symmetry. The LP bound is so strong that $\lceil z_{LP} \rceil$ is almost always optimal. But the number of patterns is exponential in $m$.</p>
       </div>
@@ -86,7 +95,7 @@
     the convex hull of its integer solutions. That is Dantzig–Wolfe in section 2, and it's
     why the bound is stronger. Stronger formulations by convexifying a substructure is the
     same idea as unit 05's facility location, done systematically.</p>
-    <p>The integer round-up property (IRUP): for most cutting-stock instances the optimum
+    <p>The <span class="term" data-term="integer round-up property">integer round-up property</span> (IRUP): for most cutting-stock instances the optimum
     is $\lceil z_{LP} \rceil$. Marcotte (1986) found instances where it fails, and the
     modified conjecture (MIRUP) says the optimum is at most $\lceil z_{LP} \rceil + 1$. It is
     still open. In the lab's <code>then</code> table, every instance had restricted IP =
@@ -103,11 +112,11 @@
       $$\bar c_j = c_j - y^\top A_j, \qquad \text{enter } j \text{ if } \bar c_j &lt; 0$$
       <p class="small">Dantzig's rule picks the most negative. With columns defined implicitly as the feasible set of a combinatorial problem, "find the most negative" <b>is</b> an optimisation problem:</p>
       $$\min_{a \in \mathcal A}\ c(a) - y^\top a$$
-      <p class="small">Cutting stock: $c(a) = 1$, so maximise $y^\top a$ over patterns, which is a knapsack with the duals as values.</p>
+      <p class="small">Cutting stock: $c(a) = 1$, so maximise $y^\top a$ over patterns, which is a knapsack with the duals as values: the <span class="term">pricing problem</span> of the <span class="term" data-term="restricted master problem">restricted master</span>.</p>
     </div>
     <div>
       <div class="box good"><span class="label">the checkpoint, in unit 03's words</span>
-        <p class="small">The restricted master's optimal duals $y$ are feasible for its dual, over the columns it contains. They are optimal for the <b>full</b> dual iff no column violates $y^\top a \le c(a)$. Pricing is the <b>separation problem for the dual</b>. Its objective coefficients are the duals because the dual constraint for column $a$ has coefficients $a$ and right-hand side $c(a)$.</p>
+        <p class="small">The restricted master's optimal duals $y$ are feasible for its dual, over the columns it contains. They are optimal for the <b>full</b> dual iff no column violates $y^\top a \le c(a)$. Pricing is the <b><span class="term" data-term="pricing = dual separation">separation problem for the dual</span></b>. Its objective coefficients are the duals because the dual constraint for column $a$ has coefficients $a$ and right-hand side $c(a)$.</p>
       </div>
       <p class="small">If pricing returns $\bar c \ge 0$, the master's solution is optimal for the full LP: complementary slackness holds for every column, present or not.</p>
     </div>
@@ -162,7 +171,7 @@
         <li>Finite: each column enters at most once (with care over degeneracy), and there are finitely many.</li>
         <li>Warm starts: add the column to HiGHS's model and re-solve from the previous basis. It's one primal simplex pivot in the common case.</li>
         <li>Multiple columns per iteration: return every negative reduced-cost column pricing found (lab step 6 returns up to 10).</li>
-        <li><b>Heuristic pricing is allowed</b> until the last iteration. Only an exact "nothing negative" proves optimality.</li>
+        <li><b><span class="term" data-term="heuristic pricing">Heuristic pricing</span> is allowed</b> until the last iteration. Only an exact "nothing negative" proves optimality.</li>
       </ul>
       <p class="small muted">Lab step 3's test checks the value against the LP over <b>all</b> patterns: 25 instances, exact agreement.</p>
     </div>
@@ -178,6 +187,41 @@
   </aside>
 </section>
 
+<section>
+  <p class="eyebrow">10 · too many columns · example</p>
+  <h2>The loop, on a small instance</h2>
+  <p class="small">Rolls $W = 10$. Pieces of width $3, 4, 6$, demands $5, 3, 2$. Start from one pattern per piece: $(3,0,0)$, $(0,2,0)$, $(0,0,1)$.</p>
+  <table style="font-size:.66em">
+    <thead><tr><th class="num">iter</th><th>master LP</th><th>duals $y$</th><th>pricing: best pattern</th><th class="num">$y^\top a$</th><th class="num">reduced cost</th><th class="num">Farley bound</th></tr></thead>
+    <tbody>
+      <tr><td class="num">0</td><td>$5.17$: $\ 1.67 \times (3,0,0),\ 1.5 \times (0,2,0),\ 2 \times (0,0,1)$</td><td>$(\tfrac13, \tfrac12, 1)$</td><td>$(0,1,1)$: a 4 and a 6</td><td class="num">1.5</td><td class="num">$-0.5$</td><td class="num">3.44</td></tr>
+      <tr><td class="num">1</td><td>$4.17$: $\ 1.67 \times (3,0,0),\ 0.5 \times (0,2,0),\ 2 \times (0,1,1)$</td><td>$(\tfrac13, \tfrac12, \tfrac12)$</td><td>$(2,1,0)$: two 3s and a 4</td><td class="num">1.17</td><td class="num">$-0.17$</td><td class="num">3.57</td></tr>
+      <tr><td class="num">2</td><td>$\mathbf{4}$: $\ 1 \times (3,0,0),\ 2 \times (0,1,1),\ 1 \times (2,1,0)$</td><td>$(\tfrac13, \tfrac13, \tfrac23)$</td><td>$(3,0,0)$, already in</td><td class="num">1</td><td class="num">$0$: stop</td><td class="num">4.00</td></tr>
+    </tbody>
+  </table>
+  <div class="cols">
+    <div class="box ex"><span class="label">reading row 0</span>
+      <p class="small">The duals price a 3-piece at $\tfrac13$ of a roll, a 4 at $\tfrac12$, a 6 at a full roll. The pattern "a 4 and a 6" fits ($4 + 6 = 10$) and is worth $\tfrac12 + 1 = 1.5$ rolls of value while costing 1 roll: reduced cost $1 - 1.5 = -0.5$. It enters.</p>
+    </div>
+    <div class="box ex"><span class="label">the end</span>
+      <p class="small">At row 2 no pattern is worth more than 1, so the LP over <b>all</b> patterns is solved, at value 4. It happens to be integral: one roll of three 3s, two rolls of 4+6, one roll of 3+3+4. Four rolls, and the LP proves no cutting uses fewer.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p><b>Pricing, row 1.</b> Maximise $\tfrac13 a_1 + \tfrac12 a_2 + \tfrac12 a_3$ subject to
+    $3a_1 + 4a_2 + 6a_3 \le 10$, $a$ nonnegative integers. Candidates: $(3,0,0)$ is worth 1;
+    $(2,1,0)$ is worth $\tfrac23 + \tfrac12 = \tfrac76$; $(0,1,1)$ is worth 1; $(0,2,0)$ is worth 1;
+    $(1,0,1)$ is worth $\tfrac13 + \tfrac12 = \tfrac56$. The best is $(2,1,0)$ at $\tfrac76$.</p>
+    <p><b>Farley bounds.</b> $d^\top y / v$: row 0, $(\tfrac53 + \tfrac32 + 2)/1.5 = \tfrac{31}{6} / \tfrac32 = 3.44$;
+    row 1, $(\tfrac53 + \tfrac32 + 1)/\tfrac76 = \tfrac{25}{6} / \tfrac76 = 3.57$; row 2, $4/1 = 4$.
+    So after row 0 we already know the answer is between 3.44 and 5.17, hence at least 4
+    rolls. The bound slide in section 3 explains why dividing by $v$ is valid.</p>
+    <p><b>Checking the final cutting.</b> Pieces of 3: $3 + 2 = 5$. Pieces of 4: $2 + 1 = 3$. Pieces
+    of 6: 2. All from the reference <code>solve_master</code>, <code>price</code> and
+    <code>farley_bound</code>; the restricted IP also returns 4 rolls.</p>
+  </aside>
+</section>
+
 <section class="divider">
   <p class="eyebrow">section 2</p>
   <h2>Dantzig–Wolfe</h2>
@@ -189,18 +233,18 @@
   <h2>Decomposition of block-angular programs</h2>
   <div class="cols">
     <div>
-      <p class="small">Linking constraints over independent blocks:</p>
+      <p class="small"><span class="term" data-term="linking constraints">Linking constraints</span> over independent blocks (<span class="term">block-angular structure</span>):</p>
       $$\begin{aligned} \min\ & \textstyle\sum_k c_k^\top x_k \\ & \textstyle\sum_k D_k x_k \ge d && \text{(linking)} \\ & x_k \in X_k && \text{(block } k\text{)} \end{aligned}$$
-      <p class="small">Replace each $X_k$ by $\mathrm{conv}(X_k)$, written as a convex combination of its extreme points $\{x_k^p\}$ (Minkowski–Weyl, unit 01):</p>
+      <p class="small"><span class="term">Convexification</span>: replace each $X_k$ by $\mathrm{conv}(X_k)$, written as a convex combination of its extreme points $\{x_k^p\}$ (Minkowski–Weyl, unit 01):</p>
       $$x_k = \textstyle\sum_p \lambda_{kp} x_k^p, \quad \sum_p \lambda_{kp} = 1, \quad \lambda \ge 0$$
     </div>
     <div>
       <div class="box def"><span class="label">master and pricing</span>
-        <p class="small"><b>Master:</b> linking rows plus one convexity row per block, over the $\lambda$ columns. <b>Pricing</b> for block $k$, with linking duals $y$ and convexity dual $\mu_k$:</p>
+        <p class="small">The <span class="term" data-term="Dantzig–Wolfe decomposition">Dantzig–Wolfe</span> <span class="term" data-term="master problem">master</span>: linking rows plus one <span class="term" data-term="convexity row">convexity row</span> per block, over the $\lambda$ columns. <b>Pricing</b> for block $k$, with linking duals $y$ and convexity dual $\mu_k$:</p>
         $$\min_{x \in X_k}\ (c_k - D_k^\top y)^\top x - \mu_k$$
       </div>
-      <div class="box thm"><span class="label">the bound (Geoffrion 1974)</span>
-        <p class="small">$z_{DW} = \min\{c^\top x : Dx \ge d,\ x_k \in \mathrm{conv}(X_k)\} \ge z_{LP}$, with equality whenever each block's LP relaxation is already integral (the <em>integrality property</em>). This is the <b>Lagrangian dual bound</b> of unit 11.</p>
+      <div class="box thm"><span class="label">the <span class="term" data-term="Dantzig–Wolfe bound">bound</span> (Geoffrion 1974)</span>
+        <p class="small">$z_{DW} = \min\{c^\top x : Dx \ge d,\ x_k \in \mathrm{conv}(X_k)\} \ge z_{LP}$, with equality whenever each block's LP relaxation is already integral (the <span class="term">integrality property</span>). This is the <b>Lagrangian dual bound</b> of unit 11.</p>
       </div>
     </div>
   </div>
@@ -232,8 +276,8 @@
     </div>
     <div>
       <div class="box warn"><span class="label">when it is not fine</span>
-        <p class="small">ESPPRC, pricing for vehicle routing, is <b>strongly</b> NP-hard (Dror 1994). Lab <code>then</code>: ×10 pricing time per four customers, from 0.09 s at $n = 12$ to 27.8 s at $n = 20$.</p>
-        <p class="small">So production codes <b>relax</b> the pricing problem. They allow non-elementary routes, or ng-routes (Baldacci, Mingozzi & Roberti 2011), which forbid only cycles within small neighbourhoods. That gives a weaker bound with a far cheaper pricer, and cuts recover the strength.</p>
+        <p class="small"><span class="term">ESPPRC</span>, pricing for vehicle routing, is <b>strongly</b> NP-hard (Dror 1994). Lab <code>then</code>: ×10 pricing time per four customers, from 0.09 s at $n = 12$ to 27.8 s at $n = 20$.</p>
+        <p class="small">So production codes <b>relax</b> the pricing problem. They allow non-elementary routes, or <span class="term">ng-routes</span> (Baldacci, Mingozzi & Roberti 2011), which forbid only cycles within small neighbourhoods. That gives a weaker bound with a far cheaper pricer, and cuts recover the strength.</p>
       </div>
     </div>
   </div>
@@ -257,18 +301,19 @@
   <h2>A lower bound at every iteration</h2>
   <div class="cols">
     <div>
-      <div class="box thm"><span class="label">Lagrangian bound (Lasdon 1970)</span>
+      <div class="box thm"><span class="label"><span class="term" data-term="Lagrangian bound (Lasdon)">Lagrangian bound</span> (Lasdon 1970)</span>
         <p class="small">If some optimal solution has $\sum_p x_p \le \kappa$, then</p>
         $$z_{RMP} + \kappa \cdot \min_a \bar c(a)\ \le\ z_{LP} \le z_{RMP}$$
       </div>
-      <div class="box thm"><span class="label">Farley 1990 · unit costs</span>
+      <div class="box thm"><span class="label"><span class="term" data-term="Farley bound">Farley</span> 1990 · unit costs</span>
         <p class="small">For any $y \ge 0$ with $v = \max_a y^\top a$, $\ y / v$ is dual feasible, so</p>
         $$z_{LP} \ge d^\top y \,/\, v$$
-        <p class="small">At the master duals, that is $z_{RMP} / v$ (lab step 2).</p>
+        <p class="small">At the master duals, that is $z_{RMP} / v$ (lab step 2). On the small instance: 3.44, 3.57, 4.</p>
+        <p class="proof-pointer">why: notes (N)</p>
       </div>
     </div>
     <div>
-      <p class="small">Lab <code>then</code>: stop when $\lceil\text{bound}\rceil = \lceil z_{RMP}\rceil$, since the integer bound is then known.</p>
+      <p class="small">Lab <code>then</code>: <span class="term">early termination</span> when $\lceil\text{bound}\rceil = \lceil z_{RMP}\rceil$, since the integer bound is then known. On the small instance, iteration 1 already has $\lceil 3.57 \rceil = 4$ but $\lceil 4.17 \rceil = 5$, so it can't stop yet.</p>
       <table>
         <thead><tr><th class="num">items</th><th class="num">iterations</th><th class="num">could stop at</th></tr></thead>
         <tbody>
@@ -298,12 +343,12 @@
   <h2>Dual oscillation, and smoothing</h2>
   <div class="cols">
     <div>
-      <p class="small">The restricted master is highly <b>degenerate</b>: many dual optima. Its duals jump between extreme points of the dual face, far from the full dual optimum. Pricing at a wild dual returns a column that is useless later. The tail of the iteration count is mostly this.</p>
-      <div class="box def"><span class="label">stabilisation, three ways</span>
+      <p class="small">The restricted master is highly <span class="term" data-term="dual degeneracy">degenerate</span>: many dual optima. Its duals jump between extreme points of the dual face, far from the full dual optimum. Pricing at a wild dual returns a column that is useless later. The tail of the iteration count is mostly this <span class="term" data-term="dual oscillation">oscillation</span>.</p>
+      <div class="box def"><span class="label"><span class="term">stabilisation</span>, three ways</span>
         <ul class="small">
           <li><b>Boxstep</b> (Marsten, Hogan & Blankenship 1975): constrain $y$ to a box around a centre.</li>
           <li><b>Penalties</b> (du Merle et al. 1999): penalise leaving the box, with surplus columns in the primal.</li>
-          <li><b>Smoothing</b> (Wentges 1997): price at $\alpha \hat y + (1 - \alpha) y$, and fall back on a mis-price. No change to the master at all.</li>
+          <li><b><span class="term" data-term="Wentges smoothing">Smoothing</span></b> (Wentges 1997): price at $\alpha \hat y + (1 - \alpha) y$ around a <span class="term" data-term="stability centre \(\hat y\)">stability centre</span> $\hat y$, and fall back on a <span class="term">mis-price</span>. No change to the master at all.</li>
         </ul>
       </div>
     </div>
@@ -341,15 +386,15 @@
   <h2>Why naive branching destroys pricing</h2>
   <div class="cols">
     <div>
-      <div class="box warn"><span class="label">branch on a master variable</span>
+      <div class="box warn"><span class="label"><span class="term" data-term="branching on master variables">branch on a master variable</span></span>
         <p class="small">Down branch $x_p \le \lfloor x_p^* \rfloor$, typically $x_p = 0$. The pricing problem doesn't know pattern $p$ is forbidden. Its optimum is that same pattern, so it regenerates it forever. Fixing that needs the $k$-th best pattern, with $k$ growing with depth.</p>
         <p class="small">Also unbalanced: $x_p = 0$ removes one of exponentially many columns and barely moves the bound.</p>
       </div>
-      <p class="small">Price-and-branch (the lab's restricted IP) sidesteps this with no guarantee. Lab <code>then</code>: exact for cutting stock, and a 10% gap for CVRP at $n = 12$ and $20$.</p>
+      <p class="small"><span class="term">Price-and-branch</span> (the lab's <span class="term" data-term="restricted master IP">restricted IP</span>) sidesteps this with no guarantee. Lab <code>then</code>: exact for cutting stock, and a 10% gap for CVRP at $n = 12$ and $20$.</p>
     </div>
     <div>
-      <div class="box good"><span class="label">branch on the original structure</span>
-        <p class="small"><b>Ryan–Foster 1981</b> (set partitioning, bin packing): pick items $i, j$ that are fractionally together. One branch says always together (merge them in pricing), the other never together (a conflict constraint in pricing). The pricer changes shape slightly but stays a knapsack-like problem.</p>
+      <div class="box good"><span class="label"><span class="term" data-term="branch on original structure">branch on the original structure</span></span>
+        <p class="small"><b><span class="term" data-term="Ryan–Foster branching">Ryan–Foster</span> 1981</b> (set partitioning, bin packing): pick items $i, j$ that are fractionally together. One branch says always together (merge them in pricing), the other never together (a conflict constraint in pricing). The pricer changes shape slightly but stays a knapsack-like problem.</p>
         <p class="small"><b>VRP</b>: branch on arcs or edges of the original graph (forbid, or force, arc $u \to v$) or on the number of vehicles. Both are easy to impose in labelling.</p>
       </div>
       <p class="small muted">Vanderbeck (2000, 2011) gives general branching schemes for identical blocks, where aggregation hides which block a column belongs to.</p>
@@ -368,14 +413,51 @@
 </section>
 
 <section>
+  <p class="eyebrow">10 · branch-and-price · example</p>
+  <h2>Ryan–Foster, on three items</h2>
+  <div class="cols">
+    <div>
+      <p class="small">Bin packing: three items of size 4, bins of size 10. Any two share a bin, all three don't.</p>
+      <div class="box ex"><span class="label">the root LP</span>
+        <p class="small">Patterns $\{1,2\}$, $\{1,3\}$, $\{2,3\}$ at $\tfrac12$ each. Every item is covered exactly once, using <b>1.5 bins</b>. The optimum is 2.</p>
+        <p class="small">Items 1 and 2 are "together" in $\tfrac12$ a bin: neither 0 nor 1. Branch on that pair.</p>
+      </div>
+    </div>
+    <div>
+      <table>
+        <thead><tr><th>branch</th><th>pricing sees</th><th>allowed patterns</th><th class="num">LP</th></tr></thead>
+        <tbody>
+          <tr><td><b>together</b></td><td>1 and 2 merged into one item of size 8</td><td>$\{1,2\}$, $\{3\}$</td><td class="num">2</td></tr>
+          <tr><td><b>apart</b></td><td>a conflict edge between 1 and 2</td><td>$\{1,3\}$, $\{2,3\}$, $\{1\}$, $\{2\}$, $\{3\}$</td><td class="num">2</td></tr>
+        </tbody>
+      </table>
+      <p class="small">Both children have LP 2 = optimum, so the tree ends after one branching. Each child's pricer is still a knapsack, with one merged item or one conflict: <b>something pricing can see</b>.</p>
+      <p class="small muted">Branching on "$x_{\{1,2\}} \le 0$" instead would leave pricing free to regenerate $\{1,2\}$.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p><b>Root LP value.</b> Each bin holds at most two items and there are three items to
+    cover, so any fractional covering uses at least $3/2$ bins, and the three half-patterns
+    achieve it.</p>
+    <p><b>Together.</b> Merged, 1 and 2 form a size-8 item, which can't share with item 3
+    ($8 + 4 &gt; 10$). Patterns are the merged item alone and item 3 alone: 2 bins, integral.
+    <b>Apart.</b> Now 1 and 2 must be covered by different patterns. Covering item 3 once
+    and items 1 and 2 once each: $\{1,3\} + \{2\}$ uses 2 bins, and so does any fractional
+    mix, since items 1 and 2 need two different bins. LP 2.</p>
+    <p>These values are by hand; the instance is too small to need a solver, and the point is
+    the shape of the two pricing problems.</p>
+  </aside>
+</section>
+
+<section>
   <p class="eyebrow">10 · branch-and-price</p>
   <h2>Vehicle routing: where column generation stops being a toy</h2>
   <div class="cols">
     <div>
-      <p class="small">Set partitioning over routes $r$, with $\alpha_{vr} = 1$ if $r$ visits $v$:</p>
+      <p class="small"><span class="term" data-term="set partitioning over routes">Set partitioning over routes</span> $r$ for the <span class="term">CVRP</span>, with $\alpha_{vr} = 1$ if $r$ visits $v$:</p>
       $$\min \textstyle\sum_r c_r x_r \quad \text{s.t.}\ \sum_r \alpha_{vr} x_r = 1\ \forall v,\ x \in \{0, 1\}$$
       <p class="small">Pricing: an elementary depot-to-depot path within capacity, with arc costs $c_{uv} - \pi_v$. Negative cycles are everywhere, which is why elementarity must be enforced.</p>
-      <p class="small"><b>Labelling</b> (lab step 6): labels (cost, load, visited set) per vertex, extended forward, with dominance pruning. Bidirectional labelling and completion bounds are the next speed-ups.</p>
+      <p class="small"><b><span class="term" data-term="labelling algorithm">Labelling</span></b> (lab step 6): labels (cost, load, visited set) per vertex, extended forward, with <span class="term">dominance</span> pruning. Bidirectional labelling and completion bounds are the next speed-ups.</p>
     </div>
     <div>
       <table>
@@ -388,7 +470,7 @@
         </tbody>
       </table>
       <div class="box"><span class="label">the state of the art</span>
-        <p class="small">Branch-price-and-cut with ng-routes, rounded capacity and limited-memory subset-row cuts, bidirectional labelling, and route enumeration. It solves CVRP instances with several hundred customers to optimality (Pessoa et al., VRPSolver 2020).</p>
+        <p class="small"><span class="term">Branch-price-and-cut</span> with ng-routes, rounded capacity and limited-memory subset-row cuts, bidirectional labelling, and route enumeration. It solves CVRP instances with several hundred customers to optimality (Pessoa et al., VRPSolver 2020).</p>
       </div>
     </div>
   </div>

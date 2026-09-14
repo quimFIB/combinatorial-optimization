@@ -18,7 +18,7 @@
   <div class="unit-no">09</div>
   <h1>Separation ⇔ optimization</h1>
   <p class="lede">You can optimize over a polytope in polynomial time exactly when you can find a violated inequality in polynomial time. Exponentially many constraints are fine.</p>
-  <p class="meta"><span>needs 04, 08</span><span>~1½ h slides + 2½ h lab</span><span>lab: <code>uv run co lab 09</code></span></p>
+  <p class="meta"><span>needs 04, 08</span><span>~2 h slides + 2½ h lab</span><span>lab: <code>uv run co lab 09</code></span></p>
   <aside class="notes">
     <p>The curriculum calls this the most beautiful result in the course, and the branch
     unit it would fight to keep. It turns the ellipsoid method (unit 04), which is
@@ -27,6 +27,12 @@
     solver supports, are sound engineering and not a hack.</p>
     <p>The lab makes it concrete on the oldest example: Dantzig, Fulkerson and
     Johnson's 1954 subtour formulation of the TSP.</p>
+    <h4>How to read this deck</h4>
+    <p>The theorem is given as two ideas, each with a picture (the second one is a square and
+    its polar, a diamond); the ellipsoid details are in the notes. The subtour section runs
+    on six cities, where the separation oracle is carried out by hand: components on an
+    integer point, a minimum cut on a fractional one, and Stoer–Wagner on four vertices.
+    Every cut value was computed with the lab's reference solution.</p>
   </aside>
 </section>
 
@@ -40,6 +46,9 @@
       <p>The subtour LP, separation by minimum cut, and Stoer–Wagner.</p></div>
     <div class="box def"><span class="label">3 · in practice</span>
       <p>Lazy constraints, cut callbacks, how good the bound is, and Concorde.</p></div>
+  </div>
+  <div class="box good"><span class="label">getting around</span>
+    <p class="small">Words with a <span class="term" data-term="separation oracle">dotted underline</span> are glossary terms: click one for its definition. <kbd>G</kbd> lists every term in the unit, <kbd>N</kbd> shows the notes.</p>
   </div>
   <p class="muted">Lab <code>then</code>: at 200 cities there are 8 × 10⁵⁹ subtour rows. The LP bound needed 56, the optimal tour 70.</p>
   <aside class="notes">
@@ -60,24 +69,24 @@
   <p class="eyebrow">09 · theorem</p>
   <h2>Two ways to be given a polytope</h2>
   <div class="cols">
-    <div class="box def"><span class="label">optimization oracle</span>
+    <div class="box def"><span class="label"><span class="term">optimization oracle</span></span>
       <p>Given $c$: return $\arg\max\{c^\top x : x \in P\}$, or report $P = \emptyset$.</p>
       <p class="small">"Solve the problem for any objective."</p>
     </div>
-    <div class="box def"><span class="label">separation oracle</span>
+    <div class="box def"><span class="label"><span class="term">separation oracle</span></span>
       <p>Given $y$: either certify $y \in P$, or return an inequality $a^\top x \le \beta$ valid for $P$ with $a^\top y &gt; \beta$.</p>
       <p class="small">"Find a violated constraint, if there is one."</p>
     </div>
   </div>
   <p>A polytope with exponentially many facets can have a <b>short</b> separation oracle, one that searches its facets implicitly. For subtour rows it is a minimum cut, and for matching's odd-set rows a minimum odd cut.</p>
-  <p class="small muted">For the theorem, $P$ must be "well-described": its facets have bounded encoding size $\varphi$, and the running time may be polynomial in $\varphi$ and $n$.</p>
+  <p class="small muted">For the theorem, $P$ must be <span class="term" data-term="well-described polyhedron">"well-described"</span>: its facets have bounded encoding size $\varphi$, and the running time may be polynomial in $\varphi$ and $n$.</p>
   <aside class="notes">
     <p>The encoding bound is what lets the ellipsoid method start and stop. From $\varphi$
     you get an initial ball radius $R = 2^{O(n\varphi)}$ and a minimum volume below
     which a full-dimensional $P$ can't hide (unit 04's $R$ and $r$). Lower-dimensional
     polytopes need extra work, since they contain no ball. GLS handle this by finding
-    the affine hull first, which is one of the technical parts of their book.</p>
-    <p>"Strong" versions of the oracles, the exact ones above, are what the theorem is
+    the <span class="term">affine hull</span> first, which is one of the technical parts of their book.</p>
+    <p><span class="term" data-term="strong and weak oracles">"Strong" versions</span> of the oracles, the exact ones above, are what the theorem is
     about. There are also "weak" versions with an $\varepsilon$ tolerance, which are the
     natural notion for general convex bodies. The equivalences between all of them are
     GLS chapter 4.</p>
@@ -91,14 +100,26 @@
     <p>For a family of well-described polyhedra, the <b>optimization</b> problem is solvable in polynomial time if and only if the <b>separation</b> problem is.</p>
   </div>
   <div class="cols">
-    <div class="box proof"><span class="label">separation ⇒ optimization</span>
-      <p class="small">Run the ellipsoid method on $P \cap \{c^\top x \ge \gamma\}$. Its cuts come from the separation oracle, or from the objective row when the centre is feasible (a "sliding objective"). The volume argument bounds the number of iterations, and rounding at the end gives an exact optimal vertex.</p>
+    <div class="box"><span class="label">separation ⇒ optimization, the idea</span>
+      <p class="small">The ellipsoid method (unit 04) only ever asks "is this centre inside, and if not, which inequality fails?". A separation oracle answers exactly that, so the ellipsoid method runs, and with the objective added as a <span class="term">sliding objective</span> it optimizes.</p>
     </div>
-    <div class="box proof"><span class="label">optimization ⇒ separation</span>
-      <p class="small">With $0$ in the interior, look at the <b>polar</b> $P^\circ = \{a : a^\top x \le 1\ \forall x \in P\}$. Separating $y$ from $P$ means finding $a \in P^\circ$ with $a^\top y &gt; 1$, which is optimization over $P^\circ$. A separation oracle for $P^\circ$ is "maximize $a^\top x$ over $P$", which is exactly the optimization oracle we have. Apply the first direction to $P^\circ$.</p>
+    <div class="box"><span class="label">optimization ⇒ separation, the idea</span>
+      <p class="small">Flip the picture with the <span class="term" data-term="polar \(P^\circ\)">polar</span> $P^\circ$: facets of $P$ become vertices of $P^\circ$, and vertices of $P$ become facets. "Find a violated facet of $P$" becomes "optimize over $P^\circ$", and the next slide shows it on a square.</p>
+      <p class="proof-pointer">details in the notes (N)</p>
     </div>
   </div>
   <aside class="notes">
+    <h4>Details</h4>
+    <p><b>Separation ⇒ optimization.</b> Run the ellipsoid method on
+    $P \cap \{c^\top x \ge \gamma\}$. Its cuts come from the separation oracle, or from the
+    objective row when the centre is feasible (a "sliding objective"). The volume
+    argument bounds the number of iterations, and rounding at the end gives an exact
+    optimal vertex.</p>
+    <p><b>Optimization ⇒ separation.</b> With $0$ in the interior of $P$, the polar is
+    $P^\circ = \{a : a^\top x \le 1\ \forall x \in P\}$. Separating $y$ from $P$ means finding
+    $a \in P^\circ$ with $a^\top y &gt; 1$, which is optimization over $P^\circ$. A separation
+    oracle for $P^\circ$ is "maximize $a^\top x$ over $P$", which is exactly the optimization
+    oracle we have. Apply the first direction to $P^\circ$.</p>
     <p>The first direction is the one the lab's intuition uses. The ellipsoid method never
     needs the constraint list, only an answer to "is this centre feasible, and if not,
     which inequality does it violate?" (unit 04, slide "Useless in practice,
@@ -117,16 +138,70 @@
 </section>
 
 <section>
+  <p class="eyebrow">09 · theorem · example</p>
+  <h2>A square and its polar</h2>
+  <div class="cols">
+    <div class="fig">
+      <svg viewBox="0 0 470 230" width="460" role="img" aria-label="the square [-1,1]^2 with the point (1.5, 0.5) outside, and its polar, the diamond |a1|+|a2| &lt;= 1, with the vertex (1,0) highlighted">
+        <line x1="10" y1="115" x2="200" y2="115" class="rule" stroke-width="1"/>
+        <line x1="100" y1="15" x2="100" y2="215" class="rule" stroke-width="1"/>
+        <rect x="40" y="55" width="120" height="120" class="fill-soft unit" stroke-width="2.5" style="fill-opacity:.9"/>
+        <line x1="160" y1="45" x2="160" y2="185" class="warn" stroke-width="4"/>
+        <circle cx="190" cy="85" r="6" class="fill-warn"/>
+        <text x="146" y="70" font-size="13" class="mono" text-anchor="end">P</text>
+        <text x="180" y="74" font-size="13" class="mono">y</text>
+        <text x="100" y="208" font-size="12" class="soft" text-anchor="middle">facet x₁ ≤ 1</text>
+        <line x1="240" y1="115" x2="430" y2="115" class="rule" stroke-width="1"/>
+        <line x1="335" y1="15" x2="335" y2="215" class="rule" stroke-width="1"/>
+        <polygon points="395,115 335,55 275,115 335,175" class="fill-soft unit" stroke-width="2.5" style="fill-opacity:.9"/>
+        <circle cx="395" cy="115" r="8" class="fill-warn"/>
+        <text x="404" y="108" font-size="13" class="mono">(1, 0)</text>
+        <text x="300" y="70" font-size="13" class="mono">P°</text>
+        <text x="335" y="208" font-size="12" class="soft" text-anchor="middle">vertex (1, 0) of P°</text>
+      </svg>
+      <p class="cap">Left: $P = [-1,1]^2$ and $y = (1.5, 0.5)$. Right: $P^\circ = \{a : |a_1| + |a_2| \le 1\}$. The facet $x_1 \le 1$ of $P$ is the vertex $(1, 0)$ of $P^\circ$.</p>
+    </div>
+    <div>
+      <table>
+        <thead><tr><th>$P$ (square)</th><th>$P^\circ$ (diamond)</th></tr></thead>
+        <tbody>
+          <tr><td>4 facets $\pm x_1 \le 1$, $\pm x_2 \le 1$</td><td>4 vertices $(\pm1, 0)$, $(0, \pm1)$</td></tr>
+          <tr><td>4 vertices $(\pm1, \pm1)$</td><td>4 facets $\pm a_1 \pm a_2 \le 1$</td></tr>
+        </tbody>
+      </table>
+      <div class="box ex"><span class="label">separating the point by optimizing over the diamond</span>
+        <p class="small">Is $y = (1.5, 0.5)$ in $P$? Maximize $a^\top y = 1.5a_1 + 0.5a_2$ over $P^\circ$. The best vertex is $a = (1, 0)$, value $1.5$.</p>
+        <p class="small">$1.5 &gt; 1$, so $a^\top x \le 1$, i.e. $x_1 \le 1$, is valid for $P$ and violated by $y$. A cut, found by an <b>optimization</b>.</p>
+      </div>
+      <p class="small">If the maximum had been $\le 1$, every facet of $P$ would hold at $y$, so $y \in P$.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p><b>Why the polar of the square is the diamond.</b> $a$ is in $P^\circ$ when
+    $a^\top x \le 1$ for every $x$ in the square. The worst $x$ is a vertex, $(\pm1, \pm1)$,
+    giving $|a_1| + |a_2| \le 1$. So each vertex of $P$ contributes one facet of $P^\circ$.</p>
+    <p><b>Why a vertex of $P^\circ$ is a facet of $P$.</b> The vertex $(1, 0)$ stands for the
+    inequality $1 \cdot x_1 + 0 \cdot x_2 \le 1$, and that is a facet of the square. Every valid
+    inequality of the form $a^\top x \le 1$ is a point of $P^\circ$, and the strongest ones are its
+    vertices.</p>
+    <p>For the square the polar is written out, so this is a toy. The theorem's power is
+    when $P$ has exponentially many facets: $P^\circ$ then has exponentially many vertices,
+    and "optimize over $P^\circ$" is done by the ellipsoid method with the optimization
+    oracle for $P$ as its separation oracle.</p>
+  </aside>
+</section>
+
+<section>
   <p class="eyebrow">09 · theorem</p>
   <h2>What it bought</h2>
   <table style="font-size:.7em">
     <thead><tr><th>result</th><th>via</th></tr></thead>
     <tbody>
-      <tr><td><b>Maximum-weight matching</b> as an LP in polynomial time</td><td>odd-set inequalities (unit 06) separated by a minimum odd cut (Padberg & Rao 1982)</td></tr>
-      <tr><td>The first polynomial algorithm for <b>submodular function minimization</b></td><td>separation over the base polytope by a greedy algorithm (unit 13)</td></tr>
-      <tr><td><b>Maximum stable set in perfect graphs</b></td><td>Lovász's theta function, an SDP, separated over the theta body (unit 25)</td></tr>
+      <tr><td><b>Maximum-weight matching</b> as an LP in polynomial time</td><td>odd-set inequalities (unit 06) separated by a <span class="term">minimum odd cut</span> (Padberg & Rao 1982)</td></tr>
+      <tr><td>The first polynomial algorithm for <b><span class="term">submodular function minimization</span></b></td><td>separation over the base polytope by a greedy algorithm (unit 13)</td></tr>
+      <tr><td><b>Maximum stable set in perfect graphs</b></td><td>Lovász's <span class="term" data-term="theta function">theta function</span>, an SDP, separated over the theta body (unit 25)</td></tr>
       <tr><td><b>Subtour LP</b> for the TSP in polynomial time</td><td>subtour rows separated by a global minimum cut (this lab)</td></tr>
-      <tr><td>NP-hardness of separation for hard polytopes</td><td>the other direction, contrapositive</td></tr>
+      <tr><td><span class="term" data-term="NP-hardness of separation">NP-hardness of separation</span> for hard polytopes</td><td>the other direction, contrapositive</td></tr>
     </tbody>
   </table>
   <p class="muted small">Some of these (stable sets in perfect graphs, submodular minimization, for a long time) had no other known polynomial algorithm. The ellipsoid method was the only route.</p>
@@ -171,14 +246,14 @@
       <p class="cap">A connected fractional point that still violates a subtour row. Degrees don't match 2 exactly here: it is lab step 3's separation example, not an LP vertex.</p>
     </div>
     <div>
-      <p>Edge variables $x_e$ on the complete graph (Dantzig, Fulkerson & Johnson 1954):</p>
+      <p>Edge variables $x_e$ on the complete graph, the <span class="term" data-term="DFJ formulation">DFJ formulation</span> (1954), with <span class="term" data-term="\(\delta(v)\), \(\delta(S)\)">$\delta(S)$</span> the edges leaving $S$:</p>
       $$\begin{aligned}\min\ & \textstyle\sum_e c_e x_e \\ \text{s.t. } & \textstyle\sum_{e \in \delta(v)} x_e = 2 \quad \forall v \\ & \textstyle\sum_{e \in \delta(S)} x_e \ge 2 \quad \forall\, \emptyset \ne S \subsetneq V \\ & 0 \le x_e \le 1\end{aligned}$$
-      <p>The degree rows alone allow <b>subtours</b>: several disjoint cycles. The subtour rows say every vertex set must be entered and left. There are $2^{n-1}-1$ of them.</p>
+      <p>The <span class="term" data-term="degree rows">degree rows</span> alone allow <span class="term" data-term="subtour">subtours</span>: several disjoint cycles. The <span class="term" data-term="subtour elimination row">subtour rows</span> say every vertex set must be entered and left. There are $2^{n-1}-1$ of them.</p>
     </div>
   </div>
   <aside class="notes">
     <p>With integrality, the degree rows plus all subtour rows describe exactly the tours.
-    The LP relaxation is the <b>subtour polytope</b>, which contains the TSP polytope
+    The LP relaxation is the <span class="term">subtour polytope</span>, which contains the TSP polytope
     and is strictly bigger, so its bound is a lower bound on the optimal tour.</p>
     <p>DFJ solved a 49-city instance (48 US state capitals plus Washington) by hand in
     1954, adding subtour rows and a few other cuts as needed. It is the first
@@ -194,18 +269,19 @@
   <div class="cols">
     <div>
       <div class="box thm"><span class="label">claim</span>
-        <p>$x^*$ violates some subtour row iff the <b>global minimum cut</b> of the graph with edge weights $x^*$ has value below 2.</p>
+        <p>$x^*$ violates some subtour row iff the <span class="term">global minimum cut</span> of the <span class="term">support graph</span> with edge weights $x^*$ has value below 2.</p>
       </div>
       <p class="small">The row for $S$ is exactly "the cut $\delta(S)$ has weight $\ge 2$", so the most violated row is the lightest cut. It is a restatement, not a trick.</p>
-      <p class="small"><b>Integer points</b> are easier: a 0/1 solution of the degree rows is a union of cycles, and each cycle's vertex set has cut weight 0. Connected components suffice (lab step 5).</p>
+      <p class="small"><b>Integer points</b> are easier: a 0/1 solution of the degree rows is a union of cycles, and each cycle's vertex set has cut weight 0. The <span class="term" data-term="connected components check">connected components check</span> suffices (lab step 5).</p>
     </div>
-    <div class="box def"><span class="label">Stoer–Wagner (1997)</span>
+    <div class="box def"><span class="label"><span class="term" data-term="Stoer–Wagner algorithm">Stoer–Wagner</span> (1997)</span>
       <ol class="small">
-        <li>Build a <b>maximum-adjacency order</b>: repeatedly add the vertex most strongly attached to those already added.</li>
-        <li>The last vertex's attachment is a minimum cut separating the last two vertices, $s$ and $t$.</li>
+        <li>Build a <span class="term" data-term="maximum-adjacency order">maximum-adjacency order</span>: repeatedly add the vertex most strongly attached to those already added.</li>
+        <li>The last vertex's attachment, the <span class="term">cut of the phase</span>, is a minimum cut separating the last two vertices, $s$ and $t$.</li>
         <li>Record it, merge $s$ and $t$, and repeat until one vertex is left.</li>
       </ol>
       <p class="small">$n - 1$ phases, $O(nm + n^2 \log n)$ in total. No flows needed.</p>
+      <p class="proof-pointer">why merging is safe: notes (N)</p>
     </div>
   </div>
   <aside class="notes">
@@ -215,9 +291,58 @@
     rung 3 sketches it. The key lemma, that the cut of the phase is a minimum $s$–$t$
     cut, is a two-paragraph induction in the paper.</p>
     <p>Before Stoer–Wagner, global minimum cut was done with $n - 1$ maximum-flow
-    computations (Gomory–Hu), which is unit 14's tool. Concorde uses flow-based
+    computations (a <b>Gomory–Hu tree</b>), which is unit 14's tool. Concorde uses flow-based
     separation with heuristics that find most violated sets without any flow at all:
     connected components, and shrinking edges with $x_e = 1$.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">09 · subtours · example</p>
+  <h2>The oracle, on six cities</h2>
+  <div class="cols">
+    <div>
+      <div class="box ex"><span class="label">an integer point: components are enough</span>
+        <p class="small">$x = 1$ on the edges of triangles $\{0,1,2\}$ and $\{3,4,5\}$, 0 elsewhere. Every degree is 2.</p>
+        <p class="small">Support graph components: $\{0,1,2\}$ and $\{3,4,5\}$. Two components, so both rows $x(\delta(\{0,1,2\})) \ge 2$ and $x(\delta(\{3,4,5\})) \ge 2$ are violated, with left side 0.</p>
+      </div>
+      <div class="box ex"><span class="label">a fractional point: connected, still violated</span>
+        <p class="small">In each triangle two edges at 1 and one at $\tfrac12$: $01 = 12 = 1$, $02 = \tfrac12$, and the same on $\{3,4,5\}$. Two bridges at $\tfrac12$: $03$ and $25$.</p>
+        <p class="small">Degrees: vertex 0 has $1 + \tfrac12 + \tfrac12 = 2$, vertex 1 has $1 + 1 = 2$, and so on. <b>All degree rows hold</b>, and the support graph is <b>connected</b>.</p>
+        <p class="small">Minimum cut: $\{3,4,5\}$, weight $\tfrac12 + \tfrac12 = 1 &lt; 2$. The row for $S = \{3,4,5\}$ is violated.</p>
+      </div>
+    </div>
+    <div>
+      <div class="box ex"><span class="label">Stoer–Wagner on four vertices</span>
+        <p class="small">Weights $01 = 3$, $23 = 3$, $02 = 12 = 13 = 1$.</p>
+        <table style="margin:0">
+          <thead><tr><th>phase</th><th>order (attachment when added)</th><th class="num">cut of phase</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>0, 1 (3), 2 (2), 3 (4)</td><td class="num">$\{3\}$: 4</td></tr>
+            <tr><td>2</td><td>0, 1 (3), $\{2,3\}$ (3)</td><td class="num"><b>$\{2,3\}$: 3</b></td></tr>
+            <tr><td>3</td><td>0, $\{1,2,3\}$ (4)</td><td class="num">$\{1,2,3\}$: 4</td></tr>
+          </tbody>
+        </table>
+        <p class="small">After each phase the last two are merged. The best phase cut, 3, is the global minimum: $\{0,1\}$ against $\{2,3\}$.</p>
+      </div>
+      <p class="small">Why the fractional point needs a real min cut: components see one piece, and every degree is right. Only a cut computation finds the thin connection.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p><b>The reference oracle.</b> <code>separate_subtours</code> on the integer point returns
+    both components; on the fractional point <code>components</code> returns one piece and
+    <code>min_cut</code> returns $(1.0, (3, 4, 5))$. The cut edges are exactly the two bridges.
+    The row for $\{0,1,2\}$ is the same row, since a set and its complement share a cut.</p>
+    <p><b>The Stoer–Wagner phases.</b> Phase 1 starts at 0. Vertex 1 is attached by 3,
+    vertex 2 by 1, vertex 3 by 0: add 1. Now 2 is attached by $1 + 1 = 2$ and 3 by 1: add 2.
+    Then 3 is attached by $1 + 3 = 4$: add 3, cut of the phase 4, merge 2 and 3. Phase 2:
+    1 is attached by 3, $\{2,3\}$ by $1$; add 1; then $\{2,3\}$ is attached by $1 + 1 + 1 = 3$:
+    cut of the phase 3. Phase 3: one merge left, cut 4. The best is 3, matching the
+    reference <code>min_cut</code>, which returns $(3.0, (2, 3))$.</p>
+    <p>Why the cut of a phase is a minimum cut between its last two vertices is the lemma in
+    the paper. The consequence used above is simpler: any global minimum cut either
+    separates that pair, and then the phase found something at least as good, or keeps them
+    together, and then it survives their merge.</p>
   </aside>
 </section>
 
@@ -259,13 +384,13 @@
     <div>
       <p>Every MIP solver can take constraints it doesn't see up front:</p>
       <ul class="small">
-        <li><b>Lazy constraints</b>: checked on every candidate integer solution; if one is violated, the solution is rejected and the row is added. Required for correctness.</li>
-        <li><b>User cuts</b>: separated at fractional LP points to tighten the bound. Optional; only for speed.</li>
+        <li><span class="term" data-term="lazy constraint">Lazy constraints</span>: checked on every candidate integer solution; if one is violated, the solution is rejected and the row is added. Required for correctness.</li>
+        <li><span class="term" data-term="user cut">User cuts</span>: separated at fractional LP points to tighten the bound. Optional; only for speed.</li>
       </ul>
-      <p class="small">Gurobi: a callback with <code>cbLazy</code> and <code>cbCut</code>. SCIP: a <b>constraint handler</b> with <code>check</code>, <code>enforce</code> and <code>separate</code> methods. That is the same distinction.</p>
+      <p class="small">Gurobi: a <span class="term">callback</span> with <code>cbLazy</code> and <code>cbCut</code>. SCIP: a <span class="term">constraint handler</span> with <code>check</code>, <code>enforce</code> and <code>separate</code> methods. That is the same distinction.</p>
     </div>
     <div class="box warn"><span class="label">the classic bug</span>
-      <p class="small">Adding subtour rows only as <b>user cuts</b> means the solver can accept an integer solution made of subtours, if no fractional node happened to trigger separation. Lazy constraints must be enforced on integer solutions, which is what lab step 5 does, clumsily.</p>
+      <p class="small">Adding subtour rows only as <b>user cuts</b> means the solver can accept an integer solution made of subtours, if no fractional node happened to trigger separation. Lazy constraints need <span class="term">enforcement</span> on integer solutions, which is what lab step 5 does, clumsily.</p>
     </div>
   </div>
   <aside class="notes">
@@ -286,13 +411,13 @@
   <div class="cols">
     <div>
       <div class="box thm"><span class="label">integrality gap of the subtour LP</span>
-        <p>For metric TSP the optimal tour is at most $\tfrac32$ times the subtour LP bound (Wolsey 1980; Shmoys & Williamson 1990), and instances with gap close to $\tfrac43$ exist. The <b>4/3 conjecture</b> says that is the truth; it is open.</p>
+        <p>For metric TSP the optimal tour is at most $\tfrac32$ times the subtour LP bound (Wolsey 1980; Shmoys & Williamson 1990), and instances with gap close to $\tfrac43$ exist. The <span class="term" data-term="4/3 conjecture">4/3 conjecture</span> says that is the truth; it is open.</p>
       </div>
       <p class="small">On random Euclidean instances the gap is tiny, under 1% in the lab.</p>
-      <p class="small">Unit 11 computes the same bound a completely different way (Held–Karp 1-trees), and gets the same number.</p>
+      <p class="small">Unit 11 computes the same bound a completely different way (the <span class="term">Held–Karp bound</span> from 1-trees), and gets the same number.</p>
     </div>
     <div class="box good"><span class="label">Concorde</span>
-      <p class="small">Applegate, Bixby, Chvátal & Cook. Branch-and-cut with subtour rows, <b>comb inequalities</b>, and "local cuts" found by solving small projected subproblems.</p>
+      <p class="small"><span class="term">Concorde</span>: Applegate, Bixby, Chvátal & Cook. Branch-and-cut with subtour rows, <span class="term" data-term="comb inequality">comb inequalities</span>, and "local cuts" found by solving small projected subproblems.</p>
       <p class="small">It solved an 85 900-city instance from a chip-layout application (pla85900) to proven optimality in 2006, with about 136 CPU-years of computation.</p>
     </div>
   </div>

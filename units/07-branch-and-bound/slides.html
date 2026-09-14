@@ -18,7 +18,7 @@
   <div class="unit-no">07</div>
   <h1>Branch and bound</h1>
   <p class="lede">Split the problem, bound each piece with an LP, and throw away every piece that cannot win. What to split on and which piece to look at next decide everything.</p>
-  <p class="meta"><span>needs 05</span><span>~1½ h slides + 3 h lab</span><span>lab: <code>uv run co lab 07</code></span></p>
+  <p class="meta"><span>needs 05</span><span>~2 h slides + 3 h lab</span><span>lab: <code>uv run co lab 07</code></span></p>
   <aside class="notes">
     <p>Branch and bound (Land & Doig, 1960) is the skeleton of every MILP solver.
     Cutting planes (08), primal heuristics, presolve, conflict analysis and
@@ -27,6 +27,11 @@
     units explain.</p>
     <p>Convention throughout: minimization. LP bounds are lower bounds, and the
     incumbent (best integer solution found) is an upper bound.</p>
+    <h4>How to read this deck</h4>
+    <p>One two-variable integer program, small enough to draw, runs through the unit. Its
+    tree, both node orders, and the branching scores were all computed with the lab's
+    reference solution, so you can reproduce every number. The big tables come from
+    <code>then</code>.</p>
   </aside>
 </section>
 
@@ -43,6 +48,9 @@
     <div class="box def"><span class="label">4 · the other job</span>
       <p>Primal heuristics, reading the gap, and a list of what makes SCIP 5–75× better than yours.</p></div>
   </div>
+  <div class="box good"><span class="label">getting around</span>
+    <p class="small">Words with a <span class="term" data-term="branch and bound">dotted underline</span> are glossary terms: click one for its definition. <kbd>G</kbd> lists every term in the unit, <kbd>N</kbd> shows the notes.</p>
+  </div>
   <aside class="notes">
     <p>The factor range quoted comes from this unit's <code>then</code>: the lab's
     best node count divided by SCIP's default node count, on the three instances used
@@ -57,49 +65,97 @@
 </section>
 
 <section>
+  <p class="eyebrow">07 · tree · example</p>
+  <h2>The running example</h2>
+  <div class="cols wide-right">
+    <div class="fig">
+      <svg viewBox="0 0 320 300" width="330" role="img" aria-label="the feasible polygon, its seven integer points, and the root LP optimum at (2, 8/3)">
+        <line x1="60" y1="20" x2="60" y2="280" class="rule" stroke-width="1.5"/>
+        <line x1="30" y1="260" x2="310" y2="260" class="rule" stroke-width="1.5"/>
+        <polygon points="60,260 248.6,260 180,100 60,220" class="fill-soft unit" stroke-width="2.5" style="fill-opacity:.9"/>
+        <line x1="40" y1="140" x2="300" y2="140" class="accent" stroke-width="1.5" stroke-dasharray="6 4"/>
+        <line x1="40" y1="80" x2="300" y2="80" class="warn" stroke-width="1.5" stroke-dasharray="6 4"/>
+        <g class="fill-ink">
+          <circle cx="60" cy="260" r="4.5"/><circle cx="120" cy="260" r="4.5"/><circle cx="180" cy="260" r="4.5"/><circle cx="240" cy="260" r="4.5"/>
+          <circle cx="120" cy="200" r="4.5"/><circle cx="180" cy="200" r="4.5"/>
+        </g>
+        <circle cx="180" cy="140" r="7" class="fill-accent"/>
+        <circle cx="180" cy="100" r="7" fill="none" class="warn" stroke-width="2.5"/>
+        <text x="190" y="96" font-size="13" class="mono">root LP (2, 2.67)</text>
+        <text x="172" y="164" text-anchor="end" font-size="13" class="mono">optimum (2, 2)</text>
+        <text x="262" y="154" font-size="12" style="fill:var(--accent)">y = 2</text>
+        <text x="262" y="74" font-size="12" style="fill:var(--warn)">y = 3</text>
+        <text x="116" y="280" font-size="12" class="mono soft">1</text><text x="176" y="280" font-size="12" class="mono soft">2</text><text x="236" y="280" font-size="12" class="mono soft">3</text>
+        <text x="44" y="204" font-size="12" class="mono soft">1</text><text x="40" y="136" font-size="12" class="mono soft">2</text>
+      </svg>
+      <p class="cap">Dots: the 7 integer points. Ring: the root LP optimum. Branching on $y$ keeps the strip $y \le 2$ and the empty region $y \ge 3$; the gap between the dashed lines holds no integer point.</p>
+    </div>
+    <div>
+      $$\begin{aligned}\min\ & -x - 5y \\ \text{s.t. } & 7x + 3y \le 22 \\ & -3x + 3y \le 2 \\ & x, y \ge 0 \text{ integer}\end{aligned}$$
+      <p class="small">Minimizing $-x - 5y$ means maximizing $x + 5y$: $y$ is worth five times as much.</p>
+      <div class="box ex"><span class="label">what the root LP says</span>
+        <p class="small">Dropping integrality, the optimum is the corner $(2, \tfrac83)$ with value $-\tfrac{46}{3} = -15.33$. That is a <b>lower bound</b>: no integer point does better.</p>
+        <p class="small">$y = 2.67$ is fractional, so branch on it: $y \le 2$ or $y \ge 3$. The next slide is the whole tree.</p>
+      </div>
+    </div>
+  </div>
+  <aside class="notes">
+    <p><b>The polygon.</b> Corners $(0, 0)$, $(\tfrac{22}{7}, 0)$, $(2, \tfrac83)$ and $(0, \tfrac23)$.
+    The top corner is where $7x + 3y = 22$ meets $y = x + \tfrac23$: substituting,
+    $10x + 2 = 22$, so $x = 2$, $y = \tfrac83$.</p>
+    <p><b>The integer points.</b> $(0,0), (1,0), (2,0), (3,0), (1,1), (2,1), (2,2)$. Their values
+    of $x + 5y$ are 0, 1, 2, 3, 6, 7, 12, so the optimum is $(2, 2)$ with objective $-12$.
+    Checking $(2,2)$: $14 + 6 = 20 \le 22$ and $-6 + 6 = 0 \le 2$. Nothing with $y = 3$
+    fits: $y \le x + \tfrac23$ needs $x \ge 3$, and then $7x + 3y \ge 30 &gt; 22$.</p>
+    <p>In code this is a <code>MILP</code> with <code>c = (-1, -5)</code>,
+    <code>A_ub = ((7, 3), (-3, 3))</code>, <code>b_ub = (22, 2)</code>, both variables integer in
+    $[0, 10]$. The reference <code>branch_and_bound</code> with most-fractional branching
+    solves it in 5 nodes best-first and 9 depth-first.</p>
+  </aside>
+</section>
+
+<section>
   <p class="eyebrow">07 · tree</p>
   <h2>LP-based branch and bound</h2>
   <div class="cols wide-right">
     <div class="fig">
-      <svg viewBox="0 0 440 330" width="440" role="img" aria-label="a small branch and bound tree">
+      <svg viewBox="-10 0 480 300" width="470" role="img" aria-label="the branch and bound tree of the running example">
         <defs><marker id="arbb" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" class="fill-ink"/></marker></defs>
         <g font-size="13">
-          <rect x="155" y="10" width="130" height="46" rx="6" class="fill-ground ink" stroke-width="1.5"/>
+          <rect x="140" y="10" width="160" height="46" rx="6" class="fill-ground ink" stroke-width="1.5"/>
           <text x="220" y="30" text-anchor="middle" font-weight="600">root</text>
-          <text x="220" y="48" text-anchor="middle" class="mono">LP 12.4, x₃ = 0.6</text>
-          <rect x="40" y="110" width="140" height="46" rx="6" class="fill-ground ink" stroke-width="1.5"/>
-          <text x="110" y="130" text-anchor="middle" class="mono">x₃ ≤ 0</text>
-          <text x="110" y="148" text-anchor="middle" class="mono">LP 13.1, x₇ = 0.5</text>
+          <text x="220" y="48" text-anchor="middle" class="mono">LP −15.33, y = 2.67</text>
+          <rect x="22" y="110" width="176" height="46" rx="6" class="fill-ground ink" stroke-width="1.5"/>
+          <text x="110" y="130" text-anchor="middle" class="mono">y ≤ 2</text>
+          <text x="110" y="148" text-anchor="middle" class="mono">LP −12.29, x = 2.29</text>
           <rect x="260" y="110" width="140" height="46" rx="6" class="fill-ground warn" stroke-width="2"/>
-          <text x="330" y="130" text-anchor="middle" class="mono">x₃ ≥ 1</text>
+          <text x="330" y="130" text-anchor="middle" class="mono">y ≥ 3</text>
           <text x="330" y="148" text-anchor="middle" style="fill:var(--warn)">infeasible: prune</text>
-          <rect x="0" y="220" width="130" height="46" rx="6" class="fill-soft accent" stroke-width="2"/>
-          <text x="65" y="240" text-anchor="middle" class="mono">x₇ ≤ 0</text>
-          <text x="65" y="258" text-anchor="middle" style="fill:var(--accent)">integral 14: incumbent</text>
-          <rect x="150" y="220" width="130" height="46" rx="6" class="fill-ground warn" stroke-width="2"/>
-          <text x="215" y="240" text-anchor="middle" class="mono">x₇ ≥ 1</text>
-          <text x="215" y="258" text-anchor="middle" style="fill:var(--warn)">LP 14.3 ≥ 14: prune</text>
+          <rect x="-8" y="220" width="160" height="46" rx="6" class="fill-soft accent" stroke-width="2"/>
+          <text x="72" y="240" text-anchor="middle" class="mono">x ≤ 2: (2, 2)</text>
+          <text x="72" y="258" text-anchor="middle" style="fill:var(--accent)">integral −12: incumbent</text>
+          <rect x="162" y="220" width="160" height="46" rx="6" class="fill-ground warn" stroke-width="2"/>
+          <text x="242" y="240" text-anchor="middle" class="mono">x ≥ 3</text>
+          <text x="242" y="258" text-anchor="middle" style="fill:var(--warn)">LP −4.67 ≥ −12: prune</text>
         </g>
         <g class="ink" stroke-width="1.5" fill="none">
           <path d="M195,56 L125,108" marker-end="url(#arbb)"/><path d="M245,56 L315,108" marker-end="url(#arbb)"/>
-          <path d="M95,156 L70,218" marker-end="url(#arbb)"/><path d="M125,156 L200,218" marker-end="url(#arbb)"/>
+          <path d="M95,156 L75,218" marker-end="url(#arbb)"/><path d="M125,156 L230,218" marker-end="url(#arbb)"/>
         </g>
-        <text x="300" y="250" font-size="13" class="soft">illustration:</text>
-        <text x="300" y="268" font-size="13" class="soft">optimum 14, proved</text>
-        <text x="300" y="286" font-size="13" class="soft">after 5 nodes</text>
+        <text x="140" y="292" font-size="13" class="soft">the running example: optimum −12, proved after 5 nodes</text>
       </svg>
     </div>
     <div>
       <ol class="small">
-        <li>Solve the root LP. If its solution is integral, done.</li>
-        <li>Otherwise pick a fractional $x_j = v$ and create two children: $x_j \le \lfloor v \rfloor$ and $x_j \ge \lceil v \rceil$. Every integer solution is in exactly one child.</li>
-        <li>Solve each child's LP, and repeat on the open nodes.</li>
+        <li>Solve the <span class="term">root</span> LP. If its solution is integral, done.</li>
+        <li>Otherwise pick a fractional $x_j = v$ and create two children (<span class="term">branching</span>): $x_j \le \lfloor v \rfloor$ and $x_j \ge \lceil v \rceil$. Every integer solution is in exactly one child.</li>
+        <li>Solve each child's LP, and repeat on the <span class="term" data-term="open node">open nodes</span>.</li>
       </ol>
       <div class="box def"><span class="label">prune a node when</span>
         <ul class="small">
-          <li>its LP is <b>infeasible</b>;</li>
-          <li>its LP is <b>integral</b>: it becomes the incumbent if better;</li>
-          <li>its LP bound is $\ge$ the <b>incumbent</b>: nothing below it can win.</li>
+          <li>its LP is <span class="term" data-term="prune by infeasibility">infeasible</span> ($y \ge 3$);</li>
+          <li>its LP is <span class="term" data-term="prune by integrality">integral</span>: it becomes the <span class="term">incumbent</span> if better ($(2,2)$);</li>
+          <li>its LP bound is $\ge$ the incumbent: <span class="term" data-term="prune by bound">nothing below it can win</span> ($x \ge 3$).</li>
         </ul>
       </div>
     </div>
@@ -113,7 +169,14 @@
     <p>The fractional point itself is cut off in both children ($x_j = v$ violates both
     new bounds), so the same LP solution never repeats. That is why branching on a
     fractional variable makes progress, where branching on an integral one wouldn't.</p>
-    <p>The numbers in the figure are an illustration, not a lab run.</p>
+    <p><b>The tree, node by node</b>, from the reference solution. Root: LP $(2, \tfrac83)$,
+    value $-\tfrac{46}{3}$; $y$ is the only fractional variable. Child $y \ge 3$: no point of
+    the polygon has $y \ge 3$ (its top is $\tfrac83$), so the LP is infeasible. Child
+    $y \le 2$: the LP moves right along $y = 2$ to $7x + 6 = 22$, $x = \tfrac{16}{7} = 2.29$,
+    value $-\tfrac{86}{7} = -12.29$. Branch on $x$. Grandchild $x \le 2$: the LP optimum is
+    $(2, 2)$, integral, value $-12$: the incumbent. Grandchild $x \ge 3$: $7 \cdot 3 + 3y \le 22$
+    gives $y \le \tfrac13$, optimum $(3, \tfrac13)$, value $-\tfrac{14}{3} = -4.67$, which is
+    worse than $-12$, so pruned by bound. Five nodes, and $-12$ is proved optimal.</p>
   </aside>
 </section>
 
@@ -122,10 +185,11 @@
   <h2>Two bounds, one gap</h2>
   <div class="cols">
     <div>
-      <p><b>Upper bound</b> $U$: the incumbent's objective value, or $+\infty$ before one is found.</p>
-      <p><b>Lower bound</b> $L$: the smallest LP bound among open nodes. Every unexplored integer point lies in some open node.</p>
+      <p><span class="term" data-term="upper bound U">Upper bound</span> $U$: the incumbent's objective value, or $+\infty$ before one is found.</p>
+      <p><span class="term" data-term="lower bound L">Lower bound</span> $L$: the smallest LP bound among open nodes. Every unexplored integer point lies in some open node.</p>
       $$L \le z^* \le U, \qquad \text{gap} = \frac{U - L}{|U|}$$
-      <p>The solver stops when the gap is 0, or below a tolerance (HiGHS and Gurobi default to a relative gap of $10^{-4}$; SCIP to 0).</p>
+      <p class="small"><b>On the example</b>, after the root and its two children: $U = +\infty$, $L = -12.29$. After $(2,2)$ is found: $U = -12$, and the only open node has bound $-4.67 \ge U$, so $L$ jumps to $-12$ and the <span class="term">gap</span> closes to 0.</p>
+      <p class="small">The solver stops when the gap is 0, or below a <span class="term" data-term="relative gap tolerance">tolerance</span> (HiGHS and Gurobi default to a relative gap of $10^{-4}$; SCIP to 0).</p>
     </div>
     <div class="box good"><span class="label">two hard jobs</span>
       <p><b>Push $U$ down</b>: find good integer solutions early, so pruning by bound starts early.</p>
@@ -157,14 +221,15 @@
   <h2>Depth-first against best-first</h2>
   <div class="cols">
     <div>
-      <div class="box def"><span class="label">depth-first</span>
+      <div class="box def"><span class="label"><span class="term" data-term="depth-first search">depth-first</span></span>
         <p class="small">Always a child of the last node. Reaches integral leaves quickly, so an incumbent exists early. Small memory. It can spend a long time in a bad subtree.</p>
       </div>
-      <div class="box def"><span class="label">best-first</span>
-        <p class="small">Always the open node with the smallest bound. That raises $L$ as fast as possible. The frontier can grow huge, and incumbents come late.</p>
+      <div class="box def"><span class="label"><span class="term" data-term="best-first search">best-first</span></span>
+        <p class="small">Always the open node with the smallest bound. That raises $L$ as fast as possible. The <span class="term">frontier</span> can grow huge, and incumbents come late.</p>
       </div>
-      <div class="box thm"><span class="label">why best-first minimizes nodes</span>
-        <p class="small">Every node whose bound is below $z^*$ must be branched on by any search with the same branching rule. Best-first branches on no other node, apart from ties at exactly $z^*$.</p>
+      <div class="box thm"><span class="label">why best-first uses fewest nodes</span>
+        <p class="small">A node whose bound is below the optimum can never be pruned, so every search must branch on it. Best-first branches on those nodes and (up to ties) nothing else.</p>
+        <p class="proof-pointer">full argument in the notes (N)</p>
       </div>
     </div>
     <div>
@@ -177,11 +242,12 @@
           <tr><td>UFL 8×20, M = 10C</td><td class="num">87</td><td class="num">79</td></tr>
         </tbody>
       </table>
-      <p class="small"><b>What solvers ship:</b> hybrids. Dive depth-first from a promising node to find a solution, then jump back to a node with a good bound or a good estimate ("best estimate" selection), with periodic plunges.</p>
+      <p class="small"><b>What solvers ship:</b> hybrids of <span class="term">node selection</span>. Dive depth-first from a promising node to find a solution, then jump back to a node with a good bound or a good estimate (<span class="term" data-term="best estimate selection">best estimate</span>), with periodic <span class="term" data-term="plunging">plunges</span>.</p>
     </div>
   </div>
   <aside class="notes">
-    <p>The best-first argument. Take any node $N$ with LP bound strictly below $z^*$.
+    <h4>Full argument</h4>
+    <p>Take any node $N$ with LP bound strictly below $z^*$.
     No incumbent can ever have value below $z^*$, so $N$ is never pruned by bound. It
     must be branched on unless its LP is integral, which is impossible because its value
     would then be below $z^*$. Conversely, best-first only pops nodes in bound order.
@@ -191,6 +257,56 @@
     <p>DFS's weakness in the numbers: on knapsack #0 it needed 5.5× the nodes. Its
     strength doesn't show in node counts, because the lab has no time limit. Under a
     time limit, DFS usually has a much better incumbent to report when time runs out.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">07 · selection · example</p>
+  <h2>Both orders, on the running example</h2>
+  <div class="cols">
+    <div>
+      <div class="box ex"><span class="label">best-first: 5 nodes</span>
+        <table style="margin:0">
+          <thead><tr><th class="num">pop</th><th>node</th><th class="num">bound</th><th>outcome</th></tr></thead>
+          <tbody>
+            <tr><td class="num">1</td><td>root</td><td class="num">−15.33</td><td>branch on $y$</td></tr>
+            <tr><td class="num">2</td><td>$y \le 2$</td><td class="num">−12.29</td><td>branch on $x$</td></tr>
+            <tr><td class="num">3</td><td>$x \le 2$</td><td class="num">−12</td><td>integral: $U = -12$</td></tr>
+            <tr><td class="num">4</td><td>$x \ge 3$</td><td class="num">−4.67</td><td>bound $\ge U$: pruned</td></tr>
+          </tbody>
+        </table>
+        <p class="small">It takes the smaller bound first, $-12$ before $-4.67$, finds the optimum there, and the other node dies without being branched.</p>
+      </div>
+    </div>
+    <div>
+      <div class="box warn"><span class="label">depth-first: 9 nodes</span>
+        <table style="margin:0">
+          <thead><tr><th class="num">pop</th><th>node</th><th class="num">bound</th><th>outcome</th></tr></thead>
+          <tbody>
+            <tr><td class="num">1</td><td>root</td><td class="num">−15.33</td><td>branch on $y$</td></tr>
+            <tr><td class="num">2</td><td>$y \le 2$</td><td class="num">−12.29</td><td>branch on $x$</td></tr>
+            <tr><td class="num">3</td><td>$x \ge 3$</td><td class="num">−4.67</td><td>branch on $y$</td></tr>
+            <tr><td class="num">4</td><td>$y \le 0$</td><td class="num">−3.14</td><td>branch on $x$</td></tr>
+            <tr><td class="num">5</td><td>$x \le 3$</td><td class="num">−3</td><td>integral: $U = -3$</td></tr>
+            <tr><td class="num">6</td><td>$x \le 2$</td><td class="num">−12</td><td>integral: $U = -12$</td></tr>
+          </tbody>
+        </table>
+        <p class="small">It dives into the <em>last</em> child created, $x \ge 3$, and digs to a poor solution $(3, 0)$ before coming back. Four extra nodes, two of them infeasible children.</p>
+      </div>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>"Nodes" counts every LP solved: the root plus every child created. Best-first creates
+    the root, $y \le 2$, $y \ge 3$ (infeasible), $x \le 2$, $x \ge 3$: five. Depth-first
+    additionally branches $x \ge 3$ into $y \le 0$ (LP $(\tfrac{22}{7}, 0)$, value
+    $-3.14$) and $y \ge 1$ (infeasible, since $x \ge 3$ forces $y \le \tfrac13$), then
+    $y \le 0$ into $x \le 3$ (integral $(3, 0)$, value $-3$) and $x \ge 4$ (infeasible):
+    nine.</p>
+    <p>Depth-first's first incumbent, $-3$, is poor, but it would be a usable answer if
+    time ran out. Best-first has nothing to report until its third pop. That is the
+    trade-off of the previous slide in four rows.</p>
+    <p>The pop orders are from a traced copy of the reference <code>branch_and_bound</code>
+    (a heap for best-first, a stack for depth-first), with most-fractional branching.</p>
   </aside>
 </section>
 
@@ -205,12 +321,12 @@
   <h2>Most fractional, and why it's weak</h2>
   <div class="cols">
     <div>
-      <p>Intuition: a variable at 0.5 is "most undecided", so decide it.</p>
+      <p><span class="term" data-term="most-fractional branching">Most-fractional branching</span>. Intuition: a variable at 0.5 is "most undecided" (its <span class="term">fractionality</span> is largest), so decide it.</p>
       <p>Measured: <b>about as good as branching on a random fractional variable</b> (Achterberg, Koch & Martin 2005, on MIPLIB).</p>
       <p>Fractionality says nothing about <b>how much the bound will move</b>. A variable at 0.5 with a zero-cost column changes nothing when fixed, while a variable at 0.9 on a tight constraint can end the subtree.</p>
     </div>
     <div class="box good"><span class="label">what a good rule estimates</span>
-      <p>For each candidate $j$, the bound improvements $\Delta_j^-$ and $\Delta_j^+$ of the two children, combined with the <b>product score</b></p>
+      <p>For each candidate $j$, the bound improvements <span class="term" data-term="\(\Delta_j^-\)">$\Delta_j^-$</span> and $\Delta_j^+$ of the two children, combined with the <span class="term">product score</span></p>
       $$\text{score}_j = \max(\Delta_j^-, \varepsilon) \cdot \max(\Delta_j^+, \varepsilon)$$
       <p class="small">A product rewards moving <b>both</b> children, and a zero on one side isn't fatal because of the $\varepsilon$.</p>
     </div>
@@ -231,16 +347,16 @@
   <p class="eyebrow">07 · branching</p>
   <h2>Strong branching and pseudocosts</h2>
   <div class="cols">
-    <div class="box def"><span class="label">strong branching</span>
+    <div class="box def"><span class="label"><span class="term">strong branching</span></span>
       <p class="small">Compute $\Delta^\pm_j$ exactly: solve both child LPs for each candidate, then branch on the best. The best node counts known, and the most LP solves by far.</p>
       <p class="small">Lab totals, best-first: <b>1 271 nodes</b> but <b>4 641 LP solves, 3.2 s</b>, against most-fractional's 1 923 nodes and 1.3 s.</p>
     </div>
-    <div class="box def"><span class="label">pseudocost branching</span>
+    <div class="box def"><span class="label"><span class="term" data-term="pseudocost">pseudocost</span> branching</span>
       <p class="small">Estimate $\Delta^\pm_j$ from history: the average gain <b>per unit of fractionality</b> seen when branching on $x_j$ before, times the current fractionality. Costs nothing per node.</p>
       <p class="small">Weak at the top of the tree, where there's no history yet. Lab totals: 1 581 nodes, barely better than most-fractional.</p>
     </div>
   </div>
-  <div class="box good"><span class="label">reliability branching (Achterberg, Koch & Martin 2005)</span>
+  <div class="box good"><span class="label"><span class="term">reliability branching</span> (Achterberg, Koch & Martin 2005)</span>
     <p>Use strong branching on a variable until its pseudocosts are <b>reliable</b> (a few observations each way), then trust the pseudocosts. This is the default rule in SCIP, and the node count of strong branching at roughly the cost of pseudocosts.</p>
   </div>
   <aside class="notes">
@@ -260,6 +376,58 @@
   </aside>
 </section>
 
+<section>
+  <p class="eyebrow">07 · branching · example</p>
+  <h2>Scores and pseudocosts, on the running example</h2>
+  <div class="cols">
+    <div>
+      <div class="box ex"><span class="label">a product score from the real tree</span>
+        <p class="small">At node $y \le 2$ (bound $-12.29$) we branched on $x = 2.29$:</p>
+        <p class="small">$\Delta^- = -12 - (-12.29) = 0.29$, $\quad \Delta^+ = -4.67 - (-12.29) = 7.62$</p>
+        <p class="small">score $= 0.29 \times 7.62 = 2.18$</p>
+      </div>
+      <div class="box ex"><span class="label">two candidates, given gains</span>
+        <table style="margin:0">
+          <thead><tr><th>candidate</th><th class="num">$\Delta^-$</th><th class="num">$\Delta^+$</th><th class="num">sum</th><th class="num">product</th></tr></thead>
+          <tbody>
+            <tr><td>A</td><td class="num">0.1</td><td class="num">8</td><td class="num">8.1</td><td class="num">0.8</td></tr>
+            <tr><td>B</td><td class="num">2</td><td class="num">3</td><td class="num">5</td><td class="num"><b>6</b></td></tr>
+          </tbody>
+        </table>
+        <p class="small">A sum prefers A; the product prefers B, which moves <b>both</b> children.</p>
+      </div>
+    </div>
+    <div>
+      <div class="box ex"><span class="label">pseudocosts recorded by that tree</span>
+        <table style="margin:0">
+          <thead><tr><th>branch</th><th class="num">gain</th><th class="num">÷ fractional part</th><th class="num">per unit</th></tr></thead>
+          <tbody>
+            <tr><td>$y$ down, at root</td><td class="num">3.05</td><td class="num">$\div\ 0.67$</td><td class="num">4.57</td></tr>
+            <tr><td>$x$ down</td><td class="num">0.29</td><td class="num">$\div\ 0.29$</td><td class="num">1.00</td></tr>
+            <tr><td>$x$ up</td><td class="num">7.62</td><td class="num">$\div\ 0.71$</td><td class="num">10.67</td></tr>
+          </tbody>
+        </table>
+        <p class="small">Next time $x$ is fractional elsewhere in the tree, with fractional part 0.5, the pseudocost <b>predicts</b> $\Delta^- \approx 0.5 \times 1.00$ and $\Delta^+ \approx 0.5 \times 10.67$, without solving an LP.</p>
+        <p class="small muted">$y$ up was infeasible, so no gain was recorded for it.</p>
+      </div>
+    </div>
+  </div>
+  <aside class="notes">
+    <p><b>Exact values.</b> Node $y \le 2$ has bound $-\tfrac{86}{7}$. Its children have
+    $-12$ and $-\tfrac{14}{3}$, so $\Delta^- = \tfrac27$ and $\Delta^+ = \tfrac{160}{21}$, and the
+    product is $\tfrac{320}{147} \approx 2.18$.</p>
+    <p><b>Pseudocosts</b> divide a gain by how far the variable had to move. At the root
+    $y = \tfrac83$ moves down by $\tfrac23$, gain $-\tfrac{86}{7} + \tfrac{46}{3} = \tfrac{64}{21}$,
+    per unit $\tfrac{32}{7} = 4.57$. At node $y \le 2$, $x = \tfrac{16}{7}$ moves down by
+    $\tfrac27$ (gain $\tfrac27$, per unit 1) and up by $\tfrac57$ (gain $\tfrac{160}{21}$, per unit
+    $\tfrac{32}{3} = 10.67$). These are exactly the lists the reference tree stores in
+    <code>stats["pseudo"]</code>.</p>
+    <p>Candidates A and B are made up to show the two scores disagreeing; A is the kind
+    of variable that makes one child much better and leaves the other essentially the
+    parent.</p>
+  </aside>
+</section>
+
 <section class="divider">
   <p class="eyebrow">section 4</p>
   <h2>The other job, and the gap to SCIP</h2>
@@ -271,16 +439,17 @@
   <h2>Primal heuristics</h2>
   <div class="cols">
     <div>
-      <p>A good incumbent early lets bound pruning start early. Solvers spend a share of their time on heuristics that find one:</p>
+      <p>A good incumbent early lets bound pruning start early. Solvers spend a share of their time on <span class="term" data-term="primal heuristic">primal heuristics</span> that find one:</p>
       <ul class="small">
-        <li><b>Rounding:</b> round the LP solution in a way that keeps feasibility where possible (simple rounding, ZI rounding).</li>
-        <li><b>Diving:</b> fix a variable, re-solve the LP, repeat, down one branch without keeping the tree.</li>
-        <li><b>RINS</b> (Danna, Rothberg & Le Pape 2005): fix the variables where the incumbent and the LP agree, and solve the small sub-MILP that remains.</li>
-        <li><b>Feasibility pump</b> (Fischetti, Glover & Lodi 2005): alternate between the LP polytope and the nearest integer point.</li>
+        <li><b><span class="term" data-term="rounding heuristic">Rounding</span>:</b> round the LP solution in a way that keeps feasibility where possible (simple rounding, ZI rounding).</li>
+        <li><b><span class="term" data-term="diving heuristic">Diving</span>:</b> fix a variable, re-solve the LP, repeat, down one branch without keeping the tree.</li>
+        <li><b><span class="term">RINS</span></b> (Danna, Rothberg & Le Pape 2005): fix the variables where the incumbent and the LP agree, and solve the small sub-MILP that remains.</li>
+        <li><b><span class="term">Feasibility pump</span></b> (Fischetti, Glover & Lodi 2005): alternate between the LP polytope and the nearest integer point.</li>
       </ul>
     </div>
     <div class="box"><span class="label">in the lab's tree</span>
       <p class="small">No heuristics: incumbents only come from integral LP leaves. That is one reason the DFS runs in <code>then</code> are so much larger than SCIP's. SCIP typically has a near-optimal solution before its tree has a dozen nodes.</p>
+      <p class="small">On the running example, rounding the root LP $(2, 2.67)$ down gives $(2, 2)$, the optimum, before any branching.</p>
       <p class="small muted">Unit 26's local search and unit 19's LNS are the same idea used as stand-alone methods.</p>
     </div>
   </div>
@@ -309,7 +478,7 @@
           <tr><td>UFL 8×20, M = 10C</td><td class="num">75</td><td class="num">41</td><td class="num">1</td><td class="num">1</td></tr>
         </tbody>
       </table>
-      <p class="small muted">"Yours, best": the fewest nodes among your six variants. * SCIP with presolve and cuts off.</p>
+      <p class="small muted">"Yours, best": the fewest nodes among your six variants. * <span class="term">SCIP bare</span>: presolve and cuts off. The ratio of your column to SCIP's is the <span class="term">factor of shame</span>.</p>
     </div>
     <div class="box"><span class="label">hypotheses to test</span>
       <ul class="small">
@@ -317,7 +486,7 @@
         <li><b>Presolve</b> tightens bounds and coefficients (units 05, 27).</li>
         <li><b>Branching:</b> reliability branching vs yours. Bare SCIP still wins by 2–5×.</li>
         <li><b>Heuristics</b> give an early incumbent, and more pruning.</li>
-        <li><b>Conflict analysis</b> learns from infeasible nodes (the SAT idea of unit 20).</li>
+        <li><b><span class="term">Conflict analysis</span></b> learns from infeasible nodes (the SAT idea of unit 20).</li>
       </ul>
     </div>
   </div>

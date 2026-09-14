@@ -19,7 +19,7 @@
   <div class="unit-no">05</div>
   <h1>Formulations, relaxations, and the integrality gap</h1>
   <p class="lede">The same integer solutions, described by different polyhedra, and why the choice decides whether a solver finishes.</p>
-  <p class="meta"><span>needs 03</span><span>~1½ h slides + 2 h lab</span><span>lab: <code>uv run co lab 05</code></span></p>
+  <p class="meta"><span>needs 03</span><span>~2 h slides + 2 h lab</span><span>lab: <code>uv run co lab 05</code></span></p>
   <aside class="notes">
     <p>Integer programming is where hardness enters the course. Everything in Part II
     is a strategy for exploiting the LP relaxation from Part I: tighten it (this unit
@@ -30,6 +30,11 @@
     solve time, and the difference can be predicted from their LP relaxations.</p>
     <p>Convention: MILPs are minimization problems (as in <code>colib.mip</code>),
     so LP bounds are <em>lower</em> bounds.</p>
+    <h4>How to read this deck</h4>
+    <p>A facility-location instance small enough to solve by hand (2 facilities, 3
+    customers) runs through the unit: its integer optimum, the LP bound of each
+    formulation, and the valid inequality that separates them. The large tables are
+    from the lab's <code>then</code>; the small example is there to make them readable.</p>
   </aside>
 </section>
 
@@ -43,6 +48,9 @@
       <p>Big-M and why M matters. Aggregated against disaggregated. Extended formulations, and their proven limits.</p></div>
     <div class="box def"><span class="label">3 · what solvers do</span>
       <p>Presolve and cuts repair weak models, which hides the problem until they can't.</p></div>
+  </div>
+  <div class="box good"><span class="label">getting around</span>
+    <p class="small">Words with a <span class="term" data-term="formulation">dotted underline</span> are glossary terms: click one for its definition. <kbd>G</kbd> lists every term in the unit, <kbd>N</kbd> shows the notes.</p>
   </div>
   <p class="muted">Lab: three facility-location models with identical integer optima. With presolve and cuts off, SCIP needs 5 644 nodes on one and 1 node on another.</p>
   <aside class="notes">
@@ -64,10 +72,10 @@
   <div class="cols">
     <div>
       <div class="box def"><span class="label">definitions</span>
-        <p>A <b>MILP</b>: $\min\{c^\top x : Ax \le b,\ x_j \in \mathbb Z \text{ for } j \in I\}$. If every variable is integer it is an <b>IP</b>.</p>
-        <p>Its <b>LP relaxation</b> drops integrality. Its optimum $z_{LP}$ is a lower bound: $z_{LP} \le z_{IP}$.</p>
+        <p>A <span class="term">MILP</span>: $\min\{c^\top x : Ax \le b,\ x_j \in \mathbb Z \text{ for } j \in I\}$. If every variable is integer it is an <span class="term">IP</span>.</p>
+        <p>Its <span class="term">LP relaxation</span> drops integrality. Its optimum $z_{LP}$ is a lower bound: $z_{LP} \le z_{IP}$.</p>
       </div>
-      <div class="box def"><span class="label">integrality gap</span>
+      <div class="box def"><span class="label"><span class="term">integrality gap</span></span>
         <p>Of an instance: $z_{IP} - z_{LP}$, or the ratio $z_{IP}/z_{LP}$.<br>
         Of a formulation for a problem class: the worst ratio over all instances (unit 24).</p>
       </div>
@@ -75,13 +83,14 @@
     <div>
       <p>Why the bound matters for solving:</p>
       <ul>
-        <li><b>Pruning</b> (unit 07): a branch whose LP bound is at least the best known solution can be discarded.</li>
-        <li><b>Proof</b>: optimality is proved when the global bound meets the incumbent.</li>
+        <li><b><span class="term">Pruning</span></b> (unit 07): a branch whose LP bound is at least the best known solution can be discarded.</li>
+        <li><b>Proof</b>: optimality is proved when the <span class="term">global bound</span> meets the <span class="term">incumbent</span>.</li>
         <li>A weak bound means both happen late, after many more nodes.</li>
       </ul>
       <p class="small muted">A MILP solver's log is largely the story of this bound rising.</p>
     </div>
   </div>
+  <p class="small">Next: all of this on an instance small enough to solve by hand.</p>
   <aside class="notes">
     <p>Integrality makes the problem NP-hard in general. Even deciding whether
     $Ax \le b$ has an integer solution is NP-complete (it contains 3SAT, unit 22).
@@ -92,6 +101,47 @@
     set. First, it is cheap and warm-startable (units 03–04). Second, it has duals,
     which give reduced costs for variable fixing (unit 11), prices for column
     generation (unit 10), and Benders cuts (unit 12).</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">05 · relaxations · example</p>
+  <h2>The running example: two facilities, three customers</h2>
+  <div class="cols">
+    <div>
+      <p class="small"><span class="term">UFL</span>, uncapacitated facility location: open some facilities ($y_i \in \{0,1\}$, cost 6 each) and serve every customer from an open one ($x_{ij}$, the share of customer $j$ served by $i$).</p>
+      <table>
+        <thead><tr><th>serving cost</th><th class="num">customer 0</th><th class="num">customer 1</th><th class="num">customer 2</th></tr></thead>
+        <tbody>
+          <tr><td>facility 0</td><td class="num">1</td><td class="num">1</td><td class="num">5</td></tr>
+          <tr><td>facility 1</td><td class="num">5</td><td class="num">5</td><td class="num">1</td></tr>
+        </tbody>
+      </table>
+      <p class="small">Facility 0 is near customers 0 and 1; facility 1 is near customer 2.</p>
+    </div>
+    <div>
+      <div class="box ex"><span class="label">the integer optimum, by brute force</span>
+        <table style="margin:0">
+          <thead><tr><th>open</th><th>opening</th><th>serving</th><th class="num">total</th></tr></thead>
+          <tbody>
+            <tr><td>$\{0\}$</td><td>6</td><td>$1 + 1 + 5$</td><td class="num"><b>13</b></td></tr>
+            <tr><td>$\{1\}$</td><td>6</td><td>$5 + 5 + 1$</td><td class="num">17</td></tr>
+            <tr><td>$\{0, 1\}$</td><td>12</td><td>$1 + 1 + 1$</td><td class="num">15</td></tr>
+          </tbody>
+        </table>
+        <p class="small">$z_{IP} = 13$: open facility 0 alone. Opening the second facility saves 4 in serving but costs 6.</p>
+      </div>
+      <p class="small">Two slides on, two LP relaxations of this same instance give <b>9</b> and <b>13</b>. The integer points are identical; only the polyhedron differs.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>The instance is <code>FacilityLocation((6, 6), ((1, 1, 5), (5, 5, 1)), (1, 1, 1), (3, 3))</code>
+    (demands and capacities are unused by UFL), and the table is what the reference
+    <code>ufl_brute_force</code> enumerates: every nonempty set of open facilities, each
+    customer served by its cheapest open one. It returns <code>(13, (0,))</code>.</p>
+    <p>Why three customers and not two: with customer 2 alone near facility 1 and two
+    customers near facility 0, the weak formulation can "open a third" of facility 1,
+    which is the effect the next slides measure.</p>
   </aside>
 </section>
 
@@ -122,11 +172,11 @@
     </div>
     <div>
       <div class="box def"><span class="label">definitions</span>
-        <p>A <b>formulation</b> of $S \subseteq \mathbb Z^n$ is a polyhedron $P$ with $P \cap \mathbb Z^n = S$.</p>
-        <p>$P_2$ is <b>at least as strong</b> as $P_1$ if $P_2 \subseteq P_1$. Its LP bound is then at least as good for <b>every</b> objective.</p>
+        <p>A <span class="term">formulation</span> of $S \subseteq \mathbb Z^n$ is a polyhedron $P$ with $P \cap \mathbb Z^n = S$.</p>
+        <p>$P_2$ is <span class="term" data-term="stronger formulation">at least as strong</span> as $P_1$ if $P_2 \subseteq P_1$. Its LP bound is then at least as good for <b>every</b> objective.</p>
       </div>
-      <div class="box thm"><span class="label">the ideal formulation</span>
-        <p>For rational data, $\mathrm{conv}(S)$ is a polyhedron (Meyer 1974). Over it, the LP optimum is an integer point, so the MILP <b>is</b> an LP.</p>
+      <div class="box thm"><span class="label">the <span class="term">ideal formulation</span></span>
+        <p>For rational data, $\mathrm{conv}(S)$ is a polyhedron (<span class="term" data-term="Meyer's theorem">Meyer 1974</span>). Over it, the LP optimum is an integer point, so the MILP <b>is</b> an LP.</p>
       </div>
       <p class="small muted">The catch: its description is usually exponentially large, and finding it is as hard as the problem.</p>
     </div>
@@ -178,18 +228,27 @@
       <p class="cap">LP-feasible $(x, y)$ for $0 \le x \le M y$, $x \le u$, $0 \le y \le 1$. Integer-feasible: $(0,0)$ and the thick segment at $y = 1$. Shaded: what $M = 2u$ adds to the tight triangle.</p>
     </div>
     <div>
-      <p>To switch a continuous quantity off with a binary: $\;x \le M\,y,\; y \in \{0,1\}$.</p>
-      <ul>
-        <li>Any $M$ at least the true upper bound $u$ of $x$ is <b>valid</b>.</li>
+      <p>To switch a continuous quantity off with a binary, a <span class="term">big-M constraint</span>: $\;x \le M\,y,\; y \in \{0,1\}$.</p>
+      <ul class="small">
+        <li>Any $M$ at least the true upper bound $u$ of $x$ is <span class="term" data-term="valid M">valid</span>.</li>
         <li>The relaxation lets $y = x/M$. With $M \gg u$, the LP opens a facility "a little": $y$ tiny, cost tiny, bound weak.</li>
-        <li>The <b>tightest valid M</b> is the best upper bound on $x$ you can prove. Finding it is modelling work, and presolve can sometimes do it for you.</li>
+        <li>The <span class="term">tightest valid M</span> is the best upper bound on $x$ you can prove. Finding it is modelling work, and presolve can sometimes do it for you.</li>
       </ul>
+      <div class="box ex"><span class="label">on the running example</span>
+        <p class="small">A facility serves at most 3 customers, so $\sum_j x_{ij} \le 3\,y_i$ uses the tightest valid $M = 3$. The LP bound is <b>9</b>.<br>Write $M = 30$ instead, equally valid: the LP bound drops to <b>3.6</b>, with $y = (\tfrac1{15}, \tfrac1{30})$.</p>
+      </div>
       <div class="box warn"><span class="label">two diseases at once</span>
         <p class="small">A big M weakens the bound <b>and</b> mixes magnitudes in one row, which is unit 02's tolerance problem.</p>
       </div>
     </div>
   </div>
   <aside class="notes">
+    <p><b>The example box.</b> Every customer still goes to its nearest facility
+    ($x_{00} = x_{01} = x_{12} = 1$, serving cost 3), and the LP pays only for the opening
+    it is forced to: $y_0 \ge 2/M$ and $y_1 \ge 1/M$. With $M = 3$ that costs
+    $6 \cdot \tfrac23 + 6 \cdot \tfrac13 = 6$, total 9. With $M = 30$ it costs
+    $6 \cdot \tfrac{2}{30} + 6 \cdot \tfrac{1}{30} = 0.6$, total 3.6. Both values are from
+    HiGHS on the reference <code>ufl_aggregated</code>.</p>
     <p>In the lab, $\sum_j x_{ij} \le M y_i$ with $x_{ij} \le 1$ has smallest valid
     $M = C$ (every customer could be served by one facility). $M = 10C$ is what a
     careless modeller writes. The LP bounds were 1542 and 1416 against an optimum of
@@ -198,9 +257,9 @@
     constraint allows $x$ up to $10^{-3}$ while the solver reports $y = 0$. Solvers
     report "integer" solutions that aren't really feasible in this way, and it is one
     of the most common modelling bugs in practice.</p>
-    <p>Alternatives to big-M: <b>indicator constraints</b> ($y = 1 \Rightarrow
+    <p>Alternatives to big-M: <span class="term" data-term="indicator constraint">indicator constraints</span> ($y = 1 \Rightarrow
     a^\top x \le b$), which solvers handle by branching or by internally choosing
-    M from bound propagation; and <b>disjunctive formulations</b> (Balas 1979), which
+    M from bound propagation; and <span class="term" data-term="disjunctive formulation">disjunctive formulations</span> (Balas 1979), which
     give the convex hull of a union of polyhedra at the price of copying variables.
     Vielma's 2015 survey in the reading list covers both.</p>
   </aside>
@@ -211,12 +270,12 @@
   <h2>Aggregated against disaggregated</h2>
   <div class="cols">
     <div>
-      <p><b>Aggregated</b>, $F$ rows: $\;\sum_j x_{ij} \le C\, y_i$</p>
-      <p><b>Disaggregated</b>, $F \cdot C$ rows: $\;x_{ij} \le y_i$</p>
+      <p><b><span class="term" data-term="aggregated formulation">Aggregated</span></b>, $F$ rows: $\;\sum_j x_{ij} \le C\, y_i$</p>
+      <p><b><span class="term" data-term="disaggregated formulation">Disaggregated</span></b>, $F \cdot C$ rows: $\;x_{ij} \le y_i$</p>
       <div class="box thm"><span class="label">claim</span>
         <p>Disaggregated is strictly stronger: it implies aggregated (sum its rows over $j$), and not the other way round.</p>
       </div>
-      <div class="box proof"><span class="label">a point only the weak model allows</span>
+      <div class="box"><span class="label">a point only the weak model allows</span>
         <p class="small">Facility $i$ serves customer 1 alone: $x_{i1} = 1$, all other $x_{ij} = 0$. Aggregated allows $y_i = 1/C$. Disaggregated forces $y_i \ge x_{i1} = 1$ and pays the full opening cost.</p>
       </div>
     </div>
@@ -249,14 +308,51 @@
 </section>
 
 <section>
+  <p class="eyebrow">05 · strength · example</p>
+  <h2>The two LPs, on the running example</h2>
+  <div class="cols">
+    <div>
+      <table>
+        <thead><tr><th>formulation</th><th>LP optimum $y$</th><th class="num">$z_{LP}$</th><th class="num">gap to 13</th></tr></thead>
+        <tbody>
+          <tr><td>aggregated, $M = 30$</td><td>$(\tfrac1{15}, \tfrac1{30})$</td><td class="num">3.6</td><td class="num">72%</td></tr>
+          <tr><td>aggregated, $M = 3$</td><td>$(\tfrac23, \tfrac13)$</td><td class="num">9</td><td class="num">31%</td></tr>
+          <tr><td>disaggregated</td><td>$(1, 0)$</td><td class="num"><b>13</b></td><td class="num"><b>0%</b></td></tr>
+        </tbody>
+      </table>
+      <p class="small">In the aggregated LP, facility 1 serves customer 2 <b>completely</b> ($x_{12} = 1$) while being open only <b>a third</b>. That is legal there: the row only asks $x_{10} + x_{11} + x_{12} \le 3y_1$, i.e. $1 \le 3 \cdot \tfrac13$.</p>
+    </div>
+    <div>
+      <div class="box ex"><span class="label">a valid inequality that cuts it off</span>
+        <p class="small">$x_{12} \le y_1$: "you can't serve customer 2 from facility 1 more than it is open". Every integer solution satisfies it (if $y_1 = 0$ then $x_{12} = 0$).</p>
+        <p class="small">The aggregated LP point has $x_{12} = 1 &gt; \tfrac13 = y_1$: <b>violated</b>. Adding all six such rows is the disaggregated formulation, and its LP optimum is already the integer optimum.</p>
+      </div>
+      <p class="small">Same three integer solutions, same 13, and bounds of 3.6, 9 and 13. A branch-and-bound on the first must branch; on the last it stops at the root.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>Gaps are $(13 - z_{LP}) / 13$: $9.4/13 = 72\%$, $4/13 = 31\%$, 0. All three LP values
+    and the $y$ vectors are HiGHS on the reference formulations. The disaggregated LP
+    returns $y = (1, 0)$ with $x_{00} = x_{01} = x_{02} = 1$: exactly the integer
+    optimum, so for this instance the disaggregated polyhedron's optimal face is integral.</p>
+    <p>Why the disaggregated LP can't cheat the same way. To serve customer 2 from
+    facility 1 fully it needs $y_1 \ge 1$, cost 6, saving only 4 in serving. Serving it
+    partly, $x_{12} = t$, needs $y_1 \ge t$: cost $6t$ against a saving of $4t$. It never
+    pays, so the LP keeps $y_1 = 0$.</p>
+    <p>This is unit 08's whole method in miniature: find an inequality valid for the
+    integer points and violated by the LP optimum, add it, re-solve.</p>
+  </aside>
+</section>
+
+<section>
   <p class="eyebrow">05 · strength</p>
   <h2>When a constraint is implied, and still helps</h2>
   <div class="cols">
     <div>
-      <p><b>Capacitated</b> facility location: $\;\sum_j d_j x_{ij} \le u_i\, y_i$.</p>
-      <p>For <b>integer</b> $y$ this already implies $x_{ij} \le y_i$: if $y_i = 0$, facility $i$ serves nothing. So the linking rows remove no integer solution.</p>
-      <p>For <b>fractional</b> $y$ they do. $y_i = 0.3$ lets the capacity row serve 30% of the capacity, but $x_{ij} \le 0.3$ also stops any single customer being served more than 30% by it.</p>
-      <p class="small">The cover row $\sum_i u_i y_i \ge \sum_j d_j$ is valid for the same reason, and it forbids opening "too little capacity in total".</p>
+      <p><span class="term" data-term="capacitated facility location">Capacitated facility location</span>: $\;\sum_j d_j x_{ij} \le u_i\, y_i$.</p>
+      <p class="small">For <b>integer</b> $y$ this already implies $x_{ij} \le y_i$: if $y_i = 0$, facility $i$ serves nothing. So the <span class="term" data-term="linking row">linking rows</span> remove no integer solution.</p>
+      <p class="small">For <b>fractional</b> $y$ they do. $y_i = 0.3$ lets the capacity row serve 30% of the capacity, but $x_{ij} \le 0.3$ also stops any single customer being served more than 30% by it.</p>
+      <p class="small">The <span class="term">cover row</span> $\sum_i u_i y_i \ge \sum_j d_j$ is valid for the same reason, and it forbids opening "too little capacity in total".</p>
     </div>
     <div>
       <p class="small">Lab <code>then</code>, 20×60, capacity ratio 1.5:</p>
@@ -267,7 +363,7 @@
           <tr><td>+ linking + cover</td><td class="num">1.2%</td><td class="num">20</td></tr>
         </tbody>
       </table>
-      <div class="box good"><span class="label">valid inequality</span>
+      <div class="box good"><span class="label"><span class="term">valid inequality</span></span>
         <p class="small">An inequality satisfied by every integer solution. Adding one never changes the MILP, and may tighten its relaxation. That sentence is all of unit 08.</p>
       </div>
     </div>
@@ -290,15 +386,15 @@
   <h2>Extended formulations: add variables, lose facets</h2>
   <div class="cols">
     <div>
-      <p>A polytope with exponentially many facets can be the <b>projection</b> of a polytope in more variables with few facets.</p>
+      <p>An <span class="term">extended formulation</span>: a polytope with exponentially many facets can be the <b>projection</b> of a polytope in more variables with few facets.</p>
       <ul class="small">
         <li><b>Spanning trees:</b> exponentially many subtour rows in edge variables, but $O(n^3)$ rows with flow variables (Martin 1991).</li>
-        <li><b>Permutahedron:</b> $2^n - 2$ facets, but $O(n \log n)$ variables and rows through a sorting network (Goemans).</li>
+        <li><b><span class="term">Permutahedron</span>:</b> $2^n - 2$ facets, but $O(n \log n)$ variables and rows through a sorting network (Goemans).</li>
         <li><b>Disjunctions:</b> $\mathrm{conv}(P_1 \cup P_2)$ by copying variables (Balas).</li>
       </ul>
       <p class="small">Unit 01 said projection can create facets. This is the useful direction of that fact.</p>
     </div>
-    <div class="box warn"><span class="label">and the limits</span>
+    <div class="box warn"><span class="label">and the <span class="term" data-term="extension complexity limits">limits</span></span>
       <p><b>Fiorini, Massar, Pokutta, Tiwary & de Wolf (2012):</b> the TSP polytope, the cut polytope and the stable-set polytope have <b>no</b> extended formulation of polynomial size, of any kind.</p>
       <p><b>Rothvoss (2014):</b> neither does the <b>perfect matching</b> polytope, even though matching is solvable in polynomial time.</p>
       <p class="small muted">So "polynomial algorithm" does not imply "polynomial LP". Matching needs Edmonds' algorithm, or separation (unit 09).</p>
@@ -322,16 +418,30 @@
   <h2>Symmetry is a formulation defect</h2>
   <div class="cols wide-left">
     <div>
-      <p>Bin packing with $K$ identical bins: $x_{ik} = 1$ if item $i$ goes in bin $k$.</p>
+      <p><span class="term" data-term="symmetry">Symmetry</span>. Bin packing with $K$ identical bins: $x_{ik} = 1$ if item $i$ goes in bin $k$.</p>
       <ul>
         <li>Every packing appears $K!$ times, once per relabelling of the bins.</li>
         <li>The LP bound is the same in every symmetric branch, so branch-and-bound proves the same thing $K!$ times.</li>
         <li>With 20 bins, $20! \approx 2.4 \times 10^{18}$ copies.</li>
       </ul>
-      <p><b>Cures:</b> symmetry-breaking rows ($y_1 \ge y_2 \ge \dots$, or item $i$ only in bins $\le i$); orbital fixing in the solver; or a formulation without labels at all (column generation, unit 10).</p>
+      <p class="small"><b>Cures:</b> <span class="term" data-term="symmetry-breaking rows">symmetry-breaking rows</span> ($y_1 \ge y_2 \ge \dots$, or item $i$ only in bins $\le i$); <span class="term">orbital fixing</span> in the solver; or a formulation without labels at all (column generation, unit 10).</p>
     </div>
-    <div class="box"><span class="label">this is unit 00 again</span>
-      <p class="small">Set partitions versus maps from items to bins: $B_n$ versus $n^n$ candidates. The restricted growth string is exactly "item $i$ may only open bin $\le$ one more than the largest used so far".</p>
+    <div>
+      <div class="box ex"><span class="label">3 items, 2 bins, every copy</span>
+        <table style="margin:0">
+          <thead><tr><th>packing</th><th>bin of each item</th></tr></thead>
+          <tbody>
+            <tr><td>all together</td><td><code>000</code> · <code>111</code></td></tr>
+            <tr><td>$\{0,1\}\ \{2\}$</td><td><code>001</code> · <code>110</code></td></tr>
+            <tr><td>$\{0,2\}\ \{1\}$</td><td><code>010</code> · <code>101</code></td></tr>
+            <tr><td>$\{0\}\ \{1,2\}$</td><td><code>011</code> · <code>100</code></td></tr>
+          </tbody>
+        </table>
+        <p class="small">$2^3 = 8$ assignments, 4 packings, each twice. "Item 0 goes in bin 0" keeps the left column only.</p>
+      </div>
+      <div class="box"><span class="label">this is unit 00 again</span>
+        <p class="small">Set partitions versus maps from items to bins. The restricted growth string is exactly "item $i$ may only open bin $\le$ one more than the largest used so far".</p>
+      </div>
     </div>
   </div>
   <aside class="notes">
@@ -361,7 +471,7 @@
     <div>
       <p class="small">The same 20×60 models, default settings:</p>
       <table>
-        <thead><tr><th>formulation</th><th class="num">nodes, bare SCIP</th><th class="num">HiGHS</th><th class="num">SCIP</th></tr></thead>
+        <thead><tr><th>formulation</th><th class="num"><span class="term" data-term="node count">nodes</span>, bare SCIP</th><th class="num">HiGHS</th><th class="num">SCIP</th></tr></thead>
         <tbody>
           <tr><td>UFL aggregated, M = 10C</td><td class="num">5 644</td><td class="num">7</td><td class="num">1</td></tr>
           <tr><td>UFL disaggregated</td><td class="num">1</td><td class="num">1</td><td class="num">1</td></tr>
@@ -373,9 +483,9 @@
     <div>
       <p>Default solvers derive much of the missing strength themselves:</p>
       <ul class="small">
-        <li><b>bound tightening</b> in presolve shrinks M to what is provable;</li>
-        <li><b>implied bound cuts</b> recover $x_{ij} \le y_i$ from bounds and linking rows;</li>
-        <li><b>knapsack and flow cover cuts</b> recover the capacity structure.</li>
+        <li><span class="term">bound tightening</span> in <span class="term">presolve</span> shrinks M to what is provable (on the running example it can take $M = 30$ back to 3, since each $x_{ij} \le 1$);</li>
+        <li><span class="term" data-term="implied bound cut">implied bound cuts</span> recover $x_{ij} \le y_i$ from bounds and linking rows;</li>
+        <li><span class="term" data-term="knapsack cover cut">knapsack</span> and <span class="term" data-term="flow cover cut">flow cover cuts</span> recover the capacity structure.</li>
       </ul>
       <div class="box warn"><span class="label">the trap</span>
         <p class="small">A weak model looks fine at this size, then falls apart at 10× the size, or once a side constraint defeats the presolve reduction that was quietly saving it.</p>
@@ -383,7 +493,7 @@
     </div>
   </div>
   <aside class="notes">
-    <p>The model that is strong before the solver touches it is robust, and the model
+    <p>The model that is strong before the solver touches it is <span class="term" data-term="robust vs fragile model">robust</span>, and the model
     that relies on presolve is fragile. Unit 27 builds a before/after table of
     interventions and asks for exactly this kind of reasoning about each row.</p>
     <p>Part 3 of <code>then</code> also shows the two solvers disagreeing about which

@@ -18,7 +18,7 @@
   <div class="unit-no">08</div>
   <h1>Cutting planes and branch-and-cut</h1>
   <p class="lede">Inequalities that every integer solution satisfies and the LP optimum doesn't: how to derive them, how to find them, and why solvers throw most of them away.</p>
-  <p class="meta"><span>needs 07</span><span>~1½ h slides + 3 h lab</span><span>lab: <code>uv run co lab 08</code></span></p>
+  <p class="meta"><span>needs 07</span><span>~2 h slides + 3 h lab</span><span>lab: <code>uv run co lab 08</code></span></p>
   <aside class="notes">
     <p>Unit 05 ended with "a valid inequality never changes the MILP and may tighten its
     relaxation". Unit 07 ended with a list of hypotheses about why SCIP needs so many
@@ -29,6 +29,11 @@
     considered impractical for thirty years; then problem-specific cuts (Crowder, Johnson
     &amp; Padberg 1983) and branch-and-cut (Padberg &amp; Rinaldi 1991) made them the
     backbone of every modern MIP solver.</p>
+    <h4>How to read this deck</h4>
+    <p>Two small examples carry the unit: Gomory's two-variable IP, whose two cuts are
+    drawn, and one knapsack row, on which a cover is separated and lifted. Every number
+    on them comes from the lab's reference solution in exact arithmetic. The theorems
+    about closures and convergence are stated, with their arguments in the notes.</p>
   </aside>
 </section>
 
@@ -42,6 +47,9 @@
       <p>Knapsack covers, exact separation by DP, lifting. The other families: cliques, flow covers, MIR.</p></div>
     <div class="box def"><span class="label">3 · branch-and-cut</span>
       <p>Cut loops, efficacy, pool management, local cuts, and what the architecture buys.</p></div>
+  </div>
+  <div class="box good"><span class="label">getting around</span>
+    <p class="small">Words with a <span class="term" data-term="cut (cutting plane)">dotted underline</span> are glossary terms: click one for its definition. <kbd>G</kbd> lists every term in the unit, <kbd>N</kbd> shows the notes.</p>
   </div>
   <aside class="notes">
     <p>Lab steps 1–2 are section 1, and steps 3–5 are section 2 plus the pool from
@@ -61,21 +69,22 @@
   <div class="cols">
     <div>
       <div class="box def"><span class="label">definitions</span>
-        <p>For $S$ = the integer feasible set: $a^\top x \le \beta$ is <b>valid</b> if every $x \in S$ satisfies it.</p>
-        <p>A <b>cut</b> for an LP point $x^*$ is a valid inequality with $a^\top x^* &gt; \beta$.</p>
-        <p>The strongest valid inequalities are the <b>facets</b> of $\mathrm{conv}(S)$.</p>
+        <p>For $S$ = the integer feasible set: $a^\top x \le \beta$ is <span class="term" data-term="valid inequality">valid</span> if every $x \in S$ satisfies it.</p>
+        <p>A <span class="term" data-term="cut (cutting plane)">cut</span> for an LP point $x^*$ is a valid inequality with $a^\top x^* &gt; \beta$.</p>
+        <p>The strongest valid inequalities are the <span class="term" data-term="facet of \(\mathrm{conv}(S)\)">facets</span> of $\mathrm{conv}(S)$.</p>
       </div>
-      <div class="box thm"><span class="label">the separation problem</span>
+      <div class="box thm"><span class="label">the <span class="term">separation problem</span></span>
         <p>Given $x^*$ and a family of valid inequalities: find a member violated by $x^*$, or prove there is none.</p>
       </div>
     </div>
     <div>
-      <p><b>The cutting-plane method:</b></p>
+      <p><b>The <span class="term">cutting-plane method</span>:</b></p>
       <ol>
         <li>Solve the LP: $x^*$.</li>
         <li>If $x^*$ is integral, it is optimal.</li>
         <li>Separate. If a cut is found, add it and re-solve with the dual simplex (unit 03). Otherwise branch (unit 07).</li>
       </ol>
+      <p class="small">On a two-variable example, three slides on, two rounds of this loop take the LP from $(1, 1.5)$ to the integer optimum $(1, 1)$.</p>
       <p class="small muted">A family whose separation problem is hard is useless in practice, however strong its members. Separation is the central question for every family.</p>
     </div>
   </div>
@@ -99,15 +108,15 @@
       <p>For $Ax \le b$, $x \ge 0$ integer, and any multipliers $u \ge 0$:</p>
       $$\begin{aligned} u^\top A\, x &\le u^\top b \\ \Longrightarrow\quad \lfloor u^\top A \rfloor x &\le u^\top b \quad (x \ge 0) \\ \Longrightarrow\quad \lfloor u^\top A \rfloor x &\le \lfloor u^\top b \rfloor \quad (x \text{ integer}) \end{aligned}$$
       <p class="small">Step 1 uses $x \ge 0$ (rounding coefficients down only lowers the left side). Step 2 uses integrality: the left side is an integer.</p>
-      <div class="box good"><span class="label">example</span>
-        <p class="small">$2x_1 + 2x_2 \le 3$ with $u = \tfrac12$: $x_1 + x_2 \le \tfrac32$, which rounds to $x_1 + x_2 \le 1$. The point $(\tfrac34, \tfrac34)$ is cut off.</p>
+      <div class="box ex"><span class="label">example</span>
+        <p class="small">$2x_1 + 2x_2 \le 3$ with $u = \tfrac12$: $x_1 + x_2 \le \tfrac32$, which rounds to $x_1 + x_2 \le 1$. The point $(\tfrac34, \tfrac34)$ is cut off, and no integer point is: $(0,0), (1,0), (0,1)$ all satisfy it.</p>
       </div>
     </div>
     <div>
       <div class="box thm"><span class="label">Chvátal 1973, Schrijver 1980</span>
-        <p>Adding all CG cuts gives the <b>CG closure</b>. Repeating finitely many times reaches $\mathrm{conv}(S)$ for any bounded pure integer program. So <b>every</b> valid inequality has a finite CG derivation.</p>
+        <p>Adding all <span class="term" data-term="Chvátal–Gomory (CG) cut">CG cuts</span> gives the <span class="term">CG closure</span>. Repeating finitely many times reaches $\mathrm{conv}(S)$ for any bounded pure integer program. So <b>every</b> valid inequality has a finite CG derivation.</p>
       </div>
-      <p class="small">The number of rounds needed is the <b>CG rank</b>. It can be large: the matching polytope's odd-set inequalities have rank 1, but some inequalities for TSP have rank that grows with $n$.</p>
+      <p class="small">The number of rounds needed is the <span class="term">CG rank</span>. It can be large: the matching polytope's odd-set inequalities have rank 1, but some inequalities for TSP have rank that grows with $n$.</p>
     </div>
   </div>
   <aside class="notes">
@@ -115,7 +124,7 @@
     reals, nonnegative combinations of rows derive every implied inequality (Farkas).
     Over the integers, nonnegative combinations plus rounding derive every valid
     inequality (Chvátal). It makes CG derivations a proof system for integer
-    infeasibility, and they have been studied as such (cutting-plane proofs; lower
+    infeasibility, and they have been studied as such (<b>cutting-plane proofs</b>; lower
     bounds on their length relate to unit 20's resolution lower bounds).</p>
     <p>The odd-set inequalities of unit 06: for an odd vertex set $S$, sum the degree
     constraints of the vertices in $S$ with $u = \tfrac12$. The edges inside $S$ get
@@ -129,7 +138,7 @@
   <h2>Gomory's cut, read off the tableau</h2>
   <div class="cols">
     <div>
-      <p>A tableau row $\;x_i + \sum_{j \in N} \bar a_{ij} z_j = \bar b_i\;$ with $\bar b_i$ fractional. With $f(v) = v - \lfloor v \rfloor$:</p>
+      <p>A tableau row $\;x_i + \sum_{j \in N} \bar a_{ij} z_j = \bar b_i\;$ with $\bar b_i$ fractional. With the <span class="term" data-term="fractional part \(f(v)\)">fractional part</span> $f(v) = v - \lfloor v \rfloor$, the <span class="term" data-term="Gomory fractional cut">Gomory fractional cut</span> is</p>
       $$\sum_{j \in N} f(\bar a_{ij})\, z_j \;\ge\; f(\bar b_i)$$
       <p class="small">It is valid for all integer solutions, and violated by the current vertex, where every nonbasic $z_j = 0$ and so the left side is $0 &lt; f(\bar b_i)$.</p>
       <p class="small muted">It is the CG cut with multipliers taken from row $i$ of $A_B^{-1}$, rearranged.</p>
@@ -139,7 +148,7 @@
       $$x_2 + \tfrac14 s_1 + \tfrac14 s_2 = \tfrac32$$
       <p class="small">Cut: $\tfrac14 s_1 + \tfrac14 s_2 \ge \tfrac12$. Substitute $s_1 = 6 - 3x_1 - 2x_2$ and $s_2 = 3x_1 - 2x_2$:</p>
       $$\tfrac14(6 - 4x_2) \ge \tfrac12 \iff x_2 \le 1$$
-      <p class="small">One more round adds $x_2 \le x_1$, and the LP reaches the integer optimum $(1, 1)$. Lab step 1's test is this example.</p>
+      <p class="small">One more round adds $x_2 \le x_1$, and the LP reaches the integer optimum $(1, 1)$. Lab step 1's test is this example; the next slide draws it.</p>
     </div>
   </div>
   <aside class="notes">
@@ -147,11 +156,72 @@
     variables, slacks included, to be integers, which is why the lab requires integer
     $A$ and $b$, and why each cut is scaled to integers before being added: its own
     slack must be integral for the next round's cuts to be valid.</p>
-    <p>For mixed-integer programs the right version is the <b>Gomory mixed-integer
-    (GMI)</b> cut, which treats continuous variables with a different coefficient
+    <p>For mixed-integer programs the right version is the <span class="term" data-term="Gomory mixed-integer (GMI) cut">Gomory mixed-integer
+    (GMI)</span> cut, which treats continuous variables with a different coefficient
     formula. GMI cuts are among the most effective general-purpose cuts in modern
     solvers. They are also equivalent to mixed-integer rounding (MIR) cuts derived from
     the tableau row.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">08 · general · example</p>
+  <h2>Both Gomory cuts, drawn</h2>
+  <div class="cols wide-right">
+    <div class="fig">
+      <svg viewBox="0 0 340 290" width="360" role="img" aria-label="the triangle with vertices (0,0), (2,0), (1,1.5), the cuts x2 = 1 and x2 = x1, and the LP points of each round">
+        <line x1="50" y1="20" x2="50" y2="275" class="rule" stroke-width="1.5"/>
+        <line x1="25" y1="250" x2="330" y2="250" class="rule" stroke-width="1.5"/>
+        <polygon points="50,250 290,250 170,70" class="fill-warn" style="fill-opacity:.15" stroke="var(--rule)" stroke-width="1.5"/>
+        <polygon points="50,250 290,250 210,130 170,130" class="fill-soft unit" stroke-width="2.5" style="fill-opacity:.9"/>
+        <line x1="30" y1="130" x2="320" y2="130" class="accent" stroke-width="2" stroke-dasharray="7 4"/>
+        <line x1="50" y1="250" x2="230" y2="70" class="accent" stroke-width="2" stroke-dasharray="3 4"/>
+        <g class="fill-ink"><circle cx="50" cy="250" r="4.5"/><circle cx="170" cy="250" r="4.5"/><circle cx="290" cy="250" r="4.5"/></g>
+        <circle cx="170" cy="70" r="7" fill="none" class="warn" stroke-width="2.5"/>
+        <circle cx="130" cy="130" r="7" fill="none" class="warn" stroke-width="2.5"/>
+        <circle cx="170" cy="130" r="7" class="fill-accent"/>
+        <text x="182" y="66" font-size="13" class="mono">round 0: (1, 1.5)</text>
+        <text x="30" y="112" font-size="13" class="mono">round 1: (⅔, 1)</text>
+        <text x="182" y="150" font-size="13" class="mono">round 2: (1, 1)</text>
+        <text x="274" y="122" font-size="13" style="fill:var(--accent)">x₂ ≤ 1</text>
+        <text x="236" y="82" font-size="13" style="fill:var(--accent)">x₂ ≤ x₁</text>
+        <text x="166" y="270" font-size="12" class="mono soft">1</text><text x="286" y="270" font-size="12" class="mono soft">2</text>
+      </svg>
+      <p class="cap">Light: the original LP region. Dark: after both cuts. Rings: LP optima cut off; filled: the final LP optimum, integral.</p>
+    </div>
+    <div>
+      <table>
+        <thead><tr><th>round</th><th>LP optimum</th><th class="num">bound</th><th>cut added</th></tr></thead>
+        <tbody>
+          <tr><td>0</td><td>$(1, \tfrac32)$</td><td class="num">1.5</td><td>$x_2 \le 1$</td></tr>
+          <tr><td>1</td><td>$(\tfrac23, 1)$</td><td class="num">1</td><td>$x_2 \le x_1$</td></tr>
+          <tr><td>2</td><td>$(1, 1)$</td><td class="num">1</td><td>none: integral</td></tr>
+        </tbody>
+      </table>
+      <div class="box ex"><span class="label">each cut, as a CG cut</span>
+        <p class="small"><b>Cut 1:</b> add the two rows with $u = (\tfrac14, \tfrac14)$: $\;x_2 \le \tfrac32$, rounded to $x_2 \le 1$.</p>
+        <p class="small"><b>Cut 2:</b> round 1's row for $x_1$ gives $\tfrac23 s_2 + \tfrac23 s_3 \ge \tfrac23$, i.e. $s_2 + s_3 \ge 1$; with $s_2 = 3x_1 - 2x_2$ and $s_3 = 1 - x_2$ that is $x_2 \le x_1$.</p>
+      </div>
+      <p class="small">The first cut moved the bound from 1.5 to 1; the second did not move it at all, and only changed <em>which</em> optimal point the LP returns. Rounds that change little are the start of stalling.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p><b>The regions.</b> The original LP region has corners $(0,0)$, $(2,0)$, $(1, \tfrac32)$.
+    After $x_2 \le 1$ the top is cut flat between $(\tfrac23, 1)$ (on $-3x_1 + 2x_2 = 0$) and
+    $(\tfrac43, 1)$ (on $3x_1 + 2x_2 = 6$). After $x_2 \le x_1$ the left end moves to $(1,1)$.
+    The integer points are $(0,0)$, $(1,0)$, $(2,0)$ and $(1,1)$, and the final region is
+    exactly their convex hull.</p>
+    <p><b>Round 1's tableau row</b> (reference two-phase with the first cut as row 3, slack
+    $s_3$): $x_1 - \tfrac13 s_2 + \tfrac23 s_3 = \tfrac23$. Fractional parts:
+    $f(-\tfrac13) = \tfrac23$, $f(\tfrac23) = \tfrac23$, $f(\tfrac23) = \tfrac23$, giving the cut on the
+    slide. The reference <code>gomory_cut</code> returns it scaled to integers as
+    $-2x_1 + 2x_2 \le 0$.</p>
+    <p><b>Why round 1 returned $(\tfrac23, 1)$</b>: after the first cut the whole top edge is
+    optimal for $\max x_2$, and the simplex stopped at one end of it. With a different
+    pivoting rule it could have stopped at $(\tfrac43, 1)$, and then the second cut would
+    have come from a different row. Cut sequences depend on the LP solver's choices.</p>
+    <p>Efficacy, for section 3: cut 1 moves $(1, 1.5)$ by $(1.5 - 1)/1 = 0.5$; cut 2 moves
+    $(\tfrac23, 1)$ by $(1 - \tfrac23)/\sqrt2 = 0.24$.</p>
   </aside>
 </section>
 
@@ -174,18 +244,23 @@
     <div class="box warn"><span class="label">why solvers ration them</span>
       <ul class="small">
         <li>Each round cuts less deeply: the bound improvements shrink geometrically.</li>
-        <li>Coefficients and dense rows grow: the LP gets slower and numerically worse.</li>
+        <li><span class="term" data-term="coefficient growth">Coefficients</span> and dense rows grow: the LP gets slower and numerically worse.</li>
         <li>In floating point, the cuts become invalid, since tableau entries carry rounding error.</li>
       </ul>
-      <p class="small">Gomory (1963) proved finite convergence with a lexicographic rule, and the proof holds. The practical fix is to stop early and branch.</p>
+      <p class="small">In theory, with a careful row choice the loop always finishes (Gomory 1963). The practical fix for <span class="term">stalling</span> is to stop early and branch.</p>
     </div>
   </div>
   <aside class="notes">
+    <p><b>Gomory's finiteness theorem.</b> With the lexicographic simplex method and the
+    cut always taken from the first fractional row, the pure fractional cutting-plane
+    algorithm terminates after finitely many cuts for any bounded pure integer program.
+    The bound on the number of cuts is astronomically large, which is why the theorem
+    reassures without guiding practice.</p>
     <p>The exact arithmetic in the lab hides the third problem. With floats, a tableau
     entry of 0.9999999 has fractional part 0.9999999, not 0, and the resulting "cut" can
     remove integer points. Early codes that ran many rounds of Gomory cuts produced
     wrong answers for exactly this reason. Modern solvers generate GMI cuts from a few
-    rounds of tableau rows, check their numerical safety (coefficient range, dynamism),
+    rounds of tableau rows, check their numerical safety (coefficient range, <b>dynamism</b>),
     and discard doubtful ones.</p>
     <p>Balas, Ceria, Cornuéjols and Natraj (1996) showed that Gomory cuts, when used
     carefully (a few rounds, in branch-and-cut), are very effective. That paper is the
@@ -205,14 +280,14 @@
   <div class="cols">
     <div>
       <p>One knapsack row $\sum_j w_j x_j \le c$, with $x \in \{0,1\}^n$ and $w \ge 0$.</p>
-      <div class="box def"><span class="label">cover</span>
-        <p>A set $C$ with $\sum_{j \in C} w_j &gt; c$: not all of $C$ fits, so</p>
+      <div class="box def"><span class="label"><span class="term">cover</span></span>
+        <p>A set $C$ with $\sum_{j \in C} w_j &gt; c$: not all of $C$ fits, so the <span class="term">cover inequality</span></p>
         $$\sum_{j \in C} x_j \le |C| - 1.$$
-        <p class="small">It is <b>minimal</b> if removing any item makes it fit.</p>
+        <p class="small">It is <span class="term" data-term="minimal cover">minimal</span> if removing any item makes it fit.</p>
       </div>
     </div>
     <div>
-      <div class="box thm"><span class="label">separation is a knapsack problem</span>
+      <div class="box thm"><span class="label"><span class="term" data-term="cover separation">separation</span> is a knapsack problem</span>
         <p>$x^*$ violates the cover inequality for $C$ iff $\sum_{j \in C} (1 - x^*_j) &lt; 1$. So find</p>
         $$\min \sum_{j \in C} (1 - x_j^*) \quad\text{s.t.}\quad \sum_{j \in C} w_j &gt; c.$$
         <p class="small">NP-hard in general, but pseudo-polynomial by DP over integer weights (unit 16). That is lab step 3.</p>
@@ -233,18 +308,58 @@
 </section>
 
 <section>
+  <p class="eyebrow">08 · structural · example</p>
+  <h2>Separating a cover, on one row</h2>
+  <div class="cols">
+    <div>
+      <p class="small">Row: $5x_0 + 5x_1 + 5x_2 + 5x_3 + 8x_4 \le 12$. LP point $x^* = (1,\ 0.7,\ 0.7,\ 0,\ 0)$, weight $5 + 3.5 + 3.5 = 12$: feasible for the LP.</p>
+      <table>
+        <thead><tr><th>cover $C$</th><th class="num">weight</th><th class="num">$\sum_{C}(1 - x^*_j)$</th><th>violated?</th></tr></thead>
+        <tbody>
+          <tr><td>$\{0, 1, 2\}$</td><td class="num">15</td><td class="num">$0 + 0.3 + 0.3 = \mathbf{0.6}$</td><td><b>yes</b></td></tr>
+          <tr><td>$\{0, 4\}$</td><td class="num">13</td><td class="num">$0 + 1 = 1$</td><td>no (tight)</td></tr>
+          <tr><td>$\{1, 4\}$</td><td class="num">13</td><td class="num">$0.3 + 1 = 1.3$</td><td>no</td></tr>
+          <tr><td>$\{0, 1, 3\}$</td><td class="num">15</td><td class="num">$0 + 0.3 + 1 = 1.3$</td><td>no</td></tr>
+        </tbody>
+      </table>
+      <p class="small">Cost below 1 means violated. The cheapest cover is $\{0,1,2\}$, and indeed $x^*_0 + x^*_1 + x^*_2 = 2.4 &gt; 2$.</p>
+    </div>
+    <div>
+      <div class="box ex"><span class="label">why "cost below 1" is the test</span>
+        <p class="small">The inequality $\sum_C x_j \le |C| - 1$ rewrites as $\sum_C (1 - x_j) \ge 1$. So it is violated exactly when that sum is below 1: each item "pays" how far it is from 1.</p>
+        <p class="small">Items at $x^*_j = 1$ are free, items at 0 cost a full unit. That is why covers are built from the items the LP has nearly packed.</p>
+      </div>
+      <p class="small">The reference <code>separate_cover</code> (a DP over weights, lab step 3) returns $(0, 1, 2)$. The next slide strengthens the resulting cut by lifting.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>The table lists the minimal covers that matter; there are others, like $\{0,2,3\}$ or
+    $\{2, 4\}$, all with cost at least 1. Every cover of this row needs total weight at least
+    13: any three of the weight-5 items, or item 4 with any one other item.</p>
+    <p>The DP in the reference is a knapsack in disguise: for each total weight $t$ it keeps
+    the cheapest set of items reaching at least $t$, and reads off the cheapest set reaching
+    13. Its cost 0.6 is below 1, so it returns the set.</p>
+    <p>Note the tight cover $\{0, 4\}$: its inequality $x_0 + x_4 \le 1$ holds with equality
+    at $x^*$. It is valid and supporting, but not a cut for this point.</p>
+  </aside>
+</section>
+
+<section>
   <p class="eyebrow">08 · structural</p>
   <h2>Lifting: strengthening a cut variable by variable</h2>
   <div class="cols">
     <div>
       <p class="small">$5x_0 + 5x_1 + 5x_2 + 5x_3 + 8x_4 \le 12$, cover $C = \{0,1,2\}$: $\;x_0 + x_1 + x_2 \le 2$.</p>
-      <p><b>Lift $x_3$</b> (weight 5): with $x_3 = 1$, capacity 7 remains, and at most one item of $C$ fits. So $\alpha_3 = 2 - 1 = 1$.</p>
-      <p><b>Lift $x_4$</b> (weight 8): with $x_4 = 1$, capacity 4 remains, and nothing fits. So $\alpha_4 = 2 - 0 = 2$.</p>
+      <p class="small"><span class="term">Lifting</span>. <b>Lift $x_3$</b> (weight 5): with $x_3 = 1$, capacity 7 remains, and at most one item of $C$ fits. So $\alpha_3 = 2 - 1 = 1$.</p>
+      <p class="small"><b>Lift $x_4$</b> (weight 8): with $x_4 = 1$, capacity 4 remains, and nothing fits. So $\alpha_4 = 2 - 0 = 2$.</p>
       $$x_0 + x_1 + x_2 + x_3 + 2x_4 \le 2$$
-      <p class="small muted">Checked by enumeration: valid for every feasible 0/1 point.</p>
+      <div class="box ex"><span class="label">checked at points</span>
+        <p class="small">$(0,0,0,0,1)$: weight 8 fits, left side $2 \le 2$, tight. $\;(1,0,0,1,0)$: weight 10, left side 2, tight. The earlier $x^* = (1, 0.7, 0.7, 0, 0)$: left side 2.4, still cut off.</p>
+        <p class="small">Raise $x_4$'s coefficient to 3 and $(0,0,0,0,1)$ gives $3 &gt; 2$: invalid. So 2 is the most it can take.</p>
+      </div>
     </div>
     <div>
-      <div class="box def"><span class="label">sequential up-lifting</span>
+      <div class="box def"><span class="label"><span class="term">sequential up-lifting</span></span>
         <p class="small">For the next $j \notin C$: $\;\alpha_j = r - \max\{\sum_{\text{lifted}} \alpha_i x_i : \sum w_i x_i \le c - w_j\}$.</p>
         <p class="small">The largest coefficient that keeps the inequality valid, given the ones already lifted.</p>
       </div>
@@ -272,12 +387,12 @@
     <thead><tr><th>family</th><th>from</th><th>separation</th></tr></thead>
     <tbody>
       <tr><td><b>Gomory mixed-integer</b></td><td>tableau rows</td><td>read off the final LP basis</td></tr>
-      <tr><td><b>mixed-integer rounding (MIR)</b></td><td>aggregations of rows (Marchand & Wolsey 2001)</td><td>heuristic aggregation, then a rounding formula</td></tr>
-      <tr><td><b>knapsack cover</b></td><td>single knapsack rows</td><td>greedy or DP, with lifting</td></tr>
-      <tr><td><b>flow cover</b></td><td>fixed-charge flow rows, $x \le u y$</td><td>heuristic, with lifting</td></tr>
-      <tr><td><b>clique</b>, <b>odd cycle</b></td><td>the conflict graph of binaries</td><td>greedy clique search; shortest paths for odd cycles</td></tr>
-      <tr><td><b>implied bound</b></td><td>bounds and implications</td><td>table lookup, e.g. $x \le u y$ recovered</td></tr>
-      <tr><td><b>zero-half</b></td><td>CG cuts with $u \in \{0, \tfrac12\}$</td><td>a parity problem on the constraint matrix</td></tr>
+      <tr><td><b><span class="term" data-term="mixed-integer rounding (MIR) cut">mixed-integer rounding (MIR)</span></b></td><td><span class="term" data-term="aggregation">aggregations</span> of rows (Marchand & Wolsey 2001)</td><td>heuristic aggregation, then a rounding formula</td></tr>
+      <tr><td><b><span class="term" data-term="lifted cover inequality">knapsack cover</span></b></td><td>single knapsack rows</td><td>greedy or DP, with lifting</td></tr>
+      <tr><td><b><span class="term" data-term="flow cover cut">flow cover</span></b></td><td>fixed-charge flow rows, $x \le u y$</td><td>heuristic, with lifting</td></tr>
+      <tr><td><b><span class="term" data-term="clique cut">clique</span></b>, <b><span class="term" data-term="odd cycle cut">odd cycle</span></b></td><td>the <span class="term">conflict graph</span> of binaries</td><td>greedy clique search; shortest paths for odd cycles</td></tr>
+      <tr><td><b><span class="term" data-term="implied bound cut">implied bound</span></b></td><td>bounds and implications</td><td>table lookup, e.g. $x \le u y$ recovered</td></tr>
+      <tr><td><b><span class="term" data-term="zero-half cut">zero-half</span></b></td><td>CG cuts with $u \in \{0, \tfrac12\}$</td><td>a parity problem on the constraint matrix</td></tr>
     </tbody>
   </table>
   <p class="small muted">Unit 05's weak facility-location models were rescued by implied bound cuts and flow covers, which is why presolve-plus-cuts made them look fine.</p>
@@ -305,17 +420,17 @@
   <h2>Cut loops and cut management</h2>
   <div class="cols">
     <div>
-      <p><b>At the root:</b> several rounds of solve, separate every family, select, add, and re-solve, until the bound stops moving enough.</p>
+      <p><b>At the root</b> (the <span class="term">root cut loop</span> of <span class="term">branch-and-cut</span>): several rounds of solve, separate every family, select, add, and re-solve, until the bound stops moving enough.</p>
       <p><b>Selection</b> scores candidates by:</p>
       <ul class="small">
-        <li><b>efficacy</b>: the Euclidean distance the cut moves $x^*$, $(a^\top x^* - \beta)/\|a\|$;</li>
-        <li><b>parallelism</b>: skip cuts nearly parallel to one already chosen;</li>
+        <li><span class="term">efficacy</span>: the Euclidean distance the cut moves $x^*$, $(a^\top x^* - \beta)/\|a\|$. Gomory's cuts above: 0.5, then 0.24;</li>
+        <li><span class="term" data-term="parallelism filter">parallelism</span>: skip cuts nearly parallel to one already chosen;</li>
         <li><b>numerics</b>: skip huge coefficient ranges.</li>
       </ul>
     </div>
     <div>
-      <div class="box def"><span class="label">the pool</span>
-        <p class="small">Cuts that have been slack for several rounds are removed from the LP but kept in a pool, and re-added if violated again. The lab's <code>age_pool</code> is the core of it.</p>
+      <div class="box def"><span class="label">the <span class="term" data-term="cut pool">pool</span></span>
+        <p class="small">Cuts that have been slack for several rounds (<span class="term">aging</span>) are removed from the LP but kept in a pool, and re-added if violated again. The lab's <code>age_pool</code> is the core of it.</p>
       </div>
       <div class="box warn"><span class="label">most cuts are discarded</span>
         <p class="small">Solvers generate far more cuts than they keep. Each kept cut is a dense row the LP must carry at every node of the tree, so a cut must earn its place.</p>
@@ -326,7 +441,7 @@
     <p>The trade-off is the same one strong branching had in unit 07: cuts improve the
     bound, which means fewer nodes, but make every node's LP larger and slower. A cut
     that closes 1% of the gap but doubles LP time can be a net loss.</p>
-    <p>Local cuts: cuts derived at a node, valid only in that subtree because they use
+    <p><span class="term" data-term="local cut">Local cuts</span>: cuts derived at a node, valid only in that subtree because they use
     the node's bound changes. They must be removed when the search leaves the subtree.
     Global cuts, valid everywhere, go to the pool and can be reused anywhere.</p>
   </aside>
@@ -337,7 +452,7 @@
   <h2>What your cuts were worth, and SCIP's</h2>
   <div class="cols wide-left">
     <div>
-      <p class="small">Lab <code>then</code>, 20-item, 2-row knapsacks. Root gap closed:</p>
+      <p class="small">Lab <code>then</code>, 20-item, 2-row knapsacks. <span class="term">Root gap closed</span>:</p>
       <table>
         <thead><tr><th class="num">seed</th><th class="num">your covers</th><th class="num">SCIP root</th><th class="num">SCIP nodes: cuts off / on</th></tr></thead>
         <tbody>
