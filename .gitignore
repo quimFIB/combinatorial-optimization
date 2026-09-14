@@ -11,3 +11,6 @@ units/*/lab/out/
 
 # direnv
 /.direnv/
+
+# The static site `co site` builds (regenerable)
+/_site/

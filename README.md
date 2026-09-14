@@ -19,6 +19,7 @@ uv sync
 ```fish
 uv run co slides 01          # theory: N = notes beside slide, R = reading mode, G = glossary
 uv run co explore 01         # optional: the unit's interactive figures (skip freely)
+uv run co site --serve       # the theory part as a static site in _site/, on localhost:8000
 uv run co lab 01             # the lab sheet
 uv run co test 01            # after each step; ends with a progress line
 uv run co then 01            # the solver comparison, once the tests pass
@@ -62,6 +63,8 @@ colib/              shared scaffolding, not the lesson
 slides/             deck.css + deck.js shared by every deck
   tools/            authoring checks: deck-check.sh (overflow, terms, keys), viz-check.sh, org-latex-check.sh
   viz/              optional interactive figures: core viz.js, widgets/, traces/ (see its README)
+  site/build.py     the static site: an allow-list copy of decks, glossaries and figures, plus an index
+.github/workflows/  pages.yml publishes that site to GitHub Pages (never labs or solutions)
 data/solomon/       Solomon's instances, downloaded by `co data` (regenerable, not course material)
 units/NN-slug/
   slides.html       theory, with <aside class="notes"> on every content slide

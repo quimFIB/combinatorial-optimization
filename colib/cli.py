@@ -4,6 +4,7 @@
     co glossary [01]      rebuild glossary.js from GLOSSARY.org, for one unit or all
     co explore 01         open the unit's optional interactive figures (rebuilds its viz data)
     co viz [01]           rebuild viz-data.js for the interactive figures, one unit or all
+    co site [--serve]     build the theory part (decks, glossaries, figures) as a static site in _site/
     co lab 01             open the lab sheet (README.md) in Emacs
     co test 01            run the lab's tests against your code
     co test 01 --solution run them against the reference solution
@@ -104,6 +105,9 @@ def main(argv=None):
                        help="use a reference solution instead of your lab (default: imperative)")
     sub.add_parser("glossary").add_argument("unit", nargs="?")
     sub.add_parser("viz").add_argument("unit", nargs="?")
+    site = sub.add_parser("site")
+    site.add_argument("--serve", action="store_true", help="then serve _site/ on http://localhost:8000")
+    site.add_argument("--port", type=int, default=8000)
     sub.add_parser("status")
     sub.add_parser("data")
     args, rest = ap.parse_known_args(argv)
@@ -129,6 +133,17 @@ def main(argv=None):
     elif args.cmd == "viz":
         units = [find_unit(args.unit)] if args.unit else sorted(p for p in UNITS.iterdir() if p.is_dir())
         _viz(units, verbose=True)
+    elif args.cmd == "site":
+        every = sorted(p for p in UNITS.iterdir() if p.is_dir())
+        warnings = _glossary(every)
+        _viz(every)
+        out = ROOT / "_site"
+        code = subprocess.call([sys.executable, str(ROOT / "slides" / "site" / "build.py"), str(out)], cwd=ROOT)
+        if code or warnings:
+            sys.exit(code or 1)
+        if args.serve:
+            print(f"serving {out.relative_to(ROOT)} on http://localhost:{args.port}  (Ctrl-C stops)")
+            subprocess.call([sys.executable, "-m", "http.server", str(args.port), "--directory", str(out)])
     elif args.cmd == "glossary":
         units = [find_unit(args.unit)] if args.unit else sorted(p for p in UNITS.iterdir() if p.is_dir())
         sys.exit(1 if _glossary(units, verbose=True) else 0)

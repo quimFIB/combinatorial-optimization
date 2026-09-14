@@ -1,0 +1,50 @@
+# Publish the theory part of the course (decks, glossaries, interactive figures) to GitHub Pages.
+#
+# The build is slides/site/build.py: standard-library Python, an allow-list copy. Labs, tests,
+# reference solutions, colib and data are never copied. glossary.js and viz-data.js are
+# committed, so no solver or package install is needed here; regenerate them locally with
+# `uv run co site` (or `co glossary` / `co viz`) and commit before pushing.
+#
+# One-time setup on GitHub: Settings → Pages → Build and deployment → Source: "GitHub Actions".
+# A private repository needs a plan that includes Pages for private repos.
+name: pages
+
+on:
+  push:
+    branches: [main]
+    paths: ["units/**/slides.html", "units/**/explore.html", "units/**/glossary.js",
+            "units/**/viz-data.js", "slides/**", "CURRICULUM.html", ".github/workflows/pages.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Build the site (fails if a local link points at a missing file)
+        run: python slides/site/build.py _site
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
