@@ -18,11 +18,15 @@
   <div class="unit-no">30</div>
   <h1>Automatic differentiation</h1>
   <p class="lede">Dual numbers and forward mode, the tape and reverse mode, why a full gradient costs one backward pass, what it costs in memory, and where the answers quietly stop being derivatives.</p>
-  <p class="meta"><span>needs 29, 28</span><span>~1 h slides + 2½ h lab</span><span>lab: <code>uv run co lab 30</code></span></p>
+  <p class="meta"><span>needs 29, 28</span><span>~1½ h slides + 2½ h lab</span><span>lab: <code>uv run co lab 30</code></span></p>
   <aside class="notes">
     <p>Unit 29 assumed gradients were given. This unit builds the machine that produces them for any
     program. The one fact that explains modern machine learning's existence is in section 2: reverse mode
     computes a full gradient in a constant number of passes, regardless of the number of parameters.</p>
+    <h4>How to read this deck</h4>
+    <p>One function, $f(x, y) = xy + \sin x$ at $(1, 2)$, runs through sections 1–3: forward mode with
+    dual numbers, the tape and its adjoint table, a VJP and a Hessian-vector product, all computed with
+    the lab's reference engines. The MLP's tape memory is then counted by hand, array by array.</p>
   </aside>
 </section>
 
@@ -40,6 +44,9 @@
       <p class="small">Tape size, checkpointing, JVPs and VJPs, Hessian-vector products.</p></div>
     <div class="box def"><span class="label">4 · real data, and lies</span>
       <p class="small">An MLP on terrain elevations; non-smooth points, branches, argmax.</p></div>
+  </div>
+  <div class="box good"><span class="label">getting around</span>
+    <p class="small">Words with a <span class="term" data-term="reverse mode">dotted underline</span> are glossary terms: click one for its definition. <kbd>G</kbd> lists every term in the unit, <kbd>N</kbd> shows the notes.</p>
   </div>
   <aside class="notes">
     <p>The checkpoint: your reverse-mode engine trains an MLP on a real dataset, and you compute the tape's
@@ -62,17 +69,18 @@
       <table class="dense">
         <thead><tr><th>method</th><th>what it does</th><th>failure mode</th></tr></thead>
         <tbody>
-          <tr><td><b>symbolic</b></td><td>rewrites the formula</td><td>expression swell; no loops or branches</td></tr>
-          <tr><td><b>numerical</b></td><td>$\frac{f(x+h) - f(x-h)}{2h}$</td><td>truncation error $O(h^2)$ against rounding error $O(\epsilon/h)$; one evaluation pair per input</td></tr>
-          <tr><td><b>automatic</b></td><td>chain rule on the operations the program executed</td><td>differentiates the program, not the function (section 4)</td></tr>
+          <tr><td><b><span class="term" data-term="symbolic differentiation">symbolic</span></b></td><td>rewrites the formula</td><td><span class="term">expression swell</span>; no loops or branches</td></tr>
+          <tr><td><b><span class="term" data-term="numerical differentiation">numerical</span></b></td><td>$\frac{f(x+h) - f(x-h)}{2h}$</td><td>truncation error $O(h^2)$ against rounding error $O(\epsilon/h)$; one evaluation pair per input</td></tr>
+          <tr><td><b><span class="term" data-term="automatic differentiation (autodiff)">automatic</span></b></td><td>chain rule on the operations the program executed</td><td>differentiates the program, not the function (section 4)</td></tr>
         </tbody>
       </table>
       <p class="small">Numerical derivatives are the <b>test oracle</b>: every op in the lab is gradient-checked against central differences.</p>
     </div>
     <div>
-      <div class="box def"><span class="label">forward mode: dual numbers</span>
-        $$\begin{aligned}(a + b\varepsilon)(c + d\varepsilon) &= ac + (ad + bc)\varepsilon, \quad \varepsilon^2 = 0 \\ g(a + b\varepsilon) &= g(a) + g'(a)\, b\,\varepsilon\end{aligned}$$
-        <p class="small">Seed $x = x_0 + 1\varepsilon$, run the program, read $f'(x_0)$ off the $\varepsilon$ part. For $f: \mathbb{R}^n \to \mathbb{R}$, one pass per input direction: <b>n passes</b> for a gradient.</p>
+      <div class="box def"><span class="label"><span class="term">forward mode</span>: <span class="term" data-term="dual number">dual numbers</span></span>
+        $$\begin{aligned}(a + b\varepsilon)(c + d\varepsilon) &= ac + (ad + bc)\varepsilon \\ g(a + b\varepsilon) &= g(a) + g'(a)\, b\,\varepsilon\end{aligned}$$
+        <p class="small">with $\varepsilon^2 = 0$.</p>
+        <p class="small"><span class="term" data-term="seed">Seed</span> $x = x_0 + 1\varepsilon$, run the program, read $f'(x_0)$ off the $\varepsilon$ part. For $f: \mathbb{R}^n \to \mathbb{R}$, one pass per input direction: <b>n passes</b> for a gradient.</p>
       </div>
       <p class="small muted">Lab step 1: twelve operators and five functions. The same code also accepts a Dual whose value is a Dual.</p>
     </div>
@@ -88,6 +96,46 @@
   </aside>
 </section>
 
+<section>
+  <p class="eyebrow">30 · kinds · example</p>
+  <h2>Forward mode, on the example</h2>
+  <p class="small">$f(x, y) = xy + \sin x$ at $(x, y) = (1, 2)$. By hand: $\partial f/\partial x = y + \cos x = 2.5403$, $\ \partial f/\partial y = x = 1$.</p>
+  <div class="cols">
+    <div class="box ex"><span class="label">pass 1: seed the first input</span>
+      <table style="margin:0">
+        <thead><tr><th>step</th><th>value</th><th class="num">$\varepsilon$ part</th></tr></thead>
+        <tbody>
+          <tr><td>$x = 1 + 1\varepsilon$</td><td class="num">1</td><td class="num">1</td></tr>
+          <tr><td>$y = 2 + 0\varepsilon$</td><td class="num">2</td><td class="num">0</td></tr>
+          <tr><td>$xy$</td><td class="num">2</td><td class="num">$1 \cdot 2 + 1 \cdot 0 = 2$</td></tr>
+          <tr><td>$\sin x$</td><td class="num">0.8415</td><td class="num">$\cos 1 \cdot 1 = 0.5403$</td></tr>
+          <tr><td>$f$</td><td class="num">2.8415</td><td class="num"><b>2.5403</b></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="box ex"><span class="label">pass 2: seed the second input</span>
+      <table style="margin:0">
+        <thead><tr><th>step</th><th>value</th><th class="num">$\varepsilon$ part</th></tr></thead>
+        <tbody>
+          <tr><td>$x = 1 + 0\varepsilon$</td><td class="num">1</td><td class="num">0</td></tr>
+          <tr><td>$y = 2 + 1\varepsilon$</td><td class="num">2</td><td class="num">1</td></tr>
+          <tr><td>$xy$</td><td class="num">2</td><td class="num">$0 \cdot 2 + 1 \cdot 1 = 1$</td></tr>
+          <tr><td>$\sin x$</td><td class="num">0.8415</td><td class="num">0</td></tr>
+          <tr><td>$f$</td><td class="num">2.8415</td><td class="num"><b>1</b></td></tr>
+        </tbody>
+      </table>
+      <p class="small">Two inputs, two passes. The value column is the ordinary evaluation, carried along for free.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>The product rule for dual numbers, $(a + b\varepsilon)(c + d\varepsilon) = ac + (ad + bc)\varepsilon$,
+    is the product rule of calculus: in pass 1, $a = 1, b = 1, c = 2, d = 0$ gives $\varepsilon$ part 2. The
+    function rule $g(a + b\varepsilon) = g(a) + g'(a) b \varepsilon$ gives $\sin(1 + \varepsilon) = 0.8415 + 0.5403\varepsilon$.</p>
+    <p>Both passes are the reference <code>Dual</code> class: <code>f(Dual(1, 1), Dual(2, 0))</code> has
+    derivative 2.5403023 and <code>f(1, Dual(2, 1))</code> has derivative 1.0.</p>
+  </aside>
+</section>
+
 <section class="divider">
   <p class="eyebrow">section 2</p>
   <h2>Reverse mode</h2>
@@ -99,13 +147,13 @@
   <h2>The Wengert tape</h2>
   <div class="cols">
     <div>
-      <p class="small">Record every operation with its inputs and local derivatives. Then sweep backwards, with adjoints $\bar v = \partial f / \partial v$:</p>
+      <p class="small">Record every operation with its inputs and local derivatives (the <span class="term" data-term="Wengert tape">tape</span>). Then sweep backwards (<span class="term" data-term="backward pass (sweep)">the backward pass</span>), with <span class="term" data-term="adjoint \(\bar v\)">adjoints</span> $\bar v = \partial f / \partial v$:</p>
       $$\bar u \mathrel{+}= \bar v \cdot \frac{\partial v}{\partial u}$$
       <p class="small">for each edge $u \to v$, visiting nodes in reverse topological order.</p>
-      <div class="box proof"><span class="label">the cost argument</span>
-        <p class="small">Each operation's backward step costs a small constant times its forward step. So a <b>full gradient</b> costs a constant multiple of <b>one function evaluation</b>, whatever the number of inputs. Griewank's cheap gradient principle bounds that constant by a small number, about 4 to 5 for standard operation sets.</p>
+      <div class="box"><span class="label">why reverse is cheap</span>
+        <p class="small">Each operation's backward step costs a small constant times its forward step. So a <b>full gradient</b> costs a constant multiple of <b>one function evaluation</b>, whatever the number of inputs: the <span class="term">cheap gradient principle</span> (Griewank), with a constant of about 4 to 5.</p>
       </div>
-      <p class="small muted">Wengert (1964) for the recorded list; Linnainmaa (1970) for reverse accumulation; backpropagation (Rumelhart, Hinton & Williams 1986) is reverse mode on a network.</p>
+      <p class="small muted">Wengert (1964) for the recorded list; Linnainmaa (1970) for reverse accumulation; <span class="term">backpropagation</span> (Rumelhart, Hinton & Williams 1986) is <span class="term">reverse mode</span> on a network.</p>
     </div>
     <div>
       <p class="small">Lab <code>then</code>, gradient of $\sum_i \sin(x_i)\, x_{i+1}$:</p>
@@ -119,7 +167,7 @@
       </table>
       <p class="small">Forward mode grows like $n^2$, reverse like $n$. At a million parameters, forward mode is a million passes and reverse mode is one.</p>
       <div class="box warn"><span class="label">two traps in the sweep</span>
-        <p class="small"><b>Each node once</b>: a graph with $2^{30}$ paths but 33 nodes must take 33 steps. <b>No recursion</b>: a 20 000-deep graph overflows Python's stack. Lab step 2 tests both.</p>
+        <p class="small"><b><span class="term">Each node once</span></b>: a graph with $2^{30}$ paths but 33 nodes must take 33 steps. <b>No recursion</b>: a 20 000-deep graph overflows Python's stack. Lab step 2 tests both.</p>
       </div>
     </div>
   </div>
@@ -130,6 +178,45 @@
     <p>Why the jit column is faster than the lab's reverse mode at n = 1 000: the lab's scalar tape
     allocates a Python object per operation. JAX traces the program once into array operations. The
     asymptotics are the same; the constant differs by Python's per-object overhead.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">30 · reverse · example</p>
+  <h2>The tape and its adjoints, on the example</h2>
+  <div class="cols">
+    <div class="box ex"><span class="label">forward: record</span>
+      <table style="margin:0">
+        <thead><tr><th>node</th><th>operation</th><th class="num">value</th><th>local derivatives</th></tr></thead>
+        <tbody>
+          <tr><td>$v_0$</td><td>$x$</td><td class="num">1</td><td></td></tr>
+          <tr><td>$v_1$</td><td>$y$</td><td class="num">2</td><td></td></tr>
+          <tr><td>$v_2$</td><td>$v_0 \cdot v_1$</td><td class="num">2</td><td>$\partial/\partial v_0 = v_1 = 2$, $\ \partial/\partial v_1 = v_0 = 1$</td></tr>
+          <tr><td>$v_3$</td><td>$\sin v_0$</td><td class="num">0.8415</td><td>$\cos v_0 = 0.5403$</td></tr>
+          <tr><td>$v_4$</td><td>$v_2 + v_3$</td><td class="num">2.8415</td><td>1 and 1</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="box ex"><span class="label">backward: one sweep</span>
+      <table style="margin:0">
+        <thead><tr><th>visit</th><th>adjoint updates</th></tr></thead>
+        <tbody>
+          <tr><td>start</td><td>$\bar v_4 = 1$</td></tr>
+          <tr><td>$v_4$</td><td>$\bar v_2 \mathrel{+}= 1$, $\ \bar v_3 \mathrel{+}= 1$</td></tr>
+          <tr><td>$v_3$</td><td>$\bar v_0 \mathrel{+}= 1 \times 0.5403$</td></tr>
+          <tr><td>$v_2$</td><td>$\bar v_0 \mathrel{+}= 1 \times 2$, $\ \bar v_1 \mathrel{+}= 1 \times 1$</td></tr>
+          <tr><td>result</td><td>$\bar v_0 = 2.5403$, $\ \bar v_1 = 1$</td></tr>
+        </tbody>
+      </table>
+      <p class="small">Both partial derivatives from <b>one</b> backward sweep, where forward mode needed two passes. $x$ feeds two nodes, so its adjoint collects two contributions: that "+=" is the multivariable chain rule.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p><b>Order matters.</b> $v_0$'s adjoint is only complete after every node that uses $v_0$ has been
+    visited, which is what reverse topological order guarantees: $v_4$, then $v_3$ and $v_2$, then the
+    inputs. Visiting $v_0$ before $v_3$ would propagate a half-finished adjoint.</p>
+    <p>The reference <code>reverse_gradient</code> on this function returns value 2.8414710 and gradient
+    $[2.5403023, 1.0]$, matching the forward passes to all printed digits.</p>
   </aside>
 </section>
 
@@ -144,18 +231,18 @@
   <h2>What the tape holds, and checkpointing</h2>
   <div class="cols">
     <div>
-      <p class="small">Reverse mode must keep every intermediate its backward steps need until the sweep reaches them. For the lab's MLP, the distinct arrays are:</p>
+      <p class="small">Reverse mode must keep every intermediate its backward steps need until the sweep reaches them: the <span class="term">tape memory</span>, mostly <span class="term" data-term="activation">activations</span>. For the lab's MLP, the distinct arrays are:</p>
       <ul class="small">
         <li>the input batch: batch × in</li>
         <li>per layer: W (m × n), matmul output and bias-add output (batch × n each)</li>
         <li>per hidden layer: the tanh output (batch × n), which its vjp reuses</li>
         <li>the loss's difference array (batch × out), and the scalar loss</li>
       </ul>
-      <p class="small">MLP [2, 64, 64, 1], batch 64: <b>predicted 233 480 bytes, measured 233 480 bytes.</b></p>
+      <p class="small"><span class="term">MLP</span> [2, 64, 64, 1], batch 64: <b>predicted 233 480 bytes, measured 233 480 bytes.</b> The count is on the next slide.</p>
     </div>
     <div>
-      <div class="box def"><span class="label">checkpointing</span>
-        <p class="small">Keep only some intermediates and recompute the rest during the backward sweep. Keeping every $\sqrt{L}$-th layer of an $L$-layer chain costs $O(\sqrt L)$ memory and about one extra forward pass (Chen et al. 2016). Griewank's <b>revolve</b> gets $O(\log L)$ memory for $O(\log L)$ times the compute, which is optimal for chains.</p>
+      <div class="box def"><span class="label"><span class="term" data-term="checkpointing (rematerialization)">checkpointing</span></span>
+        <p class="small">Keep only some intermediates and recompute the rest during the backward sweep. Keeping every $\sqrt{L}$-th layer of an $L$-layer chain costs $O(\sqrt L)$ memory and about one extra forward pass (Chen et al. 2016). Griewank's <b><span class="term">revolve</span></b> gets $O(\log L)$ memory for $O(\log L)$ times the compute, which is optimal for chains.</p>
       </div>
       <div class="box good"><span class="label">why memory, not time, is the limit</span>
         <p class="small">Activation memory grows with batch × width × depth and must coexist on the device. Parameters are a fixed cost. That's why large-model training is designed around the tape.</p>
@@ -166,9 +253,41 @@
     <p>What isn't on the tape matters as much. The biases aren't: add_bias's vjp needs only the incoming
     gradient. The matmul's saved input for layers after the first is the previous tanh output, which is
     already counted. Counting by array identity rather than by operation is what makes the prediction exact.</p>
-    <p>In-place mutation is the classic way to break a tape: if an array saved for backward is modified
+    <p><span class="term">In-place mutation</span> is the classic way to break a tape: if an array saved for backward is modified
     during the forward pass, the vjp silently uses the wrong values. PyTorch tracks version counters on
     tensors to detect exactly this, and JAX forbids mutation of traced arrays.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">30 · memory · example</p>
+  <h2>Counting the tape, by hand</h2>
+  <div class="cols wide-left">
+    <div>
+      <table>
+        <thead><tr><th>array</th><th>shape</th><th class="num">numbers</th></tr></thead>
+        <tbody>
+          <tr><td>input batch</td><td>64 × 2</td><td class="num">128</td></tr>
+          <tr><td>layer 1: $W$, matmul out, bias-add out, tanh out</td><td>2×64, 64×64 (three)</td><td class="num">$128 + 3 \times 4\,096 = 12\,416$</td></tr>
+          <tr><td>layer 2: $W$, matmul out, bias-add out, tanh out</td><td>64×64 (four)</td><td class="num">$4 \times 4\,096 = 16\,384$</td></tr>
+          <tr><td>layer 3: $W$, matmul out, bias-add out</td><td>64×1 (three)</td><td class="num">$3 \times 64 = 192$</td></tr>
+          <tr><td>loss: difference array, scalar</td><td>64×1, 1</td><td class="num">65</td></tr>
+          <tr><td><b>total</b></td><td></td><td class="num"><b>29 185</b></td></tr>
+        </tbody>
+      </table>
+      <p class="small">At 8 bytes per float64: $29\,185 \times 8 = \mathbf{233\,480}$ bytes, exactly what the lab measures.</p>
+    </div>
+    <div class="box ex"><span class="label">what the count tells you</span>
+      <p class="small">The 64×64 activations dominate: 7 of them hold 28 672 of the 29 185 numbers. Double the batch and those double; the weights don't.</p>
+      <p class="small">The last layer's output is not followed by tanh (a regression output), and the biases are not saved at all, since adding a bias needs no stored value to differentiate.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>The rule the lab uses is to count each distinct array once. The matmul in layer 2 needs its input,
+    but that input is layer 1's tanh output, already in the table. Counting by operation instead would
+    double-count it and overshoot.</p>
+    <p>The seven 64×64-sized arrays: layer 1's three batch arrays, and layer 2's weight matrix plus its three
+    batch arrays. $7 \times 4\,096 = 28\,672$.</p>
   </aside>
 </section>
 
@@ -180,12 +299,15 @@
       <table class="dense">
         <thead><tr><th>primitive</th><th>computes</th><th>by</th></tr></thead>
         <tbody>
-          <tr><td>JVP</td><td>$J v$ (one Jacobian column combination)</td><td>forward mode</td></tr>
-          <tr><td>VJP</td><td>$u^\top J$ (one row combination)</td><td>reverse mode</td></tr>
-          <tr><td>HVP</td><td>$H v = \frac{d}{d\varepsilon} \nabla f(x + \varepsilon v)$</td><td>forward over reverse</td></tr>
+          <tr><td><span class="term" data-term="JVP (Jacobian-vector product)">JVP</span></td><td>$J v$ (one Jacobian column combination)</td><td>forward mode</td></tr>
+          <tr><td><span class="term" data-term="VJP (vector-Jacobian product)">VJP</span></td><td>$u^\top J$ (one row combination)</td><td>reverse mode</td></tr>
+          <tr><td><span class="term" data-term="Hessian-vector product (HVP)">HVP</span></td><td>$H v = \frac{d}{d\varepsilon} \nabla f(x + \varepsilon v)$</td><td><span class="term">forward over reverse</span></td></tr>
         </tbody>
       </table>
-      <div class="box proof"><span class="label">forward over reverse in the lab</span>
+      <div class="box ex"><span class="label">on the example</span>
+        <p class="small">$H = \begin{pmatrix} -\sin x & 1 \\ 1 & 0 \end{pmatrix}$ at $(1, 2)$. With $v = (1, 0)$: $Hv = (-0.8415,\ 1)$, one tape run on dual inputs $(1 + \varepsilon,\ 2)$.</p>
+      </div>
+      <div class="box"><span class="label">forward over reverse in the lab</span>
         <p class="small">Write the reverse-mode tape so its values can be dual numbers. Seed inputs $x_i + v_i\varepsilon$, sweep backwards, and the $\varepsilon$ parts of the gradient are $Hv$. One forward and one backward pass: no Hessian is ever formed.</p>
       </div>
     </div>
@@ -209,6 +331,11 @@
     different operation (for example a fused kernel), not "numerical noise".</p>
     <p>The dual-number trick generalises: nesting dual numbers gives higher derivatives (hyper-dual numbers),
     and forward-over-reverse is the standard composition in JAX (jax.jvp of jax.grad).</p>
+    <p><b>A VJP on the example.</b> For $(x, y) \mapsto (xy,\ \sin x)$ and $u = (2, -1)$, one backward sweep seeded
+    with $u$ gives $u^\top J = (2y - \cos x,\ 2x) = (3.4597,\ 2)$.</p>
+    <p><b>The example box.</b> The reference <code>hvp</code> with inputs $(1, 2)$ and direction
+    $(1, 0)$ returns $[-0.8414710, 1.0]$: the first column of $H$. The VJP: $J$ has rows $(y, x)$ and
+    $(\cos x, 0)$, so $u^\top J = 2(2, 1) - (0.5403, 0) = (3.4597, 2)$.</p>
   </aside>
 </section>
 
@@ -227,7 +354,7 @@
       <table class="dense">
         <thead><tr><th>model</th><th class="num">test RMSE</th><th class="num">seconds</th></tr></thead>
         <tbody>
-          <tr><td>predict the mean</td><td class="num">161.3 m</td><td></td></tr>
+          <tr><td>predict the mean (<span class="term">baseline</span>)</td><td class="num">161.3 m</td><td></td></tr>
           <tr><td>linear in (x, y)</td><td class="num">144.9 m</td><td></td></tr>
           <tr><td><b>your MLP</b></td><td class="num"><b>90.4 m</b></td><td class="num">1.8</td></tr>
           <tr><td>same in JAX (jit)</td><td class="num">90.4 m</td><td class="num">2.6</td></tr>
@@ -269,14 +396,14 @@
       </table>
     </div>
     <div>
-      <div class="box warn"><span class="label">the rule</span>
+      <div class="box warn"><span class="label">the rule: <span class="term" data-term="differentiate the program, not the function">differentiate the program</span></span>
         <p class="small">Autodiff differentiates <b>the program that ran</b>, branch by branch. Where the program branches on a value, or uses a function at a kink, the result is a convention, not a derivative.</p>
       </div>
       <ul class="small">
         <li><b>Non-smooth points</b>: a subgradient if you're lucky, a library convention otherwise.</li>
         <li><b>Control flow</b>: the derivative of the branch taken, blind to the other branch.</li>
         <li><b>In-place mutation</b>: saved values overwritten before backward.</li>
-        <li><b>argmax, sorting, rounding</b>: derivatives exist and are zero almost everywhere, which is useless for learning.</li>
+        <li><b>argmax, sorting, rounding</b>: derivatives exist and are zero <span class="term" data-term="almost everywhere (a.e.)">almost everywhere</span>, which is useless for learning.</li>
       </ul>
     </div>
   </div>

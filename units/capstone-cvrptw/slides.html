@@ -18,7 +18,7 @@
   <div class="unit-no">∗</div>
   <h1>One problem, four traditions</h1>
   <p class="lede">Vehicle routing with time windows, solved by branch-and-cut, branch-and-price, CP-SAT and ALNS, then refereed on Solomon's instances with unit 28's method.</p>
-  <p class="meta"><span>needs 07, 08, 10, 18–19, 26, 28</span><span>~1 h slides + 12–15 h lab</span><span>lab: <code>uv run co lab capstone</code></span></p>
+  <p class="meta"><span>needs 07, 08, 10, 18–19, 26, 28</span><span>~1¼ h slides + 12–15 h lab</span><span>lab: <code>uv run co lab capstone</code></span></p>
   <aside class="notes">
     <p>The capstone is the one place in the course where the four traditions meet on a single problem:
     polyhedral (a MIP with your cuts), decomposition (column generation inside a tree), constraint
@@ -27,6 +27,13 @@
     <p>The brief in the curriculum asks for "a defensible account of which instance characteristics favour
     which method". So the deliverable is the report in <code>NOTES.md</code>, and the code is the means to
     it. A method that wins nowhere is still a finding, if the evidence is attached.</p>
+    <h4>How to read this deck</h4>
+    <p>A four-customer instance, small enough to schedule by hand, carries the mechanics: the start-time
+    recurrence, the constant-time insertion test ALNS relies on, and the primal gap the referee reports. Its
+    optimum was computed by brute force with the lab's reference <code>schedule</code> and confirmed by
+    <code>solve_cpsat</code>. Distances are in tenths, as everywhere in the capstone.</p>
+    <p>Words with a dotted underline are glossary terms: click one for its definition, or press <b>G</b> for
+    the whole list.</p>
   </aside>
 </section>
 
@@ -36,16 +43,16 @@
   <div class="cols">
     <div>
       <div class="box def"><span class="label">vehicle routing with time windows</span>
-        <p class="small">A depot 0 and customers $1..n$. Customer $i$ has demand $q_i$, a window $[a_i, b_i]$ in which service must <b>start</b>, and a service time $s_i$. Identical vehicles of capacity $Q$ leave the depot no earlier than $a_0$ and return by $b_0$. Travel time equals distance $d_{ij}$. Arriving early means waiting.</p>
+        <p class="small"><span class="term">VRPTW</span>: a depot 0 and customers $1..n$. Customer $i$ has demand $q_i$, a <span class="term" data-term="time window \([a_i, b_i]\)">window</span> $[a_i, b_i]$ in which service must <b>start</b>, and a <span class="term" data-term="service time \(s_i\)">service time</span> $s_i$. Identical vehicles of capacity $Q$ leave the depot no earlier than $a_0$ and return by $b_0$. Travel time equals distance $d_{ij}$. Arriving early means waiting.</p>
         <p class="small">Find routes that serve every customer once, within capacity and windows, minimising <b>total distance</b>. The fleet is unlimited.</p>
       </div>
       <p class="small">Along a route, service starts satisfy
       $$t_j = \max\bigl(a_j,\; t_i + s_i + d_{ij}\bigr) \le b_j.$$
-      Waiting is free, so this recurrence is the entire time-window model.</p>
+      Waiting is free, so this <span class="term">start-time recurrence</span> is the entire time-window model.</p>
     </div>
     <div>
       <table class="dense">
-        <thead><tr><th>Solomon (1987) series</th><th>customers</th><th>windows</th></tr></thead>
+        <thead><tr><th><span class="term" data-term="Solomon instances">Solomon</span> (1987) series</th><th>customers</th><th>windows</th></tr></thead>
         <tbody>
           <tr><td>C1, C2</td><td>clustered</td><td rowspan="3">series 1: short horizon, tight windows, short routes<br>series 2: long horizon, wide windows, long routes</td></tr>
           <tr><td>R1, R2</td><td>uniform random</td></tr>
@@ -53,6 +60,9 @@
         </tbody>
       </table>
       <p class="small">56 instances of 100 customers, and the literature's 25- and 50-customer versions: the first $n$ customers of each file. <code>uv run co data</code> downloads them from SINTEF's mirror.</p>
+      <div class="box good"><span class="label">getting around</span>
+        <p class="small">Words with a <span class="term" data-term="VRPTW">dotted underline</span> are glossary terms: click one. <kbd>G</kbd> lists them all, <kbd>N</kbd> shows the notes.</p>
+      </div>
     </div>
   </div>
   <aside class="notes">
@@ -66,14 +76,59 @@
 </section>
 
 <section>
+  <p class="eyebrow">capstone · the problem · example</p>
+  <h2>The recurrence, on four customers</h2>
+  <div class="cols wide-right">
+    <div>
+      <table>
+        <thead><tr><th>vertex</th><th>position</th><th class="num">window</th><th class="num">service</th></tr></thead>
+        <tbody>
+          <tr><td>depot 0</td><td>(0, 0)</td><td class="num">[0, 400]</td><td class="num">0</td></tr>
+          <tr><td>1</td><td>(0, 30)</td><td class="num">[0, 50]</td><td class="num">10</td></tr>
+          <tr><td>2</td><td>(40, 30)</td><td class="num">[60, 100]</td><td class="num">10</td></tr>
+          <tr><td>3</td><td>(40, 0)</td><td class="num">[100, 200]</td><td class="num">10</td></tr>
+          <tr><td>4</td><td>(80, 0)</td><td class="num">[0, 300]</td><td class="num">10</td></tr>
+        </tbody>
+      </table>
+      <p class="small">Demand 1 each, capacity 5, so only time matters. Distances are Euclidean: $d_{01} = 30$, $d_{12} = 40$, $d_{23} = 30$, $d_{30} = 40$, $d_{24} = 50$, $d_{34} = 40$.</p>
+    </div>
+    <div>
+      <div class="box ex"><span class="label">route 0 → 1 → 2 → 3 → 0</span>
+        <table style="margin:0">
+          <thead><tr><th>at</th><th>$t = \max(a,\ \text{previous} + s + d)$</th><th class="num">window ok?</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>$\max(0,\ 0 + 0 + 30) = 30$</td><td class="num">$30 \le 50$ ✓</td></tr>
+            <tr><td>2</td><td>$\max(60,\ 30 + 10 + 40) = 80$</td><td class="num">$80 \le 100$ ✓</td></tr>
+            <tr><td>3</td><td>$\max(100,\ 80 + 10 + 30) = 120$</td><td class="num">$120 \le 200$ ✓</td></tr>
+            <tr><td>depot</td><td>$120 + 10 + 40 = 170$</td><td class="num">$170 \le 400$ ✓</td></tr>
+          </tbody>
+        </table>
+        <p class="small">Distance $30 + 40 + 30 + 40 = 140$. Customer 4 still needs a place.</p>
+      </div>
+      <p class="small">The optimum serves all four on <b>one</b> route, $0 \to 1 \to 2 \to 4 \to 3 \to 0$, distance <b>200</b>: starts 30, 80, 140, 190, back at 240.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p><b>Checking the optimum.</b> After 2 (start 80) go to 4: $80 + 10 + 50 = 140 \le 300$. Then 3:
+    $\max(100, 140 + 10 + 40) = 190 \le 200$, with only 10 to spare. Back at $190 + 10 + 40 = 240$. Distance
+    $30 + 40 + 50 + 40 + 40 = 200$.</p>
+    <p>Brute force over every set partition of the four customers and every order within each block, using
+    the reference <code>schedule</code> to reject infeasible routes, gives 200 with the single route
+    $[1, 2, 4, 3]$; the reference <code>solve_cpsat</code> proves the same value. Note that 3 before 4 would be
+    the geographic order, but 1 must be served by 50 and 3 by 200, which leaves room to visit 4 in between.</p>
+    <p>In code: <code>VRPTW.build("tiny", [(0,0), (0,30), (40,30), (40,0), (80,0)], [0,1,1,1,1], [0,0,60,100,0], [400,50,100,200,300], [0,10,10,10,10], 5)</code>.</p>
+  </aside>
+</section>
+
+<section>
   <p class="eyebrow">capstone · conventions</p>
   <h2>Two objectives, and why the numbers are in tenths</h2>
   <div class="cols">
     <div class="box warn"><span class="label">the heuristic tables</span>
-      <p class="small">Minimise <b>vehicles first</b>, then distance, with double-precision Euclidean distances. SINTEF's best-known table uses this: R101 at 100 customers is 19 vehicles, 1650.80.</p>
+      <p class="small">Minimise <b>vehicles first</b>, then distance (a <span class="term" data-term="hierarchical objective">hierarchical objective</span>), with double-precision Euclidean distances. SINTEF's best-known table uses this: R101 at 100 customers is 19 vehicles, 1650.80.</p>
     </div>
     <div class="box def"><span class="label">the exact literature, and this lab</span>
-      <p class="small">Minimise <b>distance only</b>, with $d_{ij} = \lfloor 10 \cdot \mathrm{euclid}(i, j) \rfloor / 10$, truncated to one decimal (Kallehauge et al. 2005; Baldacci, Mingozzi & Roberti 2011). Everything is stored as integers in tenths.</p>
+      <p class="small">Minimise <b>distance only</b> (the <span class="term" data-term="distance-only objective">distance-only objective</span>), with $d_{ij} = \lfloor 10 \cdot \mathrm{euclid}(i, j) \rfloor / 10$, truncated to one decimal (Kallehauge et al. 2005; Baldacci, Mingozzi & Roberti 2011). Everything is stored as integers in tenths.</p>
     </div>
   </div>
   <ul class="small">
@@ -132,7 +187,7 @@
   <h2>A compact model whose capacity lives in your cuts</h2>
   <div class="cols">
     <div>
-      <p class="small">$x_{ij} \in \{0,1\}$ for arcs that some route could use, and start times $t_i \in [a_i, b_i]$:</p>
+      <p class="small">The <span class="term">arc MIP</span>: $x_{ij} \in \{0,1\}$ for arcs that some route could use, and start times $t_i \in [a_i, b_i]$:</p>
       $$\begin{aligned}
       \min\ & \textstyle\sum d_{ij} x_{ij} \\
       & x(\delta^+(i)) = x(\delta^-(i)) = 1 \quad i \ne 0 \\
@@ -142,10 +197,10 @@
       <p class="small">The time rows already rule out subtours: around a cycle, each start would exceed the previous one by $s_i + d_{ij} &gt; 0$. They don't limit <b>load</b>.</p>
     </div>
     <div>
-      <div class="box thm"><span class="label">rounded capacity inequalities</span>
+      <div class="box thm"><span class="label"><span class="term" data-term="rounded capacity inequality">rounded capacity inequalities</span></span>
         <p class="small">For every customer set $S$: $\;x(\delta^-(S)) \ge \lceil q(S) / Q \rceil$.</p>
       </div>
-      <p class="small">Separation by <b>connected components</b> of the support graph. On an integer point the components are the routes, so an overloaded route always yields a violated cut. That makes the handler exact as a lazy constraint. On a fractional point it's a heuristic: exact separation is NP-hard (CVRPSEP is the standard code).</p>
+      <p class="small">Separation by <span class="term" data-term="connected-components separation">connected components</span> of the support graph. On an integer point the components are the routes, so an overloaded route always yields a violated cut. That makes the handler exact as a lazy constraint. On a fractional point it's a heuristic: exact separation is NP-hard (<span class="term">CVRPSEP</span> is the standard code).</p>
       <p class="small"><code>colib.vrptw.lazy_cut_handler</code> supplies SCIP's plumbing; you supply <code>separate(values)</code>.</p>
     </div>
   </div>
@@ -169,15 +224,15 @@
   <div class="cols">
     <div>
       $$\min \sum_{r \in \Omega} c_r \lambda_r \quad \text{s.t.} \sum_{r \ni i} \lambda_r = 1\ \ \forall i,\quad \lambda \ge 0$$
-      <p class="small">$\Omega$ is every feasible route, too many to write down. Unit 10's loop: solve over a few, read duals $\pi$, and find a route with $c_r - \sum_{i \in r} \pi_i &lt; 0$.</p>
-      <div class="box def"><span class="label">a label at vertex v</span>
-        <p class="small">(reduced cost, load, start time, unreachable set, route). Extend along allowed arcs. $L$ <b>dominates</b> $L'$ when it's no worse in cost, load and time, and its unreachable set is a subset of $L'$'s.</p>
+      <p class="small"><span class="term" data-term="route set partitioning">Set partitioning over routes</span>: $\Omega$ is every feasible route, too many to write down. Unit 10's loop: solve over a few, read duals $\pi$, and find a route with $c_r - \sum_{i \in r} \pi_i &lt; 0$.</p>
+      <div class="box def"><span class="label">a <span class="term">label</span> at a vertex</span>
+        <p class="small">(reduced cost, load, start time, <span class="term" data-term="unreachable set (Feillet)">unreachable set</span>, route). Extend along allowed arcs. $L$ <span class="term" data-term="dominance (VRPTW labels)">dominates</span> $L'$ when it's no worse in cost, load and time, and its unreachable set is a subset of $L'$'s.</p>
       </div>
     </div>
     <div>
       <ul class="small">
         <li><b>Feillet et al. (2004)</b>: count customers you <em>can't reach</em> any more as visited. Dominance then fires between labels whose routes differ.</li>
-        <li><b>Branch on arc flows</b> $\sum_r [ij \in r] \lambda_r$. Forbidding an arc keeps pricing the same problem on a smaller graph; forcing $ij$ forbids its alternatives.</li>
+        <li><b><span class="term" data-term="arc branching">Branch on arc flows</span></b> $\sum_r [ij \in r] \lambda_r$. Forbidding an arc keeps pricing the same problem on a smaller graph; forcing $ij$ forbids its alternatives.</li>
         <li>Integral arc flows mean integral $\lambda$: each customer has one arc in and one out with flow 1, so every column in the support follows them.</li>
         <li>Bound $\lceil LP \rceil$ because distances are integers. A <b>restricted master IP</b> at the root gives the first incumbent.</li>
       </ul>
@@ -191,7 +246,7 @@
     bidirectional labelling with a midpoint, completion bounds, subset-row cuts in the master, and strong
     branching. On hard instances each can be worth an order of magnitude or more. With them, exact codes
     solve Solomon's 100-customer instances, which pure-Python labelling can't approach.</p>
-    <p>The heuristic pricing pass (keep eight labels per vertex) finds negative columns cheaply during most
+    <p>The <b>heuristic pricing pass</b> (keep eight labels per vertex) finds negative columns cheaply during most
     of the column-generation run. Only the final "prove there's none" pass must be exact. That is why the
     stub asks for a label limit.</p>
   </aside>
@@ -208,13 +263,13 @@ for (i, j), b in x.items():
         m.add(t[j] >= t[i] + s[i] + d[i][j]).only_enforce_if(b)
         m.add(u[j] >= u[i] + q[j]).only_enforce_if(b)
 m.minimize(sum(d[i][j] * b for (i, j), b in x.items()))</code></pre>
-      <p class="small">Vertex 0 may carry many circuits; every other vertex is on exactly one. That replaces the degree rows and subtour elimination at once. No big-M: the implication is propagated directly, and lazy clause generation (unit 21) learns from its failures.</p>
+      <p class="small">The <span class="term">multiple-circuit constraint</span>: vertex 0 may carry many circuits; every other vertex is on exactly one. That replaces the degree rows and subtour elimination at once. No big-M: the <span class="term" data-term="enforced implication">enforced implication</span> is propagated directly, and lazy clause generation (unit 21) learns from its failures.</p>
     </div>
     <div>
       <div class="box def"><span class="label">search choices you make</span>
         <ul class="small">
           <li><b>A hint</b>: a complete solution (from ALNS) that CP-SAT tries first.</li>
-          <li><b>A decision strategy</b>: branch on short arcs first, value 1. With one worker it's only followed under <code>FIXED_SEARCH</code>.</li>
+          <li><b>A <span class="term">decision strategy</span></b>: branch on short arcs first, value 1. With one worker it's only followed under <code>FIXED_SEARCH</code>.</li>
           <li><b>Workers</b>: CP-SAT is a portfolio. One worker is a fair comparison with the single-threaded methods; eight is how it's meant to be run.</li>
         </ul>
       </div>
@@ -237,20 +292,20 @@ m.minimize(sum(d[i][j] * b for (i, j), b in x.items()))</code></pre>
   <h2>Feasible insertion in constant time</h2>
   <div class="cols">
     <div>
-      <p class="small">Keep, per route, the forward starts $t_k$ and the <b>latest starts</b> $\ell_k$:</p>
+      <p class="small">Keep, per route, the forward starts $t_k$ and the <span class="term" data-term="latest start \(\ell_k\)">latest starts</span> $\ell_k$:</p>
       $$\begin{aligned} \ell_k &= \min\bigl(b_k,\; \ell_{k+1} - s_k - d_{k,k+1}\bigr), \\ \ell_{\text{depot}} &= b_0. \end{aligned}$$
       <p class="small">Inserting $c$ between $p$ and $q$ is feasible iff
       $$\begin{aligned}
       t_c &= \max(a_c,\ t_p + s_p + d_{pc}) \le b_c, \\
       &\max(a_q,\ t_c + s_c + d_{cq}) \le \ell_q,
       \end{aligned}$$
-      plus the load. Waiting absorbs any push up to $\ell_q$, so nothing after $q$ needs rechecking.</p>
+      plus the load. Waiting absorbs any push up to $\ell_q$, so nothing after $q$ needs rechecking: a <span class="term" data-term="constant-time feasible insertion">constant-time feasible insertion</span>.</p>
     </div>
     <div>
       <ul class="small">
-        <li><b>Shaw removal</b>: take out customers related in space, time and demand, so repair has room to rearrange them.</li>
-        <li><b>Regret-k repair</b>: insert first the customer with most to lose, $\sum_{h=2}^{k} (\text{cost}_h - \text{cost}_1)$, over its best position per route.</li>
-        <li><b>A new route is always an option</b>. Without it, repair can never increase the number of routes, and minimising distance sometimes needs more of them. The first prototype lacked it and got stuck 13 % above optimal on R201.25.</li>
+        <li><b><span class="term">Shaw removal</span></b>: take out customers related in space, time and demand, so repair has room to rearrange them.</li>
+        <li><b><span class="term" data-term="regret-\(k\) repair">Regret-k repair</span></b>: insert first the customer with most to lose, $\sum_{h=2}^{k} (\text{cost}_h - \text{cost}_1)$, over its best position per route.</li>
+        <li><b>A <span class="term" data-term="new-route option">new route</span> is always an option</b>. Without it, repair can never increase the number of routes, and minimising distance sometimes needs more of them. The first prototype lacked it and got stuck 13 % above optimal on R201.25.</li>
         <li>Annealing acceptance, and three destroy × three repair operators with adaptive weights (unit 26).</li>
       </ul>
     </div>
@@ -264,6 +319,50 @@ m.minimize(sum(d[i][j] * b for (i, j), b in x.items()))</code></pre>
     for.</p>
     <p>Hybrid genetic search (Vidal 2022) is the heuristic state of the art for CVRP and its time-window
     variants. ALNS here is the unit-26 design carried over, not a competitor to HGS.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">capstone · (d) ALNS · example</p>
+  <h2>Constant-time insertion, with numbers</h2>
+  <div class="cols">
+    <div>
+      <p class="small">Route $0 \to 1 \to 2 \to 3 \to 0$ from the four-customer example. Insert customer 4 (window $[0, 300]$).</p>
+      <div class="box ex"><span class="label">latest starts, computed backwards</span>
+        <table style="margin:0">
+          <thead><tr><th>position</th><th>$\ell = \min(b,\ \ell_{\text{next}} - s - d)$</th><th class="num">start $t$</th></tr></thead>
+          <tbody>
+            <tr><td>3</td><td>$\min(200,\ 400 - 10 - 40) = 200$</td><td class="num">120</td></tr>
+            <tr><td>2</td><td>$\min(100,\ 200 - 10 - 30) = 100$</td><td class="num">80</td></tr>
+            <tr><td>1</td><td>$\min(50,\ 100 - 10 - 40) = 50$</td><td class="num">30</td></tr>
+          </tbody>
+        </table>
+        <p class="small">Customer 2 has <b>no slack at all</b> for anything inserted before it: its latest start 100 is its window's end, and it starts at 80.</p>
+      </div>
+    </div>
+    <div>
+      <div class="box ex"><span class="label">every position for customer 4</span>
+        <table style="margin:0">
+          <thead><tr><th>between</th><th>4 starts at</th><th>next start vs its latest</th><th class="num">extra distance</th></tr></thead>
+          <tbody>
+            <tr><td>0 and 1</td><td>80</td><td>at 1: $175 &gt; 50$ ✗</td><td class="num">—</td></tr>
+            <tr><td>1 and 2</td><td>125</td><td>at 2: $185 &gt; 100$ ✗</td><td class="num">—</td></tr>
+            <tr><td>2 and 3</td><td>140</td><td>at 3: $190 \le 200$ ✓</td><td class="num"><b>60</b></td></tr>
+            <tr><td>3 and depot</td><td>170</td><td>back at $260 \le 400$ ✓</td><td class="num">80</td></tr>
+          </tbody>
+        </table>
+        <p class="small">Two numbers per position, no rescheduling of the rest. The cheapest feasible insertion, 60, gives the optimal route of distance $140 + 60 = 200$.</p>
+      </div>
+    </div>
+  </div>
+  <aside class="notes">
+    <p><b>Each row.</b> Between 0 and 1: 4 is reached at $0 + 80 = 80$, then 1 at $80 + 10 + 85 = 175$, past 1's
+    latest start 50. Between 1 and 2: 4 at $30 + 10 + 85 = 125$, then 2 at $125 + 10 + 50 = 185 &gt; 100$.
+    Between 2 and 3: 4 at $80 + 10 + 50 = 140$, then 3 at $\max(100, 140 + 10 + 40) = 190 \le 200$; extra
+    distance $d_{24} + d_{43} - d_{23} = 50 + 40 - 30 = 60$. At the end: 4 at $120 + 10 + 40 = 170$, back at
+    $170 + 10 + 80 = 260$; extra distance $40 + 80 - 40 = 80$.</p>
+    <p>The reference <code>insertion_delta</code> returns None, None, 60, 80 for positions 0 to 3, and
+    <code>latest_starts</code> returns $[50, 100, 200]$. ($d_{14} = 85$ is $\lfloor\sqrt{80^2 + 30^2}\rfloor$ in tenths.)</p>
   </aside>
 </section>
 
@@ -288,14 +387,15 @@ m.minimize(sum(d[i][j] * b for (i, j), b in x.items()))</code></pre>
           <tr><td>runaways</td><td>killed 30 s past the limit or beyond 2.5 GB, and recorded</td></tr>
         </tbody>
       </table>
-      <p class="small">Six runs side by side on eight cores, so absolute seconds include some contention. Every method pays it.</p>
+      <p class="small">The <span class="term">referee</span> also runs a <span class="term">violation checker</span> on every answer. Six runs side by side on eight cores, so absolute seconds include some contention. Every method pays it.</p>
     </div>
     <div>
-      <div class="box def"><span class="label">primal gap (Berthold 2013)</span>
+      <div class="box def"><span class="label"><span class="term">primal gap</span> (Berthold 2013)</span>
         <p class="small">$\gamma(v, v^*) = |v - v^*| / \max(|v|, |v^*|)$, 1 with no solution. $v^*$ is the best value <b>any</b> method found.</p>
+        <p class="small"><b>On the example</b> ($v^* = 200$): inserting 4 at the end gives $v = 220$, $\gamma = 20/220 = 0.091$. Serving 4 on its own route gives $140 + 160 = 300$, $\gamma = 100/300 = 0.333$. No solution: 1.</p>
       </div>
       <div class="box def"><span class="label">two questions, two metrics</span>
-        <p class="small"><b>Who finds good solutions?</b> Primal gap at the limit, all four methods. <b>Who proves optimality fastest?</b> PAR1 seconds, the three exact methods. ALNS never proves anything, so it has no place in the second.</p>
+        <p class="small"><b>Who finds good solutions?</b> Primal gap at the limit, all four methods. <b>Who proves optimality fastest?</b> <span class="term">PAR1</span> seconds, the three exact methods. ALNS never proves anything, so it has no place in the second.</p>
       </div>
       <p class="small">Paired over instances, Wilcoxon signed-rank, Holm over all pairs at once.</p>
     </div>
@@ -309,8 +409,8 @@ m.minimize(sum(d[i][j] * b for (i, j), b in x.items()))</code></pre>
     too. So the verdicts are about this instance set, not about seed-to-seed variation. The honest
     extension is five seeds, averaged per instance before pairing, which <code>head_to_head</code> already
     supports. It needs five times the 11 hours of CPU.</p>
-    <p>A second limitation: a primal gap at a fixed limit throws away when each method got there. A primal
-    integral (the area under the gap-versus-time curve) would keep it, but needs each method to log its
+    <p>A second limitation: a primal gap at a fixed limit throws away when each method got there. A <b>primal
+    integral</b> (the area under the gap-versus-time curve) would keep it, but needs each method to log its
     incumbents over time.</p>
   </aside>
 </section>
@@ -335,7 +435,7 @@ m.minimize(sum(d[i][j] * b for (i, j), b in x.items()))</code></pre>
           <tr><td class="num">100</td><td class="num">11 (28.9%)</td><td class="num">0 (96.5%)</td><td class="num">6 (18.9%)</td><td class="num">– (<b>0.15%</b>)</td><td class="num">11</td></tr>
         </tbody>
       </table>
-      <p class="small">Integrity: no invalid solution, no crash, no "optimal" refuted, no two different proven optima.</p>
+      <p class="small">Integrity: no invalid solution, no crash, no "optimal" refuted (no <span class="term" data-term="refuted claim">refuted claim</span>), no two different proven optima.</p>
     </div>
     <div>
       <ul class="small">
@@ -359,7 +459,7 @@ m.minimize(sum(d[i][j] * b for (i, j), b in x.items()))</code></pre>
   <p class="eyebrow">capstone · measured</p>
   <h2>Which characteristics favour which method</h2>
   <table class="dense">
-    <thead><tr><th>series</th><th class="num">window / horizon</th><th>n = 25</th><th>n = 50</th><th>n = 100</th></tr></thead>
+    <thead><tr><th>series</th><th class="num"><span class="term" data-term="window / horizon ratio">window / horizon</span></th><th>n = 25</th><th>n = 50</th><th>n = 100</th></tr></thead>
     <tbody>
       <tr><td>C1</td><td class="num">0.25</td><td>B&amp;C 8, B&amp;P 1</td><td>B&amp;C 6, ALNS 2, B&amp;P 1</td><td>ALNS 5, B&amp;C 4</td></tr>
       <tr><td>C2</td><td class="num">0.27</td><td>B&amp;C 4, CP-SAT 4</td><td>B&amp;C 5, ALNS 2, CP-SAT 1</td><td>B&amp;C 6, ALNS 2</td></tr>
@@ -369,7 +469,7 @@ m.minimize(sum(d[i][j] * b for (i, j), b in x.items()))</code></pre>
       <tr><td>RC2</td><td class="num">0.38</td><td>B&amp;P 4, CP-SAT 3, B&amp;C 1</td><td>ALNS 6, B&amp;C 1, CP-SAT 1</td><td>ALNS 8</td></tr>
     </tbody>
   </table>
-  <p class="small muted">Per instance: smallest primal gap, then fastest proof.</p>
+  <p class="small muted">Per instance: smallest primal gap, then fastest proof (the <span class="term" data-term="head-to-head verdict">head-to-head verdict</span>).</p>
   <div class="cols">
     <div class="box good"><span class="label">supported by the paired tests</span>
       <ul class="small">
