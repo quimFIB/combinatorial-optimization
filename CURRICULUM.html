@@ -1,0 +1,1826 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Combinatorial &amp; Constrained Optimization — a curriculum</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+
+<style>
+  :root {
+    --ground:      #f3f5f6;
+    --surface:     #ffffff;
+    --surface-sunk:#eef1f2;
+    --ink:         #151a1d;
+    --ink-soft:    #59646a;
+    --ink-faint:   #8a949a;
+    --rule:        #d9dfe1;
+    --rule-strong: #b9c3c6;
+    --accent:      #1f4a54;
+    --accent-soft: #e2ecee;
+
+    --c-root: #151a1d;
+    --c-lp:   #1f4a54;
+    --c-ip:   #8c5e12;
+    --c-comb: #1f6b3f;
+    --c-cp:   #63397a;
+    --c-apx:  #8a3a3a;
+    --c-prac: #5d686e;
+    --c-coda: #2a4a80;
+
+    --shadow: 0 1px 2px rgba(21, 26, 29, .05), 0 4px 14px rgba(21, 26, 29, .045);
+
+    --f-display: "Zilla Slab", "Bitter", Georgia, serif;
+    --f-body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+    --f-mono: "IBM Plex Mono", "SFMono-Regular", Consolas, monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground:      #101416;
+      --surface:     #181d20;
+      --surface-sunk:#141a1c;
+      --ink:         #e4e9eb;
+      --ink-soft:    #939ea4;
+      --ink-faint:   #6d787e;
+      --rule:        #283034;
+      --rule-strong: #3b464b;
+      --accent:      #7fbdc9;
+      --accent-soft: #1c2b30;
+
+      --c-root: #e4e9eb;
+      --c-lp:   #7fbdc9;
+      --c-ip:   #d6a241;
+      --c-comb: #5cbb82;
+      --c-cp:   #b98fd0;
+      --c-apx:  #dd9090;
+      --c-prac: #97a2a8;
+      --c-coda: #8fb0e8;
+
+      --shadow: 0 1px 2px rgba(0, 0, 0, .35), 0 4px 14px rgba(0, 0, 0, .28);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ground:      #101416; --surface: #181d20; --surface-sunk:#141a1c;
+    --ink: #e4e9eb; --ink-soft: #939ea4; --ink-faint: #6d787e;
+    --rule: #283034; --rule-strong: #3b464b;
+    --accent: #7fbdc9; --accent-soft: #1c2b30;
+    --c-root: #e4e9eb; --c-lp: #7fbdc9; --c-ip: #d6a241; --c-comb: #5cbb82;
+    --c-cp: #b98fd0; --c-apx: #dd9090; --c-prac: #97a2a8; --c-coda: #8fb0e8;
+    --shadow: 0 1px 2px rgba(0, 0, 0, .35), 0 4px 14px rgba(0, 0, 0, .28);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--f-body);
+    font-size: 16px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page {
+    max-width: 1120px;
+    margin: 0 auto;
+    padding-block: clamp(2rem, 5vw, 4rem) 5rem;
+    padding-inline: clamp(1rem, 4vw, 2.5rem);
+  }
+
+  a { color: var(--accent); }
+
+  /* ---------------- masthead ---------------- */
+
+  .masthead { border-bottom: 2px solid var(--ink); padding-bottom: 1.4rem; }
+
+  .eyebrow {
+    font-family: var(--f-mono);
+    font-size: .72rem;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 .7rem;
+  }
+
+  h1 {
+    font-family: var(--f-display);
+    font-weight: 700;
+    font-size: clamp(2rem, 5.5vw, 3.1rem);
+    line-height: 1.08;
+    letter-spacing: -.01em;
+    margin: 0 0 .6rem;
+  }
+
+  .standfirst {
+    font-size: clamp(1rem, 2.2vw, 1.14rem);
+    color: var(--ink-soft);
+    max-width: 60ch;
+    margin: 0;
+  }
+
+  .strip {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 2.4rem;
+    margin-top: 1.6rem;
+    padding-top: 1.1rem;
+    border-top: 1px solid var(--rule);
+  }
+  .strip div { padding: .2rem 0; }
+  .strip b {
+    display: block;
+    font-family: var(--f-display);
+    font-size: 1.5rem;
+    font-weight: 600;
+    line-height: 1.1;
+  }
+  .strip span {
+    font-family: var(--f-mono);
+    font-size: .68rem;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+
+  /* ---------------- generic section ---------------- */
+
+  section { margin-top: 3.6rem; }
+
+  h2 {
+    font-family: var(--f-display);
+    font-weight: 600;
+    font-size: clamp(1.4rem, 3vw, 1.85rem);
+    letter-spacing: -.005em;
+    margin: 0 0 .2rem;
+  }
+  .subhead {
+    color: var(--ink-soft);
+    max-width: 68ch;
+    margin: 0 0 1.5rem;
+  }
+  p { max-width: 72ch; }
+
+  /* ---------------- the unit contract ---------------- */
+
+  .contract {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    gap: 1px;
+    background: var(--rule);
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .contract > div { background: var(--surface); padding: 1.1rem 1.2rem; }
+  .contract h3 {
+    font-family: var(--f-mono);
+    font-size: .7rem;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 .45rem;
+  }
+  .contract p { margin: 0; font-size: .92rem; color: var(--ink-soft); }
+
+  /* ---------------- map ---------------- */
+
+  .map-wrap {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    box-shadow: var(--shadow);
+    padding: 1rem;
+    overflow-x: auto;
+  }
+  svg.map { width: 100%; min-width: 860px; height: auto; display: block; }
+
+  svg.map .edge {
+    fill: none;
+    stroke: var(--rule-strong);
+    stroke-width: 1.3;
+  }
+  svg.map .edge.dashed { stroke-dasharray: 3 4; opacity: .85; }
+  svg.map .band { stroke: var(--rule); stroke-width: 1; stroke-dasharray: 2 5; }
+  svg.map .bandlabel, svg.map .gutlabel {
+    font-family: var(--f-mono);
+    font-size: 9.5px;
+    letter-spacing: .13em;
+    fill: var(--ink-faint);
+  }
+  svg.map .gutlabel { text-anchor: middle; }
+  svg.map .n rect {
+    fill: var(--surface);
+    stroke: var(--rule-strong);
+    stroke-width: 1;
+  }
+  svg.map .n .bar { stroke: none; }
+  svg.map .n text {
+    font-family: var(--f-mono);
+    font-weight: 500;
+    fill: var(--ink);
+    dominant-baseline: auto;
+  }
+  svg.map .n-root .bar { fill: var(--c-root); }
+  svg.map .n-lp   .bar { fill: var(--c-lp); }
+  svg.map .n-ip   .bar { fill: var(--c-ip); }
+  svg.map .n-comb .bar { fill: var(--c-comb); }
+  svg.map .n-cp   .bar { fill: var(--c-cp); }
+  svg.map .n-apx  .bar { fill: var(--c-apx); }
+  svg.map .n-prac .bar { fill: var(--c-prac); }
+  svg.map .n-coda .bar { fill: var(--c-coda); }
+
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem 1.4rem;
+    margin-top: 1rem;
+    font-family: var(--f-mono);
+    font-size: .72rem;
+    color: var(--ink-soft);
+  }
+  .legend i {
+    display: inline-block;
+    width: 10px; height: 10px;
+    border-radius: 2px;
+    margin-right: .45rem;
+    vertical-align: -1px;
+  }
+  .legend .dash {
+    display: inline-block;
+    width: 22px;
+    border-top: 1.5px dashed var(--rule-strong);
+    margin-right: .45rem;
+    vertical-align: 4px;
+  }
+
+  /* ---------------- part headers ---------------- */
+
+  .part {
+    margin-top: 3.2rem;
+    padding-top: .9rem;
+    border-top: 1px solid var(--rule-strong);
+  }
+  .part-no {
+    font-family: var(--f-mono);
+    font-size: .7rem;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    margin: 0 0 .25rem;
+  }
+  .part h2 { margin-bottom: .35rem; }
+  .part .subhead { margin-bottom: 1.4rem; }
+
+  .p-lp   .part-no { color: var(--c-lp); }
+  .p-ip   .part-no { color: var(--c-ip); }
+  .p-comb .part-no { color: var(--c-comb); }
+  .p-cp   .part-no { color: var(--c-cp); }
+  .p-apx  .part-no { color: var(--c-apx); }
+  .p-prac .part-no { color: var(--c-prac); }
+  .p-coda .part-no { color: var(--c-coda); }
+  .p-root .part-no { color: var(--ink-soft); }
+
+  /* ---------------- unit cards ---------------- */
+
+  .units { display: grid; gap: 1.1rem; }
+  @media (min-width: 900px) {
+    .units { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  .unit {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-left: 4px solid var(--rule-strong);
+    border-radius: 5px;
+    box-shadow: var(--shadow);
+    padding: 1.15rem 1.25rem 1.25rem;
+    scroll-margin-top: 1rem;
+  }
+  .unit.t-lp   { border-left-color: var(--c-lp); }
+  .unit.t-ip   { border-left-color: var(--c-ip); }
+  .unit.t-comb { border-left-color: var(--c-comb); }
+  .unit.t-cp   { border-left-color: var(--c-cp); }
+  .unit.t-apx  { border-left-color: var(--c-apx); }
+  .unit.t-prac { border-left-color: var(--c-prac); }
+  .unit.t-coda { border-left-color: var(--c-coda); }
+  .unit.t-root { border-left-color: var(--c-root); }
+
+  .unit > header {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: .55rem;
+    margin-bottom: .5rem;
+  }
+  .num {
+    font-family: var(--f-mono);
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: var(--ink-faint);
+  }
+  .unit h3 {
+    font-family: var(--f-display);
+    font-size: 1.16rem;
+    font-weight: 600;
+    margin: 0;
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+  .tag {
+    font-family: var(--f-mono);
+    font-size: .62rem;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    padding: .18rem .45rem;
+    border-radius: 3px;
+    background: var(--surface-sunk);
+    color: var(--ink-faint);
+    border: 1px solid var(--rule);
+    white-space: nowrap;
+  }
+  .tag.spine { background: var(--accent-soft); color: var(--accent); border-color: transparent; }
+
+  .needs {
+    font-family: var(--f-mono);
+    font-size: .72rem;
+    color: var(--ink-faint);
+    margin: 0 0 .8rem;
+    max-width: none;
+  }
+  .needs b {
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    font-weight: 500;
+    margin-right: .4rem;
+  }
+  .needs a {
+    text-decoration: none;
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    padding: .05rem .32rem;
+    margin-right: .22rem;
+    color: var(--ink-soft);
+  }
+  .needs a:hover { border-color: var(--accent); color: var(--accent); }
+
+  .unit dl { margin: 0; }
+  .unit dt {
+    font-family: var(--f-mono);
+    font-size: .66rem;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-top: .8rem;
+  }
+  .unit dt:first-child { margin-top: 0; }
+  .unit dd {
+    margin: .15rem 0 0;
+    font-size: .93rem;
+    line-height: 1.52;
+    color: var(--ink-soft);
+  }
+  .unit dd em { color: var(--ink); font-style: normal; font-weight: 500; }
+  .unit dd.check {
+    color: var(--ink);
+    border-left: 2px solid var(--rule-strong);
+    padding-left: .7rem;
+  }
+  code, .mono {
+    font-family: var(--f-mono);
+    font-size: .88em;
+    background: var(--surface-sunk);
+    padding: .06em .3em;
+    border-radius: 3px;
+  }
+
+  /* ---------------- plain lists / tables ---------------- */
+
+  .cols {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1.6rem 2.4rem;
+  }
+  .cols h3 {
+    font-family: var(--f-mono);
+    font-size: .7rem;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 .5rem;
+    padding-bottom: .35rem;
+    border-bottom: 1px solid var(--rule);
+  }
+  .cols ul { margin: 0; padding-left: 1.1rem; }
+  .cols li { margin-bottom: .45rem; font-size: .93rem; color: var(--ink-soft); }
+  .cols li b { color: var(--ink); font-weight: 600; }
+
+  .callout {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    padding: 1.2rem 1.35rem;
+    box-shadow: var(--shadow);
+  }
+  .callout h3 {
+    font-family: var(--f-display);
+    font-size: 1.08rem;
+    margin: 0 0 .5rem;
+  }
+  .callout p:last-child { margin-bottom: 0; }
+  .route {
+    font-family: var(--f-mono);
+    font-size: .84rem;
+    line-height: 2;
+    color: var(--ink);
+    word-spacing: .1em;
+  }
+  .route span { color: var(--ink-faint); }
+
+  .colophon {
+    margin-top: 4rem;
+    padding-top: 1.2rem;
+    border-top: 1px solid var(--rule);
+    font-size: .87rem;
+    color: var(--ink-faint);
+  }
+  .colophon p { max-width: 76ch; }
+</style>
+</head>
+<body>
+<div class="page">
+
+<header class="masthead">
+  <p class="eyebrow">Self-study curriculum · proposal · 2026-09-12</p>
+  <h1>Combinatorial &amp; Constrained Optimization</h1>
+  <p class="standfirst">
+    Thirty-two units in which every piece of theory is cashed out as something you
+    implement, and every implementation is then beaten by a real solver so you can
+    see exactly what the theory you skipped was worth.
+  </p>
+  <div class="strip">
+    <div><b>32</b><span>units</span></div>
+    <div><b>3</b><span>trunks</span></div>
+    <div><b>~40</b><span>from-scratch builds</span></div>
+    <div><b>7</b><span>parts + capstone</span></div>
+    <div><b>0</b><span>fixed deadlines</span></div>
+  </div>
+</header>
+
+<section>
+  <h2>The premise</h2>
+  <p class="subhead">
+    Three things shape this curriculum, and all three came out of your answers.
+  </p>
+  <p>
+    <b>You are past the fundamentals but not at the frontier.</b> So the course does
+    not teach you what a proof is or re-derive Gaussian elimination. It starts at
+    polyhedra, spends one unit longer than feels necessary on <em>duality</em> — because
+    duality is the single idea that cutting planes, column generation, Lagrangian
+    relaxation, the Hungarian algorithm, primal–dual approximation and KKT are all
+    special cases of — and then moves fast.
+  </p>
+  <p>
+    <b>From scratch, then solvers.</b> Each unit has you build the naive thing, then
+    run the industrial thing on the same instance and measure the gap. This is the
+    only honest way to learn why branch-and-cut has the shape it has: you write a
+    branch-and-bound, watch CBC beat it by 400×, and then spend the next unit finding
+    out which of its features was worth how much. The comparison is not decoration —
+    it is the assessment.
+  </p>
+  <p>
+    <b>No calendar, so this is a dependency graph.</b> Units say what they need, not
+    when they happen. There are three trunks descending from a common root — the
+    polyhedral line (LP → IP), the combinatorial line (matroids, flows, matching, DP)
+    and the constraint line (CP, SAT) — and they are genuinely independent for a long
+    way. You can put one down for two months and pick up another. They converge only
+    when you get to approximation, where you need all three.
+  </p>
+</section>
+
+<section>
+  <h2>What a unit is</h2>
+  <p class="subhead">
+    Every unit is the same four things. A unit is done when the checkpoint is true —
+    not when you have read the chapter.
+  </p>
+  <div class="contract">
+    <div>
+      <h3>Theory</h3>
+      <p>The named results and algorithms, with the reading that covers them. Roughly
+      the size of one book chapter.</p>
+    </div>
+    <div>
+      <h3>Build</h3>
+      <p>Python, from scratch, no optimization library. Correctness checked
+      differentially against the brute-force oracle you write in unit 00.</p>
+    </div>
+    <div>
+      <h3>Then</h3>
+      <p>The same instances through HiGHS / Gurobi / OR-Tools / CaDiCaL. Record the
+      gap. The gap is the lesson.</p>
+    </div>
+    <div>
+      <h3>Checkpoint</h3>
+      <p>A single falsifiable claim about what you can now do. If you cannot make it
+      true, the unit is not finished — and you know precisely what is missing.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>The shape of it</h2>
+  <p class="subhead">
+    Solid arrows are prerequisites. Dashed arrows are the cross-trunk links — the
+    places where one tradition turns out to need another, which are the most
+    interesting moments in the course.
+  </p>
+  <div class="map-wrap">
+<!--MAP:BEGIN-->
+<svg class="map" viewBox="0 0 1080 1190" role="img" aria-label="Dependency map of the 32 units: three trunks descending from unit 00, converging into parts V, VI and VII.">
+  <defs>
+    <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6"
+            markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 9 5 L 0 9 z" fill="var(--rule-strong)"/>
+    </marker>
+  </defs>
+  <line class="band" x1="8" y1="715" x2="1072" y2="715"/>
+  <text class="bandlabel" x="8" y="707">PART V — when exact is hopeless</text>
+  <line class="band" x1="8" y1="890" x2="1072" y2="890"/>
+  <text class="bandlabel" x="8" y="882">PART VI — making it real</text>
+  <line class="band" x1="8" y1="985" x2="1072" y2="985"/>
+  <text class="bandlabel" x="8" y="977">PART VII — coda: the continuous cousin</text>
+  <path class="edge" d="M 540.0 68.0 C 540.0 218.9 150.0 -40.9 150.0 110.0" marker-end="url(#ar)"/>
+  <path class="edge" d="M 540.0 68.0 C 540.0 96.0 540.0 82.0 540.0 110.0" marker-end="url(#ar)"/>
+  <path class="edge" d="M 540.0 68.0 C 540.0 213.1 915.0 -35.1 915.0 110.0" marker-end="url(#ar)"/>
+  <path class="edge" d="M 150.0 154.0 C 150.0 182.0 150.0 152.0 150.0 180.0" marker-end="url(#ar)"/>
+  <path class="edge" d="M 150.0 224.0 C 150.0 252.0 150.0 222.0 150.0 250.0" marker-end="url(#ar)"/>
+  <path class="edge" d="M 150.0 294.0 C 150.0 322.0 150.0 292.0 150.0 320.0" marker-end="url(#ar)"/>
+  <path class="edge" d="M 150.0 364.0 C 150.0 392.0 150.0 362.0 150.0 390.0" marker-end="url(#ar)"/>
+  <path class="edge" d="M 150.0 434.0 C 150.0 462.0 150.0 432.0 150.0 460.0" marker-end="url(#ar)"/>
+  <path class="edge" d="M 150.0 504.0 C 150.0 532.0 150.0 502.0 150.0 530.0" marker-end="url(#ar)"/>
+  <path class="edge" d="M 150.0 574.0 C 150.0 602.0 150.0 572.0 150.0 600.0" marker-end="url(#ar)"/>
+  <path class="edge" d="M 248.0 132.0 C 276.0 132.0 236.5 200.0 264.5 200.0" marker-end="url(#ar)"/>
+  <path class="edge" d="M 248.0 272.0 C 276.0 272.0 236.5 340.0 264.5 340.0" marker-end="url(#ar)"/>
+  <path class="edge" d="M 248.0 482.0 C 276.0 482.0 236.5 480.0 264.5 480.0" marker-end="url(#ar)"/>
+  <path class="edge" d="M 248.0 552.0 C 276.0 552.0 236.5 550.0 264.5 550.0" marker-end="url(#ar)"/>
+  <path class="edge dashed" d="M 352.0 220.0 C 352.0 312.3 352.0 367.7 352.0 460.0" marker-end="url(#ar)"/>
+  <path class="edge" d="M 540.0 154.0 C 540.0 182.0 540.0 152.0 540.0 180.0" marker-end="url(#ar)"/>
+  <path class="edge" d="M 540.0 224.0 C 540.0 252.0 540.0 222.0 540.0 250.0" marker-end="url(#ar)"/>
+  <path class="edge" d="M 540.0 294.0 C 540.0 322.0 540.0 292.0 540.0 320.0" marker-end="url(#ar)"/>
+  <path class="edge" d="M 915.0 154.0 C 915.0 182.0 915.0 152.0 915.0 180.0" marker-end="url(#ar)"/>
+  <path class="edge" d="M 915.0 224.0 C 915.0 252.0 915.0 222.0 915.0 250.0" marker-end="url(#ar)"/>
+  <path class="edge" d="M 1013.0 132.0 C 1093.8 132.0 1093.8 342.0 1013.0 342.0" marker-end="url(#ar)"/>
+  <path class="edge" d="M 915.0 364.0 C 915.0 392.0 915.0 362.0 915.0 390.0" marker-end="url(#ar)"/>
+  <path class="edge" d="M 817.0 272.0 C 763.2 272.0 763.2 412.0 817.0 412.0" marker-end="url(#ar)"/>
+  <path class="edge dashed" d="M 638.0 272.0 C 711.9 272.0 743.1 202.0 817.0 202.0" marker-end="url(#ar)"/>
+  <path class="edge dashed" d="M 442.0 342.0 C 311.0 342.0 379.0 622.0 248.0 622.0" marker-end="url(#ar)"/>
+  <path class="edge dashed" d="M 915.0 294.0 C 915.0 494.0 540.0 620.0 540.0 820.0" marker-end="url(#ar)"/>
+  <path class="edge dashed" d="M 540.0 294.0 C 540.0 474.5 410.0 564.5 410.0 745.0" marker-end="url(#ar)"/>
+  <path class="edge" d="M 150.0 644.0 C 150.0 682.8 150.0 706.2 150.0 745.0" marker-end="url(#ar)"/>
+  <path class="edge" d="M 540.0 364.0 C 540.0 518.8 410.0 590.2 410.0 745.0" marker-end="url(#ar)"/>
+  <path class="edge" d="M 915.0 434.0 C 915.0 553.8 930.0 625.2 930.0 745.0" marker-end="url(#ar)"/>
+  <path class="edge" d="M 245.0 767.0 C 273.0 767.0 287.0 767.0 315.0 767.0" marker-end="url(#ar)"/>
+  <path class="edge" d="M 505.0 767.0 C 533.0 767.0 547.0 767.0 575.0 767.0" marker-end="url(#ar)"/>
+  <path class="edge" d="M 765.0 767.0 C 793.0 767.0 807.0 767.0 835.0 767.0" marker-end="url(#ar)"/>
+  <path class="edge" d="M 670.0 789.0 C 670.0 840.4 540.0 768.6 540.0 820.0" marker-end="url(#ar)"/>
+  <path class="edge" d="M 540.0 864.0 C 540.0 918.4 410.0 865.6 410.0 920.0" marker-end="url(#ar)"/>
+  <path class="edge" d="M 540.0 864.0 C 540.0 918.4 670.0 865.6 670.0 920.0" marker-end="url(#ar)"/>
+  <path class="edge" d="M 510.0 942.0 C 538.0 942.0 542.0 942.0 570.0 942.0" marker-end="url(#ar)"/>
+  <path class="edge" d="M 670.0 964.0 C 670.0 1017.7 540.0 961.3 540.0 1015.0" marker-end="url(#ar)"/>
+  <path class="edge" d="M 390.0 1037.0 C 418.0 1037.0 412.0 1037.0 440.0 1037.0" marker-end="url(#ar)"/>
+  <path class="edge" d="M 640.0 1037.0 C 668.0 1037.0 657.0 1037.0 685.0 1037.0" marker-end="url(#ar)"/>
+  <path class="edge" d="M 790.0 1059.0 C 790.0 1156.8 540.0 1007.2 540.0 1105.0" marker-end="url(#ar)"/>
+  <path class="edge" d="M 670.0 964.0 C 670.0 1037.8 540.0 1031.2 540.0 1105.0" marker-end="url(#ar)"/>
+  <path class="edge dashed" d="M 52 412 C 22 412 22 424 22 440 L 22 1071 C 22 1085 32 1085 46 1085 L 776 1085 C 786 1085 790 1081 790 1071 L 790 1059" marker-end="url(#ar)"/>
+  <text class="gutlabel" x="30" y="560" transform="rotate(-90 30 560)">learning to branch</text>
+  <g class="n n-root">
+    <rect x="410.0" y="24" width="260" height="44" rx="4"/>
+    <rect class="bar" x="410.0" y="24" width="4" height="44"/>
+    <text x="424.0" y="50.0" font-size="11.5">00  Models & an oracle</text>
+  </g>
+  <g class="n n-lp">
+    <rect x="52.0" y="110" width="196" height="44" rx="4"/>
+    <rect class="bar" x="52.0" y="110" width="4" height="44"/>
+    <text x="66.0" y="136.0" font-size="11.5">01  Polyhedra · Farkas</text>
+  </g>
+  <g class="n n-lp">
+    <rect x="52.0" y="180" width="196" height="44" rx="4"/>
+    <rect class="bar" x="52.0" y="180" width="4" height="44"/>
+    <text x="66.0" y="206.0" font-size="11.5">02  Simplex</text>
+  </g>
+  <g class="n n-lp">
+    <rect x="52.0" y="250" width="196" height="44" rx="4"/>
+    <rect class="bar" x="52.0" y="250" width="4" height="44"/>
+    <text x="66.0" y="276.0" font-size="11.5">03  Duality</text>
+  </g>
+  <g class="n n-ip">
+    <rect x="52.0" y="320" width="196" height="44" rx="4"/>
+    <rect class="bar" x="52.0" y="320" width="4" height="44"/>
+    <text x="66.0" y="346.0" font-size="11.5">05  Formulations & gaps</text>
+  </g>
+  <g class="n n-ip">
+    <rect x="52.0" y="390" width="196" height="44" rx="4"/>
+    <rect class="bar" x="52.0" y="390" width="4" height="44"/>
+    <text x="66.0" y="416.0" font-size="11.5">07  Branch & bound</text>
+  </g>
+  <g class="n n-ip">
+    <rect x="52.0" y="460" width="196" height="44" rx="4"/>
+    <rect class="bar" x="52.0" y="460" width="4" height="44"/>
+    <text x="66.0" y="486.0" font-size="11.5">08  Cutting planes</text>
+  </g>
+  <g class="n n-ip">
+    <rect x="52.0" y="530" width="196" height="44" rx="4"/>
+    <rect class="bar" x="52.0" y="530" width="4" height="44"/>
+    <text x="66.0" y="556.0" font-size="11.5">10  Column generation</text>
+  </g>
+  <g class="n n-ip">
+    <rect x="52.0" y="600" width="196" height="44" rx="4"/>
+    <rect class="bar" x="52.0" y="600" width="4" height="44"/>
+    <text x="66.0" y="626.0" font-size="11.5">11  Lagrangian relaxation</text>
+  </g>
+  <g class="n n-lp">
+    <rect x="264.5" y="180" width="175" height="40" rx="4"/>
+    <rect class="bar" x="264.5" y="180" width="4" height="40"/>
+    <text x="278.5" y="204.0" font-size="11">04  Ellipsoid & IPM</text>
+  </g>
+  <g class="n n-ip">
+    <rect x="264.5" y="320" width="175" height="40" rx="4"/>
+    <rect class="bar" x="264.5" y="320" width="4" height="40"/>
+    <text x="278.5" y="344.0" font-size="11">06  Unimodularity</text>
+  </g>
+  <g class="n n-ip">
+    <rect x="264.5" y="460" width="175" height="40" rx="4"/>
+    <rect class="bar" x="264.5" y="460" width="4" height="40"/>
+    <text x="278.5" y="484.0" font-size="11">09  Separation ⇔ opt.</text>
+  </g>
+  <g class="n n-ip">
+    <rect x="264.5" y="530" width="175" height="40" rx="4"/>
+    <rect class="bar" x="264.5" y="530" width="4" height="40"/>
+    <text x="278.5" y="554.0" font-size="11">12  Benders</text>
+  </g>
+  <g class="n n-comb">
+    <rect x="442.0" y="110" width="196" height="44" rx="4"/>
+    <rect class="bar" x="442.0" y="110" width="4" height="44"/>
+    <text x="456.0" y="136.0" font-size="11.5">13  Matroids & greedy</text>
+  </g>
+  <g class="n n-comb">
+    <rect x="442.0" y="180" width="196" height="44" rx="4"/>
+    <rect class="bar" x="442.0" y="180" width="4" height="44"/>
+    <text x="456.0" y="206.0" font-size="11.5">14  Network flows</text>
+  </g>
+  <g class="n n-comb">
+    <rect x="442.0" y="250" width="196" height="44" rx="4"/>
+    <rect class="bar" x="442.0" y="250" width="4" height="44"/>
+    <text x="456.0" y="276.0" font-size="11.5">15  Matching</text>
+  </g>
+  <g class="n n-comb">
+    <rect x="442.0" y="320" width="196" height="44" rx="4"/>
+    <rect class="bar" x="442.0" y="320" width="4" height="44"/>
+    <text x="456.0" y="346.0" font-size="11.5">16  DP & treewidth</text>
+  </g>
+  <g class="n n-cp">
+    <rect x="817.0" y="110" width="196" height="44" rx="4"/>
+    <rect class="bar" x="817.0" y="110" width="4" height="44"/>
+    <text x="831.0" y="136.0" font-size="11.5">17  CSP & propagation</text>
+  </g>
+  <g class="n n-cp">
+    <rect x="817.0" y="180" width="196" height="44" rx="4"/>
+    <rect class="bar" x="817.0" y="180" width="4" height="44"/>
+    <text x="831.0" y="206.0" font-size="11.5">18  Global constraints</text>
+  </g>
+  <g class="n n-cp">
+    <rect x="817.0" y="250" width="196" height="44" rx="4"/>
+    <rect class="bar" x="817.0" y="250" width="4" height="44"/>
+    <text x="831.0" y="276.0" font-size="11.5">19  CP search & LNS</text>
+  </g>
+  <g class="n n-cp">
+    <rect x="817.0" y="320" width="196" height="44" rx="4"/>
+    <rect class="bar" x="817.0" y="320" width="4" height="44"/>
+    <text x="831.0" y="346.0" font-size="11.5">20  SAT & CDCL</text>
+  </g>
+  <g class="n n-cp">
+    <rect x="817.0" y="390" width="196" height="44" rx="4"/>
+    <rect class="bar" x="817.0" y="390" width="4" height="44"/>
+    <text x="831.0" y="416.0" font-size="11.5">21  Lazy clause generation</text>
+  </g>
+  <g class="n n-apx">
+    <rect x="55.0" y="745" width="190" height="44" rx="4"/>
+    <rect class="bar" x="55.0" y="745" width="4" height="44"/>
+    <text x="69.0" y="771.0" font-size="11.5">22  Hardness & gaps</text>
+  </g>
+  <g class="n n-apx">
+    <rect x="315.0" y="745" width="190" height="44" rx="4"/>
+    <rect class="bar" x="315.0" y="745" width="4" height="44"/>
+    <text x="329.0" y="771.0" font-size="11.5">23  Approximation algs</text>
+  </g>
+  <g class="n n-apx">
+    <rect x="575.0" y="745" width="190" height="44" rx="4"/>
+    <rect class="bar" x="575.0" y="745" width="4" height="44"/>
+    <text x="589.0" y="771.0" font-size="11.5">24  Rounding · primal–dual</text>
+  </g>
+  <g class="n n-apx">
+    <rect x="835.0" y="745" width="190" height="44" rx="4"/>
+    <rect class="bar" x="835.0" y="745" width="4" height="44"/>
+    <text x="849.0" y="771.0" font-size="11.5">25  SDP · Goemans–W.</text>
+  </g>
+  <g class="n n-apx">
+    <rect x="425.0" y="820" width="230" height="44" rx="4"/>
+    <rect class="bar" x="425.0" y="820" width="4" height="44"/>
+    <text x="439.0" y="846.0" font-size="11.5">26  Metaheuristics</text>
+  </g>
+  <g class="n n-prac">
+    <rect x="310.0" y="920" width="200" height="44" rx="4"/>
+    <rect class="bar" x="310.0" y="920" width="4" height="44"/>
+    <text x="324.0" y="946.0" font-size="11.5">27  Solver practice</text>
+  </g>
+  <g class="n n-prac">
+    <rect x="570.0" y="920" width="200" height="44" rx="4"/>
+    <rect class="bar" x="570.0" y="920" width="4" height="44"/>
+    <text x="584.0" y="946.0" font-size="11.5">28  Experimental method</text>
+  </g>
+  <g class="n n-coda">
+    <rect x="190.0" y="1015" width="200" height="44" rx="4"/>
+    <rect class="bar" x="190.0" y="1015" width="4" height="44"/>
+    <text x="204.0" y="1041.0" font-size="11.5">29  Convexity & gradients</text>
+  </g>
+  <g class="n n-coda">
+    <rect x="440.0" y="1015" width="200" height="44" rx="4"/>
+    <rect class="bar" x="440.0" y="1015" width="4" height="44"/>
+    <text x="454.0" y="1041.0" font-size="11.5">30  Autodiff</text>
+  </g>
+  <g class="n n-coda">
+    <rect x="685.0" y="1015" width="210" height="44" rx="4"/>
+    <rect class="bar" x="685.0" y="1015" width="4" height="44"/>
+    <text x="699.0" y="1041.0" font-size="11.5">31  Discrete ↔ differentiable</text>
+  </g>
+  <g class="n n-root">
+    <rect x="390.0" y="1105" width="300" height="48" rx="4"/>
+    <rect class="bar" x="390.0" y="1105" width="4" height="48"/>
+    <text x="404.0" y="1133.0" font-size="11.5">CAPSTONE   one problem, four ways</text>
+  </g>
+</svg>
+<!--MAP:END-->
+  </div>
+  <div class="legend">
+    <span><i style="background:var(--c-lp)"></i>linear programming</span>
+    <span><i style="background:var(--c-ip)"></i>integer programming</span>
+    <span><i style="background:var(--c-comb)"></i>combinatorial algorithms</span>
+    <span><i style="background:var(--c-cp)"></i>constraints &amp; SAT</span>
+    <span><i style="background:var(--c-apx)"></i>hardness &amp; approximation</span>
+    <span><i style="background:var(--c-prac)"></i>practice</span>
+    <span><i style="background:var(--c-coda)"></i>continuous &amp; ML coda</span>
+    <span><i class="dash"></i>cross-trunk link</span>
+  </div>
+</section>
+
+<!-- ===================== PART 0 ===================== -->
+<div class="part p-root">
+  <p class="part-no">Part 0 — the ground floor</p>
+  <h2>One unit, and you will use it in all thirty-one others</h2>
+  <p class="subhead">
+    The single most common way self-study in this field goes wrong is having no way
+    to tell whether the clever thing you just wrote is correct. Fix that first.
+  </p>
+</div>
+
+<div class="units">
+
+<article class="unit t-root" id="u00">
+  <header><span class="num">00</span><h3>Models, instances, and an oracle you trust</h3><span class="tag spine">spine</span></header>
+  <p class="needs"><b>needs</b> <span>nothing</span></p>
+  <dl>
+    <dt>Theory</dt>
+    <dd>What makes a problem combinatorial: a finite feasible set described
+    <em>implicitly</em> by constraints. Decision vs optimization vs counting. Certificates
+    and why "here is the answer" and "here is why nothing is better" are different
+    objects. The nine problems you will return to all course: knapsack, set cover,
+    assignment, bin packing, graph colouring, max-cut, TSP, job-shop scheduling,
+    vertex cover.</dd>
+    <dt>Build</dt>
+    <dd>An instance library — generators plus readers for the formats the field
+    actually trades in (DIMACS <code>.cnf</code>, TSPLIB, MIPLIB <code>.mps</code>) — and a
+    brute-force enumerator. Then a differential test harness: every algorithm you
+    write from here on is run against the enumerator on small instances, and
+    disagreement fails loudly with the offending instance printed.</dd>
+    <dt>Then</dt>
+    <dd>Nothing yet. This unit is the measuring stick, not a thing to be measured.</dd>
+    <dd class="check"><b>Checkpoint.</b> You can generate a random instance of any of the
+    nine problems, solve it exactly by enumeration up to n ≈ 20, and your harness
+    catches a deliberately broken algorithm without you looking for it.</dd>
+  </dl>
+</article>
+
+</div>
+
+<!-- ===================== PART I ===================== -->
+<div class="part p-lp">
+  <p class="part-no">Part I — trunk A begins · linear programming and duality</p>
+  <h2>The continuous shadow that every discrete algorithm reasons about</h2>
+  <p class="subhead">
+    Nothing here is combinatorial yet. It is all load-bearing anyway: integer
+    programming is the study of what happens when you take the LP relaxation
+    seriously, and you cannot do that without knowing what the relaxation is.
+  </p>
+</div>
+
+<div class="units">
+
+<article class="unit t-lp" id="u01">
+  <header><span class="num">01</span><h3>Polyhedra, cones, and Farkas' lemma</h3><span class="tag spine">spine</span></header>
+  <p class="needs"><b>needs</b> <a href="#u00">00</a></p>
+  <dl>
+    <dt>Theory</dt>
+    <dd>Polyhedra as intersections of halfspaces; the equivalence of vertex, extreme
+    point and basic feasible solution; Minkowski–Weyl (V- and H-representations);
+    Fourier–Motzkin elimination and its blow-up; <em>Farkas' lemma</em> and the idea of an
+    infeasibility certificate; the fundamental theorem of linear programming.</dd>
+    <dt>Build</dt>
+    <dd>A Fourier–Motzkin eliminator (and watch the constraint count explode). Vertex
+    enumeration of a small polytope by brute-force basis enumeration — which ties
+    straight back to unit 00's enumerator. A Farkas certificate checker.</dd>
+    <dt>Then</dt>
+    <dd><code>scipy.spatial.ConvexHull</code> and <code>pycddlib</code> to cross-check your
+    V↔H conversions.</dd>
+    <dd class="check"><b>Checkpoint.</b> Given an infeasible system you can produce the
+    Farkas vector and explain, without reference to any solver, why it constitutes a
+    proof of infeasibility.</dd>
+  </dl>
+</article>
+
+<article class="unit t-lp" id="u02">
+  <header><span class="num">02</span><h3>Simplex, honestly</h3><span class="tag spine">spine</span></header>
+  <p class="needs"><b>needs</b> <a href="#u01">01</a></p>
+  <dl>
+    <dt>Theory</dt>
+    <dd>The tableau and the revised simplex; pivoting as a walk on vertices; Dantzig's
+    rule, Bland's anti-cycling rule, degeneracy and stalling; two-phase and big-M
+    starts; Klee–Minty and the embarrassment of a worst-case-exponential algorithm
+    that is the workhorse of the field; why real implementations use LU factorisation
+    with periodic refactorisation and steepest-edge pricing.</dd>
+    <dt>Build</dt>
+    <dd>A dense tableau simplex with pluggable pricing. Reproduce <em>Beale's cycling
+    example</em> and watch Bland's rule fix it. Write a Klee–Minty generator and plot
+    pivot count against dimension — the exponential is visible by n = 12.</dd>
+    <dt>Then</dt>
+    <dd><code>scipy.optimize.linprog</code> (HiGHS). Compare iteration counts and find the
+    instance family where your numerics fall apart first.</dd>
+    <dd class="check"><b>Checkpoint.</b> Your simplex agrees with HiGHS on 1000 random LPs,
+    you can exhibit an instance where yours cycles without Bland's rule, and you can
+    say in one sentence what steepest-edge pricing buys over Dantzig's rule.</dd>
+  </dl>
+</article>
+
+<article class="unit t-lp" id="u03">
+  <header><span class="num">03</span><h3>Duality — the load-bearing unit</h3><span class="tag spine">spine</span></header>
+  <p class="needs"><b>needs</b> <a href="#u02">02</a></p>
+  <dl>
+    <dt>Theory</dt>
+    <dd>The dual as a mechanical transform of the primal; weak and strong duality;
+    <em>complementary slackness</em>; duals as shadow prices; the dual simplex and why it is
+    the algorithm that makes branch-and-cut possible; sensitivity analysis and
+    ranging. Spend longer here than feels justified: units 08, 10, 11, 12, 15, 24 and
+    29 are each this unit wearing a different hat.</dd>
+    <dt>Build</dt>
+    <dd>An automatic primal→dual transformer that handles all constraint senses and
+    variable bounds. Extract dual values from your simplex basis and verify
+    complementary slackness numerically. Implement the dual simplex and use it to
+    <em>re-solve after adding one constraint</em> — the warm start that branch-and-cut lives
+    on.</dd>
+    <dt>Then</dt>
+    <dd>Pull duals and reduced costs out of HiGHS and Gurobi; confirm yours match,
+    including sign conventions (which will take you an afternoon, and should).</dd>
+    <dd class="check"><b>Checkpoint.</b> Given a solved LP you can read off the shadow price
+    of each constraint, predict the objective change from a small right-hand-side
+    perturbation before re-solving, and be right.</dd>
+  </dl>
+</article>
+
+<article class="unit t-lp" id="u04">
+  <header><span class="num">04</span><h3>Polynomial-time LP: ellipsoid and interior point</h3><span class="tag">branch</span></header>
+  <p class="needs"><b>needs</b> <a href="#u02">02</a> <span>· feeds 09</span></p>
+  <dl>
+    <dt>Theory</dt>
+    <dd>Why "is LP in P?" was open until Khachiyan in 1979; the ellipsoid method's
+    volume-shrinking argument; why it is useless in practice and indispensable in
+    theory (see unit 09); Karmarkar and the primal–dual path-following interior point
+    method; the central path and the log barrier; why IPMs win on large sparse LPs and
+    lose badly on warm starts.</dd>
+    <dt>Build</dt>
+    <dd>A log-barrier method on two-variable LPs with the central path plotted — this
+    is a picture worth having. A toy ellipsoid method for feasibility.</dd>
+    <dt>Then</dt>
+    <dd>HiGHS or Gurobi with <code>method=barrier</code> vs simplex on a large sparse LP;
+    find the crossover size. Then re-solve with one constraint added and watch the
+    barrier method lose.</dd>
+    <dd class="check"><b>Checkpoint.</b> You can choose between simplex and barrier for a
+    given LP and defend it, and explain why branch-and-bound still wants simplex at
+    every node.</dd>
+  </dl>
+</article>
+
+</div>
+
+<!-- ===================== PART II ===================== -->
+<div class="part p-ip">
+  <p class="part-no">Part II — trunk A continues · integer programming</p>
+  <h2>Where hardness enters, and the architecture that copes with it</h2>
+  <p class="subhead">
+    The longest part, and the one that most repays the slow reading. Everything here
+    is a strategy for exploiting the LP relaxation you built in Part I: tighten it,
+    branch on it, cut it, decompose it, or dualise it.
+  </p>
+</div>
+
+<div class="units">
+
+<article class="unit t-ip" id="u05">
+  <header><span class="num">05</span><h3>Formulations, relaxations, and the integrality gap</h3><span class="tag spine">spine</span></header>
+  <p class="needs"><b>needs</b> <a href="#u03">03</a></p>
+  <dl>
+    <dt>Theory</dt>
+    <dd>IP and MIP; the LP relaxation; the convex hull of integer points as the ideal
+    formulation you can never write down; <em>formulation strength as a partial order</em>;
+    big-M versus indicator constraints, and how a lazily chosen M destroys solve
+    times; extended formulations and the power of auxiliary variables — with the
+    Fiorini–Massar–Pokutta–Tiwary–de Wolf result that no polynomial-size extended
+    formulation of the TSP polytope exists; symmetry as a formulation defect.</dd>
+    <dt>Build</dt>
+    <dd>Three formulations of one facility-location instance family — weak big-M,
+    tight big-M, and disaggregated. Measure the root relaxation bound of each. Keep
+    them; units 07, 08 and 27 come back to these same three models.</dd>
+    <dt>Then</dt>
+    <dd>CBC and Gurobi through PuLP or python-mip. Tabulate relaxation gap, node
+    count, and wall time for all three. The ordering will be stark.</dd>
+    <dd class="check"><b>Checkpoint.</b> Shown two formulations of one problem, you can
+    predict which solves faster from their relaxation bounds alone, and be right more
+    often than not.</dd>
+  </dl>
+</article>
+
+<article class="unit t-ip" id="u06">
+  <header><span class="num">06</span><h3>Total unimodularity: when integrality is free</h3><span class="tag">branch</span></header>
+  <p class="needs"><b>needs</b> <a href="#u03">03</a> <span>· illuminates 14, 15</span></p>
+  <dl>
+    <dt>Theory</dt>
+    <dd>Totally unimodular matrices; the Hoffman–Kruskal theorem; interval matrices,
+    network matrices, bipartite incidence matrices; why assignment, transportation and
+    flow LPs have integral optima with no branching at all; balanced and perfect
+    matrices; integral polyhedra in general. This unit explains <em>why Part III exists</em>
+    — the polynomial islands are the places where the LP is already integral.</dd>
+    <dt>Build</dt>
+    <dd>A TU checker using Ghouila-Houri's criterion on small matrices. Solve an
+    assignment problem as a pure LP and watch integrality fall out unasked. Then make
+    the graph non-bipartite and watch half-integral vertices appear.</dd>
+    <dt>Then</dt>
+    <dd>LP-solved assignment vs <code>scipy.optimize.linear_sum_assignment</code>.</dd>
+    <dd class="check"><b>Checkpoint.</b> Given a constraint matrix you can decide whether to
+    expect integral LP optima, and when the answer is no, construct the odd cycle that
+    breaks it.</dd>
+  </dl>
+</article>
+
+<article class="unit t-ip" id="u07">
+  <header><span class="num">07</span><h3>Branch and bound</h3><span class="tag spine">spine</span></header>
+  <p class="needs"><b>needs</b> <a href="#u05">05</a></p>
+  <dl>
+    <dt>Theory</dt>
+    <dd>The search tree; bounding and pruning; branching variable selection —
+    most-fractional, pseudocost, <em>strong branching</em>, reliability branching; node
+    selection — depth-first for incumbents, best-first for the bound, and the hybrids
+    everyone actually ships; primal heuristics (diving, RINS, feasibility pump); the
+    gap; why the two hard jobs are <em>finding</em> a good solution early and <em>proving</em>
+    nothing better exists.</dd>
+    <dt>Build</dt>
+    <dd>Your own branch-and-bound over your unit-02 simplex, with pluggable branching
+    and node selection and instrumented node counts. Run the full matrix
+    {most-fractional, pseudocost, strong} × {DFS, best-first} on the unit-05
+    formulations.</dd>
+    <dt>Then</dt>
+    <dd>CBC and Gurobi on the same instances. Read their logs line by line, find your
+    factor of shame in node count, and write down which of their features you believe
+    explains it. Units 08 and 27 then test those hypotheses.</dd>
+    <dd class="check"><b>Checkpoint.</b> Your strong-branching variant beats your
+    most-fractional variant on node count while <em>losing</em> on wall time, and you can
+    explain that trade-off in terms of LP solves per node.</dd>
+  </dl>
+</article>
+
+<article class="unit t-ip" id="u08">
+  <header><span class="num">08</span><h3>Cutting planes and branch-and-cut</h3><span class="tag spine">spine</span></header>
+  <p class="needs"><b>needs</b> <a href="#u07">07</a></p>
+  <dl>
+    <dt>Theory</dt>
+    <dd>Valid inequalities, faces and facets; Chvátal–Gomory cuts and CG rank; Gomory
+    mixed-integer cuts read straight off the simplex tableau; the problem-specific
+    families that do the real work — knapsack cover cuts and lifting, clique and
+    odd-hole cuts, flow covers, MIR; the <em>separation problem</em> as the central question;
+    cut management, and why solvers discard most cuts they generate;
+    <em>branch-and-cut</em> as the actual architecture of every modern MIP solver.</dd>
+    <dt>Build</dt>
+    <dd>Gomory fractional cuts from your tableau, applied at the root until the
+    tableau's numerics defeat you (they will — that is a finding, not a failure).
+    Cover-cut separation for knapsack, with lifting. A cut pool with an aging policy.
+    Report <em>gap closed at the root</em> per family.</dd>
+    <dt>Then</dt>
+    <dd>Gurobi with <code>Cuts=0</code> vs default; compare your root gap closed against
+    theirs, per cut family where the log tells you.</dd>
+    <dd class="check"><b>Checkpoint.</b> From a fractional simplex tableau you can write down
+    a valid Gomory cut by hand and prove it separates the current vertex while
+    excluding no integer point.</dd>
+  </dl>
+</article>
+
+<article class="unit t-ip" id="u09">
+  <header><span class="num">09</span><h3>Separation ⇔ optimization</h3><span class="tag">branch · deep theory</span></header>
+  <p class="needs"><b>needs</b> <a href="#u04">04</a> <a href="#u08">08</a></p>
+  <dl>
+    <dt>Theory</dt>
+    <dd>The Grötschel–Lovász–Schrijver equivalence: you can optimize over a polytope
+    in polynomial time <em>if and only if</em> you can separate over it in polynomial time,
+    with the ellipsoid method as the bridge. Why this makes exponentially many
+    constraints perfectly acceptable — subtour elimination for TSP, the odd-set
+    inequalities of the matching polytope — and why lazy constraints are the
+    engineering face of a theorem. This is the most beautiful result in the course.</dd>
+    <dt>Build</dt>
+    <dd>A subtour-elimination separation oracle: connected components for integral
+    points, min-cut (your unit-14 max-flow, if you have it) for fractional ones. Solve
+    the TSP relaxation by lazy constraint generation and watch a few hundred
+    constraints stand in for 2<sup>n</sup>.</dd>
+    <dt>Then</dt>
+    <dd>Gurobi lazy-constraint callbacks on TSPLIB instances of a few hundred cities.
+    Then Concorde, to see what a decade of this idea looks like.</dd>
+    <dd class="check"><b>Checkpoint.</b> You can state the theorem precisely, and you have
+    solved a TSP over an exponential constraint family while only ever writing down a
+    few hundred of its constraints.</dd>
+  </dl>
+</article>
+
+<article class="unit t-ip" id="u10">
+  <header><span class="num">10</span><h3>Column generation, Dantzig–Wolfe, branch-and-price</h3><span class="tag spine">spine</span></header>
+  <p class="needs"><b>needs</b> <a href="#u08">08</a> <a href="#u16">16</a></p>
+  <dl>
+    <dt>Theory</dt>
+    <dd>The restricted master problem; reduced costs and the <em>pricing subproblem</em>;
+    Dantzig–Wolfe decomposition and block-angular structure; why the pricer is usually
+    itself NP-hard and that is fine; the Lagrangian bound you get for free; dual
+    degeneracy and stabilisation; branch-and-price, and why naive variable branching
+    destroys the pricing problem.</dd>
+    <dt>Build</dt>
+    <dd>Cutting stock by column generation with a knapsack pricer (your unit-16 DP,
+    reused). Then vehicle routing, where pricing becomes a resource-constrained
+    shortest path — the step where this stops being a toy.</dd>
+    <dt>Then</dt>
+    <dd>The compact MIP formulation of the same cutting-stock instance in Gurobi.
+    Compare bound quality and model size; the point at which the compact model stops
+    fitting in memory is the argument for the whole technique.</dd>
+    <dd class="check"><b>Checkpoint.</b> You can explain why the master's dual values are
+    exactly the objective coefficients of the pricing problem, in the vocabulary of
+    unit 03, without hand-waving.</dd>
+  </dl>
+</article>
+
+<article class="unit t-ip" id="u11">
+  <header><span class="num">11</span><h3>Lagrangian relaxation and subgradient methods</h3><span class="tag spine">spine</span></header>
+  <p class="needs"><b>needs</b> <a href="#u03">03</a> <a href="#u16">16</a></p>
+  <dl>
+    <dt>Theory</dt>
+    <dd>Dualising the hard constraints; the Lagrangian dual and its concavity; the
+    <em>integrality property</em> — and why it tells you in advance when Lagrangian
+    relaxation will give you nothing the LP did not; subgradients and step-size rules;
+    the Held–Karp bound for TSP via 1-trees; Lagrangian heuristics and variable fixing
+    by reduced cost.</dd>
+    <dt>Build</dt>
+    <dd>The Held–Karp 1-tree bound with subgradient ascent, on TSPLIB instances. A
+    Lagrangian relaxation of generalised assignment, with the bound tracked against
+    iteration count so you can see the notorious zig-zag.</dd>
+    <dt>Then</dt>
+    <dd>Compare your Held–Karp bound to Gurobi's root LP bound on the same instances.
+    They should be close, and knowing <em>why</em> they are close is the unit.</dd>
+    <dd class="check"><b>Checkpoint.</b> Before writing any code, you can predict whether
+    dualising a given constraint set will beat the LP relaxation, using the
+    integrality property.</dd>
+  </dl>
+</article>
+
+<article class="unit t-ip" id="u12">
+  <header><span class="num">12</span><h3>Benders decomposition</h3><span class="tag">branch</span></header>
+  <p class="needs"><b>needs</b> <a href="#u10">10</a></p>
+  <dl>
+    <dt>Theory</dt>
+    <dd>Splitting a MIP into a master over the hard variables and a subproblem over
+    the rest; optimality and feasibility cuts derived from the subproblem's <em>dual</em>;
+    Benders as row generation and therefore the formal dual of Dantzig–Wolfe's column
+    generation; two-stage stochastic programming with recourse as its natural home;
+    modern variants — Benders inside the branch-and-bound tree, cut strengthening,
+    Pareto-optimal cuts.</dd>
+    <dt>Build</dt>
+    <dd>Benders on a two-stage stochastic facility location, with the scenario
+    subproblems solved independently.</dd>
+    <dt>Then</dt>
+    <dd>The monolithic deterministic-equivalent model in Gurobi. Find the scenario
+    count at which Benders overtakes it — then report it as a crossover plot, not an
+    anecdote.</dd>
+    <dd class="check"><b>Checkpoint.</b> You can draw Dantzig–Wolfe and Benders on one page
+    as duals of each other — rows vs columns, master vs subproblem — and point at
+    where unit 03 sits in both.</dd>
+  </dl>
+</article>
+
+</div>
+
+<!-- ===================== PART III ===================== -->
+<div class="part p-comb">
+  <p class="part-no">Part III — trunk B · the polynomial islands</p>
+  <h2>The problems that are genuinely easy, and the structural reasons why</h2>
+  <p class="subhead">
+    Independent of Parts I–II: you can start this trunk the day after unit 00. But
+    read unit 06 alongside it — total unimodularity is the polyhedral explanation for
+    everything that happens here.
+  </p>
+</div>
+
+<div class="units">
+
+<article class="unit t-comb" id="u13">
+  <header><span class="num">13</span><h3>Matroids and the exact reach of greedy</h3><span class="tag spine">spine</span></header>
+  <p class="needs"><b>needs</b> <a href="#u00">00</a></p>
+  <dl>
+    <dt>Theory</dt>
+    <dd>Independence systems and matroids; the exchange axiom; the Rado–Edmonds
+    theorem — greedy is optimal on a matroid <em>and only</em> on a matroid, which is the
+    cleanest "when does this heuristic actually work" answer in the field; graphic,
+    linear, uniform, partition and transversal matroids; matroid intersection in
+    polynomial time and three-matroid intersection in NP-hard; submodularity, the
+    1 − 1/e greedy bound for monotone submodular maximisation, and the matroid
+    polytope.</dd>
+    <dt>Build</dt>
+    <dd>A matroid interface with independence oracles; instantiate the graphic matroid
+    and watch Kruskal's algorithm fall out of generic greedy. Matroid intersection.
+    Greedy submodular maximisation on a coverage function, with the 1 − 1/e bound
+    checked empirically against exact optima from unit 00.</dd>
+    <dt>Then</dt>
+    <dd><code>networkx</code> MST for the graphic case; an exact MIP for small submodular
+    instances.</dd>
+    <dd class="check"><b>Checkpoint.</b> Shown a greedy algorithm someone proposes, you can
+    either name the matroid underneath it or construct the instance where it fails.</dd>
+  </dl>
+</article>
+
+<article class="unit t-comb" id="u14">
+  <header><span class="num">14</span><h3>Network flows</h3><span class="tag spine">spine</span></header>
+  <p class="needs"><b>needs</b> <a href="#u13">13</a></p>
+  <dl>
+    <dt>Theory</dt>
+    <dd>Max-flow min-cut; augmenting paths; Ford–Fulkerson's failure to terminate on
+    irrational capacities; Edmonds–Karp, Dinic, push–relabel and their complexities;
+    min-cost flow by successive shortest paths with potentials, cycle cancelling, and
+    network simplex; flow decomposition. The real skill is <em>reduction to</em> flow:
+    bipartite matching, project selection / maximum closure, image segmentation,
+    baseball elimination, and scheduling with deadlines.</dd>
+    <dt>Build</dt>
+    <dd>Dinic and push–relabel; min-cost flow by SSP with Johnson potentials; the
+    project-selection reduction end to end.</dd>
+    <dt>Then</dt>
+    <dd>OR-Tools <code>SimpleMaxFlow</code> / <code>SimpleMinCostFlow</code> and
+    <code>networkx</code>. Benchmark on layered vs random vs bipartite graphs and find the
+    family where push–relabel beats Dinic.</dd>
+    <dd class="check"><b>Checkpoint.</b> Handed a problem you have not seen, you can decide
+    whether it is a flow in disguise and write the reduction, including the capacities
+    that encode the objective.</dd>
+  </dl>
+</article>
+
+<article class="unit t-comb" id="u15">
+  <header><span class="num">15</span><h3>Matching</h3><span class="tag spine">spine</span></header>
+  <p class="needs"><b>needs</b> <a href="#u14">14</a> <span>· feeds 18, 23</span></p>
+  <dl>
+    <dt>Theory</dt>
+    <dd>König's and Hall's theorems on bipartite graphs; Hopcroft–Karp; the
+    <em>Hungarian algorithm as primal–dual on the assignment LP</em> — the first place unit 03
+    pays off outside LP; Tutte's theorem; Edmonds' blossom algorithm and the paper
+    that first argued "polynomial" is the right definition of tractable; the matching
+    polytope's odd-set inequalities (which is unit 09's other example); Gale–Shapley
+    stable matching as a different beast entirely.</dd>
+    <dt>Build</dt>
+    <dd>Hopcroft–Karp. The Hungarian algorithm from scratch, <em>printing its dual
+    potentials</em>. Blossom as the stretch goal — it is hard, and worth one difficult
+    week. Gale–Shapley, for contrast.</dd>
+    <dt>Then</dt>
+    <dd><code>scipy.optimize.linear_sum_assignment</code>,
+    <code>networkx.max_weight_matching</code>.</dd>
+    <dd class="check"><b>Checkpoint.</b> You can verify your Hungarian algorithm's answer is
+    optimal by checking complementary slackness against its dual potentials, without
+    re-running the algorithm.</dd>
+  </dl>
+</article>
+
+<article class="unit t-comb" id="u16">
+  <header><span class="num">16</span><h3>Dynamic programming over combinatorial structure</h3><span class="tag spine">spine</span></header>
+  <p class="needs"><b>needs</b> <a href="#u15">15</a> <span>· feeds 10, 11</span></p>
+  <dl>
+    <dt>Theory</dt>
+    <dd>DP as shortest path in a DAG of states; knapsack's pseudo-polynomial algorithm
+    and precisely why it does not contradict NP-hardness; bitmask DP; <em>Held–Karp</em>
+    exact TSP in O(n²2ⁿ); DP on trees; treewidth and tree decompositions; Courcelle's
+    theorem as the general statement of why all of these work; the vocabulary of
+    parameterised complexity — FPT, XP, kernelisation — as the honest way to say "hard
+    but not hopeless".</dd>
+    <dt>Build</dt>
+    <dd>Knapsack DP (this becomes unit 10's pricer). Held–Karp exact TSP. A
+    tree-decomposition DP for vertex cover, with runtime plotted against treewidth on
+    random graphs — the exponential in the parameter, made visible.</dd>
+    <dt>Then</dt>
+    <dd>Held–Karp against your unit-07 branch-and-bound and against Gurobi on
+    n = 15…22 — three completely different algorithms, one crossover plot.</dd>
+    <dd class="check"><b>Checkpoint.</b> You can compute a decomposition's width and predict
+    the DP's runtime from it to within an order of magnitude.</dd>
+  </dl>
+</article>
+
+</div>
+
+<!-- ===================== PART IV ===================== -->
+<div class="part p-cp">
+  <p class="part-no">Part IV — trunk C · constraint programming and SAT</p>
+  <h2>The other tradition: prune the domain rather than relax and bound</h2>
+  <p class="subhead">
+    A genuinely different intellectual lineage, with different vocabulary and
+    different instincts — and the one that currently wins scheduling competitions
+    outright. Independent of Parts I–II except where marked.
+  </p>
+</div>
+
+<div class="units">
+
+<article class="unit t-cp" id="u17">
+  <header><span class="num">17</span><h3>Constraint satisfaction and propagation</h3><span class="tag spine">spine</span></header>
+  <p class="needs"><b>needs</b> <a href="#u00">00</a></p>
+  <dl>
+    <dt>Theory</dt>
+    <dd>The CSP as a formalism — variables, domains, constraints, often no objective at
+    all; consistency levels (node, arc, path, k-consistency) and what each costs;
+    AC-3 and AC-4; bounds vs domain consistency; propagation to a fixpoint;
+    backtracking search interleaved with propagation as <em>the</em> CP loop. The
+    philosophical difference from Part II stated plainly: MIP relaxes and bounds, CP
+    prunes domains, and the two see completely different instances as easy.</dd>
+    <dt>Build</dt>
+    <dd>A small CP engine: domains with trailing, a propagation queue, AC-3,
+    backtracking search. Solve Sudoku, n-queens, map colouring, magic series — and
+    instrument propagations and nodes, because those two numbers are the whole
+    diagnostic vocabulary of Part IV.</dd>
+    <dt>Then</dt>
+    <dd>OR-Tools CP-SAT on the same models.</dd>
+    <dd class="check"><b>Checkpoint.</b> You can trace your propagator's fixpoint by hand on
+    a 4×4 Sudoku, and explain why arc consistency does not imply satisfiability.</dd>
+  </dl>
+</article>
+
+<article class="unit t-cp" id="u18">
+  <header><span class="num">18</span><h3>Global constraints and their filtering algorithms</h3><span class="tag spine">spine</span></header>
+  <p class="needs"><b>needs</b> <a href="#u17">17</a> <a href="#u15">15</a></p>
+  <dl>
+    <dt>Theory</dt>
+    <dd>Why one constraint over n variables beats n(n−1)/2 binary ones; <em>Régin's
+    filtering for</em> <code>alldifferent</code>, via Hall sets and maximum matching in the
+    value graph — which is unit 15 doing load-bearing work in a different tradition;
+    <code>cumulative</code> with timetable and edge-finding filters, and disjunctive
+    scheduling; <code>element</code>, <code>table</code>, <code>circuit</code>,
+    <code>gcc</code>; the trade-off between a propagator's <em>strength</em> and its
+    <em>cost</em>, which is the only design question in CP.</dd>
+    <dt>Build</dt>
+    <dd>Régin's <code>alldifferent</code> on top of your Hopcroft–Karp. A
+    <code>cumulative</code> timetable propagator. Plug both into your unit-17 engine and
+    measure the node-count collapse on n-queens and job-shop.</dd>
+    <dt>Then</dt>
+    <dd>CP-SAT's <code>AddAllDifferent</code> and <code>AddCumulative</code> on the same
+    models.</dd>
+    <dd class="check"><b>Checkpoint.</b> On one instance, your decomposed model and your
+    global-constraint model give the same answer and differ by orders of magnitude in
+    node count — and you can name the Hall set responsible.</dd>
+  </dl>
+</article>
+
+<article class="unit t-cp" id="u19">
+  <header><span class="num">19</span><h3>Search, restarts, and large neighbourhood search</h3><span class="tag spine">spine</span></header>
+  <p class="needs"><b>needs</b> <a href="#u18">18</a> <span>· feeds 21, 26</span></p>
+  <dl>
+    <dt>Theory</dt>
+    <dd>Variable ordering (first-fail, dom/wdeg, impact-based) and value ordering;
+    symmetry breaking during search; randomisation and restart policies, Luby in
+    particular; nogood recording; <em>heavy-tailed runtime distributions</em> and why they
+    are the actual justification for restarts; large neighbourhood search — destroy
+    and repair, with the propagator as the repair engine — as the bridge from exact
+    search to heuristics.</dd>
+    <dt>Build</dt>
+    <dd>dom/wdeg and impact-based heuristics in your engine; Luby restarts; run 100
+    seeds on one hard instance and plot the runtime distribution until you can see the
+    heavy tail. Then an LNS layer on job-shop.</dd>
+    <dt>Then</dt>
+    <dd>CP-SAT with its LNS workers disabled and enabled; OR-Tools' routing solver on
+    a CVRP.</dd>
+    <dd class="check"><b>Checkpoint.</b> You can show the heavy-tailed runtime histogram from
+    your own solver and demonstrate that restarts move its mean — with the
+    distributions, not with one lucky run.</dd>
+  </dl>
+</article>
+
+<article class="unit t-cp" id="u20">
+  <header><span class="num">20</span><h3>SAT and the CDCL engine</h3><span class="tag spine">spine</span></header>
+  <p class="needs"><b>needs</b> <a href="#u17">17</a></p>
+  <dl>
+    <dt>Theory</dt>
+    <dd>CNF, resolution, DPLL; unit propagation; conflict analysis via the implication
+    graph and the <em>first-UIP</em> cut; clause learning and non-chronological backjumping;
+    VSIDS activity heuristics; two-watched-literal propagation; clause deletion and
+    LBD; phase saving. Then the honest framing: CDCL is resolution with a very good
+    heuristic, and proof complexity tells you exactly what it can never do quickly.
+    Encodings: Tseitin, at-most-one (pairwise, sequential, commander, bitwise),
+    cardinality networks.</dd>
+    <dt>Build</dt>
+    <dd>A CDCL solver — watched literals, 1UIP learning, VSIDS, Luby restarts,
+    LBD-based clause deletion. Then encoders for graph colouring, n-queens, and the
+    pigeonhole principle, which will humiliate it. That humiliation is the unit's
+    point.</dd>
+    <dt>Then</dt>
+    <dd>MiniSat, CaDiCaL and Kissat on your CNFs. DIMACS in and out, so instances
+    travel both ways.</dd>
+    <dd class="check"><b>Checkpoint.</b> Your solver emits a DRAT proof that an external
+    checker accepts, and you can explain pigeonhole's hardness in terms of resolution
+    lower bounds rather than "it just takes a long time".</dd>
+  </dl>
+</article>
+
+<article class="unit t-cp" id="u21">
+  <header><span class="num">21</span><h3>Lazy clause generation, or what CP-SAT actually is</h3><span class="tag">branch</span></header>
+  <p class="needs"><b>needs</b> <a href="#u19">19</a> <a href="#u20">20</a></p>
+  <dl>
+    <dt>Theory</dt>
+    <dd>The hybrid that ate the field: CP propagators that <em>explain</em> their inferences
+    as clauses, fed to a CDCL engine that learns from them; the order encoding of
+    integers that lets a SAT solver reason about bounds; SMT and DPLL(T) as the same
+    idea arriving from the other direction; the linear relaxation CP-SAT runs
+    alongside, which is Part II smuggled into Part IV.</dd>
+    <dt>Build</dt>
+    <dd>Make one unit-18 propagator explanation-producing and feed its clauses to your
+    unit-20 CDCL. Measure what learning from propagation buys on job-shop.</dd>
+    <dt>Then</dt>
+    <dd>Read CP-SAT's log on a job-shop instance and identify, by name, every component
+    you have now built yourself.</dd>
+    <dd class="check"><b>Checkpoint.</b> For a problem you have not modelled before you can
+    say which of MIP / CP / SAT / CP-SAT you would reach for first, and defend it with
+    something other than taste.</dd>
+  </dl>
+</article>
+
+</div>
+
+<!-- ===================== PART V ===================== -->
+<div class="part p-apx">
+  <p class="part-no">Part V — where the trunks converge</p>
+  <h2>When exact is hopeless: how far from optimal must you settle?</h2>
+  <p class="subhead">
+    This is the part that needs all three trunks — LP for rounding, matching and MST
+    for Christofides, CP for the neighbourhood search. It is also the part with the
+    most beautiful theory in the whole subject.
+  </p>
+</div>
+
+<div class="units">
+
+<article class="unit t-apx" id="u22">
+  <header><span class="num">22</span><h3>Hardness, and the shape of what is possible</h3><span class="tag spine">spine</span></header>
+  <p class="needs"><b>needs</b> <a href="#u11">11</a></p>
+  <dl>
+    <dt>Theory</dt>
+    <dd>NP-completeness through the canonical reduction chain (3SAT → vertex cover →
+    set cover → …); strong vs weak NP-hardness, and why knapsack sits on the weak
+    side; the approximation hierarchy — FPTAS ⊂ PTAS ⊂ APX ⊂ log-approximable ⊂ the
+    rest; the PCP theorem's role in making <em>hardness of approximation</em> possible;
+    Set Cover's (1−o(1))·ln n threshold; Vertex Cover's 2−ε and Max-Cut's 0.878 under
+    the Unique Games Conjecture. The practical payoff: knowing when to stop looking
+    for a better algorithm.</dd>
+    <dt>Build</dt>
+    <dd>Mechanised reductions — a program that maps a 3SAT instance to a vertex cover
+    instance and maps solutions back, verified against your unit-00 oracle in both
+    directions. Reductions become much less abstract once yours has a bug.</dd>
+    <dt>Then</dt>
+    <dd>Solve both sides of each reduction with CP-SAT and confirm optimality is
+    preserved, not just feasibility.</dd>
+    <dd class="check"><b>Checkpoint.</b> For each of unit 00's nine problems you can state
+    the best known approximation ratio and the best known hardness bound, and say
+    where the gap is still open.</dd>
+  </dl>
+</article>
+
+<article class="unit t-apx" id="u23">
+  <header><span class="num">23</span><h3>Combinatorial approximation algorithms</h3><span class="tag spine">spine</span></header>
+  <p class="needs"><b>needs</b> <a href="#u22">22</a> <a href="#u16">16</a> <a href="#u15">15</a></p>
+  <dl>
+    <dt>Theory</dt>
+    <dd>Greedy set cover's H<sub>n</sub> bound and its tightness; 2-approximation for
+    vertex cover via maximal matching; metric TSP — double-tree 2-approximation,
+    <em>Christofides</em> at 3/2, and the 2021 Karlin–Klein–Oveis Gharan improvement that
+    finally broke it; k-center greedy and its 2-tightness; local search for k-median;
+    scheduling — list scheduling's 2−1/m, LPT's 4/3, and the FPTAS for makespan on a
+    fixed number of machines.</dd>
+    <dt>Build</dt>
+    <dd>Greedy set cover with the H<sub>n</sub> bound checked empirically. Christofides
+    — which needs your MST from unit 13 and your minimum-weight perfect matching from
+    unit 15, and is the moment trunk B pays off. LPT. k-center greedy.</dd>
+    <dt>Then</dt>
+    <dd>Measure actual ratios against CP-SAT-proved optima on instances small enough
+    to solve exactly. The distance between worst-case guarantee and typical
+    performance is the finding.</dd>
+    <dd class="check"><b>Checkpoint.</b> Your Christofides never exceeds 1.5× optimum on
+    instances you can solve exactly, and you can point at the line of code
+    corresponding to each step of the proof.</dd>
+  </dl>
+</article>
+
+<article class="unit t-apx" id="u24">
+  <header><span class="num">24</span><h3>LP rounding and the primal–dual method</h3><span class="tag spine">spine</span></header>
+  <p class="needs"><b>needs</b> <a href="#u23">23</a> <a href="#u03">03</a></p>
+  <dl>
+    <dt>Theory</dt>
+    <dd>Deterministic rounding (vertex cover's ½-threshold, which is a two-line proof
+    and a genuinely surprising one); <em>randomized rounding</em> with the Chernoff and
+    union-bound argument giving set cover's O(log n); the <em>integrality gap</em> as the
+    hard limit on any LP-based analysis; the primal–dual schema — raise duals, buy
+    primals, pay for what you bought — for set cover, Steiner forest and facility
+    location; iterative rounding and Jain's 2-approximation for Steiner network as the
+    elegant endpoint.</dd>
+    <dt>Build</dt>
+    <dd>Randomized rounding for set cover, with the failure probability measured
+    empirically against the bound. Primal–dual set cover. Primal–dual facility
+    location.</dd>
+    <dt>Then</dt>
+    <dd>Three numbers on every instance — the LP bound from HiGHS, the integer optimum
+    from Gurobi, and your rounded solution — plotted together. The visible gap between
+    the first two is the integrality gap you just read about.</dd>
+    <dd class="check"><b>Checkpoint.</b> You can exhibit an instance realising the
+    integrality gap of a given LP, thereby proving no rounding of that LP can beat
+    that ratio.</dd>
+  </dl>
+</article>
+
+<article class="unit t-apx" id="u25">
+  <header><span class="num">25</span><h3>Semidefinite relaxations</h3><span class="tag">branch</span></header>
+  <p class="needs"><b>needs</b> <a href="#u24">24</a> <a href="#u21">21</a></p>
+  <dl>
+    <dt>Theory</dt>
+    <dd>Optimising over the PSD cone; vector programs as relaxations that LPs cannot
+    express; <em>Goemans–Williamson</em> Max-Cut and random-hyperplane rounding at 0.878…;
+    the Lovász theta function sandwiched between clique and chromatic number; the
+    Lasserre / Sum-of-Squares hierarchy as a tower of ever-tighter relaxations and the
+    lower bounds against it; why SDPs are convex but expensive, which is why they stay
+    a theoretical tool.</dd>
+    <dt>Build</dt>
+    <dd>Goemans–Williamson with CVXPY plus your own hyperplane rounding, over many
+    random hyperplanes. The theta function on small graphs. Compare the SDP bound, the
+    LP bound, and the truth on the same instances.</dd>
+    <dt>Then</dt>
+    <dd>Exact Max-Cut with Gurobi for n ≤ 40 to measure your realised ratio.</dd>
+    <dd class="check"><b>Checkpoint.</b> You can show empirically that your GW cuts average
+    well above 0.878 of optimum, and explain why the guarantee is nonetheless
+    tight.</dd>
+  </dl>
+</article>
+
+<article class="unit t-apx" id="u26">
+  <header><span class="num">26</span><h3>Metaheuristics, benchmarked honestly</h3><span class="tag spine">spine</span></header>
+  <p class="needs"><b>needs</b> <a href="#u24">24</a> <a href="#u19">19</a></p>
+  <dl>
+    <dt>Theory</dt>
+    <dd>Local search and neighbourhood design; 2-opt, 3-opt, Or-opt and Lin–Kernighan
+    for TSP; simulated annealing and its cooling schedules; tabu search; GRASP;
+    iterated and <em>adaptive</em> large neighbourhood search; genetic algorithms, and a
+    frank account of why they are usually the wrong answer. Then the part most courses
+    omit: this literature has a replication problem, "our metaheuristic beat theirs"
+    is very often unfalsifiable, and knowing what an honest comparison requires is
+    more valuable than knowing a tenth metaphor.</dd>
+    <dt>Build</dt>
+    <dd>2-opt and Or-opt with don't-look bits and neighbour lists for TSP. Simulated
+    annealing with a tuned schedule. ALNS for CVRP with destroy/repair operators and
+    adaptive weights.</dd>
+    <dt>Then</dt>
+    <dd>LKH and OR-Tools routing on the same instances under the <em>same time
+    budget</em> — the constraint most published comparisons quietly drop.</dd>
+    <dd class="check"><b>Checkpoint.</b> You can produce a time-to-target plot comparing
+    three of your own heuristics over 30 seeds, and correctly decline to declare a
+    winner where the distributions overlap.</dd>
+  </dl>
+</article>
+
+</div>
+
+<!-- ===================== PART VI ===================== -->
+<div class="part p-prac">
+  <p class="part-no">Part VI — making it real</p>
+  <h2>The two units that make every earlier claim defensible</h2>
+  <p class="subhead">
+    Short, unglamorous, and the difference between having done a course and being able
+    to use any of it. Unit 28 in particular retroactively upgrades every "compare"
+    step you have run so far.
+  </p>
+</div>
+
+<div class="units">
+
+<article class="unit t-prac" id="u27">
+  <header><span class="num">27</span><h3>Modelling for a real solver</h3><span class="tag spine">spine</span></header>
+  <p class="needs"><b>needs</b> <a href="#u26">26</a> <a href="#u08">08</a></p>
+  <dl>
+    <dt>Theory</dt>
+    <dd>What presolve actually does, and the modelling habits that defeat it; symmetry
+    and symmetry breaking (lex-leader constraints, orbital branching) — the single
+    biggest lever on many models; indicator constraints instead of big-M; bound
+    tightening; warm starts and MIP starts; solution pools; and reading a solver log
+    fluently — the gap, node count, cut counts per family, heuristic hits, presolve
+    reductions. MIPLIB 2017 as the field's shared reality check.</dd>
+    <dt>Build</dt>
+    <dd>Take your worst-performing model from units 05 and 07 and make it 10× faster
+    <em>without changing what it means</em>. One intervention at a time, each measured
+    separately.</dd>
+    <dt>Then</dt>
+    <dd>Gurobi and HiGHS logs on MIPLIB instances — including a few that neither
+    solves, so the experience of a genuinely open instance is not theoretical.</dd>
+    <dd class="check"><b>Checkpoint.</b> A before/after table of your own model with one row
+    per intervention and the time each bought, containing no row you cannot
+    explain.</dd>
+  </dl>
+</article>
+
+<article class="unit t-prac" id="u28">
+  <header><span class="num">28</span><h3>Experimental method</h3><span class="tag spine">spine</span></header>
+  <p class="needs"><b>needs</b> <a href="#u27">27</a></p>
+  <dl>
+    <dt>Theory</dt>
+    <dd>Performance profiles (Dolan–Moré); the shifted geometric mean, and why the
+    arithmetic mean of solver times is close to meaningless; time-to-target plots for
+    stochastic algorithms; instance selection bias; per-instance versus aggregate
+    claims; seeds and variance; the virtual best solver as a reference point; and how
+    to report a negative result so it is still worth reading.</dd>
+    <dt>Build</dt>
+    <dd>A benchmarking harness — instance sets, timeouts, seeds, per-run records in a
+    queryable form, and the three plot types. Then re-run <em>every</em> algorithm from
+    units 02–26 through it and regenerate all your earlier comparisons properly.</dd>
+    <dt>Then</dt>
+    <dd>This is the unit where the earlier "then" steps get audited. Expect at least
+    one earlier conclusion not to survive; that is the unit working.</dd>
+    <dd class="check"><b>Checkpoint.</b> Every performance claim in your notes regenerates
+    from one command, and each one survives the regeneration — or has been corrected
+    in place.</dd>
+  </dl>
+</article>
+
+</div>
+
+<!-- ===================== PART VII ===================== -->
+<div class="part p-coda">
+  <p class="part-no">Part VII — coda · the continuous cousin</p>
+  <h2>Autodiff, and the seam where discrete optimization meets modern ML</h2>
+  <p class="subhead">
+    A deliberate skim, as you asked — three units, not a second course. But they are
+    placed at the end rather than the start on purpose: once you know LP duality and
+    branch-and-bound, KKT is a generalisation you already half-own, and "learning to
+    branch" is a sentence about something you built in unit 07 rather than a slogan.
+  </p>
+</div>
+
+<div class="units">
+
+<article class="unit t-coda" id="u29">
+  <header><span class="num">29</span><h3>Convexity, gradients, and what continuity changes</h3><span class="tag">coda</span></header>
+  <p class="needs"><b>needs</b> <a href="#u03">03</a></p>
+  <dl>
+    <dt>Theory</dt>
+    <dd>Convex sets and functions; gradients and subgradients; the <em>KKT conditions as
+    the generalisation of LP duality you already know</em> — complementary slackness is
+    the KKT complementarity condition, and seeing that is most of the unit; first-order
+    methods (gradient descent, momentum, Nesterov) and their rates; stochastic
+    gradients; constrained methods — projected gradient, and Frank–Wolfe, which puts a
+    <em>linear optimization oracle</em> inside a continuous loop and is therefore the
+    cleanest formal handshake between the two halves of this course.</dd>
+    <dt>Build</dt>
+    <dd>GD, momentum and Nesterov on standard test functions with convergence plotted.
+    Projected gradient onto a simplex. Then Frank–Wolfe over a polytope, using your
+    unit-02 simplex as the linear oracle.</dd>
+    <dt>Then</dt>
+    <dd><code>scipy.optimize</code> and CVXPY for the same problems.</dd>
+    <dd class="check"><b>Checkpoint.</b> You can derive the KKT conditions for a linear
+    program and show they reduce exactly to complementary slackness from unit 03.</dd>
+  </dl>
+</article>
+
+<article class="unit t-coda" id="u30">
+  <header><span class="num">30</span><h3>Automatic differentiation</h3><span class="tag">coda</span></header>
+  <p class="needs"><b>needs</b> <a href="#u29">29</a> <a href="#u28">28</a></p>
+  <dl>
+    <dt>Theory</dt>
+    <dd>The three things constantly confused: symbolic, numerical and <em>automatic</em>
+    differentiation. Dual numbers and forward mode. The Wengert tape and reverse mode.
+    The one fact that explains modern ML's existence: reverse mode computes a full
+    gradient in O(1) forward passes <em>regardless of parameter count</em>, while forward mode
+    costs one pass per parameter. Checkpointing and the memory/compute trade.
+    Jacobian-vector and vector-Jacobian products; forward-over-reverse for
+    Hessian-vector products. And where autodiff quietly lies: non-smooth points,
+    control flow, in-place mutation, and <code>argmax</code>.</dd>
+    <dt>Build</dt>
+    <dd>Forward-mode AD with dual numbers. Then a reverse-mode tape with a small op
+    set — enough to train a two-layer MLP with your own backprop. Gradient-check every
+    op against finite differences.</dd>
+    <dt>Then</dt>
+    <dd>JAX or PyTorch: <code>grad</code>, <code>jacrev</code>, <code>jacfwd</code>. Confirm
+    your gradients agree to 1e-6, and time yours against theirs.</dd>
+    <dd class="check"><b>Checkpoint.</b> Your reverse-mode engine trains an MLP on a real
+    dataset, and you can compute the tape's memory cost in bytes before you run it.</dd>
+  </dl>
+</article>
+
+<article class="unit t-coda" id="u31">
+  <header><span class="num">31</span><h3>Where discrete meets differentiable</h3><span class="tag">coda</span></header>
+  <p class="needs"><b>needs</b> <a href="#u30">30</a> <a href="#u07">07</a> <a href="#u15">15</a></p>
+  <dl>
+    <dt>Theory</dt>
+    <dd>Differentiating through discrete choices — straight-through estimators,
+    Gumbel-Softmax and concrete relaxations, REINFORCE versus reparameterisation.
+    <em>Differentiable optimization layers</em>: differentiating through an argmin via the
+    implicit function theorem applied to the KKT conditions (OptNet, cvxpylayers),
+    differentiable sorting and top-k, and Sinkhorn as a differentiable relaxation of
+    the assignment problem — your unit-15 Hungarian algorithm, softened. Then
+    <em>learning to optimize</em>: learned branching and cut-selection policies inside MIP
+    solvers, neural combinatorial optimization (pointer networks, attention models,
+    POMO), and the honest current state — still behind LKH and CP-SAT on classical
+    problems, genuinely promising as <em>guidance inside</em> exact solvers rather than as a
+    replacement for them.</dd>
+    <dt>Build</dt>
+    <dd>Sinkhorn against your Hungarian algorithm on the same assignment instances —
+    accuracy, speed, and the gradient the Hungarian cannot give you. Then a learned
+    branching rule for your unit-07 branch-and-bound, trained by imitating strong
+    branching, evaluated on node count over held-out instances.</dd>
+    <dt>Then</dt>
+    <dd><code>cvxpylayers</code> for the argmin layer; optionally a pretrained attention
+    TSP model against LKH, which is a bracing comparison.</dd>
+    <dd class="check"><b>Checkpoint.</b> Your imitation-learned branching rule beats
+    most-fractional branching on node count on held-out instances — or you can say
+    precisely why it did not, in terms of unit 28's methodology rather than
+    anecdote.</dd>
+  </dl>
+</article>
+
+</div>
+
+<!-- ===================== CAPSTONE ===================== -->
+<section>
+  <h2>Capstone — one problem, four traditions</h2>
+  <p class="subhead">
+    Everything converges on a single instance family, which you attack four ways and
+    then referee.
+  </p>
+  <div class="callout">
+    <h3>The brief</h3>
+    <p>
+      Pick one problem — capacitated vehicle routing with time windows, or job-shop
+      scheduling. Then solve it four times: <b>(a)</b> a MIP with your own cover and
+      subtour cuts on a commercial solver; <b>(b)</b> branch-and-price with a
+      resource-constrained shortest-path pricer; <b>(c)</b> CP-SAT with global
+      constraints and a search strategy you chose deliberately; <b>(d)</b> ALNS with
+      operators you designed.
+    </p>
+    <p>
+      Then run all four through your unit-28 harness on a shared instance set under a
+      shared time budget, and write the report that says which wins where. The
+      deliverable is <em>not</em> a winner — it is a defensible account of which instance
+      characteristics favour which method, with the evidence attached and the cases
+      where the answer is "they are indistinguishable" reported as such.
+    </p>
+  </div>
+</section>
+
+<!-- ===================== EXPRESS ROUTE ===================== -->
+<section>
+  <h2>If thirty-two is too many</h2>
+  <p class="subhead">
+    There is a defensible short path. It drops every branch node and all of trunk C's
+    depth, and it still leaves you able to read the literature.
+  </p>
+  <div class="callout">
+    <h3>The express route — 13 units</h3>
+    <p class="route">
+      <a href="#u00">00</a> <span>→</span> <a href="#u01">01</a> <span>→</span>
+      <a href="#u02">02</a> <span>→</span> <a href="#u03">03</a> <span>→</span>
+      <a href="#u05">05</a> <span>→</span> <a href="#u07">07</a> <span>→</span>
+      <a href="#u08">08</a> <span>→</span> <a href="#u14">14</a> <span>→</span>
+      <a href="#u15">15</a> <span>→</span> <a href="#u17">17</a> <span>→</span>
+      <a href="#u20">20</a> <span>→</span> <a href="#u26">26</a> <span>→</span>
+      <a href="#u28">28</a>
+    </p>
+    <p>
+      Add <a href="#u30">30</a> for the autodiff skim. What you lose: the decompositions
+      (10–12), all the approximation theory (22–25), and the matroid framing that makes
+      greedy make sense. What you keep: the ability to model a problem, choose a
+      paradigm, implement the core algorithm of each, and benchmark the result
+      honestly.
+    </p>
+  </div>
+</section>
+
+<!-- ===================== READING ===================== -->
+<section>
+  <h2>Reading and tools</h2>
+  <p class="subhead">
+    Chosen so that most units have exactly one chapter to read, not four books to
+    triangulate between.
+  </p>
+  <div class="cols">
+    <div>
+      <h3>Primary texts</h3>
+      <ul>
+        <li><b>Bertsimas &amp; Tsitsiklis</b>, <i>Introduction to Linear Optimization</i> — Part I. The best treatment of duality for someone who wants to actually use it.</li>
+        <li><b>Wolsey</b>, <i>Integer Programming</i> (2nd ed.) — Part II, readable end to end.</li>
+        <li><b>Conforti, Cornuéjols &amp; Zambelli</b>, <i>Integer Programming</i> — Part II when you want the modern, deeper account.</li>
+        <li><b>Korte &amp; Vygen</b>, <i>Combinatorial Optimization</i> — Part III's reference, and the book to own.</li>
+        <li><b>Williamson &amp; Shmoys</b>, <i>The Design of Approximation Algorithms</i> — the whole of Part V. Free PDF from the authors.</li>
+        <li><b>Rossi, van Beek &amp; Walsh</b>, <i>Handbook of Constraint Programming</i> — Part IV.</li>
+        <li><b>Biere, Heule, van Maaren &amp; Walsh</b>, <i>Handbook of Satisfiability</i> — units 20–21.</li>
+      </ul>
+    </div>
+    <div>
+      <h3>Worth having nearby</h3>
+      <ul>
+        <li><b>Schrijver</b>, <i>Theory of Linear and Integer Programming</i> — consulted, not read.</li>
+        <li><b>Papadimitriou &amp; Steiglitz</b>, <i>Combinatorial Optimization</i> — cheap Dover, excellent on the classics.</li>
+        <li><b>Gärtner &amp; Matoušek</b>, <i>Understanding and Using Linear Programming</i> — short and very good.</li>
+        <li><b>Vazirani</b>, <i>Approximation Algorithms</i> — complements Williamson &amp; Shmoys.</li>
+        <li><b>Griewank &amp; Walther</b>, <i>Evaluating Derivatives</i> — unit 30's actual source.</li>
+        <li><b>Baydin et al.</b>, <i>Automatic Differentiation in Machine Learning: a Survey</i> — the 30-page version.</li>
+        <li><b>Bengio, Lodi &amp; Prouvost</b>, <i>Machine Learning for Combinatorial Optimization</i> — unit 31's survey.</li>
+      </ul>
+    </div>
+    <div>
+      <h3>Solvers and libraries</h3>
+      <ul>
+        <li><b>HiGHS</b> — open LP/MIP, and what SciPy calls underneath.</li>
+        <li><b>SCIP</b> — open branch-and-cut whose source is genuinely readable; the best way to check what you built in unit 07.</li>
+        <li><b>Gurobi</b> — free academic licence; the reference for "how fast should this be".</li>
+        <li><b>OR-Tools CP-SAT</b> — Part IV's target, and the thing unit 21 explains.</li>
+        <li><b>PuLP</b> / <b>python-mip</b> — modelling layers.</li>
+        <li><b>CaDiCaL</b>, <b>Kissat</b>, <b>MiniSat</b> — unit 20.</li>
+        <li><b>Concorde</b>, <b>LKH</b> — the TSP reality checks.</li>
+        <li><b>NetworkX</b>, <b>CVXPY</b>, <b>JAX</b> — Parts III, V and VII.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== NEXT ===================== -->
+<section>
+  <h2>What this proposal still needs from you</h2>
+  <p class="subhead">
+    Four open questions. None of them blocks starting unit 00.
+  </p>
+  <div class="cols">
+    <div>
+      <h3>Open</h3>
+      <ul>
+        <li><b>Which branches stay.</b> Units 04, 06, 09, 12, 21 and 25 are optional. Unit 09 is the one I would fight to keep; unit 12 is the one I would cut first.</li>
+        <li><b>The capstone problem.</b> CVRPTW has better instance libraries and a richer literature; job-shop shows CP-SAT at its most dominant. Picking now changes which examples I use from unit 07 onward.</li>
+        <li><b>Where the notes live.</b> One Markdown file per unit, or a dear-guide graph where each checkpoint is a task with its falsifier. The second fits how the rest of this workshop already records things.</li>
+        <li><b>Gurobi licence.</b> Several "then" steps assume one. If not, SCIP substitutes everywhere with a small loss of speed and no loss of pedagogy.</li>
+      </ul>
+    </div>
+    <div>
+      <h3>Deliberately excluded</h3>
+      <ul>
+        <li><b>Nonlinear and mixed-integer nonlinear programming.</b> A second course, not a section.</li>
+        <li><b>Robust and stochastic optimization</b> beyond unit 12's two-stage example.</li>
+        <li><b>Online and streaming algorithms</b> — competitive analysis is a different discipline.</li>
+        <li><b>Quantum and Ising-machine approaches.</b> Unit 28's methodology is the right lens on those claims, and unit 28 is enough.</li>
+        <li><b>A deep-learning course.</b> Part VII skims deliberately; it exists to connect what you built to what you already know, not to teach ML.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<footer class="colophon">
+  <p>
+    Proposal drafted 2026-09-12; all 32 units and the capstone (CVRPTW) built by
+    2026-09-14. Lives in <span class="mono">courses/combinatorial-optimization/</span>,
+    promoted there from the workshop's waiting room once it had grown its own README,
+    tests and results.
+  </p>
+  <p>
+    The dependency map is generated:
+    <span class="mono">python3 map/mkmap.py</span> rewrites the region between the
+    <span class="mono">MAP:BEGIN</span> / <span class="mono">MAP:END</span> markers in
+    this file. Edit coordinates there, not here.
+  </p>
+</footer>
+
+</div>
+</body>
+</html>

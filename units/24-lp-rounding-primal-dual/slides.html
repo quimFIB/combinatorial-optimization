@@ -1,0 +1,405 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>24 · LP rounding and the primal–dual method</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+<link rel="stylesheet" href="../../slides/deck.css">
+</head>
+<body data-trunk="apx">
+<div class="reveal"><div class="slides">
+
+<section class="title-slide">
+  <p class="eyebrow">Part V · where the trunks converge · spine</p>
+  <div class="unit-no">24</div>
+  <h1>LP rounding and the primal–dual method</h1>
+  <p class="lede">One lower bound for everything: the LP relaxation. Round its solution, or grow its dual and buy what the dual pays for. Either way, its integrality gap is the limit.</p>
+  <p class="meta"><span>needs 23, 03</span><span>~1 h slides + 2½–3 h lab</span><span>lab: <code>uv run co lab 24</code></span></p>
+  <aside class="notes">
+    <p>Part II used LP relaxations to prove optimality inside branch and bound. Here the same relaxation
+    is used without branching: solve it once (or not even that), and turn it into an integral solution
+    whose cost you can bound relative to the LP.</p>
+    <p>Duality (unit 03) is the load-bearing idea. Rounding compares against the primal LP value, and
+    primal–dual compares against a dual feasible solution it builds itself. Weak duality makes both
+    lower bounds on OPT.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">24 · overview</p>
+  <h2>The route</h2>
+  <div class="cols">
+    <div class="box def"><span class="label">1 · rounding</span>
+      <p class="small">Vertex cover at ½; half-integrality; randomized rounding for set cover and its union bound.</p></div>
+    <div class="box def"><span class="label">2 · primal–dual</span>
+      <p class="small">Raise duals, buy tight sets: set cover; Jain–Vazirani facility location; Steiner forest.</p></div>
+  </div>
+  <div class="cols">
+    <div class="box def"><span class="label">3 · integrality gaps</span>
+      <p class="small">K<sub>n</sub> and GF(2)<sup>k</sup>: instances that bound every LP-based proof.</p></div>
+    <div class="box def"><span class="label">4 · measured</span>
+      <p class="small">LP, optimum, algorithm on the same instances, and where greedy wins.</p></div>
+  </div>
+  <aside class="notes">
+    <p>The checkpoint is section 3: exhibit an instance realising an LP's integrality gap. The lab
+    builds two. The subtler point is what such an instance proves. It limits <em>analyses</em> against
+    that LP, not algorithms: unit 23's greedy solves the GF(2)<sup>k</sup> family exactly.</p>
+  </aside>
+</section>
+
+<section class="divider">
+  <p class="eyebrow">section 1</p>
+  <h2>Rounding</h2>
+  <p>Solve the relaxation, then make it integral.</p>
+</section>
+
+<section>
+  <p class="eyebrow">24 · rounding</p>
+  <h2>Vertex cover at ½</h2>
+  <div class="cols">
+    <div>
+      $$\begin{aligned}\min\ & \textstyle\sum_v w_v x_v \\ \text{s.t. } & x_u + x_v \ge 1 \quad \forall uv \in E \\ & 0 \le x \le 1\end{aligned}$$
+      <div class="box proof"><span class="label">the two-line proof (Hochbaum 1982)</span>
+        <p class="small">Take $v$ iff $x_v \ge \tfrac12$. <b>Feasible</b>: $x_u + x_v \ge 1$ forces one of them to $\ge \tfrac12$. <b>Cost</b>: every chosen $v$ has $w_v \le 2 w_v x_v$, so the cost is $\le 2\,\mathrm{LP} \le 2\,\mathrm{OPT}$.</p>
+      </div>
+      <div class="box thm"><span class="label">half-integrality (Nemhauser & Trotter 1975)</span>
+        <p class="small">Every vertex of this polytope has all $x_v \in \{0, \tfrac12, 1\}$.</p>
+      </div>
+    </div>
+    <div>
+      <div class="fig">
+        <svg viewBox="0 0 220 170" width="240" role="img" aria-label="a 5-cycle with every vertex at one half">
+          <g class="ink" stroke-width="1.6">
+            <line x1="110" y1="20" x2="190" y2="75"/><line x1="190" y1="75" x2="160" y2="150"/>
+            <line x1="160" y1="150" x2="60" y2="150"/><line x1="60" y1="150" x2="30" y2="75"/><line x1="30" y1="75" x2="110" y2="20"/>
+          </g>
+          <g class="fill-soft ink" stroke-width="1.5">
+            <circle cx="110" cy="20" r="14"/><circle cx="190" cy="75" r="14"/><circle cx="160" cy="150" r="14"/>
+            <circle cx="60" cy="150" r="14"/><circle cx="30" cy="75" r="14"/>
+          </g>
+          <g class="mono" font-size="11" text-anchor="middle">
+            <text x="110" y="24">½</text><text x="190" y="79">½</text><text x="160" y="154">½</text>
+            <text x="60" y="154">½</text><text x="30" y="79">½</text>
+          </g>
+        </svg>
+        <p class="small muted">C<sub>5</sub>: LP 2.5, OPT 3, rounding takes all 5.</p>
+      </div>
+      <p class="small">Lab <code>then</code>, 24 weighted random graphs (weights 1–20):</p>
+      <table class="dense">
+        <thead><tr><th>LP / OPT</th><th>rounding / OPT</th><th>primal–dual / OPT</th><th>half-integral</th></tr></thead>
+        <tbody><tr><td class="num">0.89</td><td class="num">1.74–1.75</td><td class="num">1.38–1.40</td><td class="num">24 / 24</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>"Genuinely surprising", as the curriculum says, because the matching argument of unit 23 fails
+    for weights: a heavy vertex and a light neighbour make "take both endpoints" arbitrarily bad. The
+    LP handles weights for free.</p>
+    <p>Half-integrality explains the measurement. A basic solution has many exact halves, and threshold
+    rounding takes every one of them. Nemhauser and Trotter's stronger statement is persistence: some
+    optimal integral cover contains every vertex at 1 and avoids every vertex at 0. So the LP solves
+    part of the instance exactly, which makes it a standard kernelisation in parameterised algorithms.
+    Only the ½ part is hard.</p>
+    <p>Threshold rounding for set cover at $1/f$ gives Hochbaum's $f$-approximation, the same guarantee
+    as primal–dual in section 2.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">24 · rounding</p>
+  <h2>Randomized rounding for set cover</h2>
+  <div class="cols">
+    <div>
+      <p class="small">Repeat $t$ times: pick each set $j$ independently with probability $x_j$. Take the union.</p>
+      <div class="box proof"><span class="label">analysis</span>
+        <p class="small"><b>Miss.</b> Element $e$ is missed in one round with probability</p>
+        $$\textstyle\prod_{j \ni e}(1 - x_j) \le e^{-\sum_{j \ni e} x_j} \le e^{-1}$$
+        <p class="small">so after $t$ rounds with probability $\le e^{-t}$. Union bound: $\Pr[\text{not a cover}] \le n e^{-t}$.</p>
+        <p class="small"><b>Cost.</b> $\mathbb{E}[\text{cost}] \le t \cdot \mathrm{LP}$ by linearity.</p>
+        <p class="small"><b>Both.</b> With $t = \ln n + 2$, by Markov, cost $\le 4t \cdot \mathrm{LP}$ and a cover together with probability $\ge 1 - \tfrac14 - e^{-2} &gt; 0.6$. Repeat until success.</p>
+      </div>
+    </div>
+    <div>
+      <p class="small">Lab <code>then</code>: failure rate of the whole cover, 4 000 draws over 10 instances (150 elements):</p>
+      <table class="dense">
+        <thead><tr><th class="num">t</th><th class="num">measured</th><th class="num">bound $150e^{-t}$</th></tr></thead>
+        <tbody>
+          <tr><td class="num">1</td><td class="num">0.896</td><td class="num">≥ 1</td></tr>
+          <tr><td class="num">2</td><td class="num">0.728</td><td class="num">≥ 1</td></tr>
+          <tr><td class="num">4</td><td class="num">0.123</td><td class="num">≥ 1</td></tr>
+          <tr><td class="num">7</td><td class="num"><b>0.0033</b></td><td class="num">0.137</td></tr>
+        </tbody>
+      </table>
+      <p class="small">The union bound is loose by 40× at $t = 7$. Tests check the <b>per-element</b> probabilities exactly, against simulation.</p>
+      <p class="small muted">Raghavan & Thompson (1987) introduced randomized rounding for routing, where Chernoff bounds are needed because loads add up. For set cover the union bound alone gives $O(\log n)$.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>Why 1 − x ≤ e<sup>−x</sup> is the whole trick: it converts the product of miss probabilities,
+    which depends on how x is spread across sets, into an exponential of the LP constraint's left-hand
+    side, which is at least 1 however it's spread.</p>
+    <p>Derandomisation: the method of conditional expectations with a pessimistic estimator (the union
+    bound's sum plus a cost term) turns this into a deterministic algorithm. It's also one way to derive
+    greedy set cover, which is part of why greedy's H<sub>n</sub> and rounding's ln n match.</p>
+    <p>The curriculum mentions Chernoff for set cover. Strictly, set cover needs only the union bound.
+    Chernoff enters when you round under packing constraints (edge capacities in routing, multicommodity
+    flow), where the danger is too much load rather than too little coverage.</p>
+  </aside>
+</section>
+
+<section class="divider">
+  <p class="eyebrow">section 2</p>
+  <h2>Primal–dual</h2>
+  <p>Raise duals, buy primals, pay for what you bought.</p>
+</section>
+
+<section>
+  <p class="eyebrow">24 · primal–dual</p>
+  <h2>The schema, on set cover</h2>
+  <div class="cols">
+    <div>
+      $$\begin{aligned}\textbf{primal}\quad \min\ & \textstyle\sum_j c_j x_j \ \ \text{s.t.}\ \textstyle\sum_{j \ni e} x_j \ge 1 \\ \textbf{dual}\quad \max\ & \textstyle\sum_e y_e \ \ \text{s.t.}\ \textstyle\sum_{e \in S_j} y_e \le c_j\end{aligned}$$
+      <ol class="small">
+        <li>Start with $y = 0$, nothing bought.</li>
+        <li>For each uncovered $e$: raise $y_e$ until some set containing $e$ is <b>tight</b>.</li>
+        <li>Buy every tight set containing $e$.</li>
+      </ol>
+      <p class="small muted">Bar-Yehuda & Even (1981).</p>
+    </div>
+    <div>
+      <div class="box proof"><span class="label">why $f$ (the largest element frequency)</span>
+        $$\begin{aligned}\text{cost} &= \textstyle\sum_{j \text{ bought}} c_j = \sum_{j \text{ bought}} \sum_{e \in S_j} y_e \\ &\le f \textstyle\sum_e y_e \le f \cdot \mathrm{LP} \le f \cdot \mathrm{OPT}\end{aligned}$$
+      </div>
+      <div class="box def"><span class="label">complementary slackness, relaxed</span>
+        <p class="small"><b>Primal CS exact</b>: $x_j &gt; 0 \Rightarrow$ set $j$ tight. <b>Dual CS relaxed</b>: $y_e &gt; 0 \Rightarrow$ $e$ covered at most $f$ times, not exactly once. The approximation ratio is exactly the relaxation factor.</p>
+      </div>
+      <p class="small">Never solves an LP. Vertex cover is $f = 2$: a 2-approximation in linear time.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>"Pay for what you bought": the dual variables are money, each element's y<sub>e</sub> is what it
+    contributes, and a set is bought only once its elements have paid its full cost. Charging each bought
+    set's cost back to the y of its elements counts each y<sub>e</sub> at most f times.</p>
+    <p>That's the general recipe. Write the LP and its dual. Grow the dual continuously, keeping it
+    feasible. When a dual constraint goes tight, set the matching primal variable. Stop when the primal
+    is feasible. Then bound how many times each dual variable is charged. The factor comes from that
+    count, and designing the growth to keep it small is the art. Facility location and Steiner forest are
+    the famous cases.</p>
+    <p>On the GF(2)<sup>k</sup> family every element has frequency 2<sup>k−1</sup> and primal–dual pays
+    exactly that (lab <code>then</code>: 64 for k = 7, where OPT is 7).</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">24 · primal–dual</p>
+  <h2>Facility location: Jain & Vazirani (2001)</h2>
+  <div class="cols">
+    <div>
+      $$\begin{aligned}\max\ & \textstyle\sum_j \alpha_j \\ \text{s.t. } & \textstyle\sum_j \beta_{ij} \le f_i \\ & \alpha_j - \beta_{ij} \le d_{ij},\ \beta \ge 0\end{aligned}$$
+      <p class="small"><b>Phase 1.</b> All $\alpha_j$ grow at rate 1. Once $\alpha_j \ge d_{ij}$, client $j$ pays $\beta_{ij} = \alpha_j - d_{ij}$ toward $i$. When $i$ is fully paid, it opens <b>temporarily</b>. A client stops growing once it's tight with an open facility.</p>
+      <p class="small"><b>Phase 2.</b> Temporarily open facilities conflict if a client pays both. Keep a maximal non-conflicting set, in opening order. Clients go to the nearest kept facility.</p>
+    </div>
+    <div>
+      <div class="box proof"><span class="label">why 3 (metric)</span>
+        <p class="small">Let $i$ be the facility client $j$ froze with, so $d_{ij} \le \alpha_j$ and $t_i \le \alpha_j$. If $i$ was kept, $j$ is within $\alpha_j$. If not, $i$ conflicts with a kept $i'$ through a client $h$, and $i'$ opened no later. Then $d_{hi}, d_{hi'} \le \alpha_h \le t_{i'} \le t_i \le \alpha_j$, and</p>
+        $$d_{i'j} \le d_{ij} + d_{hi} + d_{hi'} \le 3\alpha_j$$
+      </div>
+      <table class="dense">
+        <thead><tr><th>F × C</th><th class="num">LP integral</th><th class="num">JV / OPT</th><th class="num">Σα / OPT</th></tr></thead>
+        <tbody>
+          <tr><td>10 × 40</td><td class="num">10/10</td><td class="num">1.031 (1.119)</td><td class="num">0.990</td></tr>
+          <tr><td>20 × 80</td><td class="num">10/10</td><td class="num">1.057 (1.140)</td><td class="num">0.995</td></tr>
+          <tr><td>30 × 120</td><td class="num">10/10</td><td class="num">1.054 (1.103)</td><td class="num">0.992</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>The step "$\alpha_h \le t_{i'}$" needs care: client h strictly pays $i'$, so it reached $i'$ before
+    freezing, and it froze no later than $i'$ opened. The step "$t_i \le \alpha_j$" holds because i is the
+    facility j froze with, so j froze no earlier than i opened. The lab's tests check the
+    invariant behind both: each client froze at $\min_i \max(t_i, d_{ij})$.</p>
+    <p>The analysis actually proves the stronger Lagrangian-multiplier-preserving bound
+    $\text{connection} + 3 \cdot \text{facility} \le 3\sum\alpha$: facilities are paid for exactly by
+    the part of α spent on them. That's what lets JV give a 6-approximation for k-median by Lagrangian relaxation (unit 11)
+    over the facility cost.</p>
+    <p>The best known ratio is 1.488 (Li 2013), and 1.463 is hard (Guha &amp; Khuller 1999). On random
+    metric instances the LP was integral 30 times out of 30: the facility location LP is strong, and its
+    bad cases have to be constructed.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">24 · beyond</p>
+  <h2>Steiner forest, and iterative rounding</h2>
+  <div class="cols">
+    <div>
+      <div class="box def"><span class="label">Steiner forest</span>
+        <p class="small">Pairs $(s_i, t_i)$ in a weighted graph: the cheapest edge set connecting every pair. The LP has one covering constraint per cut separating some pair, exponentially many.</p>
+      </div>
+      <p class="small"><b>Primal–dual</b> (Agrawal, Klein & Ravi 1995; Goemans & Williamson 1995): grow duals on all "active" components at once, buy tight edges, then <b>reverse delete</b> unnecessary ones. Ratio 2, by showing active components touch at most twice as many bought edges as there are components, on average.</p>
+    </div>
+    <div>
+      <div class="box good"><span class="label">iterative rounding (Jain 2001)</span>
+        <p class="small">Steiner <b>network</b>: each pair needs $r_{ij}$ edge-disjoint paths. Theorem: every extreme point of the LP has some edge with $x_e \ge \tfrac12$. Algorithm: solve, fix that edge to 1, update the residual requirements, re-solve. Ratio 2.</p>
+      </div>
+      <p class="small">The proof is a counting argument on tight constraints forming a laminar family, the same structure as the matroid intersection polytope (unit 13). It set off a line of results on degree-bounded spanning trees (Singh & Lau 2007: optimal cost, degrees exceeded by at most 1).</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>Neither algorithm is in the lab. Steiner forest's primal–dual algorithm is the one the
+    curriculum lists, and it's the right next thing to implement if you want more: the reverse-delete
+    step is what makes the factor 2 work, and without it the ratio is unbounded.</p>
+    <p>Iterative rounding is the elegant endpoint because it combines everything in Part II. Extreme
+    points and their tight constraints (unit 01), uncrossing (unit 09), and the laminar-family rank
+    argument (unit 13) turn "some variable is at least ½" into a theorem.</p>
+  </aside>
+</section>
+
+<section class="divider">
+  <p class="eyebrow">section 3</p>
+  <h2>Integrality gaps</h2>
+  <p>The limit of every LP-based proof.</p>
+</section>
+
+<section>
+  <p class="eyebrow">24 · gaps</p>
+  <h2>Instances that realise the gap</h2>
+  <div class="cols">
+    <div>
+      <div class="box def"><span class="label">integrality gap</span>
+        <p class="small">$\sup_I \mathrm{OPT}(I) / \mathrm{LP}(I)$ for minimisation. An algorithm proved via $\mathrm{ALG} \le \rho\,\mathrm{LP}$ has $\rho \ge$ the gap, since it can't beat OPT on the worst instance.</p>
+      </div>
+      <p class="small"><b>Vertex cover, $K_n$.</b> All ½ gives $n/2$. Two uncovered vertices leave their edge uncovered, so $\mathrm{OPT} = n - 1$. Gap $2 - 2/n$.</p>
+      <p class="small"><b>Set cover, GF(2)<sup>k</sup>.</b> Elements and sets are the nonzero vectors; set $v$ holds $\{u : u \cdot v = 1\}$. Every set has $2^{k-1}$ elements, so $x = 2^{1-k}$ gives LP $&lt; 2$. Sets $v_1, \dots, v_r$ miss every nonzero $u$ orthogonal to all of them, so $\mathrm{OPT} = k$.</p>
+    </div>
+    <div>
+      <table class="dense">
+        <thead><tr><th class="num">k</th><th class="num">sets</th><th class="num">LP</th><th class="num">OPT</th><th class="num">OPT/LP</th><th class="num">greedy</th><th class="num">primal–dual</th></tr></thead>
+        <tbody>
+          <tr><td class="num">3</td><td class="num">7</td><td class="num">1.750</td><td class="num">3</td><td class="num">1.71</td><td class="num">3</td><td class="num">4</td></tr>
+          <tr><td class="num">4</td><td class="num">15</td><td class="num">1.875</td><td class="num">4</td><td class="num">2.13</td><td class="num">4</td><td class="num">8</td></tr>
+          <tr><td class="num">5</td><td class="num">31</td><td class="num">1.938</td><td class="num">5</td><td class="num">2.58</td><td class="num">5</td><td class="num">16</td></tr>
+          <tr><td class="num">6</td><td class="num">63</td><td class="num">1.969</td><td class="num">6</td><td class="num">3.05</td><td class="num">6</td><td class="num">32</td></tr>
+          <tr><td class="num">7</td><td class="num">127</td><td class="num">1.984</td><td class="num">7</td><td class="num">3.53</td><td class="num">7</td><td class="num">64</td></tr>
+        </tbody>
+      </table>
+      <div class="box warn"><span class="label">a limit on proofs, not on algorithms</span>
+        <p class="small">Greedy is <b>optimal</b> on every member. The gap says no analysis against this LP can certify better than $\approx \tfrac12\log_2 n$ here, not that finding a good cover is hard.</p>
+      </div>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>The GF(2)<sup>k</sup> construction is a clean way to see the Θ(log n) gap. The general statement
+    that the set cover LP's gap is $(1 - o(1)) \ln n$ uses random instances instead. It matches greedy's
+    $H_n$ and the NP-hardness threshold of unit 22. Three different arguments (greedy, LP gap, PCP)
+    meet at the same ln n.</p>
+    <p>Gaps also motivate stronger relaxations. Adding constraints (cuts, unit 08) or lifting to a
+    semidefinite program (unit 25) can shrink the gap. For vertex cover, not by much: no polynomial-size
+    LP beats 2 (Bazzi, Fiorini, Pokutta &amp; Svensson 2015), and neither do Sherali–Adams relaxations
+    with $n^{\varepsilon}$ rounds (Charikar, Makarychev &amp; Makarychev 2009). Whether Lasserre can is
+    open.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">24 · measured</p>
+  <h2>LP bound, optimum, algorithm: what the measurements say</h2>
+  <div class="cols">
+    <div>
+      <p class="small">Set cover, 10 instances, 150 elements and 100 sets, optimum by CP-SAT:</p>
+      <table class="dense">
+        <thead><tr><th>algorithm</th><th class="num">mean / OPT</th><th class="num">worst</th><th class="num">guarantee</th></tr></thead>
+        <tbody>
+          <tr><td>LP bound</td><td class="num">0.937</td><td class="num">1.000</td><td class="num">—</td></tr>
+          <tr><td>randomized, $t = 7$, best of 20</td><td class="num">1.728</td><td class="num">2.140</td><td class="num">$O(\log n)$</td></tr>
+          <tr><td>primal–dual</td><td class="num">1.964</td><td class="num">2.556</td><td class="num">$f = 21$</td></tr>
+          <tr><td>greedy (unit 23)</td><td class="num"><b>1.148</b></td><td class="num"><b>1.326</b></td><td class="num">$H_d \approx 5$</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div>
+      <ul class="small">
+        <li><b>Greedy beats both LP-based algorithms</b> on random set cover, while guaranteeing about the same.</li>
+        <li><b>Primal–dual beats rounding</b> on weighted vertex cover (1.39 against 1.75), with the same guarantee of 2. Rounding takes every half.</li>
+        <li><b>The LP is tight</b> on random facility location: integral 30 times of 30.</li>
+        <li><b>The gap families are built by hand.</b> Nothing random came close to them.</li>
+      </ul>
+      <p class="small">An approximation ratio is a certificate, and practice asks a different question. Unit 26 answers it with heuristics, and unit 28 with a method for comparing them honestly.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>The plot in <code>out/then.png</code> puts the three numbers (LP / OPT, OPT, algorithm / OPT) side
+    by side for all 72 instances. The vertex cover and set cover blocks show a visible integrality gap
+    below 1. The GF(2)<sup>k</sup> block shows it growing. The facility-location block shows none.</p>
+    <p>Where LP-based algorithms do win in practice: as starting points for local search, and inside
+    branch and bound where the LP solution guides branching. "Round, then improve" is how most practical
+    uses look.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">24 · lab</p>
+  <h2>Lab 24 — what you build</h2>
+  <div class="lab">
+    <span class="label">about 2½–3 hours · uv run co lab 24</span>
+    <ol>
+      <li><b>Vertex cover LP</b> and threshold rounding.</li>
+      <li><b>Randomized rounding</b> for set cover, with exact miss probabilities and the union bound.</li>
+      <li><b>Primal–dual set cover.</b></li>
+      <li><b>Jain–Vazirani</b>: event-driven dual ascent in exact arithmetic, pruning, assignment.</li>
+      <li><b>Integrality gaps</b>: $K_n$ and GF(2)<sup>k</sup>.</li>
+    </ol>
+  </div>
+<pre><code class="language-bash">uv run co test 24
+uv run co then 24     # LP · optimum · algorithm on 72 instances · failure rates · out/then.png</code></pre>
+  <aside class="notes">
+    <p>Step 4 is the longest in the lab. Its tests trace three small ascents by hand and check every
+    invariant the proof uses on 25 random instances, so a wrong event time shows up as a named failure
+    rather than a bad ratio.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">24 · checkpoint</p>
+  <h2>Done when</h2>
+  <div class="box good"><span class="label">checkpoint</span>
+    <ul>
+      <li>All five lab steps are ✓.</li>
+      <li>You can exhibit an instance realising the integrality gap of a given LP, and explain why it proves that no rounding of that LP can beat that ratio.</li>
+      <li>You can say why greedy solves that same instance optimally without contradicting anything.</li>
+    </ul>
+  </div>
+  <div class="cols">
+    <div>
+      <h3>Reading</h3>
+      <p class="small">Williamson & Shmoys (2011), ch. 1, 4, 7.<br>
+      Vazirani (2001), ch. 14–15, 24.<br>
+      Jain & Vazirani, <em>JACM</em> 48 (2001).<br>
+      Jain, <em>Combinatorica</em> 21 (2001).</p>
+    </div>
+    <div>
+      <h3>Next</h3>
+      <p class="small"><b>25</b> semidefinite relaxations: Goemans–Williamson Max-Cut · <b>26</b> metaheuristics, benchmarked honestly.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>Unit 25 keeps rounding but changes the relaxation: vectors instead of numbers, a random hyperplane
+    instead of a threshold. The analysis is again "expected cost against the relaxation", with an angle
+    replacing $1 - x \le e^{-x}$.</p>
+  </aside>
+</section>
+
+</div></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/plugin/highlight/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<script src="../../slides/deck.js"></script>
+</body>
+</html>

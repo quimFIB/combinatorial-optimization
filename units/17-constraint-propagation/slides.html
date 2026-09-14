@@ -1,0 +1,383 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>17 · Constraint propagation</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+<link rel="stylesheet" href="../../slides/deck.css">
+</head>
+<body data-trunk="cp">
+<div class="reveal"><div class="slides">
+
+<section class="title-slide">
+  <p class="eyebrow">Part IV · trunk C · constraint programming and SAT · spine</p>
+  <div class="unit-no">17</div>
+  <h1>Constraint satisfaction and propagation</h1>
+  <p class="lede">Variables, domains, constraints — and no relaxation. Remove what cannot be part of a solution, search over what remains, undo, repeat.</p>
+  <p class="meta"><span>needs 00</span><span>~1¼ h slides + 3 h lab</span><span>lab: <code>uv run co lab 17</code></span></p>
+  <aside class="notes">
+    <p>Part IV is a different intellectual lineage from Parts I–II. It came from artificial
+    intelligence and logic programming rather than operations research, with its own
+    vocabulary (domains, propagators, consistency, nogoods) and its own instincts. The payoff
+    for learning both: the two traditions find completely different instances easy, and
+    modern solvers such as CP-SAT (unit 21) are what you get when you merge them.</p>
+    <p>The lab builds an engine that the next three units extend. Keep its interfaces clean:
+    propagators as pure functions of the domains, one store with a trail, and search that
+    counts nodes and propagations.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">17 · overview</p>
+  <h2>The route</h2>
+  <div class="cols">
+    <div class="box def"><span class="label">1 · the formalism</span>
+      <p class="small">CSPs, and how "prune" differs from "relax and bound".</p></div>
+    <div class="box def"><span class="label">2 · consistency</span>
+      <p class="small">Node, arc, path, k; AC-3 and AC-4; bounds vs domain consistency; what each costs.</p></div>
+  </div>
+  <div class="cols">
+    <div class="box def"><span class="label">3 · the engine</span>
+      <p class="small">Propagators, the fixpoint, idempotence, trailing.</p></div>
+    <div class="box def"><span class="label">4 · search</span>
+      <p class="small">The CP loop, first-fail, and the two numbers that describe everything.</p></div>
+  </div>
+  <aside class="notes">
+    <p>The checkpoint has two parts. Trace a fixpoint by hand on a 4×4 sudoku. Explain why arc
+    consistency does not imply satisfiability. Both are about what propagation <em>is</em>: local
+    reasoning that is sound, cheap and incomplete.</p>
+  </aside>
+</section>
+
+<section class="divider">
+  <p class="eyebrow">section 1</p>
+  <h2>The formalism</h2>
+  <p>Feasibility first; an objective, if any, is just another constraint.</p>
+</section>
+
+<section>
+  <p class="eyebrow">17 · formalism</p>
+  <h2>Constraint satisfaction problems</h2>
+  <div class="cols">
+    <div>
+      <div class="box def"><span class="label">CSP</span>
+        <p class="small">Variables $x_1, \dots, x_n$, finite domains $D_i$, and constraints $C_j \subseteq D_{i_1} \times \cdots \times D_{i_k}$ over subsets of the variables. A <b>solution</b> assigns every variable a value from its domain so that every constraint holds.</p>
+      </div>
+      <ul class="small">
+        <li>Constraints are <b>arbitrary relations</b>: "≠", "all different", "this table of allowed tuples", "count of 3s equals $x_3$". No linearity and no convexity.</li>
+        <li>Often no objective at all. With one, minimise by adding "objective &lt; best" after each solution and continuing.</li>
+        <li>Deciding satisfiability is NP-complete: 3-colouring is a CSP.</li>
+      </ul>
+    </div>
+    <div>
+      <table>
+        <thead><tr><th></th><th>MIP (Part II)</th><th>CP (Part IV)</th></tr></thead>
+        <tbody>
+          <tr><td>core move</td><td>relax, then bound</td><td>prune domains</td></tr>
+          <tr><td>strength from</td><td>tight LP relaxations</td><td>strong propagators</td></tr>
+          <tr><td>proves optimality by</td><td>dual bound meets incumbent</td><td>exhausting the tree</td></tr>
+          <tr><td>easy for it</td><td>weighted sums, flows, covering</td><td>alldifferent, scheduling, puzzles</td></tr>
+          <tr><td>hard for it</td><td>big-M disjunctions, permutations</td><td>weak bounds on sums</td></tr>
+        </tbody>
+      </table>
+      <p class="small muted">Neither dominates, which is why unit 21's hybrid exists.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>A concrete contrast. Scheduling jobs on machines with "no two overlap" is a disjunction:
+    MIP needs a big-M constraint per pair (unit 05 showed how weak those are), while CP has a
+    dedicated disjunctive propagator (unit 18) that reasons about intervals directly. The
+    opposite case is a knapsack: its LP bound is excellent, while CP's bound-based propagation
+    on a weighted sum sees very little until most variables are fixed.</p>
+  </aside>
+</section>
+
+<section class="divider">
+  <p class="eyebrow">section 2</p>
+  <h2>Consistency</h2>
+  <p>How much local reasoning, at what price.</p>
+</section>
+
+<section>
+  <p class="eyebrow">17 · consistency</p>
+  <h2>A ladder of consistency levels</h2>
+  <div class="cols">
+    <div>
+      <ul class="small">
+        <li><b>Node</b>: every value satisfies the unary constraints.</li>
+        <li><b>Arc</b> (AC): for each binary constraint on $(x, y)$, every $a \in D_x$ has a <b>support</b> $b \in D_y$.</li>
+        <li><b>Path</b>: every consistent pair extends to any third variable.</li>
+        <li><b>$k$-consistency</b>: every consistent assignment to $k - 1$ variables extends to any $k$-th. <b>Strong</b> $n$-consistency means backtrack-free search.</li>
+      </ul>
+      <p class="small">Higher levels prune more and cost exponentially more: $k$-consistency takes $O(n^k d^k)$ time.</p>
+    </div>
+    <div>
+      <table>
+        <thead><tr><th>algorithm</th><th>time</th><th>idea</th></tr></thead>
+        <tbody>
+          <tr><td>AC-3 (Mackworth 1977)</td><td>$O(e d^3)$</td><td>queue of arcs; revise</td></tr>
+          <tr><td>AC-4 (Mohr & Henderson 1986)</td><td>$O(e d^2)$</td><td>support counters</td></tr>
+          <tr><td>AC-2001 (Bessière & Régin)</td><td>$O(e d^2)$</td><td>AC-3 plus "last support" pointers</td></tr>
+          <tr><td>path consistency</td><td>$O(n^3 d^3)$</td><td>rarely used</td></tr>
+        </tbody>
+      </table>
+      <div class="box good"><span class="label">Freuder 1982</span>
+        <p class="small">If the constraint graph is a <b>tree</b>, arc consistency alone makes search backtrack-free. More generally, width $w$ plus strong $(w+1)$-consistency suffices, which is unit 16's treewidth again.</p>
+      </div>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>$e$ is the number of constraints and $d$ the largest domain. AC-3's $O(ed^3)$: each arc is
+    re-queued at most $d$ times (once per value removed from its target), and each revise costs
+    $O(d^2)$. AC-4 precomputes, for every value, the list of values it supports, and decrements
+    counters. That's optimal in time but expensive in memory. AC-2001 keeps AC-3's simplicity and
+    reaches AC-4's bound by remembering, for each value, where its last support was found.</p>
+    <p>In practice nobody enforces path consistency. Real engines stop at arc consistency (or the
+    cheaper bounds consistency) for most constraints, and put the extra strength into
+    <em>global</em> constraints (unit 18), which is where it pays.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">17 · consistency</p>
+  <h2>Arc consistent, yet unsatisfiable</h2>
+  <div class="cols wide-right">
+    <div class="fig">
+      <svg viewBox="0 0 260 220" width="260" role="img" aria-label="triangle with two colours">
+        <g class="ink" stroke-width="2"><line x1="130" y1="30" x2="40" y2="180"/><line x1="130" y1="30" x2="220" y2="180"/><line x1="40" y1="180" x2="220" y2="180"/></g>
+        <g class="fill-ground ink" stroke-width="2"><circle cx="130" cy="30" r="22"/><circle cx="40" cy="180" r="22"/><circle cx="220" cy="180" r="22"/></g>
+        <g font-size="13" text-anchor="middle" class="mono"><text x="130" y="35">{0,1}</text><text x="40" y="185">{0,1}</text><text x="220" y="185">{0,1}</text></g>
+        <g font-size="12" text-anchor="middle" class="muted"><text x="70" y="100">≠</text><text x="190" y="100">≠</text><text x="130" y="205">≠</text></g>
+      </svg>
+      <p class="cap">Every value has a support on every edge, so nothing is pruned. No 2-colouring exists.</p>
+    </div>
+    <div>
+      <p class="small"><b>Arc consistency is local.</b> It checks one constraint at a time and never looks at a cycle. Each propagator is sound (it never removes a solution), and the fixpoint is sound, but it is not complete.</p>
+      <div class="box def"><span class="label">4×4 sudoku, from the lab</span>
+        <p class="mono small">1 . . .<br>. . 3 .<br>. 4 . .<br>. . . 2</p>
+        <p class="small">133 NotEqual propagations reach a fixpoint where every cell is a singleton: solved without search. Inkala's 9×9 "hardest sudoku" needs 3 598 nodes.</p>
+      </div>
+      <p class="small muted">Search fills the gap between "consistent" and "solved". Stronger propagation shrinks the tree, at a price per node.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>Tracing the 4×4 by hand, which is the checkpoint: start with the givens as singletons.
+    Each NotEqual with a fixed side removes that value from the other cell. Cell (0, 1) loses 1
+    from its row and 4 from its column, leaving {2, 3}. Cell (0, 2) loses 1 (row) and 3 (column),
+    leaving {2, 4}. Keep a queue of cells that became singletons and push their values into their
+    7 peers. The order doesn't change the fixpoint, only the number of propagations it takes to
+    reach it. That confluence is what lab step 3's random test checks against naive sweeps.</p>
+    <p>The same confluence argument needs <em>monotone</em> propagators: a smaller input domain
+    never yields a larger output. All the lab's propagators are monotone.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">17 · consistency</p>
+  <h2>Bounds consistency vs domain consistency</h2>
+  <div class="cols">
+    <div>
+      <div class="box def"><span class="label">domain (generalised arc) consistency</span>
+        <p class="small">Every value in every domain belongs to some satisfying tuple of the constraint.</p>
+      </div>
+      <div class="box def"><span class="label">bounds consistency</span>
+        <p class="small">Only the <b>min and max</b> of each domain need supports, often with the others relaxed to intervals. Interior holes are ignored.</p>
+      </div>
+      <p class="small">On a linear constraint $\sum a_i x_i \le b$, reasoning from bounds costs $O(n)$. Domain consistency on an <b>equality</b> $\sum a_i x_i = b$ is NP-hard: it contains subset sum.</p>
+    </div>
+    <div>
+      <p class="small">Lab step 3's LinearLe removes every value $a$ of $x_i$ with</p>
+      $$a_i\, a &gt; b - \sum_{j \ne i} \min_{v \in D_j} a_j v$$
+      <p class="small">For a single inequality this is <b>exactly</b> domain consistency, since the others' best values are always available. The test checks it against brute-force supports. LinearEq, as two inequalities, is only bounds-like, and the test only asks it to be <b>sound</b>.</p>
+      <p class="small muted">The general design question of Part IV: how strong a propagator, for what cost per call?</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>The magic series model shows why weak propagation plus <em>redundant</em> constraints is a
+    common engineering pattern. The Count constraints alone already define the problem. Adding
+    $\sum_i s_i = n$ and $\sum_i i\, s_i = n$ changes nothing semantically, but gives the bound
+    reasoning something to bite on. Lab test: with them, $n = 10$ takes 14 nodes; without the
+    second, 32.</p>
+  </aside>
+</section>
+
+<section class="divider">
+  <p class="eyebrow">section 3</p>
+  <h2>The engine</h2>
+  <p>Propagators, a queue, and a trail.</p>
+</section>
+
+<section>
+  <p class="eyebrow">17 · engine</p>
+  <h2>Propagators and the fixpoint</h2>
+  <div class="cols">
+    <div>
+      <p class="small">A <b>propagator</b> for constraint $C$ is a function $p : D \to D$ with</p>
+      <ul class="small">
+        <li><b>contracting</b>: $p(D) \subseteq D$;</li>
+        <li><b>monotone</b>: $D \subseteq D'$ implies $p(D) \subseteq p(D')$;</li>
+        <li><b>sound</b>: it never removes a solution of $C$, and it rejects any fully fixed assignment that violates $C$.</li>
+      </ul>
+      <p class="small">Run all propagators until none changes anything. The result is the <b>greatest common fixpoint</b>, independent of the order (Apt 1999).</p>
+    </div>
+    <div>
+      <div class="box good"><span class="label">the lab's engine</span>
+        <ul class="small">
+          <li><code>prune(dom)</code> is <b>pure</b>: it reads domains and returns narrowings. Only the engine writes.</li>
+          <li>Watch lists: when a variable changes, wake only the propagators on it.</li>
+          <li>A propagator that narrows its own variables is <b>re-queued</b>: LinearEq and Count aren't idempotent.</li>
+          <li>Every call counts as one <b>propagation</b>.</li>
+        </ul>
+      </div>
+      <p class="small muted">Real engines add priorities (cheap propagators first), events (fixed / bounds changed / any change), and idempotence flags (Schulte & Stuckey 2008).</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>Why pure prune functions are a good teaching choice. They make each propagator testable in
+    isolation against brute-force supports, which is how the lab tests them. They make the
+    functional reference natural. And they separate the two design questions: what a propagator
+    infers, and when the engine runs it.</p>
+    <p>The cost: a real propagator often wants incremental state between calls (unit 18's
+    alldifferent keeps its matching). Unit 18 handles that by recomputing, and notes where
+    incrementality would matter.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">17 · engine</p>
+  <h2>Trailing, copying, or recomputing</h2>
+  <div class="cols">
+    <div>
+      <p class="small">Search needs the domains of the parent node back when a branch fails. Three options (Schulte 1999):</p>
+      <ul class="small">
+        <li><b>Trailing</b>: log each change and undo back to a mark. Cheap when few domains change per node. Used by most CP systems, and by the lab's imperative engine.</li>
+        <li><b>Copying</b>: snapshot the whole store at each node. Simple, and it suits parallel search. Used by Gecode.</li>
+        <li><b>Recomputation</b>: store only the decisions and replay them. It trades time for memory.</li>
+      </ul>
+    </div>
+    <div>
+      <div class="box def"><span class="label">the functional reference</span>
+        <p class="small">Immutable domain tuples passed down the recursion: copying, with structural sharing. <b>No trail</b>, because backtracking is returning. The same node and propagation counts as the trailing engine, 3–10× slower in Python.</p>
+      </div>
+      <p class="small">Trailing is what in-place mutation costs you: every write must be undoable. Copying is what immutability costs you: every write allocates.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>SAT solvers (unit 20) use the extreme form of trailing: the trail <em>is</em> the list of
+    assigned literals in order, and backjumping pops it. The idea is the same, specialised to
+    Boolean domains where a change is always "fixed".</p>
+  </aside>
+</section>
+
+<section class="divider">
+  <p class="eyebrow">section 4</p>
+  <h2>Search</h2>
+  <p>Propagate, branch, repeat.</p>
+</section>
+
+<section>
+  <p class="eyebrow">17 · search</p>
+  <h2>The CP loop, and its two numbers</h2>
+  <div class="cols">
+    <div>
+      <ol class="small">
+        <li>Propagate to a fixpoint. If a domain is empty: fail, backtrack.</li>
+        <li>If every variable is fixed: a solution.</li>
+        <li>Choose a variable (<b>first-fail</b>: smallest domain) and a value $a$. Branch $x = a$, then $x \ne a$.</li>
+      </ol>
+      <p class="small">"Fail first": pick the variable most likely to fail, so dead ends are found near the root, where they cut the most.</p>
+      <div class="box def"><span class="label">the diagnostic vocabulary</span>
+        <p class="small"><b>Nodes</b> measure search effort; a better heuristic or stronger propagation reduces them. <b>Propagations</b> measure inference effort; stronger propagation increases them per node. Units 18–21 each move one against the other.</p>
+      </div>
+    </div>
+    <div>
+      <p class="small">Lab <code>then</code>, same models in both solvers:</p>
+      <table class="dense">
+        <thead><tr><th>model</th><th class="num">nodes</th><th class="num">your s</th><th class="num">CP-SAT branches</th><th class="num">CP-SAT s</th></tr></thead>
+        <tbody>
+          <tr><td>queens 11, all 2 680</td><td class="num">48 950</td><td class="num">7.52</td><td class="num">226 330</td><td class="num">8.60</td></tr>
+          <tr><td>queens 60, one</td><td class="num">862</td><td class="num">1.61</td><td class="num">38 681</td><td class="num">2.37</td></tr>
+          <tr><td>sudoku (Inkala), all</td><td class="num">3 598</td><td class="num">1.30</td><td class="num">6 538</td><td class="num">0.12</td></tr>
+          <tr><td>3-colour G(200, 4.4/n), unsat</td><td class="num">120 334</td><td class="num">26.5</td><td class="num">3 106</td><td class="num">0.16</td></tr>
+          <tr><td>3-colour G(300, 4.4/n), unsat</td><td class="num">limit</td><td class="num">67.7</td><td class="num">17 937</td><td class="num">0.27</td></tr>
+        </tbody>
+      </table>
+      <p class="small">On queens the Python engine keeps pace. On unsatisfiable colouring CP-SAT needs 40× fewer branches, because it <b>learns</b> from each failure (units 20–21).</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>Why the lab uses binary branching ($x = a$ / $x \ne a$) rather than $d$-way branching (one
+    child per value): after $x \ne a$ the engine propagates the removal, which can fix other
+    variables or fail immediately. $d$-way branching never gets that inference. It's also the
+    form SAT solvers use, which makes unit 21's merger natural.</p>
+    <p>CP-SAT's "branches" and "conflicts" are not the lab's nodes and failures. CP-SAT branches on
+    Boolean literals of an encoding (unit 21) and counts a conflict each time clause learning
+    runs. The comparison is of the <em>shape</em> of the effort, not a one-to-one count.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">17 · lab</p>
+  <h2>Lab 17 — what you build</h2>
+  <div class="lab">
+    <span class="label">about 3 hours · uv run co lab 17</span>
+    <ol>
+      <li><b>A trailed domain store.</b></li>
+      <li><b>AC-3.</b></li>
+      <li><b>Propagators</b> (Binary, NotEqual, LinearLe, LinearEq, Count) and <b>the fixpoint</b>.</li>
+      <li><b>First-fail and depth-first search</b> with nodes, failures, propagations.</li>
+      <li><b>Models</b>: n-queens, sudoku, map colouring, magic series.</li>
+    </ol>
+  </div>
+<pre><code class="language-bash">uv run co test 17
+uv run co then 17     # the same models in CP-SAT</code></pre>
+  <aside class="notes">
+    <p>The engine is reused by units 18 (global constraints plug in as propagators), 19 (search
+    heuristics plug in through <code>choose</code> and <code>on_failure</code>) and 21 (propagators
+    learn to explain). The tests fix the interfaces those units rely on.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">17 · checkpoint</p>
+  <h2>Done when</h2>
+  <div class="box good"><span class="label">checkpoint</span>
+    <ul>
+      <li>All five lab steps are ✓.</li>
+      <li>You can trace your propagator's fixpoint by hand on a 4×4 sudoku, and explain why arc consistency does not imply satisfiability.</li>
+      <li>You can say what nodes and propagations measure, and why one usually rises when the other falls.</li>
+    </ul>
+  </div>
+  <div class="cols">
+    <div>
+      <h3>Reading</h3>
+      <p class="small">Rossi, van Beek & Walsh (eds.), <em>Handbook of CP</em>, ch. 3–4.<br>
+      Mackworth, <em>Artificial Intelligence</em> 8 (1977).<br>
+      Freuder, <em>JACM</em> 29 (1982): backtrack-free search.<br>
+      Schulte & Stuckey, <em>TOPLAS</em> 31 (2008).</p>
+    </div>
+    <div>
+      <h3>Next</h3>
+      <p class="small"><b>18</b> global constraints: alldifferent by matching, cumulative · <b>19</b> search heuristics, restarts, LNS · <b>20</b> SAT and CDCL.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>One more way to see the incompleteness: arc consistency is polynomial and CSP satisfiability
+    is NP-complete, so unless P = NP some propagation must leave work for search. The practical
+    question is never "complete or not" but "how much search is left".</p>
+  </aside>
+</section>
+
+</div></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/plugin/highlight/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<script src="../../slides/deck.js"></script>
+</body>
+</html>

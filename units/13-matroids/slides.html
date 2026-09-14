@@ -1,0 +1,426 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>13 · Matroids and the exact reach of greedy</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+<link rel="stylesheet" href="../../slides/deck.css">
+</head>
+<body data-trunk="comb">
+<div class="reveal"><div class="slides">
+
+<section class="title-slide">
+  <p class="eyebrow">Part III · trunk B · combinatorial algorithms · spine</p>
+  <div class="unit-no">13</div>
+  <h1>Matroids and the exact reach of greedy</h1>
+  <p class="lede">Greedy is optimal for every choice of weights exactly when the feasible sets form a matroid, which answers "when does this heuristic work?" completely.</p>
+  <p class="meta"><span>needs 00</span><span>~1½ h slides + 2½ h lab</span><span>lab: <code>uv run co lab 13</code></span></p>
+  <aside class="notes">
+    <p>Trunk B is independent of Parts I–II: you can start it the day after unit 00. It
+    is about the problems that are genuinely easy, and the structural reasons why.
+    Unit 06 (total unimodularity) is the polyhedral explanation of the same islands,
+    and you'll see the matroid polytope make that link here.</p>
+    <p>This unit opens the trunk with the cleanest theorem in the subject: a
+    characterization of when the simplest possible algorithm is exactly right.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">13 · overview</p>
+  <h2>The route</h2>
+  <div class="cols three">
+    <div class="box def"><span class="label">1 · greedy and matroids</span>
+      <p>Independence systems, the matroid axioms, the Rado–Edmonds theorem, and Kruskal as a special case.</p></div>
+    <div class="box def"><span class="label">2 · two matroids</span>
+      <p>Matroid intersection: bipartite matching and more, by augmenting paths. Three matroids: NP-hard.</p></div>
+    <div class="box def"><span class="label">3 · beyond matroids</span>
+      <p>Submodularity, and greedy's 1 − 1/e guarantee when it is no longer exact.</p></div>
+  </div>
+  <aside class="notes">
+    <p>The lab builds one generic greedy function and runs it on four matroid oracles.
+    That shows the matroid abstraction is real code, not just notation. It also
+    builds the brute-force axiom checker that produces the counterexample when a
+    greedy algorithm is wrong.</p>
+  </aside>
+</section>
+
+<section class="divider">
+  <p class="eyebrow">section 1</p>
+  <h2>Greedy and matroids</h2>
+  <p>An axiom that makes the obvious algorithm correct.</p>
+</section>
+
+<section>
+  <p class="eyebrow">13 · greedy</p>
+  <h2>Independence systems, and one algorithm for all of them</h2>
+  <div class="cols">
+    <div>
+      <div class="box def"><span class="label">independence system</span>
+        <p>A ground set $E$ and a family $\mathcal I$ of "independent" subsets, containing $\emptyset$ and closed under taking subsets.</p>
+      </div>
+      <div class="box def"><span class="label">greedy (max weight)</span>
+        <p>Sort $E$ by decreasing weight. Take each element with positive weight if the chosen set stays independent.</p>
+      </div>
+    </div>
+    <div>
+      <table style="font-size:.74em">
+        <thead><tr><th>system</th><th>greedy</th></tr></thead>
+        <tbody>
+          <tr><td>forests of a graph</td><td class="good" style="color:var(--good)">optimal (Kruskal)</td></tr>
+          <tr><td>at most $k$ elements</td><td style="color:var(--good)">optimal</td></tr>
+          <tr><td>linearly independent vectors</td><td style="color:var(--good)">optimal</td></tr>
+          <tr><td>matchings of a graph</td><td style="color:var(--warn)">can fail</td></tr>
+          <tr><td>knapsack-feasible sets</td><td style="color:var(--warn)">can fail</td></tr>
+        </tbody>
+      </table>
+      <p class="small">The lab's greedy is one function, and the oracle decides which row you are in.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>The matching failure in the smallest form, from lab step 3: the path with edges
+    (0,1), (1,2), (2,3) and weights 2, 3, 2. Greedy takes the middle edge (weight 3),
+    after which neither end edge can be added. Total 3, while the optimum takes both
+    end edges for 4.</p>
+    <p>The knapsack failure: capacity 10, items of weight 6 (value 7) and two of weight 5
+    (value 5 each). Greedy by value takes the 6 and fits nothing else: 7. Optimum takes
+    both 5s: 10.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">13 · greedy</p>
+  <h2>The matroid axioms</h2>
+  <div class="cols">
+    <div>
+      <div class="box def"><span class="label">matroid</span>
+        <ol>
+          <li>$\emptyset \in \mathcal I$</li>
+          <li>$B \in \mathcal I,\ A \subseteq B \Rightarrow A \in \mathcal I$ <span class="small muted">(hereditary)</span></li>
+          <li>$A, B \in \mathcal I,\ |A| &lt; |B| \Rightarrow \exists\, b \in B \setminus A$ with $A + b \in \mathcal I$ <span class="small muted">(exchange)</span></li>
+        </ol>
+      </div>
+      <p class="small">Consequence of exchange: all maximal independent sets (<b>bases</b>) of any subset have the same size, its <b>rank</b> $r(S)$.</p>
+    </div>
+    <div>
+      <table style="font-size:.7em">
+        <thead><tr><th>matroid</th><th>independent sets</th></tr></thead>
+        <tbody>
+          <tr><td><b>graphic</b></td><td>forests of a graph</td></tr>
+          <tr><td><b>uniform</b> $U_{k,n}$</td><td>sets of size $\le k$</td></tr>
+          <tr><td><b>partition</b></td><td>at most $c_b$ elements from each block $b$</td></tr>
+          <tr><td><b>linear</b></td><td>linearly independent sets of vectors</td></tr>
+          <tr><td><b>transversal</b></td><td>sets matchable into a bipartite graph's other side</td></tr>
+        </tbody>
+      </table>
+      <p class="small muted">Linear algebra is where the axioms come from: Whitney (1935) abstracted exactly the exchange property of bases of a vector space.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>Graphic matroids: two forests $A$, $B$ with $|A| &lt; |B|$. $A$ has more connected
+    components than $B$ (a forest on $n$ vertices with $k$ edges has $n - k$
+    components), so some edge of $B$ joins two different components of $A$, and adding
+    it to $A$ creates no cycle. That is the exchange axiom, proved.</p>
+    <p>Scheduling unit-time jobs with deadlines is a transversal matroid: a set of jobs is
+    independent if they can all be scheduled on time. That's why "take the most
+    profitable job that still fits" is optimal there. It's the first half of the lab's
+    checkpoint exercise.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">13 · greedy</p>
+  <h2>Rado–Edmonds: greedy works exactly on matroids</h2>
+  <div class="box thm"><span class="label">theorem (Rado 1957; Edmonds 1971)</span>
+    <p>For an independence system $(E, \mathcal I)$: greedy finds a maximum-weight independent set <b>for every weight function</b> if and only if $(E, \mathcal I)$ is a matroid.</p>
+  </div>
+  <div class="cols">
+    <div class="box proof"><span class="label">matroid ⇒ greedy optimal</span>
+      <p class="small">Let greedy pick $g_1, g_2, \dots$ in order, and let $O$ be optimal, sorted by weight. If $w(o_i) &gt; w(g_i)$ at the first index where they differ, exchange between $\{g_1..g_{i-1}\}$ and $\{o_1..o_i\}$ gives an element of weight $\ge w(o_i) &gt; w(g_i)$ that greedy could have taken before $g_i$. That's a contradiction.</p>
+    </div>
+    <div class="box proof"><span class="label">not a matroid ⇒ some weights fool greedy</span>
+      <p class="small">Take $A, B$ violating exchange with $|A| &lt; |B|$. Give $A$ weight $1 + \varepsilon$, $B \setminus A$ weight 1, and everything else 0. Greedy takes all of $A$ first, then gets stuck at $|A|(1+\varepsilon)$, while $B$ is worth at least $|B|$.</p>
+    </div>
+  </div>
+  <p class="small muted">Lab step 3 finds the $(A, B)$. Step 2's greedy on the graphic oracle is Kruskal, matched against networkx on 25 graphs.</p>
+  <aside class="notes">
+    <p>The second direction is constructive and practical: it tells you how to build the
+    failing instance for any proposed greedy algorithm whose feasible sets aren't a
+    matroid. That is the curriculum's checkpoint.</p>
+    <p>For the weights: with $|A| &lt; |B|$ and $\varepsilon$ small enough that
+    $|A|(1+\varepsilon) &lt; |B|$, greedy's total is below $|B|$. After taking $A$, no
+    element of $B \setminus A$ can be added (by the choice of $A$, $B$), and the rest
+    have weight 0.</p>
+    <p>Beyond cardinality: the minimum-weight <em>base</em> problem (spanning trees) is
+    the same theorem with weights negated and "stop at non-positive" removed.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">13 · greedy</p>
+  <h2>The matroid polytope</h2>
+  <div class="cols">
+    <div>
+      <div class="box thm"><span class="label">Edmonds 1970</span>
+        <p>The convex hull of incidence vectors of independent sets is</p>
+        $$P(M) = \{x \ge 0 : \textstyle\sum_{e \in S} x_e \le r(S)\ \ \forall S \subseteq E\}.$$
+      </div>
+      <p class="small">Greedy's output is an optimal vertex, and a dual solution built from the same order proves it by LP duality (unit 03).</p>
+    </div>
+    <div>
+      <p><b>Why unit 06 and unit 09 meet here:</b></p>
+      <ul class="small">
+        <li>The system is TDI: integrality comes from the dual, not from total unimodularity.</li>
+        <li>There are exponentially many rows, but separation over $P(M)$ is <b>submodular function minimization</b> (min over $S$ of $r(S) - x(S)$), which is polynomial.</li>
+        <li>So by GLS, optimizing over two matroids' polytopes together is polynomial too: that is intersection, next.</li>
+      </ul>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>The dual certificate: order the elements $e_1, \dots, e_n$ by decreasing weight and
+    let $S_i = \{e_1, \dots, e_i\}$. Set $y_{S_i} = w(e_i) - w(e_{i+1})$ (nonnegative
+    because of the order), and 0 on all other sets. Then $\sum_{S \ni e} y_S = w(e)$,
+    and $\sum_S r(S) y_S$ equals the weight of greedy's set. That is LP duality
+    proving greedy optimal, with the rank function doing the work matchings did in unit
+    00.</p>
+    <p>Edmonds' matroid intersection theorem says the intersection of two matroid
+    polytopes is also integral. With three it isn't, which is the polyhedral face of
+    three-matroid intersection being NP-hard.</p>
+  </aside>
+</section>
+
+<section class="divider">
+  <p class="eyebrow">section 2</p>
+  <h2>Two matroids</h2>
+  <p>Greedy stops working, and augmenting paths start.</p>
+</section>
+
+<section>
+  <p class="eyebrow">13 · intersection</p>
+  <h2>Matroid intersection</h2>
+  <div class="cols wide-right">
+    <div class="fig">
+      <svg viewBox="0 0 360 250" width="360" role="img" aria-label="exchange graph with an augmenting path">
+        <defs><marker id="arm" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" class="fill-ink"/></marker>
+        <marker id="arma" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" class="fill-accent"/></marker></defs>
+        <text x="80" y="22" text-anchor="middle" font-size="13" class="soft">outside I</text>
+        <text x="280" y="22" text-anchor="middle" font-size="13" class="soft">in I</text>
+        <g class="ink" stroke-width="1.5">
+          <circle cx="80" cy="60" r="15" class="fill-soft"/><circle cx="80" cy="130" r="15" class="fill-ground"/><circle cx="80" cy="200" r="15" class="fill-soft"/>
+          <circle cx="280" cy="90" r="15" class="fill-unit"/><circle cx="280" cy="170" r="15" class="fill-unit"/>
+        </g>
+        <text x="80" y="65" text-anchor="middle" font-size="13" class="mono">y₁</text>
+        <text x="80" y="135" text-anchor="middle" font-size="13" class="mono">y₂</text>
+        <text x="80" y="205" text-anchor="middle" font-size="13" class="mono">y₃</text>
+        <text x="30" y="64" font-size="12" class="soft">source</text>
+        <text x="30" y="226" font-size="12" class="soft">sink</text>
+        <path d="M95,62 L262,88" class="accent" stroke-width="3" fill="none" marker-end="url(#arma)"/>
+        <path d="M265,98 L97,128" class="rule" stroke-width="1.5" fill="none" marker-end="url(#arm)"/>
+        <path d="M265,165 L96,203" class="accent" stroke-width="3" fill="none" marker-end="url(#arma)"/>
+        <path d="M280,105 L280,153" class="accent" stroke-width="0" fill="none"/>
+        <path d="M95,135 L262,168" class="rule" stroke-width="1.5" fill="none" marker-end="url(#arm)"/>
+      </svg>
+      <p class="cap">Schematic. Arcs out of I-vertices are M1-exchanges; arcs into them are M2-exchanges. A shortest source→sink path is flipped, and |I| grows by one.</p>
+    </div>
+    <div>
+      <p>Largest set independent in <b>both</b> $M_1$ and $M_2$.</p>
+      <div class="box thm"><span class="label">Edmonds' min–max theorem</span>
+        $$\max |I| = \min_{A \subseteq E}\; r_1(A) + r_2(E \setminus A)$$
+      </div>
+      <ul class="small">
+        <li><b>Bipartite matching</b>: two partition matroids, "one edge per left vertex" and "one edge per right vertex". König's theorem is this min–max.</li>
+        <li><b>Rainbow spanning forests</b>: graphic ∩ "one edge per colour".</li>
+        <li>Arborescences in digraphs, and more.</li>
+      </ul>
+      <p class="small muted">Algorithm (lab step 4): the exchange graph, then a shortest augmenting path, then flip. Polynomial in the number of oracle calls.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>The exchange graph arcs: $x \to y$ ($x \in I$, $y \notin I$) when $I - x + y$ is
+    independent in $M_1$; $y \to x$ when $I - x + y$ is independent in $M_2$. Sources
+    are $y$ with $I + y \in \mathcal I_1$, sinks are $y$ with $I + y \in \mathcal I_2$. A
+    source→sink path alternates out, in, …, out, and flipping it adds one element.
+    Shortest paths are required. The correctness proof shows the flipped set stays
+    independent in each matroid using a "unique perfect matching" lemma, and that lemma
+    only applies to shortest paths. Hint rung 3 says why.</p>
+    <p>When no path exists, the set $A$ of vertices reachable from the sources gives the
+    min–max certificate: $|I| = r_1(A) + r_2(E \setminus A)$. It is the same shape as
+    max-flow min-cut (unit 14): the unreachable set is the cut.</p>
+    <p>The figure is a schematic of the structure, not a lab run.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">13 · intersection</p>
+  <h2>Two is polynomial, three is NP-hard</h2>
+  <div class="cols">
+    <div class="box warn"><span class="label">three matroids</span>
+      <p>A <b>directed Hamiltonian path</b> is a set of $n - 1$ arcs that is independent in three matroids at once:</p>
+      <ul class="small">
+        <li>graphic (no cycle, ignoring directions);</li>
+        <li>partition: at most one arc into each vertex;</li>
+        <li>partition: at most one arc out of each vertex.</li>
+      </ul>
+      <p class="small">So a size-$(n-1)$ common independent set exists iff a Hamiltonian path does. That is NP-complete.</p>
+    </div>
+    <div>
+      <p>This is where the islands end. The sequence runs:</p>
+      <ul class="small">
+        <li><b>one</b> matroid: greedy;</li>
+        <li><b>two</b>: augmenting paths, the polytope still integral;</li>
+        <li><b>three</b>: NP-hard, and the TSP of unit 09 lives here;</li>
+        <li><b>matroid parity</b> (matching's generalization): polynomial for linear matroids (Lovász), intractable in the oracle model.</li>
+      </ul>
+      <p class="small muted">Unit 22 turns reductions like this one into code.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>Check the reduction in one direction: a Hamiltonian path has in-degree and
+    out-degree at most 1 everywhere, and no cycle, so it is independent in all three,
+    with $n-1$ arcs. Conversely, $n - 1$ arcs with in- and out-degree at most 1 form
+    vertex-disjoint directed paths and cycles. No cycle, and $n - 1$ arcs on $n$
+    vertices, leaves exactly one path covering everything.</p>
+    <p>The ATSP connection: a tour is a Hamiltonian cycle, so ATSP is essentially
+    min-weight three-matroid intersection. Held–Karp's 1-tree bound (unit 11) works by
+    dropping one of the three constraints (the degree partition) into the objective with
+    Lagrange multipliers, which leaves a one-matroid problem that greedy solves.</p>
+  </aside>
+</section>
+
+<section class="divider">
+  <p class="eyebrow">section 3</p>
+  <h2>Beyond matroids: submodularity</h2>
+  <p>When greedy is no longer exact, but still provably close.</p>
+</section>
+
+<section>
+  <p class="eyebrow">13 · submodular</p>
+  <h2>Diminishing returns, and 1 − 1/e</h2>
+  <div class="cols">
+    <div>
+      <div class="box def"><span class="label">submodular</span>
+        <p>$f : 2^E \to \mathbb R$ with $\;f(A + e) - f(A) \ge f(B + e) - f(B)\;$ for $A \subseteq B$, $e \notin B$.</p>
+        <p class="small">Adding $e$ helps a small set at least as much as a big one. Matroid rank functions and coverage functions are submodular.</p>
+      </div>
+      <div class="box thm"><span class="label">Nemhauser, Wolsey & Fisher (1978)</span>
+        <p>For monotone submodular $f$ and a cardinality limit $k$, greedy (add the element of largest marginal gain) achieves $f(G) \ge (1 - \tfrac1e)\,\mathrm{OPT}$.</p>
+      </div>
+    </div>
+    <div>
+      <div class="box proof"><span class="label">proof idea</span>
+        <p class="small">Each step, the $k$ optimal elements together would add at least $\mathrm{OPT} - f(G_i)$, so the best single one adds at least $\frac1k(\mathrm{OPT} - f(G_i))$. The gap shrinks by a factor $(1 - \frac1k)$ per step, and $(1 - \frac1k)^k \le \frac1e$.</p>
+      </div>
+      <div class="box warn"><span class="label">and it's tight</span>
+        <p class="small">For max coverage, no polynomial algorithm beats $1 - 1/e$ unless P = NP (Feige 1998).</p>
+      </div>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>Tightness of the analysis: there are coverage instances on which greedy achieves
+    exactly $(1 - (1-1/k)^k)\,\mathrm{OPT}$, which tends to $1 - 1/e$. They are built
+    with nested sets of carefully decreasing sizes. Feige's hardness result says no
+    cleverer polynomial algorithm does better in the worst case, so greedy is the best
+    possible algorithm for max coverage in that sense.</p>
+    <p>Submodular maximization is everywhere in practice: sensor placement, influence
+    maximization in networks, document summarization, active learning. In all of them
+    greedy, or a lazy-evaluation version of it, is the default method because of this
+    theorem.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">13 · submodular</p>
+  <h2>The guarantee against the typical case</h2>
+  <div class="cols wide-left">
+    <div>
+      <p class="small">Lab <code>then</code>: 40 random sets over 120 elements, exact optimum by HiGHS MIP.</p>
+      <table>
+        <thead><tr><th class="num">$k$</th><th class="num">mean ratio</th><th class="num">worst ratio</th><th class="num">guarantee</th></tr></thead>
+        <tbody>
+          <tr><td class="num">3</td><td class="num">0.987</td><td class="num">0.950</td><td class="num">0.632</td></tr>
+          <tr><td class="num">6</td><td class="num">0.992</td><td class="num">0.944</td><td class="num">0.632</td></tr>
+          <tr><td class="num">10</td><td class="num">0.980</td><td class="num">0.926</td><td class="num">0.632</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="box"><span class="label">read it as</span>
+      <p class="small">A worst-case guarantee is a floor, not a forecast. Random instances rarely come near the tight examples, which have to be constructed.</p>
+      <p class="small">Unit 23 makes the same point for set cover's $H_n$ bound, and unit 28 turns "what did you actually measure?" into method.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>The lab's exact optimum for coverage is a MILP: $y_i$ chooses set $i$ with
+    $\sum_i y_i \le k$, and $z_u \le \sum_{i \ni u} y_i$ covers element $u$. Maximize
+    $\sum_u z_u$. It is tiny for HiGHS at this size. Unit 23 revisits the related set
+    cover problem, where greedy's guarantee is $H_n$ instead.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">13 · lab</p>
+  <h2>Lab 13 — what you build</h2>
+  <div class="lab">
+    <span class="label">about 2½ hours · uv run co lab 13 · oracles, not data structures</span>
+    <ol>
+      <li><b>Four matroid oracles</b>: graphic, uniform, partition, linear.</li>
+      <li><b>One greedy</b>, which is Kruskal on the graphic oracle.</li>
+      <li><b>An axiom checker</b> that returns the exchange counterexample.</li>
+      <li><b>Matroid intersection</b> by shortest augmenting paths, which gives bipartite matching.</li>
+      <li><b>Greedy max coverage</b>, checked against its 1 − 1/e bound.</li>
+    </ol>
+  </div>
+<pre><code class="language-bash">uv run co test 13
+uv run co then 13     # greedy vs Kruskal · intersection vs Hopcroft–Karp · coverage ratios vs MIP optimum</code></pre>
+  <aside class="notes">
+    <p>The generic code is deliberately slow: every oracle call rebuilds its state from
+    scratch. <code>then</code> part 1 shows that costs about 20× against networkx's
+    Kruskal at 2180 edges, and part 2 about 1000× against Hopcroft–Karp. Unit 14's
+    flows and unit 15's matching are the specialized versions that avoid the cost.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">13 · checkpoint</p>
+  <h2>Done when</h2>
+  <div class="box good"><span class="label">checkpoint</span>
+    <ul>
+      <li>All five lab steps are ✓.</li>
+      <li>Shown a greedy algorithm someone proposes, you can either name the matroid underneath it or construct the instance where it fails.</li>
+      <li>You can explain why three-matroid intersection is NP-hard while two is polynomial.</li>
+    </ul>
+  </div>
+  <div class="cols">
+    <div>
+      <h3>Reading</h3>
+      <p class="small">Korte & Vygen, ch. 13.<br>
+      Schrijver, <em>Combinatorial Optimization</em>, vol. B, ch. 39–41 (consulted).<br>
+      Krause & Golovin, "Submodular function maximization" (2014), §1–3.</p>
+    </div>
+    <div>
+      <h3>Next</h3>
+      <p class="small"><b>14</b> network flows · then <b>15</b> matching and <b>16</b> DP. <b>23</b> uses this unit's MST inside Christofides.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>The checkpoint exercise from the lab sheet. Unit-time jobs with deadlines and
+    profits: the sets of jobs schedulable on time form a matroid (a transversal
+    matroid), so "take the most profitable job that still fits" is optimal. Weighted
+    interval scheduling: sets of disjoint intervals are not a matroid. Take a long
+    interval of weight 3 overlapping two short disjoint ones of weight 2 each. Greedy
+    takes the long one and gets 3, while the optimum is 4, and those two families are
+    exactly the (A, B) exchange witness.</p>
+  </aside>
+</section>
+
+</div></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/plugin/highlight/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<script src="../../slides/deck.js"></script>
+</body>
+</html>

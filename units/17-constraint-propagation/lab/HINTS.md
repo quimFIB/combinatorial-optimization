@@ -1,0 +1,152 @@
+# Hints — lab 17
+
+One rung at a time; then `solution/lab.py` or `solution/functional.py`.
+
+## Step 1 — The store
+
+<details><summary>Rung 1</summary>
+
+`set_domain`: `new = frozenset(new)`. If `new != self.dom[v]`, push `(v, self.dom[v])`, store
+`new`, and append v to `changed`. Return `bool(new)`. `remove` is `dom − {a}` and `assign` is
+`dom & {a}`, so assigning a value not in the domain empties it.
+</details>
+
+<details><summary>Rung 2 — undo</summary>
+
+`mark()` is `len(trail)`. `undo(m)` pops until the trail has length m, restoring each old
+domain, then clears `changed`. Pop order matters: the same variable may have been trailed
+several times, and the oldest entry must win.
+</details>
+
+<details><summary>Functional route</summary>
+
+Step 1's interface is a mutable store, so the functional reference keeps the class but makes its contents
+immutable: `dom` is a tuple of frozensets, and every change replaces the tuple and records the old domain on
+the trail. `undo` is a fold over the trail entries past the mark, in reverse, that rebuilds the tuple.
+</details>
+
+## Step 2 — AC-3
+
+<details><summary>Rung 1</summary>
+
+Build `incoming[x]` = every z with (z, x) an arc. Start the queue with all arcs, and keep a
+set of what's queued. Pop (x, y) and revise x against y. If x shrank: return None if it's
+empty, otherwise queue every (z, x) not already queued.
+</details>
+
+<details><summary>Rung 2 — the textbook shortcut, and why the tests don't allow it</summary>
+
+Textbook AC-3 skips re-queuing (y, x) after revising (x, y). That's valid when (y, x) is the
+inverse of the same constraint. The random tests give each direction its own relation, so the
+shortcut gives wrong answers there.
+</details>
+
+<details><summary>Functional route</summary>
+
+`revise` is one frozenset comprehension. AC-3 is an unfold over `(domains dict, queue tuple, revise
+count)`: pop the front arc, revise, and on a change return a new dict and requeue the incoming arcs not
+already waiting. `tz.groupby` precomputes the incoming arcs. Stop when the queue is empty or a domain is
+wiped out (the dict becomes `None`).
+</details>
+
+## Step 3 — Propagators and the fixpoint
+
+<details><summary>Rung 1 — NotEqual</summary>
+
+Nothing can be removed unless one side is fixed. If x = {a}, remove a − offset from y; if
+y = {b}, remove b + offset from x. Apply the second test to the narrowed y, so a chain
+x fixed → y fixed → x emptied is caught in one call.
+</details>
+
+<details><summary>Rung 2 — LinearLe</summary>
+
+Each term's smallest possible contribution: `c·min` if c > 0, and `c·max` if c < 0. Call
+their sum `total`. If `total > rhs`, fail. Otherwise the other terms use at least
+`total − low_i`, so keep the values a of x_i with `c·a ≤ rhs − (total − low_i)`. This is exact
+for a single inequality: each kept value has a support.
+</details>
+
+<details><summary>Rung 3 — Count</summary>
+
+`sure` = variables whose domain is {value}, and `possible` = variables whose domain contains
+value. Narrow n to [sure, possible]. If max(n) == sure, remove value from the undecided
+candidates. If min(n) == possible, fix every candidate to value. When n is also one of the xs,
+combine both narrowings of it by intersection.
+</details>
+
+<details><summary>Rung 4 — the fixpoint loop</summary>
+
+```
+queue = all props (or the watchers of dirty); queued = their ids
+while queue:
+    p = pop; unmark; stats.propagations += 1
+    out = p.prune(store.dom); None -> fail
+    store.changed.clear()
+    for v, d in out.items(): if not store.set_domain(v, d & store.dom[v]): fail
+    for v in store.changed: queue every watcher of v not already queued
+```
+Queue identity with `id(p)`: two propagators can be equal-looking objects.
+</details>
+
+<details><summary>Functional route</summary>
+
+Every `prune(dom)` is already pure: it reads domains and returns a dict of narrowed ones, or `None`.
+`LinearEq` merges its two halves with `tz.merge_with` over an overlay view, not a copied dict. The fixpoint is
+an unfold over `(domain tuple, propagator queue)` that wakes watchers of narrowed variables with `tz.unique`.
+Only at the boundary does `fixpoint` write the result back into the step-1 store. The `Stats` counters are
+the one deliberate mutation, because the tests read them.
+</details>
+
+## Step 4 — Search
+
+<details><summary>Rung 1</summary>
+
+```
+def dfs():
+    v = choose(store, stats); if v is None: record; return not all_solutions
+    a = min(store.dom[v])
+    for eq in (True, False):
+        (node limit check) ; stats.nodes += 1 ; m = store.mark()
+        ok = store.assign(v, a) if eq else store.remove(v, a)
+        if ok and fixpoint(..., dirty=[v]): if dfs(): undo; return True
+        else: stats.failures += 1
+        store.undo(m)
+    return False
+```
+</details>
+
+<details><summary>Functional route</summary>
+
+This is where immutability pays off: a node is a tuple of frozensets, so a child is a new tuple and
+backtracking is just returning, with no trail and no undo. `search(dom)` is a recursive generator that yields
+solutions lazily, and `tz.take(1, ...)` or `list(...)` decides how many to pull. The node limit is checked
+before each child.
+</details>
+
+## Step 5 — Models
+
+<details><summary>Rung 1 — queens</summary>
+
+For columns i < j: `NotEqual(i, j)`, `NotEqual(i, j, j − i)` and `NotEqual(i, j, i − j)`. The
+offsets say q_i ≠ q_j + (j − i) and q_i ≠ q_j − (j − i).
+</details>
+
+<details><summary>Rung 2 — sudoku</summary>
+
+Build the 3N groups (rows, columns, boxes), collect `{(min(a, b), max(a, b))}` over pairs
+within each group (a set, so shared row-and-box pairs appear once), then one NotEqual per pair.
+Givens are singleton domains.
+</details>
+
+<details><summary>Rung 3 — magic series</summary>
+
+`Count(range(n), i, i)` for each i, plus `LinearEq(range(n), [1]*n, n)` and
+`LinearEq(range(n), list(range(n)), n)`. Without the last one the answers are the same, but the
+search is twice as long.
+</details>
+
+<details><summary>Functional route</summary>
+
+Models are data: lists of domains and lists of propagators built by comprehensions. Sudoku's peer pairs
+are a set comprehension over the row, column and box groups, deduplicated by `(min, max)`.
+</details>

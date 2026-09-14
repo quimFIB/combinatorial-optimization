@@ -1,0 +1,359 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>31 · Where discrete meets differentiable</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+<link rel="stylesheet" href="../../slides/deck.css">
+</head>
+<body data-trunk="coda">
+<div class="reveal"><div class="slides">
+
+<section class="title-slide">
+  <p class="eyebrow">Part VII · coda · the continuous cousin</p>
+  <div class="unit-no">31</div>
+  <h1>Where discrete meets differentiable</h1>
+  <p class="lede">Every decision in this course is an argmax. Four ways to get a useful gradient through one, and an honest test of whether learning helps inside an exact solver.</p>
+  <p class="meta"><span>needs 30, 07, 15</span><span>~1 h slides + 3 h lab</span><span>lab: <code>uv run co lab 31</code></span></p>
+  <aside class="notes">
+    <p>The last unit. It joins the course's two halves in both directions: continuous tools applied to
+    discrete decisions (relaxations, estimators, argmin layers), and learning applied inside a discrete
+    algorithm (a branching rule for unit 07's branch and bound).</p>
+    <p>The curriculum's framing of the state of the art is worth keeping in view: learned methods are still
+    behind LKH and CP-SAT on classical problems, and genuinely promising as guidance inside exact solvers
+    rather than as replacements for them. The lab's own result is a modest version of that finding.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">31 · overview</p>
+  <h2>The route</h2>
+  <div class="cols">
+    <div class="box def"><span class="label">1 · relax the decision</span>
+      <p class="small">Sinkhorn as a soft assignment; differentiable sorting.</p></div>
+    <div class="box def"><span class="label">2 · sample the decision</span>
+      <p class="small">Gumbel-softmax, straight-through, REINFORCE: bias against variance.</p></div>
+  </div>
+  <div class="cols">
+    <div class="box def"><span class="label">3 · differentiate the optimum</span>
+      <p class="small">The implicit function theorem on KKT: OptNet and cvxpylayers.</p></div>
+    <div class="box def"><span class="label">4 · learn to optimise</span>
+      <p class="small">Learned branching and cuts, neural combinatorial optimisation, and where each stands.</p></div>
+  </div>
+  <aside class="notes">
+    <p>The checkpoint: the imitation-learned branching rule beats most-fractional on held-out node counts, or you
+    say precisely why not in unit 28's terms. In the lab's run it didn't, and section 4 gives the reason with
+    the numbers.</p>
+  </aside>
+</section>
+
+<section class="divider">
+  <p class="eyebrow">section 1</p>
+  <h2>Relax the decision</h2>
+  <p>A permutation becomes a doubly stochastic matrix.</p>
+</section>
+
+<section>
+  <p class="eyebrow">31 · relax</p>
+  <h2>Sinkhorn: the Hungarian algorithm, softened</h2>
+  <div class="cols">
+    <div>
+      $$\begin{aligned}\min_{P \in \mathcal{B}}\ & \langle C, P \rangle + \varepsilon \textstyle\sum_{ij} P_{ij}(\log P_{ij} - 1)\end{aligned}$$
+      <p class="small">$\mathcal{B}$: doubly stochastic matrices (the Birkhoff polytope, whose vertices are the permutations; unit 06). The entropy makes the minimiser unique, interior and smooth in $C$:</p>
+      $$P_{ij} = \exp\big((f_i + g_j - C_{ij}) / \varepsilon\big)$$
+      <p class="small"><b>Sinkhorn</b> alternates: fix $g$ and choose $f$ so rows sum to 1, then fix $f$ and choose $g$ so columns do. In log domain it's two logsumexp operations per iteration.</p>
+    </div>
+    <div>
+      <div class="box thm"><span class="label">the gradient (envelope theorem)</span>
+        <p class="small">$\nabla_C \big[\min_P \langle C, P\rangle - \varepsilon H(P)\big] = P_\varepsilon^*$</p>
+        <p class="small">The hard assignment cost has "gradient" equal to the optimal permutation matrix, which jumps. Sinkhorn replaces the jump by a smooth plan. Lab step 2: <code>jax.grad</code> through the iterations equals $P$ to 1e−6.</p>
+      </div>
+      <div class="box def"><span class="label">related relaxations</span>
+        <p class="small"><b>Gumbel-Sinkhorn</b> (Mena et al. 2018): noise plus Sinkhorn, for learning latent permutations. <b>Differentiable sorting and ranks</b> via optimal transport (Cuturi, Teboul & Vert 2019) or projections onto the permutahedron (Blondel et al. 2020).</p>
+      </div>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>ε is a temperature. As ε → 0 the plan concentrates on an optimal permutation (if unique), but the number
+    of Sinkhorn iterations needed grows roughly like 1/ε, and the kernel underflows unless you work in log space.
+    The lab uses log-domain updates throughout.</p>
+    <p>The same construction is the core of computational optimal transport (Cuturi 2013), where it replaced
+    network-flow solvers for large, approximate transport problems. Assignment is the special case with
+    uniform marginals.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">31 · relax</p>
+  <h2>Measured: Sinkhorn is not an assignment solver</h2>
+  <div class="cols">
+    <div>
+      <p class="small">Lab <code>then</code>: costs uniform in [0, 1], mean cost per row, greedy rounding of the plan.</p>
+      <table class="dense">
+        <thead><tr><th class="num">n</th><th class="num">optimal</th><th class="num">Hungarian</th><th class="num">ε = 0.05</th><th class="num">ε = 0.01</th><th class="num">ε = 0.002</th></tr></thead>
+        <tbody>
+          <tr><td class="num">50</td><td class="num">0.0238</td><td class="num">0.002 s</td><td class="num">0.0371</td><td class="num">0.0320</td><td class="num"><b>0.0238</b> (2.2 s)</td></tr>
+          <tr><td class="num">100</td><td class="num">0.0163</td><td class="num">0.013 s</td><td class="num">0.0311</td><td class="num">0.0261</td><td class="num">0.0250 (4.1 s)</td></tr>
+          <tr><td class="num">200</td><td class="num">0.0089</td><td class="num">0.062 s</td><td class="num">0.0193</td><td class="num">0.0217</td><td class="num">0.0225 (11.6 s)</td></tr>
+        </tbody>
+      </table>
+      <p class="small muted">A random assignment costs 0.5 per row.</p>
+    </div>
+    <div>
+      <ul class="small">
+        <li><b>180× slower</b> than your Hungarian at n = 200, and 2.5× the cost after rounding.</li>
+        <li><b>Colder didn't help</b> at n = 200, probably because the plan is still spread over many entries and greedy rounding picks badly among them.</li>
+        <li>The cost differences between good assignments shrink like 1/n, so ε has to shrink with n, and iterations grow like 1/ε.</li>
+      </ul>
+      <div class="box good"><span class="label">what it's for</span>
+        <p class="small">A <b>smooth, batched, GPU-friendly</b> plan with a gradient, as a layer inside a model that must output a matching. There, "approximately a permutation, differentiably" is the requirement, and the Hungarian algorithm can't meet it.</p>
+      </div>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>This is the "accuracy, speed, and the gradient the Hungarian cannot give you" comparison the curriculum
+    asks for. The first two go to the Hungarian algorithm by orders of magnitude on a CPU. The third is the
+    only reason to use Sinkhorn, and it's a good reason in the right setting.</p>
+  </aside>
+</section>
+
+<section class="divider">
+  <p class="eyebrow">section 2</p>
+  <h2>Sample the decision</h2>
+  <p>Gradients of expectations over discrete choices.</p>
+</section>
+
+<section>
+  <p class="eyebrow">31 · sample</p>
+  <h2>Gumbel, straight-through, REINFORCE</h2>
+  <div class="cols">
+    <div>
+      <div class="box def"><span class="label">Gumbel-max and Gumbel-softmax</span>
+        <p class="small">$k = \arg\max_i (\ell_i + G_i)$ with $G_i$ Gumbel noise samples exactly from $\mathrm{softmax}(\ell)$. Replacing argmax by $\mathrm{softmax}((\ell + G)/\tau)$ gives a differentiable sample (Jang, Gupta & Poole 2017; Maddison, Mnih & Teh 2017).</p>
+      </div>
+      <div class="box def"><span class="label">straight-through (Bengio, Léonard & Courville 2013)</span>
+        <p class="small">Forward the hard one-hot, backward the soft sample's gradient: <code>hard + soft − stop_gradient(soft)</code>. Biased: the gradient belongs to a different function than the one evaluated.</p>
+      </div>
+      <div class="box def"><span class="label">REINFORCE (Williams 1992)</span>
+        $$\nabla_\ell\, \mathbb{E}[f(k)] = \mathbb{E}\big[f(k)\, (e_k - p)\big]$$
+        <p class="small">Unbiased, needs no derivative of $f$, and high variance.</p>
+      </div>
+    </div>
+    <div>
+      <p class="small">Lab <code>then</code>, 10 categories, one sample per estimate, 2 000 estimates (exact gradient norm 0.496):</p>
+      <table class="dense">
+        <thead><tr><th>estimator</th><th class="num">bias</th><th class="num">spread</th><th class="num">noise in the bias</th></tr></thead>
+        <tbody>
+          <tr><td>REINFORCE</td><td class="num">0.020</td><td class="num">1.818</td><td class="num">0.041</td></tr>
+          <tr><td>straight-through, τ = 0.1</td><td class="num">0.059</td><td class="num">2.529</td><td class="num">0.057</td></tr>
+          <tr><td>straight-through, τ = 0.5</td><td class="num">0.044</td><td class="num">0.841</td><td class="num">0.019</td></tr>
+          <tr><td>straight-through, τ = 1.0</td><td class="num"><b>0.137</b></td><td class="num"><b>0.406</b></td><td class="num">0.009</td></tr>
+        </tbody>
+      </table>
+      <p class="small">Norms of vectors. REINFORCE's bias is within its noise. Straight-through trades variance for bias as τ grows: at τ = 1, 4.5× less spread and a bias 15 noise levels wide.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>The practical rules that follow. REINFORCE needs a baseline (subtract a running mean of f) to be usable,
+    which cuts variance without adding bias. Straight-through and Gumbel-softmax work well when f is smooth in
+    the relaxed output and a little bias is acceptable, as in discrete latent variables. Both are the tools
+    neural combinatorial optimisation uses: attention models for routing are trained with REINFORCE and a
+    baseline (Kool et al. 2019).</p>
+  </aside>
+</section>
+
+<section class="divider">
+  <p class="eyebrow">section 3</p>
+  <h2>Differentiate the optimum</h2>
+  <p>The KKT conditions of unit 29, differentiated.</p>
+</section>
+
+<section>
+  <p class="eyebrow">31 · argmin</p>
+  <h2>The implicit function theorem on KKT</h2>
+  <div class="cols">
+    <div>
+      <p class="small">$x^*(q) = \arg\min_x \tfrac12 x^\top Q x + q^\top x$ s.t. $Ax \le b$. With the active set $S$ fixed (strict complementarity), the KKT conditions are linear:</p>
+      $$\begin{bmatrix} Q & A_S^\top \\ A_S & 0 \end{bmatrix} \begin{bmatrix} x \\ \lambda_S \end{bmatrix} = \begin{bmatrix} -q \\ b_S \end{bmatrix}$$
+      <p class="small">Differentiate in $q$: the same matrix times $[\partial x/\partial q;\ \partial \lambda/\partial q]$ equals $[-I;\ 0]$. One linear solve, <b>no matter how the solver found $x^*$</b>.</p>
+      <p class="small muted">OptNet (Amos & Kolter 2017) for QPs; cvxpylayers (Agrawal et al. 2019) for disciplined parametrized convex programs.</p>
+    </div>
+    <div>
+      <p class="small">Lab <code>then</code>, box-constrained QP, n = 30, 19 variables at a bound:</p>
+      <table class="dense">
+        <thead><tr><th>method</th><th class="num">max error vs finite differences</th><th class="num">time</th></tr></thead>
+        <tbody>
+          <tr><td>implicit (yours)</td><td class="num">6.8e−10</td><td class="num">1.1 ms + solve</td></tr>
+          <tr><td>JAX through 500 unrolled projected-gradient steps</td><td class="num">6.8e−10</td><td class="num">4.9 ms</td></tr>
+          <tr><td>finite differences</td><td class="num">—</td><td class="num">60 solves, 0.34 s</td></tr>
+        </tbody>
+      </table>
+      <div class="box warn"><span class="label">where it breaks</span>
+        <p class="small">At a degenerate point (a constraint active with zero multiplier) the active set can change under an infinitesimal change of $q$, and $x^*(q)$ isn't differentiable there. For LPs, $x^*$ is piecewise constant: the Jacobian is zero almost everywhere, the same problem as argmax.</p>
+      </div>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>The LP remark is why differentiable optimisation for combinatorial problems adds smoothing: perturbed
+    optimisers (Berthet et al. 2020) average the argmax over random perturbations of the costs, and
+    regularised LPs add a quadratic or entropic term. Sinkhorn in section 1 is exactly the entropic
+    version for assignment.</p>
+    <p>Unrolling (differentiating through the solver's iterations) and implicit differentiation agree here
+    because 500 projected-gradient steps converge. With fewer iterations, unrolling gives the gradient of the
+    truncated algorithm, which can be a different and sometimes more useful object.</p>
+  </aside>
+</section>
+
+<section class="divider">
+  <p class="eyebrow">section 4</p>
+  <h2>Learn to optimise</h2>
+  <p>Guidance inside exact solvers, and the honest state of the field.</p>
+</section>
+
+<section>
+  <p class="eyebrow">31 · learning</p>
+  <h2>Learned branching, cuts, and neural combinatorial optimisation</h2>
+  <div class="cols">
+    <div>
+      <div class="box def"><span class="label">inside exact solvers</span>
+        <ul class="small">
+          <li><b>Learning to branch</b>: imitate strong branching's choices cheaply (Khalil et al. 2016; Alvarez, Louveaux & Wehenkel 2017). Graph neural networks on the variable–constraint graph (Gasse et al. 2019) beat SCIP's default reliability branching on some benchmark families.</li>
+          <li><b>Cut selection</b> (Tang, Agrawal & Faenza 2020; Paulus et al. 2022), node selection, primal heuristics, and solver configuration.</li>
+        </ul>
+        <p class="small">The solver keeps its guarantees: a bad learned choice costs time, never correctness.</p>
+      </div>
+    </div>
+    <div>
+      <div class="box def"><span class="label">instead of solvers</span>
+        <ul class="small">
+          <li><b>Pointer networks</b> (Vinyals, Fortunato & Jaitly 2015), <b>attention models</b> trained with REINFORCE (Kool, van Hoof & Welling 2019), <b>POMO</b> (Kwon et al. 2020) for routing.</li>
+        </ul>
+      </div>
+      <div class="box warn"><span class="label">the honest current state</span>
+        <p class="small">On classical problems at benchmark sizes, neural constructive methods remain behind LKH for TSP and behind CP-SAT, HGS and MIP solvers on their home ground, especially in generalisation to larger or differently distributed instances. As learned guidance inside exact or classical solvers, the results are genuinely promising.</p>
+      </div>
+      <p class="small muted">Bengio, Lodi & Prouvost, <em>EJOR</em> 290 (2021), is the methodological survey.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>The distinction that matters for evaluation. A learned heuristic that replaces a solver must be compared
+    with the best classical heuristic under the same time budget (unit 26's lesson), and it often loses. A
+    learned policy inside a solver is compared with the solver's default policy on node counts and time, with
+    the solver's correctness untouched. That's a much easier bar, and it's the one the lab uses.</p>
+    <p>Generalisation is the recurring weakness: models trained on 100-city instances often degrade badly on
+    1 000-city ones, while LKH doesn't care. Unit 28's instance-selection warnings apply with full force.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">31 · learning</p>
+  <h2>Measured: the lab's learned rule, judged by unit 28's method</h2>
+  <div class="cols">
+    <div>
+      <p class="small">A linear ranker over 5 features, trained on 954 strong-branching decisions (10 knapsacks), tested on 20 held-out knapsacks with larger n:</p>
+      <table class="dense">
+        <thead><tr><th>rule</th><th class="num">SGM nodes</th><th class="num">SGM s</th><th class="num">fewest nodes on</th></tr></thead>
+        <tbody>
+          <tr><td>most-fractional</td><td class="num">541</td><td class="num">0.35</td><td class="num">0</td></tr>
+          <tr><td>pseudocost</td><td class="num">510</td><td class="num">0.35</td><td class="num">0</td></tr>
+          <tr><td>strong</td><td class="num"><b>386</b></td><td class="num">0.84</td><td class="num"><b>20</b></td></tr>
+          <tr><td>learned</td><td class="num">536</td><td class="num">0.37</td><td class="num">0</td></tr>
+        </tbody>
+      </table>
+      <table class="dense">
+        <thead><tr><th>paired on nodes</th><th>ratio [95% CI]</th><th class="num">Holm p</th></tr></thead>
+        <tbody>
+          <tr><td>learned / most-fractional</td><td>0.99 [0.94, 1.03]</td><td class="num">0.65</td></tr>
+          <tr><td>learned / pseudocost</td><td>1.05 [1.00, 1.10]</td><td class="num">0.10</td></tr>
+          <tr><td>learned / strong</td><td>1.38 [1.29, 1.46]</td><td class="num">0.0003</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div>
+      <div class="box warn"><span class="label">verdict: it does not beat most-fractional, and here's why</span>
+        <ul class="small">
+          <li><b>No evidence of a difference</b>: paired interval [0.94, 1.03] over 20 held-out instances.</li>
+          <li><b>It learned fractionality</b>: weight 2.27 against at most 0.62 on the other features, so it's nearly most-fractional.</li>
+          <li><b>The features can't carry the signal</b>: held-out imitation accuracy 0.58, against 0.55 for most-fractional's own agreement with strong branching. Strong branching decides from child LP bounds, which none of the five features contains.</li>
+        </ul>
+      </div>
+      <p class="small">Next experiment, same protocol: add node-LP features (reduced costs, dual values, a one-pivot bound estimate), as Gasse et al. did.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>This is the checkpoint answered in the second form it allows, and it's a more useful answer than a lucky
+    win would be. The imitation-accuracy baseline is the key diagnostic: if a trivial rule already agrees with
+    the expert 55% of the time and the learned one 58%, the model class or features are the bottleneck, and
+    no amount of training data will fix it.</p>
+    <p>End of the units. The capstone takes one problem (CVRP with time windows, or job-shop) through four
+    methods: a MIP with your own cuts, branch-and-price, CP-SAT with a deliberate search strategy, and ALNS.
+    Then it referees them with unit 28's harness under a shared time budget.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">31 · lab</p>
+  <h2>Lab 31 — what you build</h2>
+  <div class="lab">
+    <span class="label">about 3 hours · uv run co lab 31</span>
+    <ol>
+      <li><b>Sinkhorn</b> in log domain, and greedy rounding.</li>
+      <li><b>Gradients through Sinkhorn</b> in JAX, checked against the envelope theorem.</li>
+      <li><b>Gumbel-max, Gumbel-softmax, straight-through</b>, and exact against REINFORCE gradients.</li>
+      <li><b>The argmin Jacobian</b> of a QP by the implicit function theorem.</li>
+      <li><b>A learned branching rule</b>: features, strong-branching data, a ranker.</li>
+    </ol>
+  </div>
+<pre><code class="language-bash">uv run co test 31
+uv run co then 31     # Sinkhorn vs Hungarian · estimators · argmin layer · learned branching, judged by unit 28</code></pre>
+  <aside class="notes">
+    <p>Step 5's evaluation in <code>then</code> calls your unit-28 functions (shifted geometric means, Wilcoxon,
+    Holm, bootstrap ratios) through <code>colib.ref</code>, so the course ends by using its own methodology unit
+    on its own last experiment.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">31 · checkpoint</p>
+  <h2>Done when</h2>
+  <div class="box good"><span class="label">checkpoint</span>
+    <ul>
+      <li>All five lab steps are ✓.</li>
+      <li>Your imitation-learned branching rule beats most-fractional branching on node count on held-out instances, or you can say precisely why it did not, in terms of unit 28's methodology rather than anecdote.</li>
+      <li>For each of the four techniques, you can say what it buys and what it costs, with the numbers.</li>
+    </ul>
+  </div>
+  <div class="cols">
+    <div>
+      <h3>Reading</h3>
+      <p class="small">Cuturi, <em>NeurIPS</em> 2013.<br>
+      Jang, Gupta & Poole, <em>ICLR</em> 2017.<br>
+      Amos & Kolter, <em>ICML</em> 2017.<br>
+      Gasse et al., <em>NeurIPS</em> 2019.<br>
+      Bengio, Lodi & Prouvost, <em>EJOR</em> 290 (2021).</p>
+    </div>
+    <div>
+      <h3>Next</h3>
+      <p class="small">The <b>capstone</b>: one problem, four traditions, one harness.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>The course's arc in one sentence: learn the exact methods well enough to know when to stop using them,
+    the approximate ones well enough to know what they promise, and the experimental method well enough to
+    believe neither without evidence.</p>
+  </aside>
+</section>
+
+</div></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/plugin/highlight/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<script src="../../slides/deck.js"></script>
+</body>
+</html>

@@ -1,0 +1,488 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>05 · Formulations, relaxations, and the integrality gap</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+<link rel="stylesheet" href="../../slides/deck.css">
+</head>
+<body data-trunk="ip">
+<div class="reveal"><div class="slides">
+
+<!-- ================================================================== -->
+<section class="title-slide">
+  <p class="eyebrow">Part II · trunk A · integer programming · spine</p>
+  <div class="unit-no">05</div>
+  <h1>Formulations, relaxations, and the integrality gap</h1>
+  <p class="lede">The same integer solutions, described by different polyhedra, and why the choice decides whether a solver finishes.</p>
+  <p class="meta"><span>needs 03</span><span>~1½ h slides + 2 h lab</span><span>lab: <code>uv run co lab 05</code></span></p>
+  <aside class="notes">
+    <p>Integer programming is where hardness enters the course. Everything in Part II
+    is a strategy for exploiting the LP relaxation from Part I: tighten it (this unit
+    and 08), branch on it (07), decompose it (10, 12), or dualize it (11).</p>
+    <p>This unit writes no algorithm. It is about modelling, and it makes the point
+    that surprises most people coming from continuous optimization: two models with
+    exactly the same feasible integer points can differ by orders of magnitude in
+    solve time, and the difference can be predicted from their LP relaxations.</p>
+    <p>Convention: MILPs are minimization problems (as in <code>colib.mip</code>),
+    so LP bounds are <em>lower</em> bounds.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">05 · overview</p>
+  <h2>The route</h2>
+  <div class="cols three">
+    <div class="box def"><span class="label">1 · relaxations</span>
+      <p>A formulation is a polyhedron whose integer points are the solutions. Its LP bound, its gap, and the ideal formulation.</p></div>
+    <div class="box def"><span class="label">2 · strength</span>
+      <p>Big-M and why M matters. Aggregated against disaggregated. Extended formulations, and their proven limits.</p></div>
+    <div class="box def"><span class="label">3 · what solvers do</span>
+      <p>Presolve and cuts repair weak models, which hides the problem until they can't.</p></div>
+  </div>
+  <p class="muted">Lab: three facility-location models with identical integer optima. With presolve and cuts off, SCIP needs 5 644 nodes on one and 1 node on another.</p>
+  <aside class="notes">
+    <p>The node counts are from this unit's <code>then</code>, part 2: 20 facilities
+    and 60 customers, aggregated M = 10C against disaggregated.</p>
+  </aside>
+</section>
+
+<!-- ================================================================== -->
+<section class="divider">
+  <p class="eyebrow">section 1</p>
+  <h2>Formulations and relaxations</h2>
+  <p>One set of integer points, many polyhedra.</p>
+</section>
+
+<section>
+  <p class="eyebrow">05 · relaxations</p>
+  <h2>Integer programs and their LP relaxation</h2>
+  <div class="cols">
+    <div>
+      <div class="box def"><span class="label">definitions</span>
+        <p>A <b>MILP</b>: $\min\{c^\top x : Ax \le b,\ x_j \in \mathbb Z \text{ for } j \in I\}$. If every variable is integer it is an <b>IP</b>.</p>
+        <p>Its <b>LP relaxation</b> drops integrality. Its optimum $z_{LP}$ is a lower bound: $z_{LP} \le z_{IP}$.</p>
+      </div>
+      <div class="box def"><span class="label">integrality gap</span>
+        <p>Of an instance: $z_{IP} - z_{LP}$, or the ratio $z_{IP}/z_{LP}$.<br>
+        Of a formulation for a problem class: the worst ratio over all instances (unit 24).</p>
+      </div>
+    </div>
+    <div>
+      <p>Why the bound matters for solving:</p>
+      <ul>
+        <li><b>Pruning</b> (unit 07): a branch whose LP bound is at least the best known solution can be discarded.</li>
+        <li><b>Proof</b>: optimality is proved when the global bound meets the incumbent.</li>
+        <li>A weak bound means both happen late, after many more nodes.</li>
+      </ul>
+      <p class="small muted">A MILP solver's log is largely the story of this bound rising.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>Integrality makes the problem NP-hard in general. Even deciding whether
+    $Ax \le b$ has an integer solution is NP-complete (it contains 3SAT, unit 22).
+    The relaxation is polynomial (unit 04). Every exact method for MILP is,
+    underneath, a way of making the relaxation look more like the integer problem in
+    the region where the optimum is.</p>
+    <p>Two reasons the relaxation is the right object and not some other convex
+    set. First, it is cheap and warm-startable (units 03–04). Second, it has duals,
+    which give reduced costs for variable fixing (unit 11), prices for column
+    generation (unit 10), and Benders cuts (unit 12).</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">05 · relaxations</p>
+  <h2>Formulations are polyhedra, and some are better</h2>
+  <div class="cols wide-right">
+    <div class="fig">
+      <svg viewBox="0 0 360 300" width="400" role="img" aria-label="three nested polygons with the same integer points">
+        <polygon points="50,260 323,260 50,57" fill="none" class="rule" stroke-width="2.5"/>
+        <polygon points="50,260 295,260 225,190 141,99 50,78" class="fill-soft" style="fill-opacity:.6" stroke="var(--c-lp)" stroke-width="2"/>
+        <polygon points="50,260 260,260 190,190 120,120 50,120" fill="none" stroke="var(--unit)" stroke-width="3.5"/>
+        <g class="fill-ink">
+          <circle cx="50" cy="260" r="4.5"/><circle cx="120" cy="260" r="4.5"/><circle cx="190" cy="260" r="4.5"/><circle cx="260" cy="260" r="4.5"/>
+          <circle cx="50" cy="190" r="4.5"/><circle cx="120" cy="190" r="4.5"/><circle cx="190" cy="190" r="4.5"/>
+          <circle cx="50" cy="120" r="4.5"/><circle cx="120" cy="120" r="4.5"/>
+        </g>
+        <g style="fill:var(--ink-faint)">
+          <circle cx="330" cy="260" r="2.5"/><circle cx="260" cy="190" r="2.5"/><circle cx="330" cy="190" r="2.5"/>
+          <circle cx="190" cy="120" r="2.5"/><circle cx="260" cy="120" r="2.5"/><circle cx="330" cy="120" r="2.5"/>
+          <circle cx="50" cy="50" r="2.5"/><circle cx="120" cy="50" r="2.5"/><circle cx="190" cy="50" r="2.5"/><circle cx="260" cy="50" r="2.5"/><circle cx="330" cy="50" r="2.5"/>
+        </g>
+        <text x="250" y="140" font-size="13" class="soft">P₁ weak</text>
+        <text x="200" y="100" font-size="13" style="fill:var(--c-lp)">P₂ stronger</text>
+        <text x="130" y="150" font-size="13" style="fill:var(--unit)">conv(S)</text>
+      </svg>
+      <p class="cap">Three polyhedra containing exactly the same nine integer points (black). The hull conv(S) is the ideal formulation.</p>
+    </div>
+    <div>
+      <div class="box def"><span class="label">definitions</span>
+        <p>A <b>formulation</b> of $S \subseteq \mathbb Z^n$ is a polyhedron $P$ with $P \cap \mathbb Z^n = S$.</p>
+        <p>$P_2$ is <b>at least as strong</b> as $P_1$ if $P_2 \subseteq P_1$. Its LP bound is then at least as good for <b>every</b> objective.</p>
+      </div>
+      <div class="box thm"><span class="label">the ideal formulation</span>
+        <p>For rational data, $\mathrm{conv}(S)$ is a polyhedron (Meyer 1974). Over it, the LP optimum is an integer point, so the MILP <b>is</b> an LP.</p>
+      </div>
+      <p class="small muted">The catch: its description is usually exponentially large, and finding it is as hard as the problem.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>"At least as strong for every objective" is the partial order. Two formulations
+    can also be incomparable: neither contains the other, and each gives a better bound
+    for some objectives. Adding the constraints of both gives a formulation stronger
+    than either, which is exactly what cutting planes do (unit 08).</p>
+    <p>Meyer's theorem is the reason $\mathrm{conv}(S)$ has an H-description. For
+    bounded $S$ it follows from Minkowski–Weyl (unit 01), since $S$ is finite. For
+    unbounded $S$ it needs rational data: with irrational data the convex hull of the
+    integer points in a polyhedron need not be polyhedral.</p>
+    <p>Units 06 and 15 are about the happy cases where the natural formulation already
+    <em>is</em> conv(S): totally unimodular matrices and bipartite matching. Then no
+    branching is needed at all.</p>
+  </aside>
+</section>
+
+<!-- ================================================================== -->
+<section class="divider">
+  <p class="eyebrow">section 2</p>
+  <h2>Strength</h2>
+  <p>What makes one formulation tighter than another.</p>
+</section>
+
+<section>
+  <p class="eyebrow">05 · strength</p>
+  <h2>Big-M, and why the M matters</h2>
+  <div class="cols wide-right">
+    <div class="fig">
+      <svg viewBox="0 0 320 240" width="330" role="img" aria-label="relaxation of x <= M y for two values of M">
+        <line x1="40" y1="200" x2="300" y2="200" class="rule" stroke-width="1.5"/>
+        <line x1="40" y1="200" x2="40" y2="20" class="rule" stroke-width="1.5"/>
+        <polygon points="40,200 160,120 160,40 40,40" class="fill-soft" style="fill-opacity:.55"/>
+        <line x1="160" y1="30" x2="160" y2="205" class="rule" stroke-width="1.5" stroke-dasharray="3 3"/>
+        <polygon points="40,200 160,40 40,40" fill="none" stroke="var(--unit)" stroke-width="3"/>
+        <line x1="40" y1="200" x2="280" y2="40" class="rule" stroke-width="2" stroke-dasharray="6 4"/>
+        <circle cx="40" cy="200" r="6" class="fill-ink"/>
+        <line x1="40" y1="40" x2="160" y2="40" class="ink" stroke-width="5"/>
+        <text x="8" y="44" font-size="14" class="mono">y=1</text>
+        <text x="8" y="204" font-size="14" class="mono">y=0</text>
+        <text x="152" y="222" font-size="13" class="mono soft">x = u</text>
+        <text x="265" y="222" font-size="13" class="mono soft">x = M</text>
+        <text x="172" y="118" font-size="13" class="soft">← extra room</text>
+        <text x="172" y="134" font-size="13" class="soft">when M = 2u</text>
+        <text x="60" y="30" font-size="13" style="fill:var(--unit)">tight: M = u</text>
+      </svg>
+      <p class="cap">LP-feasible $(x, y)$ for $0 \le x \le M y$, $x \le u$, $0 \le y \le 1$. Integer-feasible: $(0,0)$ and the thick segment at $y = 1$. Shaded: what $M = 2u$ adds to the tight triangle.</p>
+    </div>
+    <div>
+      <p>To switch a continuous quantity off with a binary: $\;x \le M\,y,\; y \in \{0,1\}$.</p>
+      <ul>
+        <li>Any $M$ at least the true upper bound $u$ of $x$ is <b>valid</b>.</li>
+        <li>The relaxation lets $y = x/M$. With $M \gg u$, the LP opens a facility "a little": $y$ tiny, cost tiny, bound weak.</li>
+        <li>The <b>tightest valid M</b> is the best upper bound on $x$ you can prove. Finding it is modelling work, and presolve can sometimes do it for you.</li>
+      </ul>
+      <div class="box warn"><span class="label">two diseases at once</span>
+        <p class="small">A big M weakens the bound <b>and</b> mixes magnitudes in one row, which is unit 02's tolerance problem.</p>
+      </div>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>In the lab, $\sum_j x_{ij} \le M y_i$ with $x_{ij} \le 1$ has smallest valid
+    $M = C$ (every customer could be served by one facility). $M = 10C$ is what a
+    careless modeller writes. The LP bounds were 1542 and 1416 against an optimum of
+    2629 on the 20×60 instance: gaps of 41% and 46%.</p>
+    <p>The numerical side: with $M = 10^6$ and $y$ at tolerance $10^{-9}$ from 0, the
+    constraint allows $x$ up to $10^{-3}$ while the solver reports $y = 0$. Solvers
+    report "integer" solutions that aren't really feasible in this way, and it is one
+    of the most common modelling bugs in practice.</p>
+    <p>Alternatives to big-M: <b>indicator constraints</b> ($y = 1 \Rightarrow
+    a^\top x \le b$), which solvers handle by branching or by internally choosing
+    M from bound propagation; and <b>disjunctive formulations</b> (Balas 1979), which
+    give the convex hull of a union of polyhedra at the price of copying variables.
+    Vielma's 2015 survey in the reading list covers both.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">05 · strength</p>
+  <h2>Aggregated against disaggregated</h2>
+  <div class="cols">
+    <div>
+      <p><b>Aggregated</b>, $F$ rows: $\;\sum_j x_{ij} \le C\, y_i$</p>
+      <p><b>Disaggregated</b>, $F \cdot C$ rows: $\;x_{ij} \le y_i$</p>
+      <div class="box thm"><span class="label">claim</span>
+        <p>Disaggregated is strictly stronger: it implies aggregated (sum its rows over $j$), and not the other way round.</p>
+      </div>
+      <div class="box proof"><span class="label">a point only the weak model allows</span>
+        <p class="small">Facility $i$ serves customer 1 alone: $x_{i1} = 1$, all other $x_{ij} = 0$. Aggregated allows $y_i = 1/C$. Disaggregated forces $y_i \ge x_{i1} = 1$ and pays the full opening cost.</p>
+      </div>
+    </div>
+    <div>
+      <p class="small">Lab <code>then</code>, 20 facilities and 60 customers:</p>
+      <table>
+        <thead><tr><th>formulation</th><th class="num">LP gap</th><th class="num">nodes*</th></tr></thead>
+        <tbody>
+          <tr><td>aggregated, M = 10C</td><td class="num">46.1%</td><td class="num">5 644</td></tr>
+          <tr><td>aggregated, M = C</td><td class="num">41.3%</td><td class="num">4 293</td></tr>
+          <tr><td>disaggregated</td><td class="num">0.0%</td><td class="num">1</td></tr>
+        </tbody>
+      </table>
+      <p class="small muted">* SCIP with presolve and cuts off. The disaggregated LP is 60× bigger, and it still wins by three orders of magnitude.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>For UFL the disaggregated relaxation is often integral on random instances, as
+    here. It is not always integral: UFL is NP-hard, and there are instances with a
+    fractional disaggregated optimum. Its integrality gap over all metric instances is
+    bounded by a constant, which is what LP-rounding approximation algorithms for
+    facility location exploit (unit 24).</p>
+    <p>The general lesson is "more constraints, faster solve", which is
+    counterintuitive when you think of LP size. A MILP solver's time is dominated by
+    the number of nodes, and nodes are decided by bound strength. A bigger LP per node
+    is almost always worth a smaller tree.</p>
+    <p>This ordering is the curriculum's checkpoint: predict the faster formulation
+    from the bounds alone.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">05 · strength</p>
+  <h2>When a constraint is implied, and still helps</h2>
+  <div class="cols">
+    <div>
+      <p><b>Capacitated</b> facility location: $\;\sum_j d_j x_{ij} \le u_i\, y_i$.</p>
+      <p>For <b>integer</b> $y$ this already implies $x_{ij} \le y_i$: if $y_i = 0$, facility $i$ serves nothing. So the linking rows remove no integer solution.</p>
+      <p>For <b>fractional</b> $y$ they do. $y_i = 0.3$ lets the capacity row serve 30% of the capacity, but $x_{ij} \le 0.3$ also stops any single customer being served more than 30% by it.</p>
+      <p class="small">The cover row $\sum_i u_i y_i \ge \sum_j d_j$ is valid for the same reason, and it forbids opening "too little capacity in total".</p>
+    </div>
+    <div>
+      <p class="small">Lab <code>then</code>, 20×60, capacity ratio 1.5:</p>
+      <table>
+        <thead><tr><th>CFL</th><th class="num">LP gap</th><th class="num">nodes*</th></tr></thead>
+        <tbody>
+          <tr><td>capacity rows only</td><td class="num">5.5%</td><td class="num">102</td></tr>
+          <tr><td>+ linking + cover</td><td class="num">1.2%</td><td class="num">20</td></tr>
+        </tbody>
+      </table>
+      <div class="box good"><span class="label">valid inequality</span>
+        <p class="small">An inequality satisfied by every integer solution. Adding one never changes the MILP, and may tighten its relaxation. That sentence is all of unit 08.</p>
+      </div>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>The linking rows here are an example of <b>strengthening by disaggregation</b>,
+    and the cover row of a <b>knapsack-type valid inequality</b>: the capacities of
+    the open facilities must cover the demand. Unit 08 generates such inequalities
+    automatically. Knapsack cover cuts, flow cover cuts and implied bound cuts are
+    exactly the families that would find these, and a modern solver runs all of them
+    at the root.</p>
+    <p>Rule of thumb for modelling: whenever you notice a valid inequality that the LP
+    relaxation violates, ask whether it is cheap to add. If there are few of them,
+    add them. If there are exponentially many, add them lazily (unit 09).</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">05 · strength</p>
+  <h2>Extended formulations: add variables, lose facets</h2>
+  <div class="cols">
+    <div>
+      <p>A polytope with exponentially many facets can be the <b>projection</b> of a polytope in more variables with few facets.</p>
+      <ul class="small">
+        <li><b>Spanning trees:</b> exponentially many subtour rows in edge variables, but $O(n^3)$ rows with flow variables (Martin 1991).</li>
+        <li><b>Permutahedron:</b> $2^n - 2$ facets, but $O(n \log n)$ variables and rows through a sorting network (Goemans).</li>
+        <li><b>Disjunctions:</b> $\mathrm{conv}(P_1 \cup P_2)$ by copying variables (Balas).</li>
+      </ul>
+      <p class="small">Unit 01 said projection can create facets. This is the useful direction of that fact.</p>
+    </div>
+    <div class="box warn"><span class="label">and the limits</span>
+      <p><b>Fiorini, Massar, Pokutta, Tiwary & de Wolf (2012):</b> the TSP polytope, the cut polytope and the stable-set polytope have <b>no</b> extended formulation of polynomial size, of any kind.</p>
+      <p><b>Rothvoss (2014):</b> neither does the <b>perfect matching</b> polytope, even though matching is solvable in polynomial time.</p>
+      <p class="small muted">So "polynomial algorithm" does not imply "polynomial LP". Matching needs Edmonds' algorithm, or separation (unit 09).</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>The 2012 result settled a question raised by Yannakakis (1991), who showed that
+    <em>symmetric</em> extended formulations of the TSP polytope must be exponential.
+    It came out of an unexpected connection with communication complexity: the size
+    of the smallest extended formulation equals the "nonnegative rank" of the slack
+    matrix, and lower bounds for that come from quantum communication arguments.
+    The paper won the 2023 Gödel Prize, with Rothvoss's.</p>
+    <p>The practical upshot for modelling: if a problem's natural polytope has
+    exponentially many facets, don't expect a compact exact formulation. Plan on
+    cutting planes or column generation instead. Those are units 08–10.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">05 · strength</p>
+  <h2>Symmetry is a formulation defect</h2>
+  <div class="cols wide-left">
+    <div>
+      <p>Bin packing with $K$ identical bins: $x_{ik} = 1$ if item $i$ goes in bin $k$.</p>
+      <ul>
+        <li>Every packing appears $K!$ times, once per relabelling of the bins.</li>
+        <li>The LP bound is the same in every symmetric branch, so branch-and-bound proves the same thing $K!$ times.</li>
+        <li>With 20 bins, $20! \approx 2.4 \times 10^{18}$ copies.</li>
+      </ul>
+      <p><b>Cures:</b> symmetry-breaking rows ($y_1 \ge y_2 \ge \dots$, or item $i$ only in bins $\le i$); orbital fixing in the solver; or a formulation without labels at all (column generation, unit 10).</p>
+    </div>
+    <div class="box"><span class="label">this is unit 00 again</span>
+      <p class="small">Set partitions versus maps from items to bins: $B_n$ versus $n^n$ candidates. The restricted growth string is exactly "item $i$ may only open bin $\le$ one more than the largest used so far".</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>Symmetry is often the single biggest lever on real models. Unit 27 measures it.
+    Solvers detect symmetry by computing automorphisms of a graph built from the
+    model (SCIP and Gurobi use graph automorphism tools such as bliss or saucy), then
+    apply orbital fixing or add symmetry-breaking inequalities themselves.</p>
+    <p>The strongest cure is to remove the labels from the model entirely. In the
+    cutting-stock/bin-packing formulation of unit 10, a variable is "how many bins use
+    pattern $p$", and there is nothing to permute. That formulation is also far
+    stronger: its LP bound is famously within a small additive constant of the
+    optimum in practice.</p>
+  </aside>
+</section>
+
+<!-- ================================================================== -->
+<section class="divider">
+  <p class="eyebrow">section 3</p>
+  <h2>What solvers do with your model</h2>
+  <p>They repair a lot, which is both good news and a trap.</p>
+</section>
+
+<section>
+  <p class="eyebrow">05 · solvers</p>
+  <h2>Presolve and cuts repair weak models</h2>
+  <div class="cols wide-left">
+    <div>
+      <p class="small">The same 20×60 models, default settings:</p>
+      <table>
+        <thead><tr><th>formulation</th><th class="num">nodes, bare SCIP</th><th class="num">HiGHS</th><th class="num">SCIP</th></tr></thead>
+        <tbody>
+          <tr><td>UFL aggregated, M = 10C</td><td class="num">5 644</td><td class="num">7</td><td class="num">1</td></tr>
+          <tr><td>UFL disaggregated</td><td class="num">1</td><td class="num">1</td><td class="num">1</td></tr>
+          <tr><td>CFL capacity rows only</td><td class="num">102</td><td class="num">11</td><td class="num">27</td></tr>
+          <tr><td>CFL + linking + cover</td><td class="num">20</td><td class="num">1</td><td class="num">4</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div>
+      <p>Default solvers derive much of the missing strength themselves:</p>
+      <ul class="small">
+        <li><b>bound tightening</b> in presolve shrinks M to what is provable;</li>
+        <li><b>implied bound cuts</b> recover $x_{ij} \le y_i$ from bounds and linking rows;</li>
+        <li><b>knapsack and flow cover cuts</b> recover the capacity structure.</li>
+      </ul>
+      <div class="box warn"><span class="label">the trap</span>
+        <p class="small">A weak model looks fine at this size, then falls apart at 10× the size, or once a side constraint defeats the presolve reduction that was quietly saving it.</p>
+      </div>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>The model that is strong before the solver touches it is robust, and the model
+    that relies on presolve is fragile. Unit 27 builds a before/after table of
+    interventions and asks for exactly this kind of reasoning about each row.</p>
+    <p>Part 3 of <code>then</code> also shows the two solvers disagreeing about which
+    weak model is harder (HiGHS 11 nodes, SCIP 27 on the weak CFL). Node counts are
+    not comparable across solvers, because they count different things and do
+    different amounts of work per node. Within one solver they are a good measure of
+    formulation strength.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">05 · solvers</p>
+  <h2>A caught bug, and why brute force stays in the course</h2>
+  <div class="cols">
+    <div class="box warn"><span class="label">what happened while building this lab</span>
+      <p>On a 4-facility, 7-customer instance of the aggregated model, <b>HiGHS 1.14.0 reported 881 as optimal</b>.</p>
+      <p>The brute-force oracle said 831. So did SCIP, and so did HiGHS with presolve switched off. Across 60 such instances, 1.14.0 was wrong on this one, and 1.10–1.13.1 were right on all of them.</p>
+    </div>
+    <div>
+      <p><b>What the course does about it:</b></p>
+      <ul>
+        <li>the project pins HiGHS 1.13.1;</li>
+        <li>unit 05's tests require HiGHS and SCIP to agree before trusting an optimum;</li>
+        <li>every lab keeps a small-instance brute-force check.</li>
+      </ul>
+      <p class="small muted">"Optimal" in a solver log is a claim backed by floating-point arithmetic and millions of lines of presolve code. On small instances you can check it, so check it.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>Presolve is the most bug-prone part of a MIP solver: hundreds of reductions,
+    each correct on paper and each with edge cases in floating point. Big-M rows are a
+    classic trigger, because bound-tightening reductions interact with the huge
+    coefficient. Solver developers test against libraries of instances with known
+    optima (MIPLIB) for exactly this reason, and exact MIP solvers with verifiable
+    certificates exist for applications where a wrong answer is unacceptable.</p>
+    <p>The reproduction is small enough to report upstream: four facilities, seven
+    customers, <code>FacilityLocation.random(4, 7, 4)</code>, aggregated with
+    $M = C$.</p>
+  </aside>
+</section>
+
+<!-- ================================================================== -->
+<section>
+  <p class="eyebrow">05 · lab</p>
+  <h2>Lab 05 — what you build</h2>
+  <div class="lab">
+    <span class="label">about 2 hours · uv run co lab 05 · models as data</span>
+    <ol>
+      <li><b>Aggregated big-M UFL</b>, for any M.</li>
+      <li><b>Disaggregated UFL</b>, and a check that its bound is stronger.</li>
+      <li><b>Brute force</b> over open sets: the oracle.</li>
+      <li><b>Capacitated FL</b>, weak and strong, with the same integer optimum.</li>
+      <li><b>Gap closed</b>, for the report.</li>
+    </ol>
+  </div>
+<pre><code class="language-bash">uv run co test 05
+uv run co then 05     # LP gaps · bare SCIP node counts · default HiGHS and SCIP</code></pre>
+  <aside class="notes">
+    <p>Units 07, 08 and 27 reuse these models, so keep your implementations. Unit 07
+    runs its own branch-and-bound on them, and unit 08 adds cuts to the weak ones and
+    measures how much of this unit's gap each cut family closes.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">05 · checkpoint</p>
+  <h2>Done when</h2>
+  <div class="box good"><span class="label">checkpoint</span>
+    <ul>
+      <li>All five lab steps are ✓.</li>
+      <li>Shown two formulations of one problem, you can predict which solves faster from their relaxation bounds alone, and be right more often than not.</li>
+      <li>You can explain, with the one-variable picture, why a larger M gives a weaker relaxation.</li>
+    </ul>
+  </div>
+  <div class="cols">
+    <div>
+      <h3>Reading</h3>
+      <p class="small">Wolsey, <em>Integer Programming</em> (2nd ed.), ch. 1 and §2.1–2.2.<br>
+      Conforti, Cornuéjols & Zambelli, §2.1–2.4 and §4.1–4.3.<br>
+      Vielma, <em>SIAM Review</em> 57 (2015), §1–3 (optional).</p>
+    </div>
+    <div>
+      <h3>Next</h3>
+      <p class="small"><b>07</b> branch and bound, on these models · <b>06</b> total unimodularity: when the relaxation is already ideal (branch).</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>Before running <code>then</code>, write down your predicted node ordering for
+    part 2 in <code>NOTES.md</code>. The checkpoint is about predicting, and a
+    prediction made after seeing the table doesn't count.</p>
+  </aside>
+</section>
+
+</div></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/plugin/highlight/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<script src="../../slides/deck.js"></script>
+</body>
+</html>

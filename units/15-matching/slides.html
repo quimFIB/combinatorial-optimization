@@ -1,0 +1,520 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>15 · Matching</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+<link rel="stylesheet" href="../../slides/deck.css">
+</head>
+<body data-trunk="comb">
+<div class="reveal"><div class="slides">
+
+<section class="title-slide">
+  <p class="eyebrow">Part III · trunk B · combinatorial algorithms · spine</p>
+  <div class="unit-no">15</div>
+  <h1>Matching</h1>
+  <p class="lede">König and Hall, Hopcroft–Karp, the Hungarian method as primal–dual with its certificate in plain sight, Edmonds' blossoms, and stable matching for contrast.</p>
+  <p class="meta"><span>needs 14</span><span>~1½ h slides + 3 h lab (+ blossom stretch)</span><span>lab: <code>uv run co lab 15</code></span></p>
+  <aside class="notes">
+    <p>Matching is where the course's threads cross. Bipartite matching is a unit-capacity
+    flow (unit 14). König's theorem is LP duality (unit 03) on a TU matrix (unit 06).
+    The Hungarian method is the first algorithm in the course that maintains a dual
+    solution <em>explicitly</em> and uses it to steer the primal. That pattern returns in
+    Lagrangian relaxation (unit 11) and in primal–dual approximation (unit 24).</p>
+    <p>Non-bipartite matching is the historically decisive case. Its LP relaxation is not
+    integral, but it is still solvable in polynomial time. Edmonds' 1965 paper used it to
+    argue that "polynomial" is the right formal meaning of "efficient".</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">15 · overview</p>
+  <h2>The route</h2>
+  <div class="cols">
+    <div class="box def"><span class="label">1 · bipartite cardinality</span>
+      <p class="small">Berge's augmenting paths, König and Hall, Hopcroft–Karp's $O(E\sqrt V)$.</p></div>
+    <div class="box def"><span class="label">2 · assignment</span>
+      <p class="small">The LP and its dual; the Hungarian method as primal–dual; the certificate.</p></div>
+  </div>
+  <div class="cols">
+    <div class="box def"><span class="label">3 · general graphs</span>
+      <p class="small">Tutte's theorem, blossoms, the matching polytope and its odd-set inequalities.</p></div>
+    <div class="box def"><span class="label">4 · stable matching</span>
+      <p class="small">Gale–Shapley: a different question with the same word.</p></div>
+  </div>
+  <aside class="notes">
+    <p>The weighted general case, Edmonds' weighted blossom algorithm, is mentioned but not
+    built. It combines everything on these slides, dual variables on odd sets included,
+    and a full implementation runs to hundreds of careful lines. networkx's
+    <code>max_weight_matching</code> is one, and lab <code>then</code> races your cardinality
+    blossom against it.</p>
+  </aside>
+</section>
+
+<section class="divider">
+  <p class="eyebrow">section 1</p>
+  <h2>Bipartite cardinality</h2>
+  <p>One augmenting path at a time, then many at once.</p>
+</section>
+
+<section>
+  <p class="eyebrow">15 · bipartite</p>
+  <h2>Augmenting paths: Berge's theorem</h2>
+  <div class="cols wide-right">
+    <div class="fig">
+      <svg viewBox="0 0 300 230" width="300" role="img" aria-label="augmenting path in a bipartite graph">
+        <g class="ink" stroke-width="1.6">
+          <line x1="60" y1="40" x2="240" y2="40" style="stroke-dasharray:5 4"/>
+          <line x1="60" y1="40" x2="240" y2="110" style="stroke:var(--accent);stroke-width:4"/>
+          <line x1="60" y1="110" x2="240" y2="110" style="stroke-dasharray:5 4"/>
+          <line x1="60" y1="110" x2="240" y2="180" style="stroke:var(--accent);stroke-width:4"/>
+          <line x1="60" y1="180" x2="240" y2="180" style="stroke-dasharray:5 4"/>
+        </g>
+        <g class="fill-ground ink" stroke-width="1.6">
+          <circle cx="60" cy="40" r="12"/><circle cx="60" cy="110" r="12"/><circle cx="60" cy="180" r="12"/>
+          <circle cx="240" cy="40" r="12"/><circle cx="240" cy="110" r="12"/><circle cx="240" cy="180" r="12"/>
+        </g>
+        <g class="mono" font-size="12" text-anchor="middle">
+          <text x="60" y="44">ℓ₀</text><text x="60" y="114">ℓ₁</text><text x="60" y="184">ℓ₂</text>
+          <text x="240" y="44">r₀</text><text x="240" y="114">r₁</text><text x="240" y="184">r₂</text>
+        </g>
+        <text x="150" y="220" font-size="12" text-anchor="middle" class="muted">thick: matched · dashed: the path's free edges</text>
+      </svg>
+      <p class="cap">ℓ₂ and r₀ are free. The path r₀–ℓ₀–r₁–ℓ₁–r₂–ℓ₂ alternates free, matched, free, matched, free. Flip it and the matching grows from 2 to 3.</p>
+    </div>
+    <div>
+      <div class="box def"><span class="label">definitions</span>
+        <p class="small">For a matching $M$, an <b>alternating path</b> alternates edges outside and inside $M$. It is <b>augmenting</b> if both its ends are free. Then $M \mathbin{\triangle} P$ is a matching with one more edge.</p>
+      </div>
+      <div class="box thm"><span class="label">Berge 1957</span>
+        <p>$M$ is maximum if and only if it has no augmenting path.</p>
+        <p class="small">Proof of "if": let $M^*$ be larger. $M \mathbin{\triangle} M^*$ has maximum degree 2, so it splits into paths and even cycles. Cycles are balanced, so some path has more $M^*$ edges than $M$ edges: that path is augmenting for $M$. $\square$</p>
+      </div>
+      <p class="small muted">Berge's theorem holds in <b>every</b> graph. Only <em>finding</em> the path is harder when the graph is not bipartite (section 3).</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>This is unit 14's residual-graph argument again. Model bipartite matching as a
+    flow with unit capacities (source to every left vertex, every edge left to right,
+    every right vertex to sink). An augmenting path in the flow network is exactly an
+    alternating path with free ends. The backward residual arcs are the matched edges
+    traversed right to left.</p>
+    <p>The symmetric-difference proof is worth internalising: it's also why
+    Hopcroft–Karp's phase bound works, and why the blossom algorithm is correct once
+    contraction is shown to preserve augmenting paths.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">15 · bipartite</p>
+  <h2>König and Hall: min–max theorems</h2>
+  <div class="cols">
+    <div>
+      <div class="box thm"><span class="label">König 1931</span>
+        <p>In a bipartite graph, maximum matching size = minimum vertex cover size.</p>
+      </div>
+      <div class="box proof"><span class="label">proof = lab step 2</span>
+        <p class="small">Take a maximum $M$. Let $Z$ be the vertices reachable from free left vertices by alternating paths. Cover $= (L \setminus Z) \cup (R \cap Z)$. Every edge is covered. Every cover vertex is matched (a free right vertex in $Z$ would end an augmenting path). No matched edge has both ends in the cover. So $|\text{cover}| \le |M|$. $\square$</p>
+      </div>
+    </div>
+    <div>
+      <div class="box thm"><span class="label">Hall 1935</span>
+        <p>There is a matching saturating $L$ iff $|N(S)| \ge |S|$ for every $S \subseteq L$.</p>
+        <p class="small">From König: a cover $A \cup B$ with $A \subseteq L$, $B \subseteq R$ and $|A| + |B| < |L|$ would leave $S = L \setminus A$ with $N(S) \subseteq B$, so $|N(S)| \le |B| < |S|$.</p>
+      </div>
+      <div class="box"><span class="label">through the course's lens</span>
+        <p class="small">Matching LP: $\max \mathbf 1^\top x$, $x(\delta(v)) \le 1$. Its dual is the fractional vertex cover. The incidence matrix is TU (unit 06), so both LPs have integral optima, and LP strong duality <b>is</b> König.</p>
+      </div>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>Hall's condition is a certificate of <em>impossibility</em>, in the spirit of unit 00.
+    If no perfect matching exists, a set $S$ with too few neighbours proves it, and König's
+    construction finds one: $S$ = the reachable left vertices, $N(S)$ = the reachable right
+    vertices, and $|N(S)| = |S| - (\text{free left vertices})$.</p>
+    <p>A triangle breaks König. The maximum matching has 1 edge, but the minimum cover needs 2
+    vertices, and $x_e = \tfrac12$ on all three edges is a fractional matching of value
+    $\tfrac32$. The incidence matrix of an odd cycle is not TU (unit 06's
+    <code>odd_cycle</code>). Section 3 repairs the LP.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">15 · bipartite</p>
+  <h2>Hopcroft–Karp: many shortest paths per phase</h2>
+  <div class="cols">
+    <div>
+      <ol class="small">
+        <li><b>BFS</b> from all free left vertices at once, alternating edges, to get layers. Stop at the first layer that reaches a free right vertex.</li>
+        <li><b>DFS</b> from each free left vertex along layer-increasing edges only, taking a <b>maximal</b> set of vertex-disjoint shortest augmenting paths. Remove dead ends.</li>
+        <li>Flip them all. Repeat.</li>
+      </ol>
+      <p class="small">Each phase costs $O(E)$. It is Dinic (unit 14) on the unit-capacity network.</p>
+    </div>
+    <div>
+      <div class="box thm"><span class="label">Hopcroft & Karp 1973</span>
+        <p>$O(\sqrt V)$ phases, so $O(E\sqrt V)$ total.</p>
+        <p class="small">The shortest augmenting path length strictly increases every phase. After $\sqrt V$ phases every augmenting path has length $&gt; \sqrt V$. $M \mathbin{\triangle} M^*$ holds $|M^*| - |M|$ vertex-disjoint augmenting paths, so at most $V / \sqrt V$ remain, and each later phase finds at least one. $\square$</p>
+      </div>
+      <p class="small muted">Lab <code>then</code>, degree 4: yours 0.070 s at 16 000 vertices a side, networkx 0.317 s.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>The "length strictly increases" claim is the subtle part. After a phase has taken a
+    maximal set of shortest paths, any remaining augmenting path of the same length would
+    have to be vertex-disjoint from all of them. Maximality rules that out. A path sharing
+    vertices with them must use at least one flipped edge in the other direction, which
+    makes it longer. The full argument is again a symmetric-difference count.</p>
+    <p>In practice the number of phases on random graphs is usually far below the
+    $\sqrt V$ bound, which is why the pure-Python lab code is fast at 16 000 vertices a
+    side.</p>
+    <p>The functional reference augments a single shortest path per round. That gives the
+    same answer with the Ford–Fulkerson bound $O(VE)$: the maximal-set-per-phase idea is
+    precisely what the stateful DFS with dead-end removal buys.</p>
+  </aside>
+</section>
+
+<section class="divider">
+  <p class="eyebrow">section 2</p>
+  <h2>Assignment</h2>
+  <p>Where unit 03's duality first pays off outside LP.</p>
+</section>
+
+<section>
+  <p class="eyebrow">15 · assignment</p>
+  <h2>The assignment LP and its dual</h2>
+  <div class="cols">
+    <div>
+      <div class="box def"><span class="label">primal</span>
+        $$\begin{aligned} \min\ & \textstyle\sum_{i,j} c_{ij} x_{ij} \\ \text{s.t.}\ & \textstyle\sum_j x_{ij} = 1 \ \ \forall i \\ & \textstyle\sum_i x_{ij} = 1 \ \ \forall j, \quad x \ge 0 \end{aligned}$$
+      </div>
+      <div class="box def"><span class="label">dual</span>
+        $$\max \sum_i u_i + \sum_j v_j \quad \text{s.t.}\ u_i + v_j \le c_{ij}$$
+      </div>
+      <p class="small">Integral vertices (Birkhoff–von Neumann: the doubly stochastic matrices are the convex hull of the permutation matrices), so the LP optimum is an assignment.</p>
+    </div>
+    <div>
+      <div class="box thm"><span class="label">the certificate · lab step 4</span>
+        <p class="small">If $\sigma$ is a permutation, $u_i + v_j \le c_{ij}$ everywhere, and $u_i + v_{\sigma(i)} = c_{i\sigma(i)}$ for every $i$, then $\sigma$ is optimal.</p>
+        <p class="small">For any permutation $\tau$: $\ c(\tau) = \sum_i c_{i\tau(i)} \ge \sum_i (u_i + v_{\tau(i)}) = \sum u + \sum v = c(\sigma)$. $\square$</p>
+      </div>
+      <p class="small">Checking takes $O(n^2)$ and needs no solver. The tests never call scipy for step 4.</p>
+      <p class="small muted">Lab <code>then</code>: HiGHS's simplex vertex had zero fractional entries at every n up to 400.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>The equality $\sum_i v_{\tau(i)} = \sum_j v_j$ is where "permutation" is used. Every
+    column appears exactly once. That is why the checker must test the permutation
+    property. A test in step 4 hands it <code>[0, 0]</code> with perfectly good duals, and
+    a checker that only compares lengths accepts it.</p>
+    <p>"The reduced cost $c_{ij} - u_i - v_j$" is exactly unit 03's reduced cost of variable
+    $x_{ij}$ with respect to dual prices $(u, v)$. Dual feasibility = all reduced costs
+    nonnegative. Complementary slackness = basic (here, assigned) variables have zero
+    reduced cost.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">15 · assignment</p>
+  <h2>The Hungarian method is primal–dual</h2>
+  <div class="cols">
+    <div>
+      <p class="small">Keep dual-feasible $(u, v)$ and a partial assignment using only <b>tight</b> edges ($c_{ij} = u_i + v_j$). To add row $i$:</p>
+      <ol class="small">
+        <li>Grow an alternating tree from $i$ over tight edges.</li>
+        <li>If it reaches a free column, augment. Done.</li>
+        <li>Else let $\delta$ = the smallest reduced cost from a tree row to a non-tree column. Raise $u$ on tree rows by $\delta$ and lower $v$ on tree columns by $\delta$. Tree edges stay tight, all duals stay feasible, and at least one new edge becomes tight. Go to 1.</li>
+      </ol>
+    </div>
+    <div>
+      <div class="box good"><span class="label">why this is $O(n^3)$</span>
+        <p class="small">Keep $\text{minv}[j]$, the smallest reduced cost into column $j$ from the tree. Each dual step then costs $O(n)$, not $O(n^2)$. There are at most $n$ steps per row and $n$ rows.</p>
+      </div>
+      <div class="box"><span class="label">the same thing, seen from unit 14</span>
+        <p class="small">It is successive shortest paths for min-cost flow: Dijkstra on reduced costs, with $(u, v)$ as the potentials. $\text{minv}$ is Dijkstra's tentative distance, and step 3 is "settle the nearest node".</p>
+      </div>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>History. Kuhn named the method in 1955 after König and Egerváry, whose 1931 work
+    contained its core. Munkres showed it polynomial in 1957 ($O(n^4)$), and Tomizawa (1971)
+    and Edmonds–Karp (1972) gave the $O(n^3)$ shortest-path form the lab uses. Much later
+    it emerged that Jacobi had described an equivalent method, published posthumously in
+    1890.</p>
+    <p>The lab's virtual column 0 is a trick from the widely copied e-maxx implementation.
+    Setting <code>p[0] = i</code> makes the new row look like a row already matched to a
+    column, so the first tree step needs no special case. Every row enters through the
+    same loop.</p>
+    <p>Why $\sum u + \sum v = $ total at the end (a test in step 4): every row and every
+    column is tight on its assigned edge, and summing those $n$ equalities gives exactly
+    that.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">15 · assignment</p>
+  <h2>How much faster is production code?</h2>
+  <div class="cols wide-left">
+    <div>
+      <p class="small">Lab <code>then</code>, costs uniform in $0..10^6$, seconds. All four totals are equal.</p>
+      <table>
+        <thead><tr><th class="num">n</th><th class="num">yours</th><th class="num">scipy</th><th class="num">OR-Tools</th><th class="num">HiGHS LP</th></tr></thead>
+        <tbody>
+          <tr><td class="num">50</td><td class="num">0.002</td><td class="num"><b>0.0001</b></td><td class="num">0.0014</td><td class="num">0.051</td></tr>
+          <tr><td class="num">100</td><td class="num">0.012</td><td class="num"><b>0.0003</b></td><td class="num">0.0056</td><td class="num">0.046</td></tr>
+          <tr><td class="num">200</td><td class="num">0.085</td><td class="num"><b>0.0016</b></td><td class="num">0.022</td><td class="num">0.233</td></tr>
+          <tr><td class="num">400</td><td class="num">0.505</td><td class="num"><b>0.0063</b></td><td class="num">0.089</td><td class="num">1.332</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div>
+      <ul class="small">
+        <li><b>scipy</b> (<code>linear_sum_assignment</code>) is a C shortest-augmenting-path code, the same asymptotics as yours, about 80× faster.</li>
+        <li><b>OR-Tools</b> uses cost-scaling push–relabel (Goldberg–Kennedy), designed for large sparse graphs rather than dense matrices.</li>
+        <li>The <b>general LP</b> is slowest, but is exact and integral here.</li>
+      </ul>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>The factor of ~80 is typical for interpreted versus compiled code on an inner loop
+    over arrays. It is not an algorithmic gap. If you vectorised the $\text{minv}$ update
+    with numpy, you would recover much of it. That's a fine ten-minute experiment after
+    the lab.</p>
+    <p>This benchmark is dense, which suits the $n \times n$ scan of the Hungarian method.
+    On sparse assignment graphs that scan is wasteful, and methods that only touch existing
+    arcs, like cost scaling, have the structural advantage. The table doesn't test that
+    family, so treat the ranking as specific to dense random costs, just as unit 14's flow
+    rankings depended on the family.</p>
+  </aside>
+</section>
+
+<section class="divider">
+  <p class="eyebrow">section 3</p>
+  <h2>General graphs</h2>
+  <p>Odd cycles, and why "polynomial" means "good".</p>
+</section>
+
+<section>
+  <p class="eyebrow">15 · general graphs</p>
+  <h2>Tutte's theorem, and why the bipartite search fails</h2>
+  <div class="cols wide-right">
+    <div class="fig">
+      <svg viewBox="0 0 300 220" width="300" role="img" aria-label="a blossom: odd cycle with a stem">
+        <g class="ink" stroke-width="1.6">
+          <line x1="30" y1="110" x2="90" y2="110"/>
+          <line x1="90" y1="110" x2="150" y2="110" style="stroke:var(--accent);stroke-width:4"/>
+          <line x1="150" y1="110" x2="200" y2="50"/>
+          <line x1="200" y1="50" x2="265" y2="80" style="stroke:var(--accent);stroke-width:4"/>
+          <line x1="265" y1="80" x2="265" y2="140"/>
+          <line x1="265" y1="140" x2="200" y2="170" style="stroke:var(--accent);stroke-width:4"/>
+          <line x1="200" y1="170" x2="150" y2="110"/>
+        </g>
+        <g class="fill-ground ink" stroke-width="1.6">
+          <circle cx="30" cy="110" r="11"/><circle cx="90" cy="110" r="11"/><circle cx="150" cy="110" r="11" style="stroke:var(--warn);stroke-width:3"/>
+          <circle cx="200" cy="50" r="11"/><circle cx="265" cy="80" r="11"/><circle cx="265" cy="140" r="11"/><circle cx="200" cy="170" r="11"/>
+        </g>
+        <text x="30" y="92" font-size="12" text-anchor="middle" class="mono">root</text>
+        <text x="150" y="140" font-size="12" text-anchor="middle" class="mono">base</text>
+      </svg>
+      <p class="cap">From the free root, an alternating walk reaches the base, then goes round an odd cycle. Each cycle vertex is reachable at <b>both</b> parities, so "left/right" labels break.</p>
+    </div>
+    <div>
+      <div class="box thm"><span class="label">Tutte 1947</span>
+        <p>$G$ has a perfect matching iff $\ \mathrm{odd}(G - U) \le |U|$ for every $U \subseteq V$.</p>
+        <p class="small">$\mathrm{odd}(G - U)$ is the number of odd components after deleting $U$. Each needs a vertex of $U$ to match out. The <b>Tutte–Berge formula</b> generalises this: $\nu(G) = \min_U \tfrac12\bigl(|V| + |U| - \mathrm{odd}(G - U)\bigr)$.</p>
+      </div>
+      <p class="small">In a bipartite graph every vertex has a fixed side, so the BFS labels it once. In the figure, a BFS that labels each vertex once can miss augmenting paths that go round the cycle.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>The Tutte set $U$ is the general-graph certificate that no larger matching exists,
+    the analogue of König's cover. Edmonds' algorithm, run to completion, produces one: the
+    odd-labelled outer vertices of the final forest form $U$, and the blossoms and even
+    vertices form the odd components.</p>
+    <p>The lab's <code>then</code> table checks, for random graphs of average degree 3,
+    whether odd cycles actually bind. It solves bipartite matching on the double cover,
+    which gives twice the optimum of the degree-constraint LP. At $n = 2000$ that LP's
+    optimum was strictly above the true maximum matching, so a bipartite-style method
+    would have been wrong there.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">15 · general graphs</p>
+  <h2>Edmonds 1965: shrink the blossom</h2>
+  <div class="cols">
+    <div>
+      <div class="box thm"><span class="label">the key lemma</span>
+        <p class="small">Let $B$ be a blossom (an odd alternating cycle reached at its base). $G / B$ is $G$ with $B$ contracted to a single vertex. Then $M$ has an augmenting path in $G$ iff $M / B$ has one in $G / B$.</p>
+      </div>
+      <p class="small">The algorithm: grow alternating trees. When an edge joins two <b>even</b> vertices of the same tree, find their lowest common ancestor (the base) and contract the cycle. When you reach a free vertex, expand the blossoms back along the path and augment.</p>
+      <p class="small">$O(V^3)$ as in the lab (contraction as <code>base[v]</code> relabelling). $O(E\sqrt V)$ by Micali–Vazirani (1980).</p>
+    </div>
+    <div>
+      <div class="box"><span class="label">"Paths, trees, and flowers", §2</span>
+        <p class="small">Edmonds argued that an algorithm whose running time is bounded by a polynomial in the input size is the right formal notion of a <b>good</b> algorithm. His evidence: perfect matching has exponentially many candidates, no totally unimodular LP, and yet a good algorithm.</p>
+      </div>
+      <p class="small muted">Cobham (1965) made the same proposal independently. Their thesis is why P became the dividing line of unit 22.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>How the lab's version represents contraction. It doesn't build $G / B$. Each vertex
+    carries <code>base[v]</code>, the base of the outermost blossom containing it. Edges
+    inside the same blossom are skipped by comparing bases. <code>mark_path</code> rewrites
+    <code>parent</code> pointers round the cycle in both directions, so a later augmentation
+    can walk through the blossom on the correct side. Expansion is therefore implicit.</p>
+    <p>Two mutations of the reference implementation survive 800 random graphs. One drops
+    the same-base skip test; the other marks the cycle from only one end. Neither
+    changed a single answer, and whether either is truly redundant is not obvious. It's a reminder that "passes random tests" is weaker than "proved", and
+    the blossom algorithm is the classic place where published implementations have had
+    subtle bugs.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">15 · general graphs</p>
+  <h2>The matching polytope</h2>
+  <div class="cols">
+    <div>
+      <div class="box thm"><span class="label">Edmonds 1965</span>
+        <p class="small">The convex hull of matchings of $G$ is</p>
+        $$\begin{aligned} x(\delta(v)) &\le 1 && \forall v \\ x(E[S]) &\le \tfrac{|S| - 1}{2} && \forall S \subseteq V,\ |S| \text{ odd} \\ x &\ge 0 \end{aligned}$$
+      </div>
+      <p class="small">The <b>odd-set inequalities</b> cut off $x_e = \tfrac12$ on a triangle: $x(E[S]) = \tfrac32 &gt; 1$.</p>
+    </div>
+    <div>
+      <ul class="small">
+        <li>There are exponentially many of them, yet you can optimise over the polytope in polynomial time. <b>Separation</b> (Padberg–Rao 1982) is a minimum odd cut, via a Gomory–Hu tree. It's unit 09's pattern again: subtour elimination with an odd-parity twist.</li>
+        <li>No compact formulation exists. Rothvoss (2014) proved every extended formulation of the perfect matching polytope needs $2^{\Omega(n)}$ inequalities.</li>
+        <li>The weighted blossom algorithm keeps a dual variable on every odd set, and it's the primal–dual method on this LP.</li>
+      </ul>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>This is the cleanest example of the separation–optimisation equivalence (Grötschel,
+    Lovász & Schrijver, via the ellipsoid method of unit 04). An exponential description
+    is harmless if you can find a violated inequality in polynomial time.</p>
+    <p>Rothvoss's result is striking because matching is in P. Extension complexity
+    measures something different from algorithmic difficulty. Polynomial-time solvability
+    does not imply a polynomial-size LP, and the matching polytope is the witness.</p>
+    <p>Half-integrality: the degree-constraint LP alone has vertices with entries in
+    $\{0, \tfrac12, 1\}$, and the $\tfrac12$ entries form odd cycles. That structure also
+    gives the 2-approximation for vertex cover in unit 24.</p>
+  </aside>
+</section>
+
+<section class="divider">
+  <p class="eyebrow">section 4</p>
+  <h2>Stable matching</h2>
+  <p>A different question with the same word.</p>
+</section>
+
+<section>
+  <p class="eyebrow">15 · stable matching</p>
+  <h2>Gale–Shapley</h2>
+  <div class="cols">
+    <div>
+      <p class="small">$n$ proposers and $n$ receivers, each ranking the other side. A matching is <b>stable</b> if no pair $(p, r)$ both prefer each other to their partners.</p>
+      <ol class="small">
+        <li>A free proposer proposes to the best receiver not yet tried.</li>
+        <li>The receiver keeps the better of the current holder and the proposer.</li>
+      </ol>
+      <div class="box thm"><span class="label">Gale & Shapley 1962</span>
+        <p class="small">It ends after at most $n^2$ proposals with a stable perfect matching. Every proposer gets their <b>best</b> stable partner, and every receiver their <b>worst</b>.</p>
+      </div>
+    </div>
+    <div>
+      <div class="box warn"><span class="label">what is different</span>
+        <ul class="small">
+          <li>No weights, nothing summed: stability is a <b>local, strategic</b> condition.</li>
+          <li>Who proposes matters: the algorithm is not symmetric.</li>
+          <li>Proposing truthfully is a dominant strategy for proposers (Dubins–Freedman, Roth), but not for receivers.</li>
+        </ul>
+      </div>
+      <p class="small">Used for the US medical residency match (NRMP, after Roth–Peranson 1999) and school choice. Roth and Shapley won the 2012 Nobel prize in economics.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>Why it terminates stable: a receiver's holder only improves, and a proposer only
+    moves down their list. If $(p, r)$ blocked the final matching, $p$ proposed to $r$
+    before reaching their final partner, and $r$ rejected $p$ for someone $r$ likes more.
+    $r$ only improves after that, so $r$ can't prefer $p$ now.</p>
+    <p>Why proposer-optimal: suppose some proposer is rejected by a stable partner $r$.
+    Look at the <em>first</em> such rejection in the run. It creates a blocking pair in the
+    supposedly stable matching. Lab step 5 checks this by brute force over all stable
+    matchings for $n \le 6$.</p>
+    <p>Despite the contrast drawn here, there is an LP after all. Vande Vate (1989) showed
+    stable matchings are exactly the vertices of a polytope, so weighted stable matching
+    is solvable by LP. The combinatorial lattice structure behind that is in Gusfield &
+    Irving's book.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">15 · lab</p>
+  <h2>Lab 15 — what you build</h2>
+  <div class="lab">
+    <span class="label">about 3 hours + a stretch session · uv run co lab 15</span>
+    <ol>
+      <li><b>Hopcroft–Karp.</b></li>
+      <li><b>König's cover</b> from your maximum matching.</li>
+      <li><b>The Hungarian method</b>, returning its potentials.</li>
+      <li><b>The certificate:</b> permutation + dual feasibility + tightness.</li>
+      <li><b>Gale–Shapley</b> and a stability checker.</li>
+      <li><em>Stretch:</em> <b>Edmonds' blossom</b> algorithm.</li>
+    </ol>
+  </div>
+<pre><code class="language-bash">uv run co test 15
+uv run co then 15     # vs scipy, OR-Tools, HiGHS · networkx for bipartite and general</code></pre>
+  <aside class="notes">
+    <p>The functional reference writes steps 1–5 in the folds-and-unfolds style, but
+    reuses the imperative blossom. Its base relabelling is a mutable union-find, and a
+    persistent version obscures it. Do the same if you're working functionally.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">15 · checkpoint</p>
+  <h2>Done when</h2>
+  <div class="box good"><span class="label">checkpoint</span>
+    <ul>
+      <li>Lab steps 1–5 are ✓ (6 if you took the stretch).</li>
+      <li>You can verify your Hungarian algorithm's answer is optimal by checking complementary slackness against its dual potentials, without re-running the algorithm.</li>
+      <li>You can explain why König fails on a triangle and which inequality repairs the LP.</li>
+    </ul>
+  </div>
+  <div class="cols">
+    <div>
+      <h3>Reading</h3>
+      <p class="small">Korte & Vygen, ch. 10–11.<br>
+      Schrijver, <em>A Course in Combinatorial Optimization</em>, ch. 3, 5.<br>
+      Edmonds, "Paths, trees, and flowers" (1965).<br>
+      Gale & Shapley, <em>Amer. Math. Monthly</em> 69 (1962).</p>
+    </div>
+    <div>
+      <h3>Next</h3>
+      <p class="small"><b>16</b> dynamic programming · <b>18</b> Régin's alldifferent filter is a matching algorithm · <b>23</b> Christofides needs a minimum-weight perfect matching.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>Where matching reappears. Régin's alldifferent propagator (unit 18) computes one
+    maximum matching of the variable–value graph, then removes every edge that belongs to
+    no maximum matching, using strongly connected components of the alternating graph.
+    Christofides (unit 23) adds a minimum-weight perfect matching on the odd-degree
+    vertices of a spanning tree; networkx's weighted blossom does that step in the lab.</p>
+  </aside>
+</section>
+
+</div></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/plugin/highlight/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<script src="../../slides/deck.js"></script>
+</body>
+</html>

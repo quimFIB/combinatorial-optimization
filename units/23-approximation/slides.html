@@ -1,0 +1,427 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>23 · Combinatorial approximation algorithms</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+<link rel="stylesheet" href="../../slides/deck.css">
+</head>
+<body data-trunk="apx">
+<div class="reveal"><div class="slides">
+
+<section class="title-slide">
+  <p class="eyebrow">Part V · where the trunks converge · spine</p>
+  <div class="unit-no">23</div>
+  <h1>Combinatorial approximation algorithms</h1>
+  <p class="lede">Greedy, matchings, spanning trees and sorting, each with a lower bound on the optimum it can compute, and a proof that fits on one slide.</p>
+  <p class="meta"><span>needs 22, 16, 15, 13</span><span>~1 h slides + 2½ h lab</span><span>lab: <code>uv run co lab 23</code></span></p>
+  <aside class="notes">
+    <p>Unit 22 drew the map of what's possible. This unit fills in the easy half of the "best guarantee"
+    column with combinatorial algorithms: no LPs, no SDPs, only structures from Part III. Units 24 and 25
+    fill in the rest with relaxations.</p>
+    <p>The curriculum calls Christofides "the moment trunk B pays off". It needs a minimum spanning tree
+    (unit 13) and a minimum-weight perfect matching (unit 15), composed through an Euler circuit.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">23 · overview</p>
+  <h2>The route</h2>
+  <div class="cols">
+    <div class="box def"><span class="label">1 · the shape of a guarantee</span>
+      <p class="small">A computable lower bound on OPT. Greedy set cover and its prices.</p></div>
+    <div class="box def"><span class="label">2 · packings</span>
+      <p class="small">Vertex cover by maximal matching; k-center by farthest-first.</p></div>
+  </div>
+  <div class="cols">
+    <div class="box def"><span class="label">3 · metric TSP</span>
+      <p class="small">Double tree (2), Christofides (3/2), and the 2021 improvement.</p></div>
+    <div class="box def"><span class="label">4 · scheduling, and the gap to practice</span>
+      <p class="small">List scheduling, LPT; tight families; ratios measured against CP-SAT.</p></div>
+  </div>
+  <aside class="notes">
+    <p>The measured finding of the unit, stated up front: on random instances every algorithm here does
+    better than its guarantee, and most do far better: greedy set cover's worst excess over 1 was 0.30
+    against a bound of 2.6. The guarantees are
+    still real theorems, and each has a family of instances attaining it exactly. The lab builds those
+    families too, so you see both.</p>
+  </aside>
+</section>
+
+<section class="divider">
+  <p class="eyebrow">section 1</p>
+  <h2>The shape of a guarantee</h2>
+  <p>Compare against something you can compute.</p>
+</section>
+
+<section>
+  <p class="eyebrow">23 · guarantees</p>
+  <h2>Every proof in this unit has one shape</h2>
+  <div class="cols">
+    <div>
+      <p class="small">OPT is unknown, and computing it is NP-hard. So find a quantity $\mathrm{LB}$ with</p>
+      $$\mathrm{ALG} \le \rho \cdot \mathrm{LB} \quad\text{and}\quad \mathrm{LB} \le \mathrm{OPT}$$
+      <p class="small">The algorithm constructs its solution <b>and</b> its lower bound together. The lab returns both, so tests check each inequality separately.</p>
+      <div class="box warn"><span class="label">the limit of the method</span>
+        <p class="small">If some instance has $\mathrm{OPT} / \mathrm{LB} = r$, no analysis against that $\mathrm{LB}$ can prove a ratio below $r$. That's the integrality gap of unit 05 again, for bounds that aren't LPs.</p>
+      </div>
+    </div>
+    <div>
+      <table class="dense">
+        <thead><tr><th>problem</th><th>lower bound</th><th class="num">ρ</th></tr></thead>
+        <tbody>
+          <tr><td>set cover</td><td>prices ÷ $H_d$: a feasible LP dual (unit 03)</td><td class="num">$H_d$</td></tr>
+          <tr><td>vertex cover</td><td>size of any matching</td><td class="num">2</td></tr>
+          <tr><td>k-center</td><td>half the spacing of $k + 1$ points</td><td class="num">2</td></tr>
+          <tr><td>metric TSP</td><td>minimum spanning tree</td><td class="num">2</td></tr>
+          <tr><td>metric TSP</td><td>MST, and ½·tour ≥ matching on odd vertices</td><td class="num">3/2</td></tr>
+          <tr><td>makespan</td><td>$\max(\sum p / m,\ \max p)$</td><td class="num">$2 - 1/m$</td></tr>
+          <tr><td>makespan, LPT</td><td>… and $2\,p_{m+1}$ after sorting</td><td class="num">$4/3 - 1/(3m)$</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>For maximisation the shape flips: an upper bound $\mathrm{UB} \ge \mathrm{OPT}$ and
+    $\mathrm{ALG} \ge \rho\,\mathrm{UB}$. Unit 25's Goemans–Williamson uses the SDP value as UB.</p>
+    <p>The ratio convention: for minimisation, ρ ≥ 1 and smaller is better. Some texts write
+    maximisation ratios as ρ ≤ 1 (0.878) and some as 1/ρ ≥ 1 (1.139). This course writes Max-Cut's as
+    0.878, a fraction of the optimum.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">23 · guarantees</p>
+  <h2>Greedy set cover and its prices</h2>
+  <div class="cols">
+    <div>
+      <p class="small">Buy the set with the least cost per <b>newly</b> covered element. Charge each new element that price.</p>
+      <div class="box thm"><span class="label">price lemma</span>
+        <p class="small">For every set $S$: $\sum_{e \in S} \mathrm{price}_e \le H_{|S|}\, c_S$.</p>
+      </div>
+      <div class="box proof"><span class="label">proof</span>
+        <p class="small">List $S$'s elements in the order greedy covered them, last first: $e_k, \dots, e_1$. When $e_j$ was covered, at least $j$ elements of $S$ were uncovered, so $S$ offered a ratio of at most $c_S / j$. Greedy paid no more: $\mathrm{price}_{e_j} \le c_S / j$. Sum over $j$. Applied to an optimal cover: $\mathrm{ALG} = \sum_e \mathrm{price}_e \le H_d \cdot \mathrm{OPT}$.</p>
+      </div>
+      <p class="small muted">Johnson 1974; Lovász 1975; Chvátal 1979. Unit 22: $(1-\varepsilon)\ln n$ is NP-hard, so this is optimal.</p>
+    </div>
+    <div>
+      <div class="box def"><span class="label">tight family</span>
+        <p class="small">Singletons $\{i\}$ at cost $L/(i+1)$, and the whole universe at $L + 1$ ($L = \mathrm{lcm}(1..n)$). Greedy takes every singleton, at total cost $L \cdot H_n$.</p>
+      </div>
+      <table class="dense">
+        <thead><tr><th>instance</th><th class="num">greedy / OPT</th><th class="num">bound</th></tr></thead>
+        <tbody>
+          <tr><td>tight, $n = 8$</td><td class="num">2.715</td><td class="num">$H_8 = 2.718$</td></tr>
+          <tr><td>tight, $n = 16$</td><td class="num">3.381</td><td class="num">$H_{16} = 3.381$</td></tr>
+          <tr><td>20 random (120 elements, 80 sets)</td><td class="num">mean 1.173, max 1.302</td><td class="num">$H_d \approx 3.6$</td></tr>
+        </tbody>
+      </table>
+      <p class="small muted">Lab <code>then</code>, optima by CP-SAT.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>The price lemma is an LP duality argument in disguise. Scaled down by $H_d$, the prices satisfy
+    every dual constraint $\sum_{e \in S} y_e \le c_S$ of the set cover LP. So
+    $\mathrm{ALG}/H_d = \sum_e y_e \le \mathrm{LP} \le \mathrm{OPT}$. This is <b>dual fitting</b>, and the
+    guarantee is really against the LP, which is stronger. Unit 24 turns the idea into the primal–dual
+    method.</p>
+    <p>The tight family uses weights. For <em>unit</em> costs greedy's worst case is still
+    $\Theta(\log n)$, but the classic instance is more intricate (two disjoint "rows" and
+    exponentially growing "columns") and only reaches about $\tfrac12 \log_2 n$.</p>
+  </aside>
+</section>
+
+<section class="divider">
+  <p class="eyebrow">section 2</p>
+  <h2>Packings</h2>
+  <p>Objects no single choice can serve twice.</p>
+</section>
+
+<section>
+  <p class="eyebrow">23 · packings</p>
+  <h2>Vertex cover by matching; k-center by farthest-first</h2>
+  <div class="cols">
+    <div>
+      <div class="box def"><span class="label">vertex cover</span>
+        <p class="small">Take a <b>maximal</b> matching $M$ (scan edges, keep those with both ends free). Cover: all $2|M|$ endpoints.</p>
+        <ul class="small">
+          <li>Feasible: an uncovered edge could have joined $M$.</li>
+          <li>$\mathrm{OPT} \ge |M|$: matching edges share no vertex, so each needs its own.</li>
+        </ul>
+        <p class="small">Tight on $K_{n,n}$: $2n$ against $n$. UGC-hard to beat (unit 22).</p>
+      </div>
+      <p class="small">Measured, G(n, p) with n = 50 to 200: mean <b>1.53–1.59</b>, worst <b>1.74</b>.</p>
+    </div>
+    <div>
+      <div class="box def"><span class="label">k-center (Gonzalez 1985)</span>
+        <p class="small">Start anywhere; repeatedly add the point farthest from the chosen centres. Radius $r$ = the farthest distance left.</p>
+        <ul class="small">
+          <li>The $k$ centres and the final farthest point are $k + 1$ points pairwise $\ge r$ apart.</li>
+          <li>Two share an optimal centre, so $r \le 2\,\mathrm{OPT}$ by the triangle inequality.</li>
+        </ul>
+        <p class="small">NP-hard to beat $2 - \varepsilon$ (Hsu & Nemhauser 1979).</p>
+      </div>
+      <p class="small">Measured, 80 points: mean <b>1.64</b> (k = 3), <b>1.42</b> (k = 6), <b>1.28</b> (k = 10); worst <b>1.91</b>.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>Both sit closer to their bound on random instances than anything else in the unit. Unit 24 gets the same factor 2 for <em>weighted</em> vertex cover, where the matching
+    argument no longer works, by rounding the LP.</p>
+    <p>The k-center ratio falls as k grows on these uniform random points (1.64, 1.42, 1.28). The lab
+    doesn't test why. One experiment worth running: fix the instance, vary the <code>first</code> point, and
+    see how much of the spread at k = 3 is the arbitrary starting choice.</p>
+  </aside>
+</section>
+
+<section class="divider">
+  <p class="eyebrow">section 3</p>
+  <h2>Metric TSP</h2>
+  <p>Trees, matchings, Euler, and a shortcut.</p>
+</section>
+
+<section>
+  <p class="eyebrow">23 · metric TSP</p>
+  <h2>The double tree: 2</h2>
+  <div class="cols">
+    <div class="fig">
+      <svg viewBox="0 0 330 210" width="380" role="img" aria-label="a spanning tree on six points, and the tour 0 1 2 4 5 3 obtained by shortcutting its depth-first walk">
+        <g class="ink" stroke-width="3">
+          <line x1="60" y1="60" x2="140" y2="40"/><line x1="140" y1="40" x2="220" y2="70"/><line x1="60" y1="60" x2="100" y2="150"/>
+          <line x1="220" y1="70" x2="200" y2="160"/><line x1="200" y1="160" x2="280" y2="140"/>
+        </g>
+        <g class="accent" stroke-width="2" stroke-dasharray="6 4" fill="none">
+          <line x1="280" y1="140" x2="100" y2="150"/>
+        </g>
+        <g class="fill-ground ink" stroke-width="1.5">
+          <circle cx="60" cy="60" r="12"/><circle cx="140" cy="40" r="12"/><circle cx="220" cy="70" r="12"/>
+          <circle cx="100" cy="150" r="12"/><circle cx="200" cy="160" r="12"/><circle cx="280" cy="140" r="12"/>
+        </g>
+        <g class="mono" font-size="11" text-anchor="middle">
+          <text x="60" y="64">0</text><text x="140" y="44">1</text><text x="220" y="74">2</text>
+          <text x="100" y="154">3</text><text x="200" y="164">4</text><text x="280" y="144">5</text>
+        </g>
+        <text x="190" y="200" font-size="11" text-anchor="middle" class="soft">walk 0 1 2 4 5 4 2 1 0 3 0 → tour 0 1 2 4 5 3</text>
+      </svg>
+      <p class="small muted">Solid: the MST. Dashed: the one shortcut, replacing 5 → 4 → 2 → 1 → 0 → 3.</p>
+    </div>
+    <div>
+      <ol class="small">
+        <li>$\mathrm{MST} \le \mathrm{OPT}$: delete one edge of the optimal tour and a spanning path remains.</li>
+        <li>Walk around the tree, using every edge twice: length $2\,\mathrm{MST}$.</li>
+        <li>Skip vertices already visited. Each skip replaces a path by one edge, <b>no longer by the triangle inequality</b>.</li>
+      </ol>
+      <p class="small">So $\mathrm{tour} \le 2\,\mathrm{MST} \le 2\,\mathrm{OPT}$. The walk's shortcut is exactly a preorder of the tree.</p>
+      <p class="small">Measured, 30 instances with $n \le 60$: mean <b>1.30–1.37</b>, worst <b>1.49</b>.</p>
+      <div class="box warn"><span class="label">without the triangle inequality</span>
+        <p class="small">Step 3 fails, and unit 22's Hamiltonian-cycle gadget shows no ratio at all is possible.</p>
+      </div>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>The measured MST/OPT ratio averages 0.82–0.87 on these instances. A stronger lower bound is the
+    Held–Karp 1-tree bound of unit 11, which is typically within 1% of OPT on Euclidean instances. It
+    doesn't give a better <em>proof</em> for the double tree, but it's what you'd report as a gap.</p>
+    <p>The dashed shortcut in the figure is long (it crosses the whole picture). Shortcutting can cost a
+    lot on a particular instance while staying within the bound: the whole walk is $2\,\mathrm{MST}$, and
+    the shortcut replaced four walk edges.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">23 · metric TSP</p>
+  <h2>Christofides: 3/2</h2>
+  <div class="cols">
+    <div>
+      <ol class="small">
+        <li><b>MST</b> $T$ (unit 13). $w(T) \le \mathrm{OPT}$.</li>
+        <li><b>Odd vertices</b> $O$ of $T$: an even number (handshake lemma).</li>
+        <li><b>Min-weight perfect matching</b> $M$ on $O$ (unit 15's blossom, weighted). $w(M) \le \mathrm{OPT}/2$.</li>
+        <li><b>Euler circuit</b> of $T + M$: every degree is now even.</li>
+        <li><b>Shortcut</b>: triangle inequality.</li>
+      </ol>
+      <div class="box proof"><span class="label">why $w(M) \le \mathrm{OPT}/2$</span>
+        <p class="small">Shortcut the optimal tour to visit only $O$: length $\le \mathrm{OPT}$. Its edges alternate between two perfect matchings on $O$. The cheaper is $\le \mathrm{OPT}/2$, and $M$ is cheaper still.</p>
+      </div>
+    </div>
+    <div>
+      <table class="dense">
+        <thead><tr><th class="num">n</th><th class="num">double tree</th><th class="num">Christofides</th><th class="num">MST/OPT</th><th class="num">M/OPT</th></tr></thead>
+        <tbody>
+          <tr><td class="num">20</td><td class="num">1.323 (max 1.486)</td><td class="num"><b>1.112</b> (1.194)</td><td class="num">0.819</td><td class="num">0.337</td></tr>
+          <tr><td class="num">40</td><td class="num">1.301 (1.446)</td><td class="num"><b>1.101</b> (1.130)</td><td class="num">0.830</td><td class="num">0.336</td></tr>
+          <tr><td class="num">60</td><td class="num">1.370 (1.443)</td><td class="num"><b>1.136</b> (1.191)</td><td class="num">0.867</td><td class="num">0.332</td></tr>
+        </tbody>
+      </table>
+      <p class="small muted">Lab <code>then</code>: 10 instances per size, mean (max), optima by CP-SAT's circuit constraint (under 2 s each).</p>
+      <div class="box good"><span class="label">45 years at 3/2</span>
+        <p class="small">Christofides (1976) and Serdyukov (1978). Karlin, Klein & Oveis Gharan (2021): $3/2 - 10^{-36}$, by sampling a random spanning tree from the max-entropy distribution fitted to the Held–Karp LP.</p>
+      </div>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>The checkpoint asks you to point at the line of code for each step of this proof. In the reference
+    solution <code>christofides</code> is three lines, and each of the five steps above is one call. The
+    proof's structure is the code's structure.</p>
+    <p>Christofides' 3/2 is tight: there are instances (a "zig-zag" strip of unit triangles, where the MST
+    is a path whose two ends are far apart) where the matching edge is nearly OPT/2 and no shortcut
+    helps. The Held–Karp LP's integrality gap for metric TSP is between 4/3 and 3/2, and closing that
+    interval is open. A follow-up by the same authors (2022) showed the gap is strictly below 3/2 as
+    well.</p>
+    <p>Serdyukov's paper was in Russian and went unnoticed in the West for decades. Some authors now call
+    it the Christofides–Serdyukov algorithm.</p>
+  </aside>
+</section>
+
+<section class="divider">
+  <p class="eyebrow">section 4</p>
+  <h2>Scheduling</h2>
+  <p>And the distance between guarantee and practice.</p>
+</section>
+
+<section>
+  <p class="eyebrow">23 · scheduling</p>
+  <h2>List scheduling and LPT (Graham 1966, 1969)</h2>
+  <div class="cols">
+    <div>
+      <p class="small">$n$ jobs, $m$ identical machines, minimise the makespan. Lower bounds: $\mathrm{OPT} \ge \sum_j p_j / m$ and $\mathrm{OPT} \ge \max_j p_j$.</p>
+      <div class="box proof"><span class="label">list scheduling: each job to the least-loaded machine</span>
+        <p class="small">Let job $j$ finish last. Its machine was least loaded, so it held $\le (\sum p - p_j)/m$:</p>
+        $$\begin{aligned} C &\le \tfrac{1}{m}\textstyle\sum p + (1 - \tfrac1m)\,p_j \\ &\le (2 - \tfrac1m)\,\mathrm{OPT}\end{aligned}$$
+      </div>
+      <div class="box proof"><span class="label">LPT: sort longest first</span>
+        <p class="small">If the last job $j$ sets the makespan and $j &gt; m$, then $p_j \le p_{m+1}$ and two of the first $m+1$ jobs share a machine in OPT: $p_j \le \mathrm{OPT}/2$, giving $3/2$. A finer counting argument gives $4/3 - 1/(3m)$.</p>
+      </div>
+    </div>
+    <div>
+      <table class="dense">
+        <thead><tr><th>$n / m$</th><th class="num">list sched.</th><th class="num">LPT</th></tr></thead>
+        <tbody>
+          <tr><td>12 / 3</td><td class="num">1.135 (1.282)</td><td class="num"><b>1.025</b> (1.070)</td></tr>
+          <tr><td>30 / 5</td><td class="num">1.107 (1.233)</td><td class="num"><b>1.012</b> (1.030)</td></tr>
+          <tr><td>60 / 10</td><td class="num">1.131 (1.178)</td><td class="num"><b>1.012</b> (1.027)</td></tr>
+        </tbody>
+      </table>
+      <p class="small muted">20 instances each, times uniform on 1..100, mean (max).</p>
+      <table class="dense">
+        <thead><tr><th>tight family</th><th class="num">m = 3</th><th class="num">m = 10</th></tr></thead>
+        <tbody>
+          <tr><td>$m(m-1)$ ones, then $m$: list sched.</td><td class="num">5/3</td><td class="num">19/10</td></tr>
+          <tr><td>pairs $2m{-}1 \dots m{+}1$, three $m$: LPT</td><td class="num">11/9</td><td class="num">39/30</td></tr>
+        </tbody>
+      </table>
+      <p class="small">Better: a PTAS (Hochbaum & Shmoys 1987) and, for fixed $m$, an FPTAS (Sahni 1976). Strongly NP-hard when $m$ is part of the input, so no FPTAS then.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>Why LPT is so good on random data. The analysis charges the worst case to the <em>smallest</em>
+    job placed last. With sorted jobs, that's small, and with many jobs per machine the loads even out
+    to within about one small job. On uniform times with n/m ≥ 4, the loss is a percent or two.</p>
+    <p>The fixed-m FPTAS is unit 16's DP over load vectors, rounded like the knapsack FPTAS of unit 22.
+    The PTAS for general m guesses the placement of the large jobs (a constant number of distinct
+    rounded sizes) and fills in the small ones greedily. It runs in time $n^{O(1/\varepsilon^2)}$ and is
+    purely theoretical.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">23 · beyond</p>
+  <h2>Local search as an approximation algorithm: k-median</h2>
+  <div class="cols">
+    <div>
+      <p class="small">$k$-median: open $k$ facilities, minimising the <b>sum</b> of distances from clients to their nearest open facility (k-center minimises the maximum).</p>
+      <div class="box thm"><span class="label">Arya et al. (2004)</span>
+        <p class="small">Local search that swaps up to $p$ facilities at a time, stopping at a local optimum, is a $(3 + 2/p)$-approximation.</p>
+      </div>
+      <p class="small">The proof pairs each optimal facility with a swap and adds up the local optimality inequalities of all the swaps: the same "compare against OPT piece by piece" as the price lemma.</p>
+    </div>
+    <div>
+      <table class="dense">
+        <thead><tr><th>k-median</th><th>ratio</th></tr></thead>
+        <tbody>
+          <tr><td>single swaps</td><td>5</td></tr>
+          <tr><td>$p$ swaps</td><td>$3 + 2/p$</td></tr>
+          <tr><td>LP-based (Byrka et al. 2015, and later)</td><td>below 2.7</td></tr>
+          <tr><td>NP-hard (Jain, Mahdian & Saberi 2002)</td><td>$1 + 2/e \approx 1.736$</td></tr>
+        </tbody>
+      </table>
+      <p class="small">To stop in polynomial time, accept a swap only if it improves by a factor $1 - \varepsilon/\mathrm{poly}(n)$. That costs a $(1 + \varepsilon)$ factor in the ratio.</p>
+      <p class="small muted">Unit 26 uses local search for speed; this is local search with a proof.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>This slide isn't in the lab. It's here because it connects the two halves of Part V: local search
+    is usually a heuristic judged by measurement (unit 26), but for some problems its local optima come
+    with a worst-case guarantee.</p>
+    <p>Other classic results in the same spirit: local search for max-cut (every local optimum under
+    single flips cuts at least half the edges), and for maximum-weight independent sets in
+    $k$-claw-free graphs.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">23 · lab</p>
+  <h2>Lab 23 — what you build</h2>
+  <div class="lab">
+    <span class="label">about 2½ hours · uv run co lab 23</span>
+    <ol>
+      <li><b>Greedy set cover</b> with prices, $H_k$, and the tight family.</li>
+      <li><b>Packings</b>: maximal-matching vertex cover; farthest-first k-center with its witness.</li>
+      <li><b>Prim and the double tree.</b></li>
+      <li><b>Christofides</b>: odd vertices, Hierholzer, and the composition.</li>
+      <li><b>List scheduling and LPT</b>, with both tight families.</li>
+    </ol>
+  </div>
+<pre><code class="language-bash">uv run co test 23
+uv run co then 23     # ratios against CP-SAT optima · tight families · the lower bounds themselves</code></pre>
+  <aside class="notes">
+    <p>The minimum-weight perfect matching is given (networkx's implementation of Edmonds' weighted
+    blossom algorithm). Unit 15 built the cardinality version, and the weighted one is a unit of work in
+    itself. Everything else in Christofides is yours.</p>
+    <p>Instances are metric closures of rounded Euclidean distances, so every proof's use of the triangle
+    inequality holds exactly.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">23 · checkpoint</p>
+  <h2>Done when</h2>
+  <div class="box good"><span class="label">checkpoint</span>
+    <ul>
+      <li>All five lab steps are ✓.</li>
+      <li>Your Christofides never exceeds 1.5× the optimum on instances you can solve exactly, and you can point at the line of code for each step of the proof.</li>
+      <li>For each algorithm you can name its lower bound, its tight family, and how far random instances sit from both.</li>
+    </ul>
+  </div>
+  <div class="cols">
+    <div>
+      <h3>Reading</h3>
+      <p class="small">Williamson & Shmoys (2011), ch. 1–2.<br>
+      Vazirani, <em>Approximation Algorithms</em> (2001), ch. 2–3.<br>
+      Arya et al., <em>SIAM J. Comput.</em> 33 (2004).<br>
+      Karlin, Klein & Oveis Gharan, <em>STOC</em> 2021.</p>
+    </div>
+    <div>
+      <h3>Next</h3>
+      <p class="small"><b>24</b> LP rounding and primal–dual: weighted vertex cover, randomized set cover, facility location · <b>26</b> metaheuristics.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>Unit 24 replaces the ad hoc lower bounds of this unit with a single systematic one, the LP
+    relaxation, and shows two ways to use it: round its solution, or grow a dual solution alongside the
+    primal. The price lemma was already the second one.</p>
+  </aside>
+</section>
+
+</div></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/plugin/highlight/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<script src="../../slides/deck.js"></script>
+</body>
+</html>

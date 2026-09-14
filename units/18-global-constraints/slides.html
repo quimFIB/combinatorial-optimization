@@ -1,0 +1,368 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>18 · Global constraints</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+<link rel="stylesheet" href="../../slides/deck.css">
+</head>
+<body data-trunk="cp">
+<div class="reveal"><div class="slides">
+
+<section class="title-slide">
+  <p class="eyebrow">Part IV · trunk C · constraint programming and SAT · spine</p>
+  <div class="unit-no">18</div>
+  <h1>Global constraints and their filtering algorithms</h1>
+  <p class="lede">One constraint that sees the whole structure beats many that each see a pair. Matching filters alldifferent; compulsory parts filter cumulative; the price is paid per call.</p>
+  <p class="meta"><span>needs 17, 15</span><span>~1¼ h slides + 3 h lab</span><span>lab: <code>uv run co lab 18</code></span></p>
+  <aside class="notes">
+    <p>A global constraint is a constraint over an unbounded number of variables with a dedicated
+    propagator. The idea that made CP competitive in scheduling and timetabling in the 1990s was
+    not a better search engine. It was propagators that exploit the combinatorial structure of
+    one constraint using algorithms from Part III: matching for alldifferent, flows for global
+    cardinality, shortest paths for regular.</p>
+    <p>This unit is also where the course's traditions start trading. Unit 15's Hopcroft–Karp
+    becomes the inner loop of a CP propagator. In unit 21 the same propagators will explain
+    themselves to a SAT solver.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">18 · overview</p>
+  <h2>The route</h2>
+  <div class="cols">
+    <div class="box def"><span class="label">1 · why global</span>
+      <p class="small">What a decomposition cannot see; strength versus cost.</p></div>
+    <div class="box def"><span class="label">2 · alldifferent</span>
+      <p class="small">Hall sets, the value graph, Régin's matching-based filter.</p></div>
+  </div>
+  <div class="cols">
+    <div class="box def"><span class="label">3 · scheduling</span>
+      <p class="small">Cumulative: timetable, edge-finding, disjunctive.</p></div>
+    <div class="box def"><span class="label">4 · the catalogue</span>
+      <p class="small">element, table, circuit, gcc — and the one design question.</p></div>
+  </div>
+  <aside class="notes">
+    <p>The checkpoint asks for a measured pair of models with the same answer and very different
+    node counts, plus the Hall set responsible. Lab <code>then</code> gives pigeonhole (725 758
+    nodes against 0) and prints a named Hall set on a sudoku.</p>
+  </aside>
+</section>
+
+<section class="divider">
+  <p class="eyebrow">section 1</p>
+  <h2>Why global</h2>
+  <p>Pairs cannot count.</p>
+</section>
+
+<section>
+  <p class="eyebrow">18 · why global</p>
+  <h2>What pairwise ≠ cannot see</h2>
+  <div class="cols">
+    <div>
+      $$x_1, x_2 \in \{1, 2\}, \quad x_3 \in \{1, 2, 3\}, \quad x_4 \in \{2, 3, 4\}$$
+      <ul class="small">
+        <li><b>Pairwise ≠</b> (arc consistent): no variable is fixed, so nothing is pruned.</li>
+        <li><b>alldifferent</b> (generalised arc consistent): $\{x_1, x_2\}$ use up $\{1, 2\}$, so $x_3 = 3$, so $x_4 = 4$.</li>
+      </ul>
+      <p class="small">$\{x_1, x_2\}$ is a <b>Hall set</b>: $k$ variables whose domains together hold exactly $k$ values. By Hall's theorem (unit 15), alldifferent is satisfiable iff no set of variables has fewer values than members.</p>
+    </div>
+    <div>
+      <div class="box thm"><span class="label">the general fact</span>
+        <p class="small">Arc consistency on a decomposition is at most as strong as generalised arc consistency on the global constraint, and often strictly weaker. For alldifferent, pairwise AC equals GAC only in the trivial case of fixed variables.</p>
+      </div>
+      <div class="box warn"><span class="label">the design question</span>
+        <p class="small">A stronger propagator removes more and costs more per call. It wins only if the nodes saved outweigh the time per node. That trade-off is <b>the only design question in CP</b>, and lab <code>then</code> shows both outcomes.</p>
+      </div>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>This slide's example is lab step 2's test <code>test_step2_not_the_decomposition</code>:
+    every pairwise propagator returns its input unchanged, and your alldifferent returns
+    $\{1,2\}, \{1,2\}, \{3\}, \{4\}$.</p>
+    <p>Bessière et al. (2004) showed that enforcing GAC on some global constraints is NP-hard. For
+    those, the choice is between a weaker polynomial propagator and decomposition, and "global"
+    does not automatically mean "strongest".</p>
+  </aside>
+</section>
+
+<section class="divider">
+  <p class="eyebrow">section 2</p>
+  <h2>alldifferent</h2>
+  <p>Unit 15, doing load-bearing work.</p>
+</section>
+
+<section>
+  <p class="eyebrow">18 · alldifferent</p>
+  <h2>Régin 1994: matching-based filtering</h2>
+  <div class="cols wide-right">
+    <div class="fig">
+      <svg viewBox="0 0 280 230" width="280" role="img" aria-label="value graph with a matching">
+        <g class="ink" stroke-width="1.4">
+          <line x1="50" y1="40" x2="220" y2="40" style="stroke:var(--accent);stroke-width:3.5"/>
+          <line x1="50" y1="40" x2="220" y2="90"/>
+          <line x1="50" y1="90" x2="220" y2="40"/>
+          <line x1="50" y1="90" x2="220" y2="90" style="stroke:var(--accent);stroke-width:3.5"/>
+          <line x1="50" y1="140" x2="220" y2="40" style="stroke-dasharray:5 4"/>
+          <line x1="50" y1="140" x2="220" y2="90" style="stroke-dasharray:5 4"/>
+          <line x1="50" y1="140" x2="220" y2="140" style="stroke:var(--accent);stroke-width:3.5"/>
+          <line x1="50" y1="190" x2="220" y2="90" style="stroke-dasharray:5 4"/>
+          <line x1="50" y1="190" x2="220" y2="140" style="stroke-dasharray:5 4"/>
+          <line x1="50" y1="190" x2="220" y2="190" style="stroke:var(--accent);stroke-width:3.5"/>
+        </g>
+        <g class="fill-ground ink" stroke-width="1.5">
+          <circle cx="50" cy="40" r="13"/><circle cx="50" cy="90" r="13"/><circle cx="50" cy="140" r="13"/><circle cx="50" cy="190" r="13"/>
+          <circle cx="220" cy="40" r="13"/><circle cx="220" cy="90" r="13"/><circle cx="220" cy="140" r="13"/><circle cx="220" cy="190" r="13"/>
+        </g>
+        <g font-size="12" text-anchor="middle" class="mono">
+          <text x="50" y="44">x₁</text><text x="50" y="94">x₂</text><text x="50" y="144">x₃</text><text x="50" y="194">x₄</text>
+          <text x="220" y="44">1</text><text x="220" y="94">2</text><text x="220" y="144">3</text><text x="220" y="194">4</text>
+        </g>
+      </svg>
+      <p class="cap">Thick: a maximum matching. Dashed: edges in no maximum matching, removed. {x₁, x₂} ↔ {1, 2} is an alternating cycle, so those edges stay.</p>
+    </div>
+    <div>
+      <ol class="small">
+        <li>Build the <b>value graph</b> and find a maximum matching (Hopcroft–Karp). If it doesn't cover every variable: <b>fail</b>.</li>
+        <li>By Berge, an edge lies in <b>some</b> maximum matching iff it is matched, or on an even alternating cycle, or on an even alternating path from a free value.</li>
+        <li>Orient matched edges value → variable and the rest variable → value. Cycles are <b>SCCs</b>, and paths are <b>reachability to free values</b>. Remove every other edge.</li>
+      </ol>
+      <p class="small">$O(m \sqrt n)$ for the matching and $O(m)$ for the rest. Incrementally, the old matching is repaired rather than recomputed.</p>
+      <p class="small muted">Lab step 2's test: on 80 random instances, the kept values equal brute-force supports exactly.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>Why the Hall set falls out of the same graph (lab's <code>hall_set</code>). A removed edge
+    $(x, a)$ has $a$'s node unable to reach a free value, and $x$ outside $a$'s component.
+    Everything reachable from $a$ is a closed set: its values are all matched to variables in
+    it, and its variables' edges all lead back into it. So those variables have exactly as many
+    values as members, and they include $a$. That's the explanation a propagator gives in unit 21.</p>
+    <p>Cheaper alternatives. <b>Bounds consistency</b> for alldifferent (Puget 1998;
+    López-Ortiz et al. 2003) runs in $O(n \log n)$ using Hall <em>intervals</em>. It is what most
+    solvers use by default on large domains, keeping Régin's GAC for small ones.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">18 · alldifferent</p>
+  <h2>Measured: when it pays, and when it doesn't</h2>
+  <div class="cols">
+    <div>
+      <p class="small">Lab <code>then</code>, your unit-17 engine:</p>
+      <table class="dense">
+        <thead><tr><th>model</th><th></th><th class="num">nodes</th><th class="num">propagations</th><th class="num">s</th></tr></thead>
+        <tbody>
+          <tr><td>queens 10, all</td><td>pairwise</td><td class="num">11 430</td><td class="num">973 550</td><td class="num"><b>1.44</b></td></tr>
+          <tr><td></td><td>alldifferent</td><td class="num">9 326</td><td class="num">45 382</td><td class="num">2.56</td></tr>
+          <tr><td>sudoku (Inkala)</td><td>pairwise</td><td class="num">3 598</td><td class="num">823 458</td><td class="num">1.14</td></tr>
+          <tr><td></td><td>alldifferent</td><td class="num"><b>102</b></td><td class="num">3 272</td><td class="num"><b>0.18</b></td></tr>
+          <tr><td>pigeonhole 10 → 9</td><td>pairwise</td><td class="num">725 758</td><td class="num">16.6 M</td><td class="num">25.9</td></tr>
+          <tr><td></td><td>alldifferent</td><td class="num"><b>0</b></td><td class="num">1</td><td class="num"><b>0.00</b></td></tr>
+        </tbody>
+      </table>
+      <p class="small muted">CP-SAT, queens 11 all solutions: 8.1 s pairwise, 2.1 s with AddAllDifferent.</p>
+    </div>
+    <div>
+      <div class="box def"><span class="label">a Hall set, by name</span>
+        <p class="small">Two decisions down Inkala's solution path, pairwise ≠ at its fixpoint: alldifferent on row 7 removes <b>2</b> from r7c1 (domain {2, 4, 5, 7}). The Hall set: <b>r7c2, r7c4, r7c5, r7c6</b>, whose domains hold only {2, 4, 7, 9}.</p>
+      </div>
+      <ul class="small">
+        <li><b>Queens:</b> a Hall set rarely forms before a variable is fixed, so alldifferent saves 18% of nodes and costs a matching per call. Slower.</li>
+        <li><b>Sudoku:</b> rows, columns and boxes create Hall sets constantly. 35× fewer nodes.</li>
+        <li><b>Pigeonhole:</b> no perfect matching at the root. Pairwise ≠ can only discover this by enumeration.</li>
+      </ul>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>Pigeonhole returns in unit 20, where it's the canonical hard instance for resolution-based
+    SAT solvers. The same counting argument that alldifferent performs in one matching needs
+    exponential-size resolution proofs. Global reasoning isn't just faster; some of it is
+    impossible for weaker proof systems to replicate efficiently.</p>
+  </aside>
+</section>
+
+<section class="divider">
+  <p class="eyebrow">section 3</p>
+  <h2>Scheduling</h2>
+  <p>Tasks, resources, time.</p>
+</section>
+
+<section>
+  <p class="eyebrow">18 · scheduling</p>
+  <h2>Cumulative, and timetable filtering</h2>
+  <div class="cols wide-right">
+    <div class="fig">
+      <svg viewBox="0 0 300 200" width="300" role="img" aria-label="compulsory part of a task">
+        <g class="ink" stroke-width="1.2"><line x1="20" y1="170" x2="290" y2="170"/></g>
+        <g class="mono" font-size="11" text-anchor="middle">
+          <text x="50" y="186">1</text><text x="80" y="186">2</text><text x="110" y="186">3</text><text x="140" y="186">4</text><text x="170" y="186">5</text><text x="200" y="186">6</text><text x="230" y="186">7</text>
+        </g>
+        <rect x="80" y="30" width="90" height="22" rx="3" class="fill-soft ink" style="fill-opacity:.5"/>
+        <text x="125" y="45" font-size="11" text-anchor="middle">earliest: start 2</text>
+        <rect x="110" y="62" width="90" height="22" rx="3" class="fill-soft ink" style="fill-opacity:.5"/>
+        <text x="155" y="77" font-size="11" text-anchor="middle">latest: start 3</text>
+        <rect x="110" y="110" width="60" height="30" rx="3" class="fill-accent" style="fill-opacity:.85"/>
+        <text x="140" y="129" font-size="12" text-anchor="middle" fill="white">compulsory</text>
+        <text x="225" y="129" font-size="11" class="muted">[3, 5)</text>
+      </svg>
+      <p class="cap">Duration 3, start ∈ {2, 3}: whatever it chooses, the task runs during [3, 5). Lab test: with capacity 1, a second task of duration 3 loses starts 1–4.</p>
+    </div>
+    <div>
+      <p class="small">$\text{cumulative}(s, d, r, C)$: tasks with start variables $s_i$, durations $d_i$ and demands $r_i$ never use more than $C$ at once.</p>
+      <ul class="small">
+        <li><b>Compulsory part</b> of task $i$: $[\max s_i,\ \min s_i + d_i)$ when non-empty.</li>
+        <li><b>Profile</b>: the sum of demands of compulsory parts at each time. Above $C$ means fail.</li>
+        <li><b>Filter</b>: remove a start $t$ of task $i$ if it would overload a time where the others' compulsory parts already sit.</li>
+      </ul>
+      <p class="small">Disjunctive scheduling (one machine) is cumulative with $C = 1$ and every $r_i = 1$. Lab step 4's job-shop uses one per machine.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>The own-compulsory-part subtraction in the filter rule (lab hint) is the usual first bug: a
+    task that sees its own demand at its own compulsory times rejects every start value it has.</p>
+    <p>Timetable filtering is weak when tasks have wide time windows, because their compulsory
+    parts are empty and it sees nothing. That is precisely the situation at the top of a job-shop
+    search, and why lab <code>then</code> finds ft06's optimum but can't prove it.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">18 · scheduling</p>
+  <h2>Stronger scheduling reasoning</h2>
+  <div class="cols">
+    <div>
+      <ul class="small">
+        <li><b>Edge-finding</b> (Carlier & Pinson 1989; $O(n \log n)$ with Θ-trees, Vilím 2004): if a task can't finish before a set $\Omega$ of tasks all end, given their total duration, it must end last, which raises its start.</li>
+        <li><b>Not-first / not-last</b>: a task cannot be scheduled first (or last) among a set.</li>
+        <li><b>Energetic reasoning</b>: the minimum energy each task must spend inside an interval, compared with $C \times$ interval length.</li>
+        <li><b>Time-table edge-finding</b> (Vilím 2011), combining profile and edge-finding.</li>
+      </ul>
+    </div>
+    <div>
+      <p class="small">Lab <code>then</code>, ft06 (optimum 55), 100 000 nodes:</p>
+      <table class="dense">
+        <thead><tr><th>machines as</th><th class="num">55 found at node</th><th class="num">proof</th></tr></thead>
+        <tbody>
+          <tr><td>pairwise disjunctions</td><td class="num">588</td><td class="num">not finished</td></tr>
+          <tr><td>cumulative, timetable</td><td class="num"><b>116</b></td><td class="num">not finished</td></tr>
+          <tr><td>CP-SAT, pairwise</td><td class="num"></td><td class="num">0.035 s</td></tr>
+          <tr><td>CP-SAT, <code>AddNoOverlap</code></td><td class="num"></td><td class="num"><b>0.018 s</b></td></tr>
+        </tbody>
+      </table>
+      <p class="small">CP-SAT's no-overlap runs edge-finding, not-first/not-last and precedence reasoning, all explained as clauses and learned from (unit 21).</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>Edge-finding in one sentence: for a set $\Omega$ of tasks with earliest start
+    $\text{est}_\Omega$, latest completion $\text{lct}_\Omega$ and total duration $d_\Omega$, if
+    adding task $i$ makes $\text{est}_{\Omega \cup \{i\}} + d_{\Omega \cup \{i\}} &gt; \text{lct}_\Omega$,
+    then $i$ must end after every task in $\Omega$. Θ-trees maintain those sums over all relevant
+    $\Omega$ at once, in a balanced tree keyed by earliest start.</p>
+  </aside>
+</section>
+
+<section class="divider">
+  <p class="eyebrow">section 4</p>
+  <h2>The catalogue</h2>
+  <p>400 constraints, one question.</p>
+</section>
+
+<section>
+  <p class="eyebrow">18 · catalogue</p>
+  <h2>A few globals worth knowing</h2>
+  <div class="cols">
+    <div>
+      <table class="dense">
+        <thead><tr><th>constraint</th><th>means</th><th>filtering</th></tr></thead>
+        <tbody>
+          <tr><td>element$(i, T, v)$</td><td>$v = T[i]$</td><td>GAC by supports, $O(|D_i|)$</td></tr>
+          <tr><td>table$(x, \mathcal T)$</td><td>$x \in \mathcal T$</td><td>STR, compact tables, MDDs</td></tr>
+          <tr><td>gcc$(x, [l_a, u_a])$</td><td>value $a$ used $l_a$..$u_a$ times</td><td><b>flow</b> (Régin 1996), unit 14</td></tr>
+          <tr><td>regular$(x, \mathcal A)$</td><td>$x$ spells a word of automaton $\mathcal A$</td><td>layered graph reachability (Pesant 2004)</td></tr>
+          <tr><td>circuit$(\text{succ})$</td><td>successors form one Hamiltonian cycle</td><td>alldifferent + subtour pruning</td></tr>
+          <tr><td>cumulative / no-overlap</td><td>resource capacity</td><td>timetable, edge-finding, energy</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div>
+      <div class="box good"><span class="label">the pattern</span>
+        <p class="small">Each strong filter is an algorithm from Parts I–III wearing a CP interface: matching (alldifferent), flow (gcc), DP over an automaton (regular), shortest paths and assignment bounds (circuit, the TSP relaxations of unit 09). Global constraints are where the traditions first cooperate.</p>
+      </div>
+      <p class="small muted">Beldiceanu, Carlsson & Rampon's Global Constraint Catalog lists 400+ constraints with semantics, decompositions and filtering algorithms.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>gcc by flow, in brief: a source-to-variable arc of capacity 1 per variable, variable-to-value
+    arcs for each domain value, and value-to-sink arcs with lower bound $l_a$ and upper bound
+    $u_a$. A feasible flow is a solution. Filtering is Régin's alldifferent argument generalised:
+    an arc is kept iff it carries flow in some feasible flow, found by SCCs of the residual graph.
+    Alldifferent is the special case $l_a = 0$, $u_a = 1$.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">18 · lab</p>
+  <h2>Lab 18 — what you build</h2>
+  <div class="lab">
+    <span class="label">about 3 hours · uv run co lab 18</span>
+    <ol>
+      <li><b>The value graph</b> and its maximum matching (your unit-15 Hopcroft–Karp).</li>
+      <li><b>Régin's alldifferent</b>, and the <b>Hall set</b> behind every removal.</li>
+      <li><b>Cumulative</b> with timetable filtering.</li>
+      <li><b>Global and decomposed models</b> (queens, sudoku, pigeonhole, job-shop) and <b>minimisation</b>.</li>
+    </ol>
+  </div>
+<pre><code class="language-bash">uv run co test 18
+CO_MINE=15,17 uv run co test 18   # on your own matching and engine
+uv run co then 18                 # node counts, a named Hall set, CP-SAT's globals</code></pre>
+  <aside class="notes">
+    <p>The propagators plug into unit 17's engine unchanged. That was the point of the pure
+    <code>prune</code> interface: a global constraint is just another propagator, however much
+    graph algorithm it runs inside.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">18 · checkpoint</p>
+  <h2>Done when</h2>
+  <div class="box good"><span class="label">checkpoint</span>
+    <ul>
+      <li>All four lab steps are ✓.</li>
+      <li>On one instance your decomposed and global models give the same answer and differ by orders of magnitude in node count, and you can name the Hall set responsible.</li>
+      <li>You can explain why alldifferent is slower on queens and 6× faster on sudoku.</li>
+    </ul>
+  </div>
+  <div class="cols">
+    <div>
+      <h3>Reading</h3>
+      <p class="small">Régin, <em>AAAI</em> 1994.<br>
+      van Hoeve, "The alldifferent constraint: a survey" (2001).<br>
+      Baptiste, Le Pape & Nuijten, <em>Constraint-Based Scheduling</em>, ch. 2–3.<br>
+      Global Constraint Catalog (sofdem.github.io/gccat).</p>
+    </div>
+    <div>
+      <h3>Next</h3>
+      <p class="small"><b>19</b> search: heuristics, restarts, LNS on job-shop · <b>21</b> these propagators, explaining themselves.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>If you want one more measurement: time Régin's filter against the pairwise decomposition on
+    random sudokus with fewer givens. The crossover, where the matching's cost per call stops
+    paying for itself, moves with how often Hall sets form. That frequency is what the "strength
+    vs cost" design question is really about.</p>
+  </aside>
+</section>
+
+</div></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/plugin/highlight/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<script src="../../slides/deck.js"></script>
+</body>
+</html>

@@ -1,0 +1,335 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>27 · Modelling for a real solver</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+<link rel="stylesheet" href="../../slides/deck.css">
+</head>
+<body data-trunk="prac">
+<div class="reveal"><div class="slides">
+
+<section class="title-slide">
+  <p class="eyebrow">Part VI · making it real · spine</p>
+  <div class="unit-no">27</div>
+  <h1>Modelling for a real solver</h1>
+  <p class="lede">What presolve does and what defeats it, symmetry, big-M against indicators, starts, reading the log, and the discovery that most single-run speed-ups are noise.</p>
+  <p class="meta"><span>needs 26, 08</span><span>~1 h slides + 2½ h lab</span><span>lab: <code>uv run co lab 27</code></span></p>
+  <aside class="notes">
+    <p>Parts I–V built algorithms. Part VI is about using the industrial ones well. The same problem can
+    be written in ways that differ by orders of magnitude in solve time, and a solver's log is the
+    instrument that tells you which parts of the solve are struggling.</p>
+    <p>The unit's measured finding comes out of the lab and is worth stating first: on ten instances, only two
+    of six interventions had effects larger than SCIP's run-to-run variation. That's not a failure of the
+    other four. It's the reason unit 28 exists.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">27 · overview</p>
+  <h2>The route</h2>
+  <div class="cols">
+    <div class="box def"><span class="label">1 · what the solver does before branching</span>
+      <p class="small">Presolve, bound and coefficient tightening; the habits that defeat them; indicators.</p></div>
+    <div class="box def"><span class="label">2 · symmetry</span>
+      <p class="small">Why interchangeable objects cost exponentially, and three ways to stop paying.</p></div>
+  </div>
+  <div class="cols">
+    <div class="box def"><span class="label">3 · starts, bounds, reformulation</span>
+      <p class="small">MIP starts, solution pools, bounds from heuristics, and changing the model entirely.</p></div>
+    <div class="box def"><span class="label">4 · logs and variability</span>
+      <p class="small">Reading a statistics report; seeds; MIPLIB 2017 as shared reality.</p></div>
+  </div>
+  <aside class="notes">
+    <p>The checkpoint: a before/after table of your own model, one row per intervention, with the time
+    each bought and no row you can't explain. After the lab, "within noise, here are the seed re-runs"
+    counts as an explanation, and often it's the correct one.</p>
+  </aside>
+</section>
+
+<section class="divider">
+  <p class="eyebrow">section 1</p>
+  <h2>Before branching</h2>
+  <p>The model the solver actually solves isn't the one you wrote.</p>
+</section>
+
+<section>
+  <p class="eyebrow">27 · presolve</p>
+  <h2>What presolve does, and what defeats it</h2>
+  <div class="cols">
+    <div>
+      <table class="dense">
+        <thead><tr><th>reduction</th><th>example</th></tr></thead>
+        <tbody>
+          <tr><td>bound tightening</td><td>$x + 10y \le 12$, $y \in \{0,1\}$ ⇒ $x \le 12$</td></tr>
+          <tr><td>coefficient tightening</td><td>$x \le 1000y$ with $x \le 50$ ⇒ $x \le 50y$</td></tr>
+          <tr><td>dual fixing</td><td>a variable that only hurts the objective and only helps constraints → its bound</td></tr>
+          <tr><td>aggregation</td><td>$x = y + z$ substituted away</td></tr>
+          <tr><td>probing</td><td>fix a binary both ways and learn implications</td></tr>
+          <tr><td>clique detection</td><td>pairwise conflicts merged into one row</td></tr>
+        </tbody>
+      </table>
+      <p class="small muted">Achterberg et al., "Presolve reductions in mixed integer programming", <em>INFORMS JoC</em> 32 (2020).</p>
+    </div>
+    <div>
+      <div class="box warn"><span class="label">modelling habits that defeat it</span>
+        <ul class="small">
+          <li><b>Big-M larger than it needs to be.</b> Presolve can tighten some; it can't know your data's true range.</li>
+          <li><b>Unbounded continuous variables</b> feeding big-M rows: nothing to tighten from.</li>
+          <li><b>Redundant formulations</b> that hide structure, like one aggregated row in place of many disaggregated ones (unit 05).</li>
+          <li><b>Numerically wide coefficients</b> (1e-6 next to 1e6): tolerances start to bite, and cuts get rejected.</li>
+        </ul>
+      </div>
+      <div class="box good"><span class="label">indicator constraints instead of big-M</span>
+        <p class="small">$y = 1 \Rightarrow a^\top x \le b$, stated as such. The solver chooses between big-M reformulation (with the tightest M it can derive), branching on the implication, or SOS1. It's often better, sometimes worse. Measure.</p>
+      </div>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>Unit 05 met the aggregated and disaggregated facility-location models, and big-M. The lab here
+    meets the same thing in bin packing: capacity rows linked to y (strong) against separate x ≤ y
+    rows (weak). The weak model's LP bound is exactly 1 bin, whatever the instance.</p>
+    <p>Why "sometimes worse" for indicators: branching on an implication gives no LP bound at all until
+    the binary is fixed, while a well-chosen big-M does contribute to the relaxation. The best choice
+    depends on whether M can be made small.</p>
+  </aside>
+</section>
+
+<section class="divider">
+  <p class="eyebrow">section 2</p>
+  <h2>Symmetry</h2>
+  <p>The single biggest lever on many models.</p>
+</section>
+
+<section>
+  <p class="eyebrow">27 · symmetry</p>
+  <h2>Interchangeable objects cost $k!$</h2>
+  <div class="cols">
+    <div>
+      <p class="small">In the assignment model, any permutation of the bins maps a packing to another packing of the same cost. With 17 bins, every solution has up to 17! ≈ 3.6 × 10¹⁴ copies, and branch and bound can prove infeasibility of a subtree only by visiting its copies too.</p>
+      <div class="box def"><span class="label">three ways to stop paying</span>
+        <ul class="small">
+          <li><b>Symmetry-breaking constraints</b> (lex-leader, Crawford et al. 1996): keep one representative per orbit. Lab: $y_b \ge y_{b+1}$, item $i$ only in bins $0..i$.</li>
+          <li><b>Orbitopes</b> (Kaibel & Pfetsch 2008): the convex hull of lexicographically sorted 0/1 matrices, with a propagation algorithm.</li>
+          <li><b>Orbital branching and fixing</b> (Ostrowski et al. 2011): detect the symmetry group, branch on orbits, fix variables in the same orbit.</li>
+        </ul>
+      </div>
+    </div>
+    <div>
+      <div class="box warn"><span class="label">the interaction</span>
+        <p class="small">Modern solvers detect symmetry themselves (SCIP: <code>misc/usesymmetry</code>). Explicit constraints can duplicate that work, or conflict with the solver's choice of representative.</p>
+      </div>
+      <p class="small">Lab <code>then</code>, same linked model:</p>
+      <table class="dense">
+        <thead><tr><th>variant</th><th class="num">solved</th><th class="num">SGM s</th></tr></thead>
+        <tbody>
+          <tr><td>B  SCIP symmetry handling on</td><td class="num">8/10</td><td class="num">5.32</td></tr>
+          <tr><td>B′ off</td><td class="num">8/10</td><td class="num">4.00</td></tr>
+          <tr><td>C  on + your constraints</td><td class="num">9/10</td><td class="num">3.80</td></tr>
+        </tbody>
+      </table>
+      <p class="small">Within noise: four seeds on one instance gave B 20, 15.3, 20, 1.7 s and B′ 1.6, 11.3, 2.8, 11.4 s.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>A better model removes the symmetry at the source. The arc-flow and pattern formulations don't
+    have bin identities at all: a solution is a multiset of patterns. That's why section 3's
+    reformulation was the one intervention with a large, stable effect.</p>
+    <p>Why the lab's symmetry breaking is valid: renumber the bins of any packing by their smallest item.
+    Then used bins come first, and the bin holding item i has number at most i. Every orbit keeps at
+    least one member, so the optimum is unchanged, and the tests check exactly that.</p>
+  </aside>
+</section>
+
+<section class="divider">
+  <p class="eyebrow">section 3</p>
+  <h2>Starts, bounds, reformulation</h2>
+  <p>Tell the solver what you know.</p>
+</section>
+
+<section>
+  <p class="eyebrow">27 · what you know</p>
+  <h2>Bounds, starts, and a different model</h2>
+  <div class="cols">
+    <div>
+      <ul class="small">
+        <li><b>Upper bound → smaller model.</b> First-fit decreasing packs into at most $\frac{11}{9}\mathrm{OPT} + \frac69$ bins, so no more bins than that are needed.</li>
+        <li><b>Lower bound → fixings.</b> Martello–Toth L2 ≥ ⌈Σ/C⌉. With symmetry broken, bins $0..L_2-1$ must be used.</li>
+        <li><b>MIP start.</b> A feasible solution before the first node: an incumbent for pruning, a seed for improvement heuristics. Solution pools keep several.</li>
+        <li><b>Reformulation.</b> Arc flow (Valério de Carvalho 1999): one path per bin through capacities 0..C, pseudo-polynomial size. Its LP equals Gilmore–Gomory's pattern LP (unit 10).</li>
+      </ul>
+    </div>
+    <div>
+      <table class="dense">
+        <thead><tr><th>configuration</th><th class="num">solved</th><th class="num">SGM s</th><th class="num">median nodes</th></tr></thead>
+        <tbody>
+          <tr><td>A  x ≤ y linking</td><td class="num">6/10</td><td class="num">9.97</td><td class="num">942</td></tr>
+          <tr><td>B  capacity linked</td><td class="num">8/10</td><td class="num">5.32</td><td class="num">870</td></tr>
+          <tr><td>C  + symmetry breaking</td><td class="num">9/10</td><td class="num">3.80</td><td class="num">598</td></tr>
+          <tr><td>D  + FFD bins, L2 fixing</td><td class="num">10/10</td><td class="num">3.43</td><td class="num">1 380</td></tr>
+          <tr><td>E  + FFD as a start</td><td class="num">9/10</td><td class="num">3.02</td><td class="num">1 576</td></tr>
+          <tr><td><b>F  arc flow</b></td><td class="num"><b>10/10</b></td><td class="num"><b>1.40</b></td><td class="num"><b>1</b></td></tr>
+        </tbody>
+      </table>
+      <p class="small muted">10 instances, SCIP 10, 20 s limit, shift 1 s.</p>
+      <p class="small">Arc flow's LP proves optimality at the root on these instances. On the triplet instances (C = 1000) its graph is ten times bigger and it's <em>slower</em> than C–E.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>Pseudo-polynomial is the catch. The arc-flow model has O(C × distinct sizes) arcs, so C = 100 is tiny
+    and C = 10⁹ is impossible. Column generation (unit 10) keeps the same LP with an implicit column set,
+    which is why branch-and-price is the standard exact method for large-capacity cutting stock.</p>
+    <p>The round-up property: for almost all practical bin-packing instances the optimum equals the
+    pattern LP rounded up, so the LP bound is enough to prove optimality once a good packing is found.
+    That's what "median nodes 1" measures.</p>
+  </aside>
+</section>
+
+<section class="divider">
+  <p class="eyebrow">section 4</p>
+  <h2>Logs and variability</h2>
+  <p>Where did the time go, and would it go there again?</p>
+</section>
+
+<section>
+  <p class="eyebrow">27 · the log</p>
+  <h2>Reading a SCIP statistics report</h2>
+  <div class="cols">
+    <div>
+      <table class="dense">
+        <thead><tr><th>section</th><th>read it for</th></tr></thead>
+        <tbody>
+          <tr><td>Presolvers</td><td>which reductions fired: fixed vars, deleted rows, changed coefficients</td></tr>
+          <tr><td>Constraints</td><td>which constraint handlers did the propagating and separating</td></tr>
+          <tr><td>Separators</td><td>cuts found and <b>applied</b> per family; <code>&gt;</code> rows split a separator by cut class</td></tr>
+          <tr><td>Primal Heuristics</td><td>which heuristic found solutions, and which found the best</td></tr>
+          <tr><td>Branching Rules</td><td>how many children, cutoffs and domain reductions</td></tr>
+          <tr><td>B&B Tree</td><td><b>nodes (total)</b>, depth, nodes left</td></tr>
+          <tr><td>Root Node</td><td>first LP value against the final dual bound: what cuts bought</td></tr>
+          <tr><td>Solution</td><td>primal and dual bounds, gap, <b>found by &lt;heuristic&gt;</b></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div>
+      <div class="box def"><span class="label">diagnosis by pattern</span>
+        <ul class="small">
+          <li><b>Dual bound stuck at the first LP value</b>, many nodes: a weak relaxation. Reformulate or add structure.</li>
+          <li><b>Incumbent late or never</b>, bound fine: give a start, or check heuristics.</li>
+          <li><b>Huge node count, gap closing slowly</b>: symmetry, or branching on the wrong variables.</li>
+          <li><b>Time in presolve or root LP</b>: model size or numerics, before any search.</li>
+        </ul>
+      </div>
+      <p class="small">Lab step 6 parses the report into a dict and checks it against SCIP's API. Its traps: "nodes" appears twice, and "cut pool" isn't a separator.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>An example while building the lab: 30 items, linked assignment model, 10 s. The report said first
+    LP value 13.34, final dual bound 13.34, primal bound 15, gap 12.44%, after about 1 350 nodes. That's the
+    "stuck bound" pattern: the LP can't see that bins are discrete, and no cut SCIP found moved it. The
+    arc-flow model's median of 1 node in <code>then</code> is the same diagnosis from the other side.</p>
+    <p>The log formats change between versions. Parsing by column name rather than position is what
+    keeps a parser working after an upgrade.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">27 · variability</p>
+  <h2>Performance variability: the same model, different seeds</h2>
+  <div class="cols">
+    <div>
+      <p class="small">Four SCIP random seeds on instances where consecutive configurations disagreed (seconds, 20 = limit):</p>
+      <table class="dense">
+        <thead><tr><th>instance, step</th><th>before</th><th>after</th></tr></thead>
+        <tbody>
+          <tr><td>triplets #1, A → B</td><td>20 13.8 12.5 20</td><td>6.4 1.9 3.1 2.0</td></tr>
+          <tr><td>triplets #3, B → B′</td><td>20 15.3 20 1.7</td><td>1.6 11.3 2.8 11.4</td></tr>
+          <tr><td>uniform #3, B′ → C</td><td>20 2.9 7.1 8.6</td><td>2.9 3.2 9.6 10.7</td></tr>
+          <tr><td>uniform #2, D → E</td><td>15.9 19.3 1.9 20</td><td>20 1.7 10.0 4.9</td></tr>
+          <tr><td>uniform #2, E → F</td><td>20 1.7 10.1 4.9</td><td><b>0.4 0.4 0.3 0.3</b></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div>
+      <div class="box warn"><span class="label">what survives</span>
+        <p class="small"><b>Linking</b> (A → B) and <b>reformulation</b> (→ F). The rest are within noise on ten instances. Two runs of the whole script also disagreed on solved counts (A: 5 then 6; B: 9 then 8), because runs near the time limit flip.</p>
+      </div>
+      <p class="small">MIP solvers are chaotic in the technical sense: a tiny change (a seed, row order, a different but equivalent model) changes branching decisions early, and the tree grows differently from there. Lodi & Tramontani (2013) document this across solvers.</p>
+      <p class="small muted">MIPLIB 2017 (Gleixner et al. 2021): 1 065 instances, a 240-instance benchmark set, and many still open. The shared reality check. <code>then</code> section 2 runs any MIPLIB files you download.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>This slide is the bridge to unit 28. The practical rules: report several seeds (or several
+    permutations of the model), use a shifted geometric mean over many instances rather than totals over a
+    few, and treat any single-instance speed-up under about 2× as unestablished until repeated.</p>
+    <p>Solver developers use exactly this discipline internally. A new feature is accepted on a large test
+    set with many seeds, and a few percent improvement on the shifted geometric mean is a real result
+    there. On ten instances and one seed it's nothing.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">27 · lab</p>
+  <h2>Lab 27 — what you build</h2>
+  <div class="lab">
+    <span class="label">about 2½ hours · uv run co lab 27</span>
+    <ol>
+      <li><b>The assignment model</b>, weak and linked, integer and LP.</li>
+      <li><b>Symmetry-breaking constraints.</b></li>
+      <li><b>Bounds</b>: first-fit decreasing, Martello–Toth L2, and the bounded model.</li>
+      <li><b>A MIP start</b>, checked before it's offered.</li>
+      <li><b>The arc-flow reformulation.</b></li>
+      <li><b>A parser</b> for SCIP's statistics report.</li>
+    </ol>
+  </div>
+<pre><code class="language-bash">uv run co test 27
+uv run co then 27     # seven configurations × ten instances · per-instance times · seed re-runs (≈ 30 min)</code></pre>
+  <aside class="notes">
+    <p>Every intervention is tested against an exact DP optimum on small instances, so "faster" can never
+    silently mean "wrong". The step 3 tests include two hand-built instances found by searching for cases
+    where plausible mistakes in L2 give a weaker bound.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">27 · checkpoint</p>
+  <h2>Done when</h2>
+  <div class="box good"><span class="label">checkpoint</span>
+    <ul>
+      <li>All six lab steps are ✓.</li>
+      <li>A before/after table of your own model with one row per intervention and the time each bought, and no row you can't explain, including "within noise" with the evidence.</li>
+      <li>You can read a statistics report and say where the time went.</li>
+    </ul>
+  </div>
+  <div class="cols">
+    <div>
+      <h3>Reading</h3>
+      <p class="small">Achterberg et al., <em>INFORMS JoC</em> 32 (2020).<br>
+      Lodi & Tramontani, <em>TutORials in OR</em> (2013).<br>
+      Margot, in <em>50 Years of Integer Programming</em> (2010).<br>
+      Delorme, Iori & Martello, <em>EJOR</em> 255 (2016).</p>
+    </div>
+    <div>
+      <h3>Next</h3>
+      <p class="small"><b>28</b> experimental method: the harness, the plots, and an audit of earlier conclusions.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>Unit 28 takes this unit's finding, that single runs mislead, and builds the machinery to avoid it:
+    stored runs, seeds, shifted geometric means, performance profiles, bootstrap intervals and corrected
+    tests. Then it applies them to two earlier units' conclusions, and one of them doesn't survive.</p>
+  </aside>
+</section>
+
+</div></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/plugin/highlight/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<script src="../../slides/deck.js"></script>
+</body>
+</html>

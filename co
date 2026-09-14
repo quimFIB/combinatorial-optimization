@@ -1,0 +1,4 @@
+#!/bin/sh
+# Run the course CLI through uv without the VIRTUAL_ENV mismatch warning.
+# The shell auto-activates ~/.python-env; this project uses its own .venv.
+cd "$(dirname "$0")" && exec env -u VIRTUAL_ENV uv run --quiet co "$@"

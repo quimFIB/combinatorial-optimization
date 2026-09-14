@@ -1,0 +1,13 @@
+# Regenerable environment and caches (recreate with `uv sync`)
+/.venv/
+__pycache__/
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+
+# Outputs the "then" steps regenerate: plots and run databases
+units/*/lab/out/
+
+# direnv
+/.direnv/

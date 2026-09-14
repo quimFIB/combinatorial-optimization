@@ -1,0 +1,345 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>21 · Lazy clause generation</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+<link rel="stylesheet" href="../../slides/deck.css">
+</head>
+<body data-trunk="cp">
+<div class="reveal"><div class="slides">
+
+<section class="title-slide">
+  <p class="eyebrow">Part IV · trunk C · constraint programming and SAT · branch</p>
+  <div class="unit-no">21</div>
+  <h1>Lazy clause generation, or what CP-SAT actually is</h1>
+  <p class="lede">Propagators that explain themselves as clauses, a CDCL engine that learns from them, and a linear relaxation running alongside: the hybrid that ate the field.</p>
+  <p class="meta"><span>needs 19, 20</span><span>~1 h slides + 2½ h lab</span><span>lab: <code>uv run co lab 21</code></span></p>
+  <aside class="notes">
+    <p>Lazy clause generation was developed at the University of Melbourne (Ohrimenko, Stuckey &amp;
+    Codish 2007–09) and quickly dominated the MiniZinc Challenge. Google's CP-SAT is built on the same
+    idea, with a linear relaxation and a portfolio of LNS workers added. It has taken most of the MiniZinc
+    Challenge's gold medals since 2018.</p>
+    <p>The unit is short because it assembles pieces you already have: unit 18's propagators, unit 20's
+    CDCL, unit 19's LNS, Part II's LP. The one new idea is the explanation.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">21 · overview</p>
+  <h2>The route</h2>
+  <div class="cols">
+    <div class="box def"><span class="label">1 · explanations</span>
+      <p class="small">The order encoding; propagators that return clauses; learning from propagation.</p></div>
+    <div class="box def"><span class="label">2 · the same idea, elsewhere</span>
+      <p class="small">SMT and DPLL(T); logic-based Benders.</p></div>
+  </div>
+  <div class="cols">
+    <div class="box def"><span class="label">3 · CP-SAT</span>
+      <p class="small">LCG + LP relaxation + LNS portfolio, read off its log.</p></div>
+    <div class="box def"><span class="label">4 · choosing a solver</span>
+      <p class="small">MIP, CP, SAT, CP-SAT: a decision table with reasons.</p></div>
+  </div>
+  <aside class="notes">
+    <p>The checkpoint is a judgement: for an unseen problem, which paradigm first, and why. The last
+    section gives criteria, but the defensible answer always comes from the structure: what the
+    relaxation sees, what propagation sees, and what learning can reuse.</p>
+  </aside>
+</section>
+
+<section class="divider">
+  <p class="eyebrow">section 1</p>
+  <h2>Explanations</h2>
+  <p>Tell the SAT solver why.</p>
+</section>
+
+<section>
+  <p class="eyebrow">21 · explanations</p>
+  <h2>Integers as Booleans: the order encoding</h2>
+  <div class="cols">
+    <div>
+      <p class="small">For $x \in [\ell, u]$, one Boolean per threshold:</p>
+      $$[x \le \ell],\ [x \le \ell + 1],\ \dots,\ [x \le u - 1]$$
+      $$[x \le v] \rightarrow [x \le v + 1]$$
+      <ul class="small">
+        <li>A bound change is a <b>single literal</b>: $x \ge 5$ is $\lnot[x \le 4]$.</li>
+        <li>Each integer value corresponds to exactly one Boolean assignment (lab step 1's test: 6 models for $x \in 0..5$).</li>
+        <li>Variables are created <b>lazily</b> in real solvers, only for thresholds propagation actually uses.</li>
+      </ul>
+    </div>
+    <div>
+      <div class="box def"><span class="label">other encodings</span>
+        <p class="small"><b>Direct</b> $[x = v]$: good for ≠ and tables, and bad for bounds. <b>Log</b> (binary digits): compact, and propagation is weak. The order encoding is what makes <b>bounds</b> reasoning into unit propagation. It's the right choice for scheduling and arithmetic, and LCG solvers often keep both $[x \le v]$ and $[x = v]$, linked by clauses.</p>
+      </div>
+      <p class="small muted">Tamura et al.'s Sugar (2009) showed the order encoding makes pure SAT competitive on scheduling. LCG keeps the encoding and removes the need to write out the constraints.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>The size problem the order encoding creates: a domain of size 10⁶ needs 10⁶ Booleans if created
+    eagerly. That's why LCG solvers create $[x \le v]$ literals on demand, and why CP-SAT represents
+    integer bounds natively and creates Boolean views only when an explanation or a branch needs one.
+    The lab creates them eagerly for simplicity. On ft06 with horizon 60 that's about 2 000 Booleans.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">21 · explanations</p>
+  <h2>A propagator's inference, as a clause</h2>
+  <div class="cols">
+    <div>
+      <p class="small">A propagator narrows a bound. LCG requires it to also return an <b>explanation</b>: a clause</p>
+      <ul class="small">
+        <li>that holds in <b>every solution</b> of the constraint (so it can be kept forever),</li>
+        <li>whose literals are all false now except the new one (so it propagates it).</li>
+      </ul>
+      <div class="box def"><span class="label">precedence $x + d \le y$</span>
+        $$\begin{aligned} & [x \ge a] \rightarrow [y \ge a + d] \\ \equiv\ & \lnot[x \ge a] \lor [y \ge a + d] \end{aligned}$$
+      </div>
+      <div class="box def"><span class="label">unary resource, compulsory part $[lst, ect)$ of task $i$</span>
+        <p class="small">$[s_i \le lst] \land [s_i \ge ect - d_i] \land [s_j \ge lst - d_j + 1] \rightarrow [s_j \ge ect]$</p>
+      </div>
+    </div>
+    <div>
+      <p class="small">CDCL treats explanation clauses exactly like input clauses: as <b>reasons</b> in the implication graph. Conflict analysis resolves through them, and a learned clause mixes Boolean decisions with integer bounds, in this shape:</p>
+      <p class="mono small" style="font-size:.6em">¬[s₃ ≥ 12] ∨ ¬b₃,₇ ∨ [makespan ≥ 58]</p>
+      <p class="small">"If operation 3 starts at 12 or later and precedes operation 7 on their machine, the makespan is at least 58." A nogood like that would take unit 17's engine an entire subtree to rediscover, every time.</p>
+      <p class="small muted">Lab steps 2–3's tests decode every returned clause back to integers and check it against every feasible assignment.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>Explanation quality matters. The most general explanation (fewest, weakest literals) produces
+    learned clauses that prune the most. The lab's timetable explanation uses the bounds that justify
+    the compulsory part, not the current bounds. A lazy implementation that explains with "all current
+    bounds of all tasks" would be valid but would learn clauses that almost never fire again.</p>
+    <p>That's also why explanations are generated lazily in real solvers: a propagator records only
+    enough to reconstruct the explanation, and builds the clause only if conflict analysis actually
+    resolves through that literal. Most propagated literals never are.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">21 · explanations</p>
+  <h2>Measured: what learning from propagation buys</h2>
+  <div class="cols">
+    <div>
+      <p class="small">Lab <code>then</code>, job-shop makespan, same kind of propagation in both:</p>
+      <table class="dense">
+        <thead><tr><th>instance</th><th class="num">unit 18 CP</th><th class="num">LCG</th></tr></thead>
+        <tbody>
+          <tr><td>ft06</td><td class="num">55, not proven in 100 000 nodes</td><td class="num"><b>55 proven, 154 conflicts</b></td></tr>
+          <tr><td>random 6×4</td><td class="num">47, not proven</td><td class="num"><b>44 proven, 94</b></td></tr>
+          <tr><td>random 8×4</td><td class="num">no solution in 100 000</td><td class="num"><b>58 proven, 293</b></td></tr>
+          <tr><td>random 8×5</td><td class="num">53, not proven</td><td class="num"><b>52 proven, 290</b></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div>
+      <p class="small">Ablation on ft06:</p>
+      <table class="dense">
+        <thead><tr><th>variant</th><th class="num">conflicts</th><th class="num">s</th></tr></thead>
+        <tbody>
+          <tr><td>disjunctions + explained timetable</td><td class="num">154</td><td class="num">3.8</td></tr>
+          <tr><td>disjunctions only</td><td class="num">286</td><td class="num">5.2</td></tr>
+          <tr><td>no restarts</td><td class="num">154</td><td class="num">3.7</td></tr>
+        </tbody>
+      </table>
+      <p class="small">Stronger propagation halves the proof. <b>Learning turns an unfinished search into a proof.</b> It is not a constant factor: nogoods cut every symmetric and repeated subtree the CP search would re-enter.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>Why the effect is so large on job-shop in particular. The same critical overlaps recur in
+    thousands of subtrees that differ only in irrelevant decisions on other machines. A CP search
+    without memory proves each of those subtrees infeasible separately. A learned clause names only the
+    literals involved in the overlap, so it prunes all of them at once. That's the same phenomenon as unit
+    17's 3-colouring comparison, now inside your own code.</p>
+  </aside>
+</section>
+
+<section class="divider">
+  <p class="eyebrow">section 2</p>
+  <h2>The same idea, elsewhere</h2>
+  <p>A theory explains; a SAT solver learns.</p>
+</section>
+
+<section>
+  <p class="eyebrow">21 · elsewhere</p>
+  <h2>SMT, DPLL(T), and logic-based Benders</h2>
+  <div class="cols">
+    <div>
+      <div class="box def"><span class="label">DPLL(T) (Nieuwenhuis, Oliveras & Tinelli 2006)</span>
+        <p class="small">A CDCL solver over Boolean abstractions of theory atoms ($x - y \le 3$, $f(a) = b$). A <b>theory solver</b> checks the current atoms for consistency and returns a <b>theory explanation</b> (a clause) on conflict or propagation. Z3, CVC5 and Yices work this way.</p>
+      </div>
+      <p class="small">LCG is DPLL(T) with CP propagators as the theory, arriving from the CP side. SMT is the same idea arriving from verification.</p>
+    </div>
+    <div>
+      <div class="box def"><span class="label">logic-based Benders (Hooker & Ottosson 2003)</span>
+        <p class="small">Unit 12's Benders with any subproblem solver: the subproblem returns an <b>inference</b>, a no-good or bound cut, about the master's decision. Same shape: one solver decides, another explains, and the first learns.</p>
+      </div>
+      <div class="box good"><span class="label">the common pattern</span>
+        <p class="small">Decide in one representation. Check or propagate in a richer one. Hand back a <b>certificate of why</b> in the first representation. Units 09 (separation), 10 (pricing), 12 (Benders cuts) and 21 are all this pattern.</p>
+      </div>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>The difference between DPLL(T) and LCG is mostly engineering emphasis. SMT theories are often
+    expensive and incremental (the simplex method for linear arithmetic, congruence closure for
+    equality). CP propagators are many, cheap, and specialised to one global constraint each. Both
+    depend on explanations being small.</p>
+  </aside>
+</section>
+
+<section class="divider">
+  <p class="eyebrow">section 3</p>
+  <h2>CP-SAT</h2>
+  <p>Every component, by name.</p>
+</section>
+
+<section>
+  <p class="eyebrow">21 · CP-SAT</p>
+  <h2>Reading CP-SAT's log</h2>
+  <div class="cols">
+    <div>
+      <p class="small">Lab <code>then</code>, 15×15 job-shop, 5 s, 8 workers (352 log lines):</p>
+      <table class="dense">
+        <thead><tr><th>log section</th><th>what it is</th><th>built in</th></tr></thead>
+        <tbody>
+          <tr><td>Presolve summary</td><td>simplification rules applied</td><td>27</td></tr>
+          <tr><td>subsolvers list</td><td>portfolio: default_lp, no_lp, max_lp, quick_restart, …</td><td>19</td></tr>
+          <tr><td>Search stats</td><td>conflicts, branches, restarts, Bool/int propagations</td><td>17–21</td></tr>
+          <tr><td>SAT stats</td><td>learned literals, minimisation</td><td>20</td></tr>
+          <tr><td>Clause deletion</td><td>learned clauses removed</td><td>20</td></tr>
+          <tr><td>Lp stats, Lp Cut</td><td>LP relaxation; CG, MIR, no-overlap cuts</td><td>02–08</td></tr>
+          <tr><td>LNS stats</td><td>graph_*, rnd_*, scheduling_* neighbourhoods</td><td>19</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div>
+      <ul class="small">
+        <li><b>LCG core</b>: integer variables with lazily created literals, and propagators (no-overlap, cumulative, linear) that explain.</li>
+        <li><b>LP relaxation</b> in some workers (<code>max_lp</code>, <code>reduced_costs</code>), cutting planes included, used for bounds and reduced-cost fixing (unit 11's idea).</li>
+        <li><b>Portfolio</b>: different workers with different heuristics, restart policies and LP levels, sharing incumbents, bounds and (optionally) clauses.</li>
+        <li><b>LNS</b> workers improving the incumbent: unit 19 at industrial scale.</li>
+      </ul>
+      <p class="small muted">Makespan 1211 against a bound of 1162 after 5 s: not proven, which is typical for 15×15 job-shops.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>Reading the log is a skill worth practising on your own models. When CP-SAT is slow, the log
+    usually says why. The LP workers' bound may not move, meaning a weak relaxation (reformulate, unit
+    05). Search workers may have many conflicts but no incumbent (add hints, or check the model for
+    symmetry). LNS may improve the incumbent while the bound is stuck, meaning the proof is the hard
+    part, not finding solutions.</p>
+  </aside>
+</section>
+
+<section class="divider">
+  <p class="eyebrow">section 4</p>
+  <h2>Choosing a solver</h2>
+  <p>Defend it with structure, not taste.</p>
+</section>
+
+<section>
+  <p class="eyebrow">21 · choosing</p>
+  <h2>MIP, CP, SAT, or CP-SAT?</h2>
+  <div class="cols">
+    <div>
+      <table class="dense">
+        <thead><tr><th>if the problem has…</th><th>reach first for</th><th>because</th></tr></thead>
+        <tbody>
+          <tr><td>a strong LP relaxation (flows, covering, assignment with costs)</td><td>MIP</td><td>the bound does the proving (Part II)</td></tr>
+          <tr><td>big-M disjunctions, scheduling, sequencing</td><td>CP-SAT</td><td>no-overlap propagation + learning beats weak big-M LPs (units 05, 18, 21)</td></tr>
+          <tr><td>pure feasibility, Boolean structure, verification</td><td>SAT</td><td>CDCL, proofs, and preprocessing (unit 20)</td></tr>
+          <tr><td>huge instances, need good solutions not proofs</td><td>CP-SAT LNS, or a metaheuristic</td><td>unit 19; unit 26</td></tr>
+          <tr><td>counting / cardinality at the core (pigeonhole-like)</td><td>MIP or a global constraint, not plain SAT</td><td>resolution can't count (unit 20)</td></tr>
+          <tr><td>nonlinear continuous parts</td><td>MINLP / a spatial B&amp;B solver</td><td>outside this course's solvers</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div>
+      <div class="box good"><span class="label">the three questions</span>
+        <ol class="small">
+          <li>What does the <b>LP relaxation</b> see? If its bound is close to the optimum, MIP proves quickly.</li>
+          <li>What does <b>propagation</b> see? If the constraints are global and combinatorial, CP propagators prune early.</li>
+          <li>What can <b>learning</b> reuse? If the same local conflicts recur across the search, nogoods pay off.</li>
+        </ol>
+      </div>
+      <p class="small">Then <b>measure</b>, on several instances (unit 28). CP-SAT's portfolio is an admission that nobody can answer these questions in advance for every instance.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>A worked example of the checkpoint. Nurse rostering (shifts, coverage per day, rest rules,
+    fairness): the coverage constraints are LP-friendly, but the rest rules are sequence patterns
+    (regular constraints) and big-M-hostile, and fairness is a min-max. The first reach is CP-SAT: native
+    sequence and linear constraints, learning for recurring rule conflicts, and an LP worker for the
+    coverage bound. MIP would be a reasonable second, with a column-generation formulation (unit 10) if
+    the instances are large.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">21 · lab</p>
+  <h2>Lab 21 — what you build</h2>
+  <div class="lab">
+    <span class="label">about 2½ hours · uv run co lab 21</span>
+    <ol>
+      <li><b>The order encoding</b>: literals and bounds.</li>
+      <li><b>An explained precedence</b>, optionally reified.</li>
+      <li><b>An explained unary timetable.</b></li>
+      <li><b>LCGSolver</b>: propagators inside your unit-20 CDCL.</li>
+      <li><b>Job-shop minimisation</b>, keeping learned clauses across bounds.</li>
+    </ol>
+  </div>
+<pre><code class="language-bash">uv run co test 21
+CO_MINE=20 uv run co test 21     # on your own CDCL
+uv run co then 21                # learning vs not · ablation · CP-SAT's log by name</code></pre>
+  <aside class="notes">
+    <p>A note on proofs. Unit 20's DRAT proofs don't carry over directly: an explanation clause is not
+    implied by the CNF (it follows from the integer constraint), so a RUP checker rejects it. Certifying
+    LCG needs proof formats that can justify theory lemmas, such as VeriPB for cutting-planes reasoning.
+    That's an active research area.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">21 · checkpoint</p>
+  <h2>Done when</h2>
+  <div class="box good"><span class="label">checkpoint</span>
+    <ul>
+      <li>All five lab steps are ✓.</li>
+      <li>For a problem you have not modelled before, you can say which of MIP / CP / SAT / CP-SAT you would reach for first, and defend it with something other than taste.</li>
+      <li>In CP-SAT's log you can name, for every section, the unit where you built it.</li>
+    </ul>
+  </div>
+  <div class="cols">
+    <div>
+      <h3>Reading</h3>
+      <p class="small">Ohrimenko, Stuckey & Codish, <em>Constraints</em> 14 (2009).<br>
+      Feydy & Stuckey, <em>CP</em> 2009.<br>
+      Nieuwenhuis, Oliveras & Tinelli, <em>JACM</em> 53 (2006).<br>
+      Perron, Didier & Gay, "The CP-SAT-LP solver", <em>CP</em> 2023.</p>
+    </div>
+    <div>
+      <h3>Next</h3>
+      <p class="small">Part V: <b>22</b> hardness and what's possible · <b>23</b> approximation · <b>26</b> metaheuristics.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>End of Part IV. The three trunks now meet: Part II's relaxations, Part III's combinatorial
+    algorithms inside propagators, and Part IV's search and learning. Part V asks what to do when even
+    the hybrid can't prove optimality: how far from optimal can you promise to be, and how do you know?</p>
+  </aside>
+</section>
+
+</div></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/plugin/highlight/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<script src="../../slides/deck.js"></script>
+</body>
+</html>

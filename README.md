@@ -1,0 +1,148 @@
+# Combinatorial & constrained optimization — course materials
+
+`CURRICULUM.html` explains what the course covers and why. This file explains how
+the materials are laid out and used.
+
+Each unit has two parts. The **theory** is a slide deck with notes written for
+self-study. The **practice** is a scaffolded lab: the library supplies everything
+that isn't the lesson, and you write only the core algorithm, against tests that
+report progress step by step.
+
+## Setup, once
+
+```fish
+uv sync
+```
+
+## Working a unit
+
+```fish
+uv run co slides 01          # theory: N = notes beside slide, R = reading mode
+uv run co lab 01             # the lab sheet
+uv run co test 01            # after each step; ends with a progress line
+uv run co then 01            # the solver comparison, once the tests pass
+uv run co status             # every unit's progress at a glance
+uv run co data               # once, before the capstone: Solomon's VRPTW instances
+```
+
+Add `--solution` to `test` or `then` to run the imperative reference solution
+instead of your code, or `--solution functional` for the functional one. Your
+own code can be in either style, or a mix: the tests check results only.
+`FUNCTIONAL.md` maps Haskell names (`foldl`, `scanl`, `groupBy`, `.` …) to Python
+and `toolz`, which is a project dependency.
+
+The project's `.envrc` points `VIRTUAL_ENV` and `PATH` at this project's
+`.venv`. direnv applies it in the shell (via `direnv hook fish` in
+`config.fish`) and per buffer in Emacs (Doom's `direnv` module), so `uv run`
+does not warn and Eglot resolves `colib`, numpy and scipy from `.venv`. On a
+fresh clone, run `direnv allow` once. Without direnv, `./co` does the same job
+as `uv run co`: it clears the inherited `VIRTUAL_ENV` first.
+
+Lab sheets open with `emacsclient -n` if an Emacs server is running, and in a
+new Emacs otherwise; set `CO_EDITOR` to change that.
+
+The slides load reveal.js and KaTeX from cdnjs, so they need a network
+connection.
+
+## Layout
+
+```
+colib/              shared scaffolding, not the lesson
+  problems.py       the nine problems: space / is_feasible / objective / random
+  spaces.py         Binary, Permutations, SetPartitions, Product
+  oracle.py         reference brute force
+  harness.py        differential(...) and instances(...)
+  polyhedra.py      exact Ax <= b helpers for units 01–03
+  formats.py        DIMACS CNF, TSPLIB
+  vrptw.py          VRPTW instances, Solomon's files, SCIP's lazy-cut plumbing (capstone)
+  testing.py        pytest plugin: load_lab, "not started" skips, progress line
+  cli.py            the `co` command
+slides/             deck.css + deck.js shared by every deck
+data/solomon/       Solomon's instances, downloaded by `co data` (regenerable, not course material)
+units/NN-slug/
+  slides.html       theory, with <aside class="notes"> on every content slide
+  lab/
+    README.md       the lab sheet: steps, time per step, "done when", checkpoint
+    lab.py          stubs raising NotImplementedError: this is the file you edit
+    test_lab.py     test_stepN_* tests; run against lab.py or solution/
+    HINTS.md        a hint ladder per step, in <details> folds
+    then.py         the "Then" comparison against real tools
+    solution/
+      lab.py        reference solution, imperative (tests run against it too)
+      functional.py reference solution without mutation (and against it)
+    out/            plots from then.py (regenerable)
+    NOTES.md        yours: the numbers and sentences the checkpoint asks for
+```
+
+## Built so far
+
+Each built unit has slides with notes, a lab with staged tests, two reference
+solutions (imperative and functional) that both pass, a mutation check of the
+tests, and a `then.py` whose numbers the slides and lab sheet quote.
+
+| Unit | Slides | Reference tests |
+|---|---:|---:|
+| 00 Models, instances, and an oracle you trust | 21 | 40 |
+| 01 Polyhedra, cones, and Farkas' lemma | 23 | 61 |
+| 02 Simplex, honestly | 20 | 127 |
+| 03 Duality — the load-bearing unit | 20 | 195 |
+| 04 Polynomial-time LP: ellipsoid and interior point | 18 | 80 |
+| 05 Formulations, relaxations, and the integrality gap | 16 | 34 |
+| 06 Total unimodularity | 14 | 220 |
+| 07 Branch and bound | 15 | 46 |
+| 08 Cutting planes and branch-and-cut | 16 | 84 |
+| 09 Separation ⇔ optimization | 15 | 66 |
+| 10 Column generation, Dantzig–Wolfe, branch-and-price | 17 | 237 |
+| 11 Lagrangian relaxation and subgradient methods | 14 | 137 |
+| 12 Benders decomposition | 15 | 106 |
+| 13 Matroids and the exact reach of greedy | 15 | 125 |
+| 14 Network flows | 15 | 163 |
+| 15 Matching | 18 | 416 |
+| 16 Dynamic programming over combinatorial structure | 17 | 275 |
+| 17 Constraint satisfaction and propagation | 15 | 291 |
+| 18 Global constraints and their filtering algorithms | 14 | 234 |
+| 19 Search, restarts, and large neighbourhood search | 14 | 28 |
+| 20 SAT and the CDCL engine | 14 | 271 |
+| 21 Lazy clause generation, or what CP-SAT actually is | 14 | 106 |
+| 22 Hardness, and the shape of what is possible | 17 | 233 |
+| 23 Combinatorial approximation algorithms | 15 | 237 |
+| 24 LP rounding and the primal–dual method | 14 | 176 |
+| 25 Semidefinite relaxations | 15 | 99 |
+| 26 Metaheuristics, benchmarked honestly | 14 | 167 |
+| 27 Modelling for a real solver | 13 | 101 |
+| 28 Experimental method | 14 | 40 |
+| 29 Convexity, gradients, and what continuity changes | 13 | 80 |
+| 30 Automatic differentiation | 13 | 46 |
+| 31 Where discrete meets differentiable | 14 | 52 |
+| Capstone: one problem, four traditions (`co test capstone`) | 16 | 114 |
+
+## Conventions for writing the next unit
+
+- **Slides state; notes explain.** A slide holds a definition, theorem, figure or
+  table. The notes hold the argument, the history, and what later unit the idea
+  feeds. Every content slide has notes.
+- **Figures are inline SVG** using the classes in `deck.css`, so they follow dark
+  mode. Numbers on slides come from running code, never from memory.
+- **A lab is 2–3 hours and 4–6 steps.** Each step is one function of 10–40 lines,
+  with a time estimate and a "done when" line that names a test.
+- **Tests are semantic.** Compare against an oracle or a trusted tool on random
+  and hand-built instances, not against the shape of the reference code. The
+  reference solution must pass them, and simple mutants of it must not.
+- **The lab never uses the solver it is about to be compared with.** `then.py` does.
+- **Two reference solutions, both tested.** `solution/lab.py` uses loops and
+  mutable state, and `solution/functional.py` uses no mutation. Stubs must not
+  dictate a style: say "return an iterable", not "yield". Each step in the lab
+  sheet names its natural *shape*, and HINTS.md gives each step a "Functional
+  route" fold. Where an algorithm genuinely needs mutable state (a simplex
+  tableau, a CDCL trail), the functional solution may keep it local to one
+  function, and the lab sheet should say so rather than pretend.
+- **Check the deck for overflow.** Open `units/NN-*/slides.html?check=1`: it visits
+  every slide and replaces the page with a list of display equations wider than
+  their column and slides taller than the frame. Long equations fail silently
+  otherwise; split them with `aligned`.
+  A table too big for its column takes `class="dense"`; an inline `font-size`
+  in em *enlarges* it, because deck.css already shrinks tables to .72em.
+- **No test passes against the stubs.** Run the unit's tests with the stub `lab.py`:
+  everything must be skipped. A test that returns early on an unlucky random
+  instance (already integral, disconnected, unsatisfiable) silently checks nothing;
+  redraw the instance instead.

@@ -1,0 +1,356 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>06 · Total unimodularity</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+<link rel="stylesheet" href="../../slides/deck.css">
+</head>
+<body data-trunk="ip">
+<div class="reveal"><div class="slides">
+
+<section class="title-slide">
+  <p class="eyebrow">Part II · trunk A · integer programming · branch</p>
+  <div class="unit-no">06</div>
+  <h1>Total unimodularity: when integrality is free</h1>
+  <p class="lede">The structural reason assignment, transportation and flow problems need no branching, and the smallest structure that ends it.</p>
+  <p class="meta"><span>needs 03</span><span>illuminates 14, 15</span><span>~1 h slides + 2 h lab</span></p>
+  <aside class="notes">
+    <p>Unit 05 said the ideal formulation of an integer program is the convex hull of
+    its solutions, and that it is usually out of reach. This unit is about the
+    important exception: problems whose <em>natural</em> formulation already is the
+    convex hull. For them the LP relaxation solves the integer problem, which explains
+    why trunk B (flows, matching, assignment) is polynomial.</p>
+    <p>It is a branch unit and the express route skips it. If you take trunk B,
+    read it alongside units 14 and 15: it is the polyhedral explanation for everything
+    that happens there.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">06 · overview</p>
+  <h2>The route</h2>
+  <div class="cols three">
+    <div class="box def"><span class="label">1 · the theorem</span>
+      <p>TU matrices, Hoffman–Kruskal, and why Cramer's rule is the whole proof in one direction.</p></div>
+    <div class="box def"><span class="label">2 · recognizing it</span>
+      <p>Interval, network and bipartite incidence matrices. Ghouila-Houri. What preserves TU.</p></div>
+    <div class="box def"><span class="label">3 · where it ends</span>
+      <p>Odd cycles, half-integrality, Edmonds' matching polytope, and the families beyond TU.</p></div>
+  </div>
+  <aside class="notes">
+    <p>The lab mirrors this order: a TU test by definition, then Ghouila-Houri, the
+    matrices that are TU, an assignment LP that comes out integral, and finally the
+    odd cycle that breaks it.</p>
+  </aside>
+</section>
+
+<section class="divider">
+  <p class="eyebrow">section 1</p>
+  <h2>The theorem</h2>
+  <p>An algebraic condition on $A$ that makes every vertex integral.</p>
+</section>
+
+<section>
+  <p class="eyebrow">06 · theorem</p>
+  <h2>Totally unimodular matrices</h2>
+  <div class="cols">
+    <div>
+      <div class="box def"><span class="label">definition</span>
+        <p>$A$ is <b>totally unimodular</b> (TU) if every square submatrix has determinant in $\{-1, 0, 1\}$.</p>
+        <p class="small">In particular every entry is $-1$, $0$ or $1$.</p>
+      </div>
+      <div class="box thm"><span class="label">Hoffman & Kruskal, 1956</span>
+        <p>For integral $A$: $\{x \ge 0 : Ax \le b\}$ has only integral vertices <b>for every integral $b$</b> if and only if $A$ is TU.</p>
+      </div>
+    </div>
+    <div>
+      <div class="box proof"><span class="label">proof of "if"</span>
+        <p>A vertex solves $B x_B = b'$ for a nonsingular square submatrix $B$ of $[A \mid I]$ and integral $b'$. That submatrix has $\det B = \pm 1$, because $[A \mid I]$ is TU when $A$ is. By Cramer's rule, $x_B = \dfrac{\mathrm{adj}(B)\, b'}{\det B}$, which is integral. $\square$</p>
+      </div>
+      <p class="small">"Only if" is harder: from a submatrix with determinant $\pm 2$ or more, construct an integral $b$ whose polyhedron has a fractional vertex.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>Why $[A \mid I]$ is TU when $A$ is: expand the determinant of any square
+    submatrix along its identity columns. Each such column has a single 1, and
+    removing its row and column leaves a square submatrix of $A$ (up to sign). So
+    every determinant of $[A\mid I]$ equals, up to sign, a determinant of $A$.</p>
+    <p>"For every integral $b$" is essential. A matrix that is not TU can still give an
+    integral polyhedron for one particular $b$. TU is the property that survives
+    changing the right-hand side, which is what you need when branching changes bounds
+    or when the data changes.</p>
+    <p>Since the dual LP's constraint matrix is $A^\top$, which is TU whenever $A$ is,
+    integral $c$ also gives integral dual vertices. That is how König's theorem
+    ($\nu = \tau$ on bipartite graphs, unit 00) falls out of LP duality: both LPs have
+    integral optima, and their values are equal.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">06 · theorem</p>
+  <h2>Consequences you already rely on</h2>
+  <table style="font-size:.72em">
+    <thead><tr><th>problem</th><th>matrix</th><th>so</th></tr></thead>
+    <tbody>
+      <tr><td>assignment, transportation</td><td>bipartite incidence</td><td>the LP relaxation is integral; the Hungarian algorithm is a primal–dual LP method (unit 15)</td></tr>
+      <tr><td>max-flow, min-cost flow</td><td>directed incidence (network)</td><td>integer capacities give an integer optimal flow (unit 14)</td></tr>
+      <tr><td>shortest path as an LP</td><td>directed incidence</td><td>the LP optimum is a path, not a fractional mix</td></tr>
+      <tr><td>interval scheduling</td><td>consecutive ones</td><td>maximum-weight independent interval sets solve as LPs</td></tr>
+      <tr><td>bipartite vertex cover</td><td>bipartite incidence (transpose)</td><td>König: max matching = min vertex cover</td></tr>
+    </tbody>
+  </table>
+  <p>In every row, the combinatorial algorithm you'd normally use is a fast special case of solving an integral LP.</p>
+  <aside class="notes">
+    <p>Lab <code>then</code>, part 1: the assignment LP solved by HiGHS's simplex, with no
+    integrality constraint, was integral for every $n$ from 20 to 150, and matched
+    <code>scipy.optimize.linear_sum_assignment</code>. The dedicated solver was about
+    1000× faster at $n = 150$ (0.0007 s against 0.73 s). TU tells you the LP
+    <em>can</em> solve the problem; it doesn't say the LP is the best way.</p>
+    <p>For flows the integrality statement is a theorem you'll use constantly in unit
+    14: many combinatorial problems reduce to "find an integral flow", and TU is why
+    you don't need to add integrality to the flow model.</p>
+  </aside>
+</section>
+
+<section class="divider">
+  <p class="eyebrow">section 2</p>
+  <h2>Recognizing TU</h2>
+  <p>In practice you spot the structure; you don't compute determinants.</p>
+</section>
+
+<section>
+  <p class="eyebrow">06 · recognizing</p>
+  <h2>Three families</h2>
+  <div class="cols three">
+    <div class="box def"><span class="label">bipartite incidence</span>
+      <p class="small">Rows are the vertices, split into two sides; each column has one 1 on each side.</p>
+      <p class="small"><b>Proof by Ghouila-Houri:</b> sign left-side rows +1 and right-side rows −1. Every column sums to 0 or ±1.</p>
+    </div>
+    <div class="box def"><span class="label">network matrices</span>
+      <p class="small">Directed incidence: each column has one +1 and one −1. Tutte's network matrices generalize these (paths in a tree).</p>
+      <p class="small"><b>Ghouila-Houri:</b> sign every row +1, and each column sums to 0 or ±1 over any subset.</p>
+    </div>
+    <div class="box def"><span class="label">interval matrices</span>
+      <p class="small">Each row (or column) has its ones consecutive.</p>
+      <p class="small"><b>Ghouila-Houri:</b> order the chosen rows by column index and alternate signs +, −, +, … Every interval then sums to 0 or ±1.</p>
+    </div>
+  </div>
+  <div class="box thm"><span class="label">Ghouila-Houri, 1962</span>
+    <p>$A$ is TU if and only if every subset $R$ of rows has a signing $\sigma \in \{\pm1\}^R$ with $\sum_{r \in R} \sigma_r a_r \in \{-1, 0, 1\}^n$.</p>
+  </div>
+  <aside class="notes">
+    <p>The interval argument, carefully: for a chosen set of columns (applying the
+    criterion to $A^\top$, since TU is closed under transpose), sort them and
+    alternate signs. A row whose ones form an interval covers a consecutive run of the
+    chosen columns, and an alternating sum over a consecutive run is 0 or ±1.</p>
+    <p>Operations that preserve TU: transposing; multiplying a row or column by −1;
+    permuting, duplicating, or deleting rows and columns; appending a unit row or
+    column; and pivoting. These let you check a model's matrix by transforming it into
+    a known family. A flow model with extra bound rows is still TU, for example.</p>
+    <p>The characterization theorem (Seymour, 1980): every TU matrix can be built by
+    certain "1-, 2- and 3-sums" from network matrices, their transposes, and two
+    special 5×5 matrices. This gives a polynomial recognition algorithm. It is deep,
+    and in modelling you essentially never need it.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">06 · recognizing</p>
+  <h2>Testing by brute force, and why nobody does</h2>
+  <div class="cols wide-left">
+    <div>
+      <p class="small">Lab <code>then</code>, part 3, your step-1 test on interval matrices:</p>
+      <table>
+        <thead><tr><th class="num">size</th><th class="num">square submatrices</th><th class="num">seconds</th></tr></thead>
+        <tbody>
+          <tr><td class="num">6×6</td><td class="num">923</td><td class="num">0.003</td></tr>
+          <tr><td class="num">8×8</td><td class="num">12 869</td><td class="num">0.061</td></tr>
+          <tr><td class="num">10×10</td><td class="num">184 755</td><td class="num">1.43</td></tr>
+        </tbody>
+      </table>
+      <p class="small">An $n\times n$ matrix has $\binom{2n}{n} - 1$ square submatrices, which grows like $4^n$.</p>
+    </div>
+    <div class="box good"><span class="label">in practice</span>
+      <p>You recognize the structure while modelling: "this is a flow with side constraints", "these rows are intervals". If extra side constraints break TU, expect to branch, and look for a different formulation that keeps the TU core.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>The count: $\sum_k \binom{n}{k}^2 = \binom{2n}{n}$ by Vandermonde's identity,
+    minus 1 for the empty submatrix. At $n = 10$ that is 184 755, which matches the
+    table.</p>
+    <p>A common real-world situation is a TU core plus a few "complicating"
+    constraints: a network flow with a budget row, or an assignment with a side
+    constraint. The side constraints break integrality, but only mildly. Lagrangian
+    relaxation (unit 11) exploits exactly this: dualize the few bad rows and solve the
+    TU remainder as a fast combinatorial problem.</p>
+  </aside>
+</section>
+
+<section class="divider">
+  <p class="eyebrow">section 3</p>
+  <h2>Where it ends</h2>
+  <p>One odd cycle is enough.</p>
+</section>
+
+<section>
+  <p class="eyebrow">06 · limits</p>
+  <h2>The odd cycle</h2>
+  <div class="cols wide-right">
+    <div class="fig">
+      <svg viewBox="0 0 260 230" width="300" role="img" aria-label="triangle with one half on each edge">
+        <line x1="130" y1="30" x2="45" y2="180" class="accent" stroke-width="5"/>
+        <line x1="130" y1="30" x2="215" y2="180" class="accent" stroke-width="5"/>
+        <line x1="45" y1="180" x2="215" y2="180" class="accent" stroke-width="5"/>
+        <circle cx="130" cy="30" r="14" class="fill-ground ink" stroke-width="2"/>
+        <circle cx="45" cy="180" r="14" class="fill-ground ink" stroke-width="2"/>
+        <circle cx="215" cy="180" r="14" class="fill-ground ink" stroke-width="2"/>
+        <text x="66" y="100" font-size="17" class="mono">½</text>
+        <text x="182" y="100" font-size="17" class="mono">½</text>
+        <text x="124" y="205" font-size="17" class="mono">½</text>
+      </svg>
+      <p class="cap">Max matching LP on a triangle: value $\tfrac32$ at the vertex $x = (\tfrac12, \tfrac12, \tfrac12)$; the best integer matching has value 1.</p>
+    </div>
+    <div>
+      <p>The incidence matrix of a triangle has determinant 2:</p>
+      $$\det\begin{pmatrix}1&1&0\\0&1&1\\1&0&1\end{pmatrix} = 2$$
+      <div class="box thm"><span class="label">theorem</span>
+        <p>A graph's incidence matrix is TU if and only if the graph is <b>bipartite</b>. The obstruction is an odd cycle: the incidence matrix of an odd cycle has determinant $\pm 2$.</p>
+      </div>
+      <p class="small muted">Lab step 3's test checks "TU iff bipartite" on 30 random graphs, and step 5 builds the odd cycle.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>Determinant of an odd cycle's incidence matrix: expanding along the first row
+    gives $1 + (-1)^{k+1} = 2$ for odd $k$, and 0 for even $k$. The even cycle is fine;
+    the odd one is not.</p>
+    <p>This is also the triangle of unit 00: the matching lower bound on vertex cover
+    failed there. Both facts have the same cause. The LPs for matching and vertex
+    cover are dual, and on a triangle both have the fractional optimum $\tfrac32$.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">06 · limits</p>
+  <h2>Half-integrality, and Edmonds' fix</h2>
+  <div class="cols">
+    <div>
+      <div class="box thm"><span class="label">Balinski, 1965</span>
+        <p>Every vertex of the fractional matching polytope $\{x \ge 0 : \sum_{e \ni v} x_e \le 1\}$ has entries in $\{0, \tfrac12, 1\}$, and the $\tfrac12$ entries form vertex-disjoint odd cycles.</p>
+      </div>
+      <p class="small">Lab <code>then</code>, part 2: on 197 random non-bipartite graphs the LP vertex was fractional 42 times, and the only fractional value ever seen was 0.5. On 203 bipartite graphs it was fractional 0 times.</p>
+    </div>
+    <div>
+      <div class="box good"><span class="label">Edmonds, 1965</span>
+        <p>Add the <b>odd-set inequalities</b>: for every vertex set $S$ with $|S|$ odd, $\displaystyle\sum_{e \subseteq S} x_e \le \frac{|S|-1}{2}$.</p>
+        <p>The result is exactly the matching polytope: conv of matchings, integral for every graph.</p>
+      </div>
+      <p class="small muted">There are exponentially many such inequalities, and by unit 05 no polynomial extended formulation exists (Rothvoss). The way through is separation (unit 09), or Edmonds' blossom algorithm (unit 15).</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>The triangle violates its own odd-set inequality: $S = $ all three vertices,
+    $|S| = 3$, and the inequality says the three edge values sum to at most 1, while
+    the LP point sums to $\tfrac32$. Adding that one inequality makes the triangle's
+    LP integral. This is a cutting plane in the sense of unit 08: valid for all
+    matchings and violated by the fractional vertex.</p>
+    <p>Edmonds' 1965 papers are where "polynomial time" was first argued to be the
+    right notion of efficient ("Paths, trees, and flowers"). The blossom algorithm
+    solves maximum matching in polynomial time without ever writing the exponential
+    LP down, and its correctness proof is an LP duality argument over the odd-set
+    inequalities.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">06 · limits</p>
+  <h2>Beyond TU</h2>
+  <div class="cols three">
+    <div class="box def"><span class="label">balanced matrices</span>
+      <p class="small">0/1 matrices with no odd submatrix cycle. Set packing, covering and partitioning over them have integral LPs (Berge; Fulkerson, Hoffman & Oppenheim).</p>
+    </div>
+    <div class="box def"><span class="label">perfect matrices</span>
+      <p class="small">Clique constraints of perfect graphs: the stable-set LP with clique rows is integral (Chvátal; Lovász's perfect graph theorem).</p>
+    </div>
+    <div class="box def"><span class="label">TDI systems</span>
+      <p class="small">Total dual integrality (Edmonds & Giles 1977): the dual has integral optima for every integral $c$. Then the primal polyhedron is integral, whatever $A$ is.</p>
+    </div>
+  </div>
+  <p>The general pattern for the rest of the course: <b>integral polyhedra are the polynomial islands</b>. Each has a combinatorial algorithm, and a min–max theorem that is LP duality in disguise.</p>
+  <aside class="notes">
+    <p>TDI is the most general of these and the most useful for proofs. A system is
+    TDI if its dual has integral optimal solutions whenever the objective is integral.
+    Edmonds and Giles showed that a TDI system with integral right-hand side describes
+    an integral polyhedron. Matroid intersection (unit 13), matching, and submodular
+    flows are all proved integral this way.</p>
+    <p>Unit 23's approximation algorithms live on the opposite side of this: problems
+    whose natural LPs are provably not integral, where the question becomes how far
+    from integral, which is the integrality gap of unit 24.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">06 · lab</p>
+  <h2>Lab 06 — what you build</h2>
+  <div class="lab">
+    <span class="label">about 2 hours · uv run co lab 06 · exact integers</span>
+    <ol>
+      <li><b>TU by definition</b>, with exact determinants.</li>
+      <li><b>Ghouila-Houri</b>, returning a real witness when it fails.</li>
+      <li><b>Incidence and interval matrices</b>, where the test checks TU iff bipartite.</li>
+      <li><b>Assignment as an LP</b> with no integrality, and an integral answer.</li>
+      <li><b>The odd cycle</b>, and the half-integral vertex it forces.</li>
+    </ol>
+  </div>
+<pre><code class="language-bash">uv run co test 06
+uv run co then 06     # assignment LP vs Hungarian · matching LP fractionality · TU test cost</code></pre>
+  <aside class="notes">
+    <p>The one place floating point appears is step 4, where HiGHS solves the LP. The
+    test checks integrality with a tolerance of $10^{-7}$. A simplex solver returns a
+    vertex, and by Hoffman–Kruskal that vertex is integral, so the tolerance only has
+    to absorb rounding.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">06 · checkpoint</p>
+  <h2>Done when</h2>
+  <div class="box good"><span class="label">checkpoint</span>
+    <ul>
+      <li>All five lab steps are ✓.</li>
+      <li>Given a constraint matrix, you can decide whether to expect integral LP optima, and when the answer is no, construct the odd cycle that breaks it.</li>
+      <li>You can explain why a flow LP with integer capacities has an integer optimal flow.</li>
+    </ul>
+  </div>
+  <div class="cols">
+    <div>
+      <h3>Reading</h3>
+      <p class="small">Wolsey, ch. 3 (§3.1–3.3), or Conforti, Cornuéjols & Zambelli, §4.1–4.3.<br>
+      Schrijver, <em>Combinatorial Optimization</em> vol. A, ch. 5 (consulted).</p>
+    </div>
+    <div>
+      <h3>Next</h3>
+      <p class="small"><b>07</b> branch and bound, for when the LP is not integral · <b>14</b> network flows and <b>15</b> matching, the algorithms this unit explains.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>The flow question, answered: the flow conservation rows form a directed
+    incidence matrix, which is TU. Appending the capacity bounds $x \le u$ adds an
+    identity block, which keeps it TU. So for integral $u$ every vertex is integral,
+    and simplex returns a vertex.</p>
+  </aside>
+</section>
+
+</div></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/plugin/highlight/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<script src="../../slides/deck.js"></script>
+</body>
+</html>

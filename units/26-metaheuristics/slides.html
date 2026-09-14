@@ -1,0 +1,396 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>26 · Metaheuristics, benchmarked honestly</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+<link rel="stylesheet" href="../../slides/deck.css">
+</head>
+<body data-trunk="apx">
+<div class="reveal"><div class="slides">
+
+<section class="title-slide">
+  <p class="eyebrow">Part V · where the trunks converge · spine</p>
+  <div class="unit-no">26</div>
+  <h1>Metaheuristics, benchmarked honestly</h1>
+  <p class="lede">Local search engineered properly, the handful of metaheuristics worth knowing, and what a comparison between randomised algorithms has to hold fixed before it means anything.</p>
+  <p class="meta"><span>needs 24, 19</span><span>~1 h slides + 3 h lab</span><span>lab: <code>uv run co lab 26</code></span></p>
+  <aside class="notes">
+    <p>Units 22–25 were about guarantees. This unit gives them up. A metaheuristic promises nothing, so
+    the only evidence for one is measurement, and measurement of randomised algorithms is easy to get
+    wrong. The curriculum's framing is deliberate: the literature has a replication problem, and knowing
+    what an honest comparison requires is worth more than knowing a tenth metaphor.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">26 · overview</p>
+  <h2>The route</h2>
+  <div class="cols">
+    <div class="box def"><span class="label">1 · local search, engineered</span>
+      <p class="small">2-opt, Or-opt, neighbour lists, don't-look bits; Lin–Kernighan and LKH.</p></div>
+    <div class="box def"><span class="label">2 · metaheuristics</span>
+      <p class="small">Annealing, tabu, GRASP, ILS, ALNS, and a frank account of genetic algorithms.</p></div>
+  </div>
+  <div class="cols">
+    <div class="box def"><span class="label">3 · honest comparison</span>
+      <p class="small">Equal budgets, tuning sets, seeds, time-to-target plots, and a test allowed to say no.</p></div>
+    <div class="box def"><span class="label">4 · measured</span>
+      <p class="small">Your heuristics against each other and against OR-Tools, TSP and CVRP.</p></div>
+  </div>
+  <aside class="notes">
+    <p>The checkpoint is a time-to-target plot of three of your heuristics over 30 seeds, together with
+    correctly declining to declare a winner where the distributions overlap. The lab's <code>then</code>
+    produces exactly such a case: ILS with 10 neighbours against ILS with 6, p = 0.76.</p>
+  </aside>
+</section>
+
+<section class="divider">
+  <p class="eyebrow">section 1</p>
+  <h2>Local search, engineered</h2>
+  <p>The same neighbourhood, a hundred ways to search it.</p>
+</section>
+
+<section>
+  <p class="eyebrow">26 · local search</p>
+  <h2>2-opt, neighbour lists, don't-look bits</h2>
+  <div class="cols">
+    <div>
+      <p class="small"><b>2-opt</b> (Croes 1958): remove edges $ab$ and $cd$, add $ac$ and $bd$, reversing the stretch between.</p>
+      <div class="box proof"><span class="label">why scanning near neighbours suffices</span>
+        <p class="small">An improving move has $d_{ac} + d_{bd} &lt; d_{ab} + d_{cd}$, so $d_{ac} &lt; d_{ab}$ or $d_{bd} &lt; d_{cd}$. Either way, one endpoint sees the move while scanning its sorted neighbour list, and can <b>stop</b> at the first neighbour farther than its tour edge.</p>
+      </div>
+      <p class="small"><b>Don't-look bits</b> (Bentley 1992): a city whose surroundings haven't changed since it last failed isn't examined again. Keep a queue, and re-queue the four endpoints of every move.</p>
+    </div>
+    <div>
+      <p class="small">Lab <code>then</code>, n = 1000, from nearest neighbour (278 829):</p>
+      <table class="dense">
+        <thead><tr><th>variant</th><th class="num">length</th><th class="num">s</th></tr></thead>
+        <tbody>
+          <tr><td>sweep, full lists</td><td class="num">244 044</td><td class="num">0.02</td></tr>
+          <tr><td>sweep, k = 10</td><td class="num">246 410</td><td class="num">0.02</td></tr>
+          <tr><td>don't-look bits, k = 10</td><td class="num">245 287</td><td class="num">0.01</td></tr>
+          <tr><td>… + Or-opt</td><td class="num">239 655</td><td class="num">3.2</td></tr>
+          <tr><td>don't-look bits, random start</td><td class="num">257 969</td><td class="num">0.13</td></tr>
+        </tbody>
+      </table>
+      <p class="small">The stopping rule does most of the work: even full lists are cheap once scanning stops early. <b>Building</b> the lists (0.4 s) cost more than searching with them. A good start matters: from a random tour 2-opt ends 5% worse.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>The result "k = 10 sweep is slightly worse than full lists" (246 410 vs 244 044) is one instance and
+    one run. Short lists can miss moves whose good endpoint is the eleventh neighbour. On uniform
+    instances the effect is small; on clustered instances it can be large, which is why LKH uses
+    α-nearness (from 1-trees, unit 11) instead of plain distance to choose candidates.</p>
+    <p>Or-opt is the slow row because the lab version rebuilds the reduced tour for every candidate
+    segment, which is O(n) each. Production implementations use a doubly linked list or an array with
+    position lookups, and for very large instances a splay tree or two-level list so reversals cost
+    O(√n).</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">26 · local search</p>
+  <h2>From 2-opt to Lin–Kernighan and LKH</h2>
+  <div class="cols">
+    <div>
+      <ul class="small">
+        <li><b>Or-opt</b> (Or 1976): move a segment of 1–3 cities, possibly reversed. Cheap, and finds moves 2-opt can't.</li>
+        <li><b>3-opt</b>: remove three edges and reconnect. $O(n^3)$ naively; neighbour lists make it practical.</li>
+        <li><b>Lin–Kernighan</b> (1973): a variable-depth sequence of exchanges, extended while the cumulative gain stays positive. The move size adapts to the instance.</li>
+        <li><b>LKH</b> (Helsgaun 2000, 2009): 5-opt basic moves, candidates by α-nearness from 1-trees, and many refinements. The reference heuristic for TSP, holding best-known tours on many large benchmark instances.</li>
+      </ul>
+    </div>
+    <div>
+      <div class="box def"><span class="label">what "state of the art" means here</span>
+        <p class="small">For symmetric TSP, Concorde proves optimality on instances of thousands of cities, and LKH finds tours within a small fraction of a percent on much larger ones. A new TSP heuristic that doesn't compare against LKH, under the same time budget, hasn't been compared.</p>
+      </div>
+      <p class="small muted">LKH isn't installed in this course environment. <code>then</code> section 2 has a hook for the <code>elkai</code> wrapper, untested here because it isn't installed.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>The α-nearness idea connects to unit 11: α(i, j) is how much the minimum 1-tree's length increases
+    if edge ij is forced in. Edges of the optimal tour tend to have small α, much more reliably than they
+    have small length. Helsgaun reports that five α-nearest candidates capture the optimal tour's edges
+    far better than five nearest neighbours.</p>
+    <p>Why LK's variable depth matters: the best k for k-opt varies across the tour and over the run.
+    Fixing k = 3 everywhere wastes effort where 2 would do, and misses improvements that need 4.</p>
+  </aside>
+</section>
+
+<section class="divider">
+  <p class="eyebrow">section 2</p>
+  <h2>Metaheuristics</h2>
+  <p>Ways to leave a local optimum.</p>
+</section>
+
+<section>
+  <p class="eyebrow">26 · metaheuristics</p>
+  <h2>Annealing, tabu, GRASP, ILS, ALNS</h2>
+  <table class="dense">
+    <thead><tr><th>method</th><th>escapes local optima by</th><th>the parameter that matters</th></tr></thead>
+    <tbody>
+      <tr><td><b>Simulated annealing</b> (Kirkpatrick, Gelatt & Vecchi 1983; Černý 1985)</td><td>accepting a worsening $\Delta$ with probability $e^{-\Delta/T}$, $T$ falling</td><td>the cooling schedule, in units of typical $\Delta$</td></tr>
+      <tr><td><b>Tabu search</b> (Glover 1986)</td><td>taking the best non-tabu move even if worsening; recent moves are forbidden</td><td>tenure; aspiration criteria</td></tr>
+      <tr><td><b>GRASP</b> (Feo & Resende 1995)</td><td>restarting from randomised greedy constructions, each followed by local search</td><td>the greediness α of the restricted candidate list</td></tr>
+      <tr><td><b>Iterated local search</b> (Martin, Otto & Felten 1991)</td><td>kicking the local optimum (a double bridge for TSP) and descending again</td><td>kick strength; acceptance</td></tr>
+      <tr><td><b>(A)LNS</b> (Shaw 1998; Ropke & Pisinger 2006)</td><td>destroying part of the solution and repairing it; operators chosen by adaptive weights</td><td>destroy size; operator portfolio</td></tr>
+    </tbody>
+  </table>
+  <div class="cols">
+    <div class="box proof"><span class="label">annealing's theorem</span>
+      <p class="small">With $T_k \ge c / \log k$ and $c$ large enough, annealing converges to a global optimum in probability (Hajek 1988). That schedule is far too slow to use. Practical schedules carry no guarantee.</p>
+    </div>
+    <div class="box good"><span class="label">the double bridge</span>
+      <p class="small">A 4-opt move $A\,B\,C\,D \to A\,C\,B\,D$ that sequential 2-opt and 3-opt can't undo in one step. That's why it's a good kick: the descent doesn't just fall back.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>Nearly every metaheuristic is local search plus a rule for escaping. Sörensen's point (reading
+    list) is that most "novel" metaheuristics since 2000 are one of these five with a new metaphor, and the
+    metaphor obscures which of the five it is.</p>
+    <p>In the lab, annealing's start temperature was tuned on a separate training instance over four
+    values, in units of the mean edge length. Tuning in the right units matters more than the exact
+    value, because a temperature of 20 means something different on a 100 × 100 square and on a
+    10 000 × 10 000 one.</p>
+    <p>ALNS is unit 19's LNS with a learning rule on top. Its adaptive weights rarely matter much when
+    there are two operators, as in the lab. They earn their keep with a portfolio of many operators of
+    uneven quality.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">26 · metaheuristics</p>
+  <h2>Genetic algorithms: usually the wrong answer, with one notable exception</h2>
+  <div class="cols">
+    <div>
+      <div class="box warn"><span class="label">why usually wrong</span>
+        <ul class="small">
+          <li><b>Crossover ignores structure.</b> Recombining two tours or schedules position by position mostly produces infeasible or poor children, and repairing them is where the work goes.</li>
+          <li><b>Population = many restarts</b>, with a lot of machinery. Against ILS at equal budget, a plain GA rarely keeps up.</li>
+          <li><b>Parameters multiply</b>: population size, crossover and mutation rates, selection pressure. They're easy to tune on the test set by accident.</li>
+        </ul>
+      </div>
+    </div>
+    <div>
+      <div class="box good"><span class="label">the exception: memetic algorithms done well</span>
+        <p class="small"><b>Hybrid genetic search</b> for vehicle routing (Vidal et al. 2012; HGS-CVRP, Vidal 2022) is among the best CVRP heuristics. It works because every child is improved by a strong local search, crossover (OX on giant tours) preserves route structure, and the population is managed for diversity as well as quality.</p>
+      </div>
+      <p class="small">Read the exception carefully: the local search does most of the optimisation. The population chooses where to start it.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>This is the "frank account" the curriculum promises. It isn't that population-based search is
+    useless. The plain GA of textbooks, with bit-string encodings and generic crossover, is a poor choice
+    for structured combinatorial problems, and its popularity comes from being easy to describe, not from
+    winning comparisons.</p>
+    <p>HGS is also the counterexample to "never combine methods". Its components are the lessons of this
+    unit: a strong, engineered local search; diversity management instead of a metaphor; and published,
+    open-source code evaluated on standard instances.</p>
+  </aside>
+</section>
+
+<section class="divider">
+  <p class="eyebrow">section 3</p>
+  <h2>Honest comparison</h2>
+  <p>What has to be held fixed.</p>
+</section>
+
+<section>
+  <p class="eyebrow">26 · honest</p>
+  <h2>How "our metaheuristic beat theirs" goes wrong</h2>
+  <div class="cols">
+    <div>
+      <table class="dense">
+        <thead><tr><th>common flaw</th><th>honest practice</th></tr></thead>
+        <tbody>
+          <tr><td>unequal time or evaluation budgets</td><td>the <b>same</b> wall-clock budget on the same machine, or the same number of evaluations</td></tr>
+          <tr><td>parameters tuned on the test instances</td><td>tune on a <b>separate</b> training set (lab: one instance, four temperatures)</td></tr>
+          <tr><td>best of N runs reported</td><td>report the <b>distribution</b> over seeds: median, quartiles, TTT plot</td></tr>
+          <tr><td>a weak or badly implemented baseline</td><td>compare against the <b>state of the art</b> (LKH, HGS, OR-Tools), engineered equally</td></tr>
+          <tr><td>a few hand-picked instances</td><td>standard benchmark sets, or a generator with stated parameters</td></tr>
+          <tr><td>"better on average" from 5 seeds</td><td>a test, and the willingness to report <b>no difference</b></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div>
+      <div class="box def"><span class="label">time-to-target plot (Aiex, Resende & Ribeiro 2007)</span>
+        <p class="small">Fix a target value. Run each algorithm from many seeds and record the time to reach it (or a failure at the cap). Plot the empirical CDF, with failures kept in the denominator.</p>
+      </div>
+      <div class="box def"><span class="label">Mann–Whitney U</span>
+        <p class="small">Rank-based, so no normality assumption, and tolerant of capped runs (count failures as the cap). It tests whether one algorithm's times tend to be smaller. <b>Not rejecting is not "equal"</b>, only "these data can't tell".</p>
+      </div>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>Budget equality is subtler than it looks. A C++ heuristic and a Python heuristic under the same
+    wall clock aren't being compared as algorithms. The lab's section 2 has OR-Tools calling a Python
+    distance callback, which costs it a lot. Say what was held fixed, and what wasn't.</p>
+    <p>Many comparisons, many tests: with six pairwise tests at α = 0.05 the chance of at least one false
+    positive is about 26% if nothing differs. Unit 28 adds corrections (Holm) and effect sizes, and the
+    question of which comparisons were planned in advance.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">26 · measured</p>
+  <h2>Time to target, 30 seeds each</h2>
+  <div class="cols">
+    <div>
+      <p class="small">n = 150, target 0.5% above the best of three 5 s ILS runs, 4 s cap:</p>
+      <table class="dense">
+        <thead><tr><th>heuristic</th><th class="num">reached</th><th class="num">median</th><th class="num">quartiles</th></tr></thead>
+        <tbody>
+          <tr><td>ILS, k = 10</td><td class="num">28/30</td><td class="num">0.86 s</td><td class="num">0.49–1.17</td></tr>
+          <tr><td>ILS, k = 6</td><td class="num">25/30</td><td class="num">0.66 s</td><td class="num">0.40–1.10</td></tr>
+          <tr><td>multi-start</td><td class="num">14/30</td><td class="num">1.36 s</td><td class="num">0.58–1.77</td></tr>
+          <tr><td>annealing</td><td class="num">1/30</td><td class="num">—</td><td class="num">—</td></tr>
+        </tbody>
+      </table>
+      <table class="dense">
+        <thead><tr><th>pair</th><th class="num">p</th><th>verdict</th></tr></thead>
+        <tbody>
+          <tr><td>ILS vs multi-start</td><td class="num">&lt; 0.0001</td><td>ILS</td></tr>
+          <tr><td>multi-start vs annealing</td><td class="num">0.0002</td><td>multi-start</td></tr>
+          <tr><td><b>ILS k = 10 vs k = 6</b></td><td class="num"><b>0.76</b></td><td><b>no winner declared</b></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="fig">
+      <svg viewBox="0 0 320 230" width="360" role="img" aria-label="time-to-target curves: the two ILS variants overlap, multi-start rises slowly to 0.47, annealing stays near zero">
+        <g class="rule" stroke-width="1"><line x1="40" y1="200" x2="310" y2="200"/><line x1="40" y1="20" x2="40" y2="200"/></g>
+        <g font-size="10" class="soft" text-anchor="middle">
+          <text x="40" y="214">0</text><text x="107" y="214">1</text><text x="175" y="214">2</text><text x="242" y="214">3</text><text x="310" y="214">4 s</text>
+          <text x="28" y="204">0</text><text x="28" y="110">.5</text><text x="28" y="24">1</text>
+        </g>
+        <polyline fill="none" class="unit" stroke-width="2" points="40,200 73,197 90,170 103,146 120,125 132,101 150,89 170,74 190,61 214,46 240,41"/>
+        <polyline fill="none" class="accent" stroke-width="2" stroke-dasharray="5 3" points="40,200 68,197 84,176 101,137 120,116 133,95 160,81 178,74 223,59 238,59"/>
+        <polyline fill="none" class="ink" stroke-width="1.5" points="40,200 72,197 85,185 125,173 140,160 152,150 180,137 210,125 240,116"/>
+        <polyline fill="none" class="warn" stroke-width="1.5" points="40,200 80,200 80,197 310,197"/>
+        <g font-size="10">
+          <text x="246" y="40">ILS k = 10</text><text x="244" y="68">ILS k = 6</text><text x="246" y="120">multi-start</text><text x="246" y="192">annealing</text>
+        </g>
+      </svg>
+      <p class="small muted">A schematic sketch of <code>out/ttt.png</code>, not to scale; the plot file has the data. The two ILS curves cross.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>The two ILS curves are the checkpoint in picture form. k = 6 is faster in the middle of the
+    distribution (lower median), and k = 10 is more reliable at the tail (28 against 25 successes).
+    Mann–Whitney weighs both and can't separate them at 30 seeds. Declaring k = 6 "faster" from its
+    median would be the classic mistake.</p>
+    <p>Annealing's failure is itself a result worth reporting honestly: pure-Python annealing with uniformly random
+    2-opt moves (no neighbour lists) wastes most proposals on long edges, and 4 seconds of Python
+    buys few of them. That's an implementation-and-budget finding, not a verdict on annealing as an
+    idea, and the report should say so.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">26 · measured</p>
+  <h2>Equal budgets: TSP and CVRP</h2>
+  <div class="cols">
+    <div>
+      <p class="small">TSP, n = 200, 10 instances, 3 s each: % above the best tour found by any method.</p>
+      <table class="dense">
+        <thead><tr><th>method</th><th class="num">mean</th><th class="num">worst</th><th class="num">best on</th></tr></thead>
+        <tbody>
+          <tr><td>ILS (double bridge)</td><td class="num"><b>0.06%</b></td><td class="num">0.34%</td><td class="num">8/10</td></tr>
+          <tr><td>multi-start 2-opt + Or-opt</td><td class="num">0.48%</td><td class="num">1.51%</td><td class="num">2/10</td></tr>
+          <tr><td>annealing + polish (tuned)</td><td class="num">1.78%</td><td class="num">3.06%</td><td class="num">0/10</td></tr>
+          <tr><td>OR-Tools routing, GLS</td><td class="num">2.65%</td><td class="num">5.64%</td><td class="num">0/10</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div>
+      <p class="small">CVRP, n = 60, 5 instances, 10 s budget:</p>
+      <table class="dense">
+        <thead><tr><th class="num">seed</th><th class="num">greedy</th><th class="num">your ALNS</th><th class="num">ALNS s</th><th class="num">OR-Tools GLS</th></tr></thead>
+        <tbody>
+          <tr><td class="num">0</td><td class="num">2 039</td><td class="num">1 059</td><td class="num">6.9</td><td class="num">1 067</td></tr>
+          <tr><td class="num">1</td><td class="num">2 368</td><td class="num">1 160</td><td class="num">8.6</td><td class="num">1 170</td></tr>
+          <tr><td class="num">2</td><td class="num">2 262</td><td class="num">1 237</td><td class="num">9.2</td><td class="num">1 261</td></tr>
+          <tr><td class="num">3</td><td class="num">2 326</td><td class="num">1 182</td><td class="num">7.6</td><td class="num">1 230</td></tr>
+          <tr><td class="num">4</td><td class="num">2 546</td><td class="num">1 266</td><td class="num">9.2</td><td class="num">1 304</td></tr>
+        </tbody>
+      </table>
+      <p class="small"><b>Before believing "ALNS beats OR-Tools"</b>: 5 instances, no lower bound, one machine, and OR-Tools pays for a Python callback on every arc. The claim that survives: <em>at this size and budget, a simple ALNS is competitive</em>.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>Both tables are "measured against the best found", not against optimality. For the TSP the gaps are
+    small enough that the best found is probably close to optimal, and unit 11's Held–Karp bound would
+    say how close. For the CVRP there is no bound here at all. Unit 10's column generation gives one for
+    small n, but not in 10 seconds at n = 60.</p>
+    <p>What would make the CVRP claim publishable: the standard X instances (Uchoa et al. 2017) with
+    best-known solutions, ten seeds per instance, the same language or a compiled baseline, and HGS as
+    the state-of-the-art reference. Unit 28 is the unit for that.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">26 · lab</p>
+  <h2>Lab 26 — what you build</h2>
+  <div class="lab">
+    <span class="label">about 3 hours · uv run co lab 26</span>
+    <ol>
+      <li><b>Tours and neighbour lists.</b></li>
+      <li><b>2-opt</b>: the move, the sweep, and don't-look bits.</li>
+      <li><b>Or-opt</b>, and alternating local search.</li>
+      <li><b>Simulated annealing</b>: acceptance, cooling, the loop.</li>
+      <li><b>ALNS for CVRP</b>: two destroy operators, greedy repair, adaptive weights.</li>
+      <li><b>Time to target and Mann–Whitney</b>, and a verdict that can say no.</li>
+    </ol>
+  </div>
+<pre><code class="language-bash">uv run co test 26
+uv run co then 26     # speed-ups · equal budgets vs OR-Tools · TTT over 30 seeds · CVRP (≈ 12 min)</code></pre>
+  <aside class="notes">
+    <p>Several tests replay a scripted random stream, so the order of random draws is part of the
+    specification: positions first, then the uniform, every iteration. That's what makes a randomised
+    algorithm testable exactly, and it's the same discipline that makes experiments reproducible.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">26 · checkpoint</p>
+  <h2>Done when</h2>
+  <div class="box good"><span class="label">checkpoint</span>
+    <ul>
+      <li>All six lab steps are ✓.</li>
+      <li>You can produce a time-to-target plot comparing three of your heuristics over 30 seeds, and correctly decline to declare a winner where the distributions overlap.</li>
+      <li>You can list what a comparison held fixed, and what it didn't.</li>
+    </ul>
+  </div>
+  <div class="cols">
+    <div>
+      <h3>Reading</h3>
+      <p class="small">Johnson & McGeoch, in <em>Local Search in Combinatorial Optimization</em> (1997).<br>
+      Helsgaun, <em>EJOR</em> 126 (2000).<br>
+      Ropke & Pisinger, <em>Transportation Science</em> 40 (2006).<br>
+      Sörensen, "Metaheuristics — the metaphor exposed", <em>ITOR</em> 22 (2015).</p>
+    </div>
+    <div>
+      <h3>Next</h3>
+      <p class="small">Part VI: <b>27</b> modelling for a real solver · <b>28</b> experimental method.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>End of Part V. Part VI turns from algorithms to practice: making models that solvers like (27), and
+    making performance claims that survive scrutiny (28), including a re-run of this unit's comparisons
+    through a proper harness.</p>
+  </aside>
+</section>
+
+</div></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/plugin/highlight/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<script src="../../slides/deck.js"></script>
+</body>
+</html>

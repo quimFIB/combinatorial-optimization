@@ -1,0 +1,347 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>19 · Search, restarts, LNS</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+<link rel="stylesheet" href="../../slides/deck.css">
+</head>
+<body data-trunk="cp">
+<div class="reveal"><div class="slides">
+
+<section class="title-slide">
+  <p class="eyebrow">Part IV · trunk C · constraint programming and SAT · spine</p>
+  <div class="unit-no">19</div>
+  <h1>Search, restarts, and large neighbourhood search</h1>
+  <p class="lede">Which variable next, which value first, when to give up and start again — and how destroy-and-repair turns an exact engine into a heuristic that scales.</p>
+  <p class="meta"><span>needs 18</span><span>~1¼ h slides + 2½ h lab</span><span>lab: <code>uv run co lab 19</code></span></p>
+  <aside class="notes">
+    <p>Units 17 and 18 were about inference, what propagation can deduce. This unit is about
+    decisions: where the tree branches, and when a search should abandon its tree entirely. The
+    unit's claim is empirical, and the lab measures it. Backtracking search effort on a single
+    instance, across random seeds, often has a heavy tail. Restarts are justified by that tail,
+    and only where it exists.</p>
+    <p>The second half, large neighbourhood search, is the bridge to Part V. It uses the exact
+    engine as a subroutine inside a heuristic loop, and it's how CP solvers find good solutions to
+    problems they cannot prove optimal.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">19 · overview</p>
+  <h2>The route</h2>
+  <div class="cols">
+    <div class="box def"><span class="label">1 · heuristics</span>
+      <p class="small">Variable and value ordering: first-fail, dom/wdeg, impact, activity; symmetry.</p></div>
+    <div class="box def"><span class="label">2 · heavy tails</span>
+      <p class="small">Runtime distributions, and why they justify randomisation and restarts.</p></div>
+  </div>
+  <div class="cols">
+    <div class="box def"><span class="label">3 · restarts and nogoods</span>
+      <p class="small">Luby's universal schedule; what to remember across restarts.</p></div>
+    <div class="box def"><span class="label">4 · LNS</span>
+      <p class="small">Destroy and repair with the propagator as the repair engine.</p></div>
+  </div>
+  <aside class="notes">
+    <p>The checkpoint is a histogram from your own solver, and a demonstration that restarts move its
+    mean. It needs a distribution over 100 seeds, not one run: a single run can make any strategy
+    look good.</p>
+  </aside>
+</section>
+
+<section class="divider">
+  <p class="eyebrow">section 1</p>
+  <h2>Heuristics</h2>
+  <p>Fail first; succeed first.</p>
+</section>
+
+<section>
+  <p class="eyebrow">19 · heuristics</p>
+  <h2>Variable and value ordering</h2>
+  <div class="cols">
+    <div>
+      <p class="small"><b>Variables: fail first</b> (Haralick & Elliott 1980). Branch where a dead end is most likely, so it is found near the root.</p>
+      <ul class="small">
+        <li><b>first-fail</b>: smallest domain.</li>
+        <li><b>dom/deg</b>: domain size over degree.</li>
+        <li><b>dom/wdeg</b> (Boussemart et al. 2004): each constraint's weight counts its failures, so search is drawn to the <b>hard core</b> of the problem.</li>
+        <li><b>impact-based</b> (Refalo 2004): prefer variables whose assignments shrank the search space most in the past.</li>
+        <li><b>activity-based</b> (Michel & Van Hentenryck 2012): a VSIDS-like count of how often each variable's domain changes.</li>
+      </ul>
+    </div>
+    <div>
+      <p class="small"><b>Values: succeed first.</b> Try the value most likely to lead to a solution. It matters only for satisfiable subtrees; for proofs, every value is tried anyway.</p>
+      <div class="box good"><span class="label">lab step 2: a hidden core</span>
+        <p class="small">14 easy three-valued variables in a chain, plus 5 variables that must all differ over 4 values. <b>first-fail</b> branches on the chain (smaller domains): more than 20 000 nodes, unfinished. <b>dom/wdeg</b> learns from the first failures that the ≠ clique is where they come from: <b>under 500 nodes</b> to prove infeasibility.</p>
+      </div>
+      <p class="small muted">On QCP, where all constraints look alike, dom/wdeg is worse than randomised first-fail (lab <code>then</code>). Heuristics are instance-family bets.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>dom/wdeg is the CP cousin of SAT's VSIDS (unit 20): both learn from conflicts which part of the
+    problem is hard. The difference is granularity. VSIDS bumps the variables in each learned
+    clause, and dom/wdeg bumps the constraint that failed.</p>
+    <p><b>Symmetry breaking during search</b> (SBDS, Gent & Smith 2000; SBDD) adds, after each
+    failed branch, constraints excluding the symmetric images of that subtree. The static
+    alternative adds lexicographic ordering constraints to the model. Both prevent the search from
+    rediscovering the same failure in a symmetric disguise.</p>
+  </aside>
+</section>
+
+<section class="divider">
+  <p class="eyebrow">section 2</p>
+  <h2>Heavy tails</h2>
+  <p>Most runs are fast. A few never end.</p>
+</section>
+
+<section>
+  <p class="eyebrow">19 · heavy tails</p>
+  <h2>The runtime distribution of one instance</h2>
+  <div class="cols">
+    <div>
+      <p class="small">Lab <code>then</code>: quasigroup completion, order 12, 55% holes, 100 seeds of randomised first-fail (ties broken at random), nodes to a solution:</p>
+<pre class="small" style="font-size:.52em"><code>      16–31 ███████████████████████████████████ 51
+      32–63 ████████████████ 24
+     64–127 ████████ 12
+    128–255 █████ 8
+   512–1023 █ 2
+   cap 3000 ██ 3</code></pre>
+      <p class="small">Median 31, p90 174, and 3 runs never finished within 3 000 nodes. The only difference between runs is tie-breaking.</p>
+    </div>
+    <div>
+      <div class="box thm"><span class="label">Gomes, Selman, Crato & Kautz 2000</span>
+        <p class="small">Backtracking search on many CSP and SAT families has runtimes with <b>Pareto-like tails</b>: $P(T &gt; t) \sim C t^{-\alpha}$, often with $\alpha &lt; 1$, which means <b>infinite mean</b> in the limit.</p>
+        <p class="small">Cause: an early wrong decision puts search in a subtree with no solution that it must exhaust. Its size is exponential in how early the mistake happened.</p>
+      </div>
+      <p class="small">A heavy tail makes the <b>mean</b> a poor summary and a single run a lottery ticket. It also points to the fix: <b>don't wait</b>.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>How to see the tail properly: plot $\log P(T &gt; t)$ against $\log t$. A straight line with slope
+    $-\alpha$ is a power-law tail. An exponential tail curves down sharply. With 100 samples you can
+    see the shape, but not estimate $\alpha$ well. Gomes et al. used thousands of runs.</p>
+    <p>The same instance at 58% holes (lab's LIGHT) has p90/median 1.3: runtimes cluster tightly,
+    and no single decision is catastrophic. Heavy tails depend on the instance and the heuristic
+    together, and are not a property of the problem class.</p>
+  </aside>
+</section>
+
+<section class="divider">
+  <p class="eyebrow">section 3</p>
+  <h2>Restarts and nogoods</h2>
+  <p>Cut the tail off.</p>
+</section>
+
+<section>
+  <p class="eyebrow">19 · restarts</p>
+  <h2>Luby's universal schedule</h2>
+  <div class="cols">
+    <div>
+      $$1, 1, 2, 1, 1, 2, 4, 1, 1, 2, 1, 1, 2, 4, 8, \dots$$
+      <div class="box thm"><span class="label">Luby, Sinclair & Zuckerman 1993</span>
+        <p class="small">For a Las Vegas algorithm with an <b>unknown</b> runtime distribution, running with cutoffs $c \cdot \text{luby}(i)$ is within $O(\log)$ of the best fixed-cutoff strategy, which knows the distribution. No universal strategy can do better by more than a constant factor.</p>
+      </div>
+      <p class="small">Geometric schedules ($c \cdot r^i$) are the common alternative. SAT solvers now also restart <b>adaptively</b>, when recent conflicts look worse than average (Audemard & Simon 2012).</p>
+    </div>
+    <div>
+      <p class="small">Lab <code>then</code>, 100 seeds, base 30:</p>
+      <table class="dense">
+        <thead><tr><th>instance</th><th>strategy</th><th class="num">mean</th><th class="num">median</th><th class="num">max</th></tr></thead>
+        <tbody>
+          <tr><td>heavy (55%)</td><td>plain</td><td class="num">153.6</td><td class="num"><b>31</b></td><td class="num">3 000 cap</td></tr>
+          <tr><td></td><td>Luby</td><td class="num"><b>52.1</b></td><td class="num">49.5</td><td class="num"><b>202</b></td></tr>
+          <tr><td>light (58%)</td><td>plain</td><td class="num"><b>48.7</b></td><td class="num"><b>35</b></td><td class="num">668</td></tr>
+          <tr><td></td><td>Luby</td><td class="num">92.3</td><td class="num">93</td><td class="num">217</td></tr>
+        </tbody>
+      </table>
+      <p class="small">Restarts <b>cut the tail</b>, and with it the (capped) mean, but only where there is a tail to cut. On the light instance they double the mean. <span class="muted">Corrected after unit 28: the median difference on the heavy instance is within its bootstrap interval.</span></p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>Why restarts need randomisation, or learning: an identical deterministic restart repeats the
+    same search. The lab's restarts vary through random tie-breaking or through dom/wdeg's weights,
+    which change with every failure. SAT solvers restart deterministically but keep their VSIDS
+    activities and learned clauses, so the new search differs.</p>
+    <p>The maximum dropping from over 3 000 to 202 is the practical win: restarts turn a heavy-tailed
+    distribution into one with an exponentially decaying tail, so worst cases become predictable.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">19 · restarts</p>
+  <h2>What to remember across restarts</h2>
+  <div class="cols">
+    <div>
+      <ul class="small">
+        <li><b>Heuristic state</b>: dom/wdeg weights, activity, impacts. The next search branches differently because it learned.</li>
+        <li><b>Nogoods</b>: a set of decisions proved to have no solution below it. Record it as a constraint and the next search never enters that subtree again.</li>
+        <li><b>Nogoods from restarts</b> (Lecoutre et al. 2007): at each restart, extract the nogoods implied by the current partial tree's refuted branches.</li>
+        <li><b>The incumbent</b>, for optimisation: the objective bound carries over.</li>
+      </ul>
+    </div>
+    <div>
+      <div class="box def"><span class="label">nogoods, done right</span>
+        <p class="small">A decision nogood such as "$x_1 = 3 \wedge x_4 = 1$ fails" is weak: it mentions decisions, not reasons. The strong form records <b>why</b> it failed, the propagators and removed values responsible. That's clause learning, the core of CDCL SAT solvers (unit 20), and lazy clause generation brings it to CP (unit 21).</p>
+      </div>
+      <p class="small muted">Lab <code>then</code>'s 3-colouring in unit 17 was that difference: 120 334 nodes without learning, 3 106 branches with.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>The honest limitation of this unit's engine is that it forgets everything except weights.
+    Units 20 and 21 fix that. The interesting measurement once you have both is how much of CP-SAT's
+    advantage comes from learning and how much from propagation strength. Unit 21's lab measures
+    exactly that on job-shop.</p>
+  </aside>
+</section>
+
+<section class="divider">
+  <p class="eyebrow">section 4</p>
+  <h2>Large neighbourhood search</h2>
+  <p>The exact engine, as a heuristic's inner loop.</p>
+</section>
+
+<section>
+  <p class="eyebrow">19 · LNS</p>
+  <h2>Destroy and repair</h2>
+  <div class="cols">
+    <div>
+      <ol class="small">
+        <li>Start from a solution (lab: a greedy dispatch schedule).</li>
+        <li><b>Destroy</b>: free a part of it. Lab: a random 30% of the jobs; the other jobs keep their order on every machine.</li>
+        <li><b>Repair</b>: search the freed part with the full propagation engine and <b>objective &lt; best</b>, under a small node limit.</li>
+        <li>Accept an improvement and repeat.</li>
+      </ol>
+      <p class="small">Shaw (1998) introduced it for vehicle routing with CP repair. <b>ALNS</b> (Ropke & Pisinger 2006) chooses among several destroy operators adaptively.</p>
+    </div>
+    <div>
+      <p class="small">Lab <code>then</code>, random job-shops, 22 500 nodes each:</p>
+      <table class="dense">
+        <thead><tr><th>instance</th><th class="num">greedy</th><th class="num">LNS</th><th class="num">branch-and-bound</th></tr></thead>
+        <tbody>
+          <tr><td>8 × 4</td><td class="num">54</td><td class="num"><b>49</b></td><td class="num">57</td></tr>
+          <tr><td>10 × 5</td><td class="num">72</td><td class="num"><b>66</b></td><td class="num">77</td></tr>
+          <tr><td>12 × 6</td><td class="num">117</td><td class="num"><b>78</b></td><td class="num">84</td></tr>
+        </tbody>
+      </table>
+      <p class="small">Branch-and-bound spends its budget at the bottom of one subtree. LNS spends it around a good schedule, where the improvements are.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>Why the propagator makes a good repair engine: with most of each machine's order fixed,
+    propagation pins down most start times immediately, and the search space is the freed jobs'
+    insertions. The neighbourhood is exponentially large, but it's explored by propagation-guided
+    search rather than enumerated. That's the difference from classical local search (unit 26),
+    whose neighbourhoods are small enough to scan.</p>
+    <p>The choice of what to destroy matters as much as the repair. Related jobs (those sharing
+    machines around the critical path) usually beat random ones. Neighbourhood design is where
+    domain knowledge enters LNS.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">19 · LNS</p>
+  <h2>In the tools</h2>
+  <div class="cols">
+    <div>
+      <div class="box def"><span class="label">CP-SAT's portfolio</span>
+        <p class="small">Several workers in parallel: different search strategies, restarts, and many LNS workers (random, graph-based, relaxation-induced, scheduling-specific) sharing one incumbent.</p>
+      </div>
+      <p class="small">Lab <code>then</code>, 30 × 15 job-shop (durations 1–99), 10 s:</p>
+      <table class="dense">
+        <thead><tr><th>configuration</th><th class="num">makespan</th><th class="num">bound</th></tr></thead>
+        <tbody>
+          <tr><td>8 workers, LNS on</td><td class="num">1837–1851</td><td class="num">1828</td></tr>
+          <tr><td>8 workers, LNS off</td><td class="num">1852</td><td class="num">1828</td></tr>
+          <tr><td>1 worker</td><td class="num">2047–2049</td><td class="num">1828</td></tr>
+        </tbody>
+      </table>
+      <p class="small">The LNS switch is within run-to-run noise here. The portfolio (8 workers against 1) is the big effect.</p>
+    </div>
+    <div>
+      <div class="box def"><span class="label">OR-Tools routing</span>
+        <p class="small">A local search engine with a CP core: a first solution, then guided local search over routing neighbourhoods.</p>
+      </div>
+      <table class="dense">
+        <thead><tr><th class="num">n</th><th class="num">unit 10 LP bound</th><th class="num">routing, 5 s</th><th class="num">gap</th></tr></thead>
+        <tbody>
+          <tr><td class="num">12</td><td class="num">422.0</td><td class="num">442</td><td class="num">4.5%</td></tr>
+          <tr><td class="num">16</td><td class="num">478.2</td><td class="num">483</td><td class="num">1.0%</td></tr>
+          <tr><td class="num">20</td><td class="num">662.0</td><td class="num">680</td><td class="num">2.6%</td></tr>
+        </tbody>
+      </table>
+      <p class="small">The LP bound from unit 10 certifies how good the heuristic solution is.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>The noise matters for how you report results. Two runs of the same CP-SAT configuration
+    differed by 14 in makespan. Any comparison of solver configurations on one instance at a
+    time limit needs multiple runs or multiple instances. That's unit 28's subject: performance
+    profiles, shifted geometric means, and why single-run tables mislead.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">19 · lab</p>
+  <h2>Lab 19 — what you build</h2>
+  <div class="lab">
+    <span class="label">about 2½ hours · uv run co lab 19</span>
+    <ol>
+      <li><b>Luby</b>, <b>randomised first-fail</b>, and a <b>quasigroup completion</b> model.</li>
+      <li><b>dom/wdeg</b>, through the engine's failure hook.</li>
+      <li><b>Restarts</b> on a Luby schedule with a node budget.</li>
+      <li><b>Runtime distributions</b> and their order statistics.</li>
+      <li><b>Greedy dispatch</b> and <b>LNS</b> for job-shop.</li>
+    </ol>
+  </div>
+<pre><code class="language-bash">uv run co test 19
+uv run co then 19     # histograms · LNS vs B&amp;B · CP-SAT portfolio · OR-Tools routing</code></pre>
+  <aside class="notes">
+    <p>Two of the tests are statistical: restarts must halve the mean on the heavy instance and raise
+    it on the light one, over 40 seeds each. They use your randomised first-fail, so they check the
+    phenomenon, not the reference's exact random stream.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">19 · checkpoint</p>
+  <h2>Done when</h2>
+  <div class="box good"><span class="label">checkpoint</span>
+    <ul>
+      <li>All five lab steps are ✓.</li>
+      <li>You can show the heavy-tailed runtime histogram from your own solver and demonstrate that restarts move its mean, with distributions, not one lucky run.</li>
+      <li>You can say why restarts hurt on an instance without a tail.</li>
+    </ul>
+  </div>
+  <div class="cols">
+    <div>
+      <h3>Reading</h3>
+      <p class="small">Gomes et al., <em>J. Automated Reasoning</em> 24 (2000).<br>
+      Luby, Sinclair & Zuckerman, <em>IPL</em> 47 (1993).<br>
+      Boussemart et al., <em>ECAI</em> 2004.<br>
+      Shaw, <em>CP</em> 1998.</p>
+    </div>
+    <div>
+      <h3>Next</h3>
+      <p class="small"><b>20</b> SAT and CDCL: learning from conflicts · <b>21</b> lazy clause generation · <b>26</b> local search and metaheuristics.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>The one-sentence version of the unit: a heuristic is a bet on an instance family, a restart
+    policy is insurance against a heavy tail, and LNS is a way to spend an exact solver's effort
+    where the good solutions are.</p>
+  </aside>
+</section>
+
+</div></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/plugin/highlight/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<script src="../../slides/deck.js"></script>
+</body>
+</html>

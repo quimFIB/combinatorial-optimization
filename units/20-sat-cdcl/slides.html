@@ -1,0 +1,355 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>20 · SAT and CDCL</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+<link rel="stylesheet" href="../../slides/deck.css">
+</head>
+<body data-trunk="cp">
+<div class="reveal"><div class="slides">
+
+<section class="title-slide">
+  <p class="eyebrow">Part IV · trunk C · constraint programming and SAT · spine</p>
+  <div class="unit-no">20</div>
+  <h1>SAT and the CDCL engine</h1>
+  <p class="lede">Unit propagation, conflict analysis, backjumping, activity, restarts — resolution with a very good heuristic, and a proof system with limits you can state precisely.</p>
+  <p class="meta"><span>needs 17</span><span>~1½ h slides + 3½ h lab</span><span>lab: <code>uv run co lab 20</code></span></p>
+  <aside class="notes">
+    <p>SAT solvers went from toy to industrial in about five years, around 1996–2001: GRASP (clause
+    learning), Chaff (watched literals, VSIDS), then MiniSat's clean re-implementation. They now
+    handle hardware verification instances with millions of variables, and they're the engine inside
+    CP-SAT (unit 21), SMT solvers and many planners.</p>
+    <p>The unit has two halves that belong together. How CDCL works: every component the lab builds.
+    What CDCL can't do: pigeonhole, and the resolution lower bound behind it. The second half is
+    what turns "SAT solvers are magic" into a precise statement.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">20 · overview</p>
+  <h2>The route</h2>
+  <div class="cols">
+    <div class="box def"><span class="label">1 · from DPLL to CDCL</span>
+      <p class="small">CNF, resolution, unit propagation, watched literals.</p></div>
+    <div class="box def"><span class="label">2 · learning</span>
+      <p class="small">Implication graphs, first UIP, backjumping, VSIDS, restarts, LBD.</p></div>
+  </div>
+  <div class="cols">
+    <div class="box def"><span class="label">3 · proofs and limits</span>
+      <p class="small">DRAT; CDCL is resolution; pigeonhole's exponential lower bound.</p></div>
+    <div class="box def"><span class="label">4 · encodings</span>
+      <p class="small">Tseitin, at-most-one, cardinality networks: why the smallest CNF is not the best.</p></div>
+  </div>
+  <aside class="notes">
+    <p>Checkpoint: a DRAT proof from your own solver that an external checker accepts, and an
+    explanation of pigeonhole's hardness in terms of resolution lower bounds.</p>
+  </aside>
+</section>
+
+<section class="divider">
+  <p class="eyebrow">section 1</p>
+  <h2>From DPLL to CDCL</h2>
+  <p>Branch, propagate, and remember why you failed.</p>
+</section>
+
+<section>
+  <p class="eyebrow">20 · DPLL</p>
+  <h2>CNF, resolution, and unit propagation</h2>
+  <div class="cols">
+    <div>
+      <p class="small"><b>CNF</b>: a conjunction of clauses, each a disjunction of literals. Satisfiability is NP-complete (Cook 1971); 3-SAT already is.</p>
+      <div class="box def"><span class="label">resolution</span>
+        $$\frac{(C \lor x) \qquad (D \lor \lnot x)}{C \lor D}$$
+        <p class="small">Sound and refutation-complete: $F$ is unsatisfiable iff the empty clause can be derived.</p>
+      </div>
+      <p class="small"><b>DPLL</b> (Davis, Logemann & Loveland 1962): branch on a variable, apply <b>unit propagation</b> (a clause with all literals false but one forces it), and backtrack chronologically on a conflict.</p>
+    </div>
+    <div>
+      <div class="box good"><span class="label">two watched literals (Chaff 2001)</span>
+        <p class="small">Watch two non-false literals per clause. A clause needs attention only when a watched literal becomes false: find a replacement, or the clause is unit or conflicting.</p>
+        <p class="small"><b>Backtracking costs nothing</b>: unassigning variables never invalidates a watch. No counters to restore.</p>
+      </div>
+      <p class="small muted">Lab step 1's test: on 40 random formulas with random decisions, the watch loop reaches exactly the assignments and conflicts of naive propagation.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>Propagation takes 80–90% of a modern solver's time, which is why its data structure matters so
+    much. Before watched literals, solvers kept counters of false literals per clause and had to
+    update them on every assignment and every backtrack. Watched literals made the backtrack free and
+    most assignments cheap. That's the imperative core the functional reference keeps as it is.</p>
+  </aside>
+</section>
+
+<section class="divider">
+  <p class="eyebrow">section 2</p>
+  <h2>Learning</h2>
+  <p>A conflict is a lesson; write it down.</p>
+</section>
+
+<section>
+  <p class="eyebrow">20 · learning</p>
+  <h2>The implication graph and the first UIP</h2>
+  <div class="cols wide-right">
+    <div class="fig">
+      <svg viewBox="0 0 300 230" width="300" role="img" aria-label="implication graph">
+        <defs><marker id="ari" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" class="fill-ink"/></marker></defs>
+        <g class="ink" stroke-width="1.5" fill="none">
+          <path d="M60,40 L60,95" marker-end="url(#ari)"/>
+          <path d="M150,40 L205,95" marker-end="url(#ari)"/>
+          <path d="M72,110 L193,110" marker-end="url(#ari)"/>
+          <path d="M150,40 C 230,40 250,120 250,165" marker-end="url(#ari)"/>
+          <path d="M220,120 L245,165" marker-end="url(#ari)"/>
+          <path d="M210,125 L165,185" marker-end="url(#ari)"/>
+          <path d="M245,185 L178,195" marker-end="url(#ari)"/>
+        </g>
+        <g class="fill-ground ink" stroke-width="1.5">
+          <circle cx="60" cy="30" r="14"/><circle cx="60" cy="110" r="14"/>
+          <circle cx="150" cy="30" r="14" style="stroke:var(--accent);stroke-width:3"/>
+          <circle cx="210" cy="110" r="14"/><circle cx="250" cy="178" r="14"/>
+        </g>
+        <rect x="140" y="182" width="36" height="24" rx="4" class="fill-soft ink"/>
+        <g font-size="11" text-anchor="middle" class="mono">
+          <text x="60" y="34">x₁</text><text x="60" y="114">x₃</text><text x="150" y="34">x₂</text>
+          <text x="210" y="114">x₄</text><text x="250" y="182">x₅</text><text x="158" y="198">⊥</text>
+        </g>
+        <g font-size="10" class="muted"><text x="78" y="30">level 1</text><text x="100" y="60">level 2</text></g>
+      </svg>
+      <p class="cap">Lab step 2's textbook example. Clauses (¬x₁∨x₃), (¬x₂∨¬x₃∨x₄), (¬x₂∨¬x₄∨x₅), (¬x₄∨¬x₅). Decisions x₁, then x₂.</p>
+    </div>
+    <div>
+      <p class="small"><b>Implication graph</b>: a node per assigned literal, with edges from the reason clause's other literals. A conflict is a clause with every literal false.</p>
+      <div class="box def"><span class="label">first unique implication point</span>
+        <p class="small">A <b>UIP</b> is a current-level node on <b>every</b> path from the decision to the conflict. The <b>first</b> UIP is the one closest to the conflict.</p>
+      </div>
+      <p class="small">Here x₄ is not a UIP: x₂ → x₅ bypasses it. The first UIP is <b>x₂</b>, and the learned clause is <b>¬x₂ ∨ ¬x₃</b>: backjump to level 1 and assert ¬x₂.</p>
+      <p class="small muted">Computing it is resolution: resolve the conflict clause with the reason of the latest current-level literal until one current-level literal remains.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>Resolution trace for the example. Conflict (¬x₄∨¬x₅). Resolve with x₅'s reason (¬x₂∨¬x₄∨x₅)
+    to get (¬x₂∨¬x₄): two current-level literals, x₂ and x₄. Resolve with x₄'s reason
+    (¬x₂∨¬x₃∨x₄) to get (¬x₂∨¬x₃): one current-level literal (x₂), stop. The functional reference
+    writes exactly this unfold. The imperative MiniSat loop computes the same thing with a counter
+    and a seen-array.</p>
+    <p>Why first UIP and not the decision (all-decision learning) or a later UIP: Zhang, Madigan,
+    Moskewicz & Malik (2001) compared schemes, and 1UIP gave the shortest clauses that assert the
+    most. It has been the default ever since.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">20 · learning</p>
+  <h2>The rest of the engine</h2>
+  <div class="cols">
+    <div>
+      <ul class="small">
+        <li><b>Non-chronological backjumping</b>: jump to the second-highest level in the learned clause, where it becomes unit. It can skip many levels of irrelevant decisions.</li>
+        <li><b>VSIDS</b> (Chaff): bump the activity of variables in each conflict, and grow the bump by 1/decay after every conflict, so recent conflicts weigh exponentially more. Branch on the most active.</li>
+        <li><b>Phase saving</b> (Pipatsrisawat & Darwiche 2007): re-assign a variable its last value, so backjumps don't discard satisfied sub-problems.</li>
+        <li><b>Restarts</b> (unit 19's Luby, or adaptive): cheap, because learned clauses and activities survive.</li>
+      </ul>
+    </div>
+    <div>
+      <div class="box def"><span class="label">clause deletion by LBD (Glucose, 2009)</span>
+        <p class="small"><b>Literal block distance</b>: the number of distinct decision levels in a learned clause. "Glue" clauses (LBD ≤ 2) link two blocks of propagation and are kept forever. Periodically delete the worse half of the rest, never a clause that is a current reason.</p>
+      </div>
+      <p class="small">Lab <code>then</code>, random 3-SAT at the threshold:</p>
+      <table class="dense">
+        <thead><tr><th>n</th><th class="num">your conflicts</th><th class="num">MiniSat</th><th class="num">your s</th><th class="num">MiniSat s</th></tr></thead>
+        <tbody>
+          <tr><td>150 unsat</td><td class="num">2 236</td><td class="num">3 051</td><td class="num">0.40</td><td class="num">0.015</td></tr>
+          <tr><td>200 sat</td><td class="num">8 588</td><td class="num">7 748</td><td class="num">2.31</td><td class="num">0.048</td></tr>
+        </tbody>
+      </table>
+      <p class="small muted">The same conflicts, 30–50× the time per conflict: the algorithm is right, the language is slow.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>Why VSIDS works is still partly empirical. The best-supported explanation (Liang et al. 2015)
+    is that it focuses search on the "bridge" variables of the formula's community structure, which
+    is why it does well on industrial instances with modular structure and less well on random ones.</p>
+  </aside>
+</section>
+
+<section class="divider">
+  <p class="eyebrow">section 3</p>
+  <h2>Proofs and limits</h2>
+  <p>"Unsatisfiable" should come with evidence.</p>
+</section>
+
+<section>
+  <p class="eyebrow">20 · proofs</p>
+  <h2>DRAT: checkable unsatisfiability</h2>
+  <div class="cols">
+    <div>
+      <p class="small">A <b>DRAT</b> proof lists every learned clause (and every deletion) in order. A checker replays it: each lemma must be <b>RUP</b>, meaning that assigning its negation and unit-propagating over the clauses so far gives a conflict. It ends with the empty clause.</p>
+      <ul class="small">
+        <li>A first-UIP clause is always RUP: that's what analysis just showed.</li>
+        <li>RAT extends RUP to cover inprocessing techniques that add non-implied clauses (such as blocked clauses).</li>
+        <li>SAT competitions require verified proofs; drat-trim and the formally verified cake_lpr check them.</li>
+      </ul>
+    </div>
+    <div>
+      <p class="small">Lab <code>then</code>, proofs from your solver, checked by <code>colib.drat</code> (an independent RUP checker):</p>
+      <table class="dense">
+        <thead><tr><th>instance</th><th class="num">lemmas</th><th class="num">check</th></tr></thead>
+        <tbody>
+          <tr><td>3-SAT n = 120, unsat</td><td class="num">831</td><td class="num">accepted, 0.2 s</td></tr>
+          <tr><td>pigeonhole 7 into 6</td><td class="num">784</td><td class="num">accepted, 0.2 s</td></tr>
+        </tbody>
+      </table>
+      <p class="small">The tests also check 30 proofs, with aggressive deletions included. A solver bug that learns a wrong clause fails the check, even if the final answer happens to be right.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>Proofs matter because solvers have bugs, and "UNSAT" is otherwise unfalsifiable. The Boolean
+    Pythagorean triples problem (Heule, Kullmann & Marek 2016) was settled with a 200 TB DRAT proof,
+    later compressed and verified. That's the course's certificate theme from unit 00, at scale.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">20 · limits</p>
+  <h2>CDCL is resolution, and pigeonhole defeats resolution</h2>
+  <div class="cols">
+    <div>
+      <div class="box thm"><span class="label">Pipatsrisawat & Darwiche 2011; Atserias, Fichte & Thurley 2011</span>
+        <p class="small">CDCL with restarts <b>polynomially simulates</b> general resolution, and every CDCL run yields a resolution refutation of similar size. So a resolution lower bound is a CDCL lower bound.</p>
+      </div>
+      <div class="box thm"><span class="label">Haken 1985</span>
+        <p class="small">Every resolution refutation of the pigeonhole formula $\mathrm{PHP}^{n+1}_n$ has size $2^{\Omega(n)}$.</p>
+      </div>
+      <p class="small">Counting ("$n+1$ objects don't fit in $n$ places") can't be expressed compactly in clause-by-clause reasoning. Unit 18's alldifferent does it in <b>one matching</b>.</p>
+    </div>
+    <div>
+      <p class="small">Lab <code>then</code>, conflicts:</p>
+      <table class="dense">
+        <thead><tr><th>pigeonhole</th><th class="num">yours</th><th class="num">MiniSat</th><th class="num">CaDiCaL</th><th class="num">Kissat s</th></tr></thead>
+        <tbody>
+          <tr><td>7 into 6</td><td class="num">784</td><td class="num">2 498</td><td class="num">1 044</td><td class="num">0.004</td></tr>
+          <tr><td>9 into 8</td><td class="num">41 364</td><td class="num">39 063</td><td class="num">31 719</td><td class="num">0.13</td></tr>
+          <tr><td>10 into 9</td><td class="num">—</td><td class="num">510 308</td><td class="num">267 023</td><td class="num">0.50</td></tr>
+          <tr><td>11 into 10</td><td class="num">—</td><td class="num">10.7 M</td><td class="num">2.2 M</td><td class="num">3.2</td></tr>
+        </tbody>
+      </table>
+      <p class="small">Better engineering shifts the curve; it doesn't change its shape. Stronger proof systems (cutting planes, extended resolution) have short pigeonhole proofs, and pseudo-Boolean solvers exploit that.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>The intuition behind Haken's bound, via Ben-Sasson & Wigderson's width method (2001): any
+    refutation must contain a clause of large width, about $n/3$ literals, and a wide clause forces
+    exponential size. Pigeonhole's clauses mention one pigeon or one hole each, but refuting them
+    requires reasoning about many pigeons at once, and resolution can only do that by building wide
+    clauses one resolution at a time.</p>
+    <p>That's the checkpoint answer in one sentence: CDCL is a resolution proof search, pigeonhole's
+    resolution refutations are exponentially long, so any CDCL run on it takes exponentially many
+    conflicts, whatever the heuristic.</p>
+  </aside>
+</section>
+
+<section class="divider">
+  <p class="eyebrow">section 4</p>
+  <h2>Encodings</h2>
+  <p>The same constraint, very different CNFs.</p>
+</section>
+
+<section>
+  <p class="eyebrow">20 · encodings</p>
+  <h2>Tseitin, at-most-one, cardinality</h2>
+  <div class="cols">
+    <div>
+      <ul class="small">
+        <li><b>Tseitin</b> (1968): name every subformula with a fresh variable. Linear size, equisatisfiable. Arbitrary circuits become CNF.</li>
+        <li><b>At most one</b> of $n$: pairwise ($\binom n2$ clauses), <b>sequential counter</b> (Sinz 2005, $3n - 4$ clauses, $n - 1$ variables), <b>bitwise</b> ($n \lceil\log n\rceil$ clauses), commander, product.</li>
+        <li><b>At most $k$</b>: sequential counters, sorting and cardinality networks (Asín et al. 2011), totalizers.</li>
+      </ul>
+      <p class="small"><b>Arc consistency</b> is the property that matters: does unit propagation on the encoding prune as much as the constraint would? Pairwise and the sequential counter both have it.</p>
+    </div>
+    <div>
+      <p class="small">Lab <code>then</code>, n-queens with your solver (clauses / seconds):</p>
+      <table class="dense">
+        <thead><tr><th class="num">n</th><th class="num">pairwise</th><th class="num">sequential</th><th class="num">bitwise</th></tr></thead>
+        <tbody>
+          <tr><td class="num">40</td><td class="num">103 520 / <b>0.33</b></td><td class="num">18 292 / 3.82</td><td class="num">35 584 / 0.88</td></tr>
+          <tr><td class="num">60</td><td class="num">352 880 / <b>0.97</b></td><td class="num">41 832 / 20.9</td><td class="num">83 604 / 10.5</td></tr>
+        </tbody>
+      </table>
+      <p class="small">The largest CNF is the fastest. Pairwise propagates in one step. The counter needs chains of auxiliary variables, which also distract the branching heuristic. <b>Fewer clauses is not the objective</b>; propagation strength and a branching-friendly variable set are.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>The bitwise encoding is not arc consistent in general: fixing one literal true propagates the
+    bits, and the bits falsify the others, so it works in that direction. But fixing all but one
+    literal false doesn't force the last one true through the bits. For at-most-one that's harmless.
+    For exactly-one, the extra at-least-one clause does the work.</p>
+    <p>At industrial scale, 10⁵-literal cardinality constraints make pairwise impossible, and the
+    choice between counters and networks becomes a real trade-off. It's also where pseudo-Boolean and
+    CP-SAT's native linear constraints (unit 21) take over.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">20 · lab</p>
+  <h2>Lab 20 — what you build</h2>
+  <div class="lab">
+    <span class="label">about 3½ hours · uv run co lab 20</span>
+    <ol>
+      <li><b>Assignment and two-watched-literal propagation.</b></li>
+      <li><b>First-UIP conflict analysis</b> and backjumping with phase saving.</li>
+      <li><b>The CDCL loop</b>: VSIDS, Luby restarts.</li>
+      <li><b>DRAT proofs</b> and <b>LBD-based deletion</b>.</li>
+      <li><b>Encodings</b>: three at-most-one, at-most-k, pigeonhole, queens, colouring.</li>
+    </ol>
+  </div>
+<pre><code class="language-bash">uv run co test 20
+uv run co then 20     # MiniSat, CaDiCaL, Kissat · pigeonhole · encodings · DRAT checks</code></pre>
+  <aside class="notes">
+    <p>Unit 21 subclasses your solver, adding propagators that explain themselves, so keep the
+    attribute names the tests use. The lab docstring lists them.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">20 · checkpoint</p>
+  <h2>Done when</h2>
+  <div class="box good"><span class="label">checkpoint</span>
+    <ul>
+      <li>All five lab steps are ✓.</li>
+      <li>Your solver emits a DRAT proof that an external checker accepts, and you can explain pigeonhole's hardness in terms of resolution lower bounds rather than "it just takes a long time".</li>
+      <li>You can compute the first UIP of a small implication graph by hand.</li>
+    </ul>
+  </div>
+  <div class="cols">
+    <div>
+      <h3>Reading</h3>
+      <p class="small">Marques-Silva, Lynce & Malik, <em>Handbook of Satisfiability</em>, ch. 4.<br>
+      Eén & Sörensson, "An extensible SAT-solver" (2003).<br>
+      Audemard & Simon, <em>IJCAI</em> 2009 (LBD).<br>
+      Haken, <em>TCS</em> 39 (1985); Buss's survey (2012).</p>
+    </div>
+    <div>
+      <h3>Next</h3>
+      <p class="small"><b>21</b> lazy clause generation: CP propagators that explain themselves to this solver · <b>22</b> hardness and reductions.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>If you want to feel the lower bound instead of reading it: run your solver on pigeonhole with
+    the functional reference's resolution-fold analysis and print the width of every learned clause.
+    The maximum grows with n, as Ben-Sasson and Wigderson predict.</p>
+  </aside>
+</section>
+
+</div></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/plugin/highlight/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<script src="../../slides/deck.js"></script>
+</body>
+</html>

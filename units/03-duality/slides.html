@@ -1,0 +1,582 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>03 · Duality — the load-bearing unit</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+<link rel="stylesheet" href="../../slides/deck.css">
+</head>
+<body data-trunk="lp">
+<div class="reveal"><div class="slides">
+
+<!-- ================================================================== -->
+<section class="title-slide">
+  <p class="eyebrow">Part I · trunk A · linear programming · spine</p>
+  <div class="unit-no">03</div>
+  <h1>Duality — the load-bearing unit</h1>
+  <p class="lede">Every LP has a shadow LP that bounds it, prices its constraints, certifies its
+  optimum, and re-solves it cheaply after a change.</p>
+  <p class="meta"><span>needs 02</span><span>~2 h slides + 2½ h lab</span><span>lab: <code>uv run co lab 03</code></span></p>
+  <aside class="notes">
+    <p>The curriculum calls this unit load-bearing, and asks you to spend longer on it
+    than feels justified. The reason is on the second-to-last slide: cutting planes,
+    column generation, Lagrangian relaxation, Benders, the Hungarian algorithm,
+    primal–dual approximation and KKT are each duality in a different setting. If
+    this unit is solid, those units are applications. If it is shaky, they are seven
+    separate things to memorize.</p>
+    <p>There are four views of the dual in this unit, and each gets a section:</p>
+    <ul>
+      <li>a <b>bound</b> (weak and strong duality);</li>
+      <li>a <b>certificate</b> (complementary slackness);</li>
+      <li>a set of <b>prices</b> (sensitivity);</li>
+      <li>an <b>algorithm</b> (the dual simplex).</li>
+    </ul>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">03 · overview</p>
+  <h2>Four faces of one idea</h2>
+  <div class="cols">
+    <div class="box def"><span class="label">1 · a bound</span>
+      <p>Nonnegative combinations of constraints bound the objective. The best such bound is an LP, and it is <b>exact</b>.</p></div>
+    <div class="box def"><span class="label">2 · a certificate</span>
+      <p>A pair $(x, y)$ with equal objectives proves both optimal. Complementary slackness is the pointwise version.</p></div>
+    <div class="box def"><span class="label">3 · a set of prices</span>
+      <p>$y_i$ is what one more unit of $b_i$ is worth, exactly, within a computable range.</p></div>
+    <div class="box def"><span class="label">4 · an algorithm</span>
+      <p>The dual simplex keeps optimality and restores feasibility. It is the method used after adding a cut or a bound.</p></div>
+  </div>
+  <aside class="notes">
+    <p>The lab follows the same order. Step 1 writes the dual, step 2 reads it from
+    a tableau, step 3 uses it as a certificate, step 4 runs the dual simplex,
+    and step 5 uses it for prices.</p>
+  </aside>
+</section>
+
+<!-- ================================================================== -->
+<section class="divider">
+  <p class="eyebrow">section 1</p>
+  <h2>The dual as a bound</h2>
+  <p>Adding up constraints, done as well as possible.</p>
+</section>
+
+<section>
+  <p class="eyebrow">03 · bound</p>
+  <h2>Where the dual comes from</h2>
+  <div class="cols">
+    <div>
+      <p>$\max\ 3x + 2y\;$ s.t. $\;x + y \le 4,\ \ 2x + y \le 6,\ \ x, y \ge 0$.</p>
+      <p>Multiply the rows by $u, v \ge 0$ and add:</p>
+      $$(u + 2v)\,x + (u + v)\,y \;\le\; 4u + 6v$$
+      <p>If $u + 2v \ge 3$ and $u + v \ge 2$, the left side is at least $3x + 2y$ for every $x, y \ge 0$. So $4u + 6v$ is an <b>upper bound</b> on the optimum.</p>
+    </div>
+    <div>
+      <p>The best such bound is itself an LP:</p>
+      <div class="box def"><span class="label">the dual</span>
+        $$\begin{aligned}\min\ & 4u + 6v\\ \text{s.t. } & u + 2v \ge 3\\ & u + v \ge 2\\ & u, v \ge 0\end{aligned}$$
+      </div>
+      <p>$u = v = 1$ gives the bound $10$, and $x = y = 2$ attains $10$. Both are optimal, and neither needed a solver to check.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>This is unit 00's certificate idea in its original setting. There, a matching
+    was a lower bound on vertex cover because we combined constraints (one per
+    matched edge). Here the combination has real-valued weights, and the best weights
+    form an LP.</p>
+    <p>It is also unit 01's Farkas argument turned into optimization. Farkas says a
+    nonnegative combination of rows can prove $0 \le -1$. Duality says a nonnegative
+    combination can prove "objective $\le$ bound", and the best provable bound is the
+    optimum.</p>
+    <p>Keep this LP. It is <code>SMALL</code> in the lab and the tableau example in
+    unit 02, and its dual $(1, 1)$ is the first thing lab step 2 checks.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">03 · bound</p>
+  <h2>The rules, once</h2>
+  <div class="cols wide-left">
+    <div>
+      <table style="font-size:.76em">
+        <thead><tr><th>primal (max $c^\top x$)</th><th>dual (min $b^\top y$)</th></tr></thead>
+        <tbody>
+          <tr><td>row $i$: $a_i x \le b_i$</td><td>$y_i \ge 0$</td></tr>
+          <tr><td>row $i$: $a_i x \ge b_i$</td><td>$y_i \le 0$</td></tr>
+          <tr><td>row $i$: $a_i x = b_i$</td><td>$y_i$ free</td></tr>
+          <tr><td>$x_j \ge 0$</td><td>dual row $j$: $(A^\top y)_j \ge c_j$</td></tr>
+          <tr><td>$x_j \le 0$</td><td>dual row $j$: $(A^\top y)_j \le c_j$</td></tr>
+          <tr><td>$x_j$ free</td><td>dual row $j$: $(A^\top y)_j = c_j$</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div>
+      <div class="box"><span class="label">how to rebuild it</span>
+        <p class="small">Multipliers must keep inequalities pointing the right way: $\le$ rows get $y \ge 0$. The combination must dominate the objective on the variable's allowed sign: $x_j \ge 0$ needs coefficient $\ge c_j$.</p>
+      </div>
+      <div class="box good"><span class="label">involution</span>
+        <p class="small">For a min primal, flip every sign. Then $\text{dual}(\text{dual}(P)) = P$ exactly, and lab step 1 tests this on 40 random LPs.</p>
+      </div>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>Don't memorize the table; rebuild it from the bounding argument each time until
+    it becomes automatic. For a $\ge$ row, you need $y_i \le 0$: multiplying
+    $a_i x \ge b_i$ by a nonpositive number gives $y_i a_i x \le y_i b_i$, which points
+    the same way as the $\le$ rows and can be added to them. For a free $x_j$, the
+    combined coefficient must equal $c_j$ exactly. If it were larger, a very negative
+    $x_j$ would make the combined left side smaller than the objective and break the
+    bound.</p>
+    <p>Most textbooks give the rules for a min primal (Bertsimas & Tsitsiklis table
+    4.1). They are the same table read backwards, which is exactly why the dual of the
+    dual is the primal.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">03 · bound</p>
+  <h2>Weak and strong duality</h2>
+  <div class="cols">
+    <div>
+      <div class="box thm"><span class="label">weak duality</span>
+        <p>For $\max\{c^\top x : Ax \le b,\, x \ge 0\}$ and its dual: if $x$ and $y$ are feasible, $c^\top x \le b^\top y$.</p>
+      </div>
+      <div class="box proof"><span class="label">proof</span>
+        <p>$c^\top x \le (A^\top y)^\top x = y^\top (Ax) \le y^\top b$, using $x \ge 0$ and then $y \ge 0$. $\square$</p>
+      </div>
+    </div>
+    <div>
+      <div class="box thm"><span class="label">strong duality</span>
+        <p>If the primal has an optimal solution, so does the dual, and the optimal values are <b>equal</b>.</p>
+      </div>
+      <div class="box proof"><span class="label">proof, from farkas (unit 01)</span>
+        <p class="small">For $\varepsilon &gt; 0$, the system $Ax \le b,\ -c^\top x \le -(z^* + \varepsilon),\ x \ge 0$ has no solution. Its Farkas vector $(y, t) \ge 0$ must have $t &gt; 0$, because $Ax \le b$ is feasible. Scaled to $t = 1$, $y$ is dual feasible with $b^\top y &lt; z^* + \varepsilon$.</p>
+      </div>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>Filling in the strong duality proof. Farkas for
+    $\{x \ge 0 : Ax \le b,\ -c^\top x \le -(z^*+\varepsilon)\}$ gives
+    $(y, t) \ge 0$ with $y^\top A - t c^\top \ge 0$ and
+    $y^\top b - t (z^* + \varepsilon) &lt; 0$ (the form with $x \ge 0$; see the notes of
+    unit 01's Farkas slide). If $t = 0$, then $y^\top A \ge 0$ and $y^\top b &lt; 0$,
+    which is a certificate that $Ax \le b$, $x \ge 0$ is infeasible, a contradiction.
+    So $t &gt; 0$. Divide by $t$: $A^\top y \ge c$, $y \ge 0$, and
+    $b^\top y &lt; z^* + \varepsilon$. By weak duality $b^\top y \ge z^*$. The dual
+    optimum therefore lies in $[z^*, z^* + \varepsilon)$ for every $\varepsilon$, and
+    since an LP attains its optimum (unit 01, FTLP) it equals $z^*$.</p>
+    <p>A second proof is constructive: the simplex method terminates (with Bland's
+    rule) at a basis with all reduced costs $\le 0$, and $y^\top = c_B^\top A_B^{-1}$ is
+    then dual feasible with $b^\top y = c^\top x$. That is section 2's reading of the
+    tableau.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">03 · bound</p>
+  <h2>Four possible outcomes, not nine</h2>
+  <div class="cols wide-left">
+    <table style="font-size:.74em">
+      <thead><tr><th>primal \ dual</th><th>optimal</th><th>unbounded</th><th>infeasible</th></tr></thead>
+      <tbody>
+        <tr><td><b>optimal</b></td><td>✓ equal values</td><td>✗</td><td>✗</td></tr>
+        <tr><td><b>unbounded</b></td><td>✗</td><td>✗</td><td>✓</td></tr>
+        <tr><td><b>infeasible</b></td><td>✗</td><td>✓</td><td>✓ possible</td></tr>
+      </tbody>
+    </table>
+    <div>
+      <p class="small">Unbounded primal ⇒ infeasible dual: any dual solution would bound it.</p>
+      <p class="small">Both infeasible happens, for example with $\max\ x_1$ subject to $x_1 - x_2 \le -1,\ -x_1 + x_2 \le -1$.</p>
+      <p class="small muted">In the lab's random general LPs, HiGHS found 246 optimal pairs and 154 unbounded/infeasible pairs out of 400.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>The table follows from weak duality (the ✗ in "optimal / unbounded" and
+    "unbounded / unbounded") and strong duality (the ✗ in "optimal / infeasible").</p>
+    <p>Check the doubly infeasible example: adding the two primal rows gives
+    $0 \le -2$, so the primal is infeasible. The dual is
+    $\min -y_1 - y_2$ subject to $y_1 - y_2 \ge 1$, $-y_1 + y_2 \ge 0$, $y \ge 0$;
+    adding its rows gives $0 \ge 1$, so it is infeasible too. (The second dual row
+    is $\ge 0$ because $x_2$ has cost 0.)</p>
+    <p>This is why solvers report "infeasible or unbounded" from presolve. Sometimes
+    presolve can see that the dual is infeasible, which leaves both possibilities
+    open for the primal. Unit 02's <code>then</code> met this: HiGHS labelled some
+    unbounded LPs infeasible until presolve was turned off.</p>
+  </aside>
+</section>
+
+<!-- ================================================================== -->
+<section class="divider">
+  <p class="eyebrow">section 2</p>
+  <h2>The dual as a certificate</h2>
+  <p>Where the multipliers must be zero, and where they can be read off.</p>
+</section>
+
+<section>
+  <p class="eyebrow">03 · certificate</p>
+  <h2>Complementary slackness</h2>
+  <div class="box thm"><span class="label">theorem</span>
+    <p>Feasible $x$ and $y$ are both optimal if and only if</p>
+    $$y_i\,(b_i - a_i x) = 0 \ \text{ for every row } i, \qquad x_j\,\big((A^\top y)_j - c_j\big) = 0 \ \text{ for every variable } j.$$
+  </div>
+  <div class="cols">
+    <div class="box proof"><span class="label">proof</span>
+      <p>$b^\top y - c^\top x = \underbrace{y^\top (b - Ax)}_{\ge 0} + \underbrace{x^\top (A^\top y - c)}_{\ge 0}$. The gap is 0 exactly when every product is 0, and a zero gap means both are optimal by weak duality. $\square$</p>
+    </div>
+    <div>
+      <p><b>In words:</b> a constraint with slack has price 0. A variable that is used has zero reduced cost.</p>
+      <p class="small muted">Checking takes two matrix–vector products. That is lab step 3.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>Each product in the sum is a nonnegative number times a nonnegative number,
+    which is why a zero total forces each one to zero. That identity is the proof of
+    weak duality written as an equation instead of an inequality.</p>
+    <p>Complementary slackness is often the fastest way to <em>find</em> a dual
+    solution when you already have a primal optimum. The slack rows force some
+    $y_i = 0$, the positive variables force some dual rows to hold with equality,
+    and what remains is a square linear system. Lab step 3's rejection tests include
+    a pair that is primal and dual feasible and fails only this condition:
+    $x = (0,0)$, $y = (1,1)$ on the textbook LP.</p>
+    <p>It generalizes directly to KKT conditions (unit 29). There, complementarity
+    says an inactive constraint has zero multiplier, which is the same statement
+    with gradients in place of rows.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">03 · certificate</p>
+  <h2>Reading the dual off the final tableau</h2>
+  <div class="cols wide-left">
+    <div>
+      <p>At an optimal basis, $y^\top = c_B^\top A_B^{-1}$, and the reduced cost of every column is $\bar c_j = c_j - y^\top a_j$.</p>
+      <p>A slack $s_i$ has cost 0 and column $e_i$, so $\bar c_{s_i} = -y_i$. The objective row, which stores $-\bar c$, holds $y_i$ in slack column $i$.</p>
+      <div class="box good"><span class="label">so</span>
+        <p>The optimal dual solution is <b>the slack columns of the objective row</b>. Every simplex solve returns a primal solution and a dual certificate at once.</p>
+      </div>
+    </div>
+    <div>
+      <p class="small">Unit 02's final tableau:</p>
+      <table class="small" style="font-family:var(--f-mono)">
+        <tr><td>y</td><td>0</td><td>1</td><td>2</td><td>−1</td><td>2</td></tr>
+        <tr><td>x</td><td>1</td><td>0</td><td>−1</td><td>1</td><td>2</td></tr>
+        <tr><td>z</td><td>0</td><td>0</td><td><b>1</b></td><td><b>1</b></td><td>10</td></tr>
+      </table>
+      <p class="small">$y = (1, 1)$, and $b^\top y = 4 + 6 = 10 = c^\top x$.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>Dual feasibility is visible in the same row. Structural columns hold
+    $-\bar c_j = (A^\top y)_j - c_j \ge 0$, which is exactly $A^\top y \ge c$, and slack
+    columns hold $y_i \ge 0$. "No negative entries in the objective row" is the
+    optimality test of unit 02 and it is also the dual feasibility test. The primal
+    simplex method keeps primal feasibility and works toward dual feasibility, and
+    the dual simplex method (section 4) does the opposite.</p>
+    <p>Phase 1 may have negated some rows or deleted redundant ones. That doesn't
+    matter here: reduced costs are properties of columns, and row operations don't
+    change them. Lab hint rung 2 of step 2 says this.</p>
+  </aside>
+</section>
+
+<!-- ================================================================== -->
+<section class="divider">
+  <p class="eyebrow">section 3</p>
+  <h2>The dual as prices</h2>
+  <p>What a unit of each resource is worth, and for how long.</p>
+</section>
+
+<section>
+  <p class="eyebrow">03 · prices</p>
+  <h2>Shadow prices</h2>
+  <div class="cols wide-right">
+    <div class="fig">
+      <svg viewBox="0 0 450 320" width="440" role="img" aria-label="optimal value as a function of b1: slope 3 up to 3, slope 1 up to 6, then flat">
+        <line x1="60" y1="280" x2="430" y2="280" class="rule" stroke-width="1.5"/>
+        <line x1="60" y1="30" x2="60" y2="280" class="rule" stroke-width="1.5"/>
+        <rect x="195" y="30" width="135" height="250" class="fill-soft" style="fill-opacity:.8"/>
+        <polyline points="60,280 195,100 330,40 420,40" fill="none" class="unit" stroke-width="3"/>
+        <circle cx="240" cy="80" r="7" class="fill-accent"/>
+        <circle cx="195" cy="100" r="4" class="fill-ink"/>
+        <circle cx="330" cy="40" r="4" class="fill-ink"/>
+        <text x="110" y="200" font-size="14" class="soft">slope 3</text>
+        <text x="255" y="112" font-size="14" style="fill:var(--accent)">slope 1 = y₁</text>
+        <text x="350" y="62" font-size="14" class="soft">slope 0</text>
+        <text x="248" y="72" font-size="13" class="mono">b₁=4, z*=10</text>
+        <text x="190" y="300" font-size="13" class="mono soft">3</text>
+        <text x="326" y="300" font-size="13" class="mono soft">6</text>
+        <text x="410" y="300" font-size="13" class="mono soft">b₁</text>
+        <text x="22" y="104" font-size="13" class="mono soft">9</text>
+        <text x="16" y="44" font-size="13" class="mono soft">12</text>
+        <text x="30" y="30" font-size="13" class="mono soft">z*</text>
+      </svg>
+      <p class="cap">Optimum of the textbook LP as the right-hand side of $x + y \le b_1$ varies. Shaded: the range where the current basis stays optimal.</p>
+    </div>
+    <div>
+      <div class="box thm"><span class="label">theorem</span>
+        <p>If the optimal basis is nondegenerate, $\;\dfrac{\partial z^*}{\partial b_i} = y_i$.</p>
+        <p>More generally $z^*(b)$ is <b>concave and piecewise linear</b>, and $y$ is a supergradient.</p>
+      </div>
+      <p>Here $y_1 = 1$ on $b_1 \in [3, 6]$. Below 3, the constraint $2x+y \le 6$ stops binding and the price jumps to 3. Above 6, $x+y \le b_1$ stops binding and the price drops to 0.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>The curve was computed with the exact simplex at 17 values of $b_1$: slopes
+    3, 1, 0, with breakpoints at $b_1 = 3$ (value 9) and $b_1 = 6$ (value 12).</p>
+    <p>Why concave: $z^*(b)$ is the minimum over dual feasible $y$ of $b^\top y$. The
+    dual feasible set does not depend on $b$, so $z^*$ is a minimum of linear
+    functions of $b$, which is concave. The pieces correspond to the dual vertices,
+    one per optimal basis. This picture comes back in unit 11: the Lagrangian dual
+    function is also a minimum of linear functions, and subgradient methods climb it.</p>
+    <p>The economic reading: if row $i$ is a resource (machine hours, budget), $y_i$
+    is the most you should pay for one more unit, and a row with slack is worth
+    nothing at the margin. This is also where the name "shadow price" comes from.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">03 · prices</p>
+  <h2>Ranging: how long the price holds</h2>
+  <div class="cols">
+    <div>
+      <p>Change $b_i$ to $b_i + \delta$. Reduced costs don't involve $b$, so the basis stays <b>optimal</b> for as long as it stays <b>feasible</b>:</p>
+      $$x_B(\delta) = A_B^{-1}(b + \delta e_i) = \bar b + \delta\, d$$
+      <p class="small">where $d$ is slack column $i$ of the final tableau.</p>
+      <p>Feasible while $\bar b_r + \delta d_r \ge 0$ for all rows:</p>
+      $$\max_{d_r > 0} \frac{-\bar b_r}{d_r} \;\le\; \delta \;\le\; \min_{d_r < 0} \frac{-\bar b_r}{d_r}$$
+    </div>
+    <div>
+      <div class="box good"><span class="label">example</span>
+        <p>Slack column 1 is $d = (2, -1)$ with $\bar b = (2, 2)$: $\delta \in [-1, 2]$, so $b_1 \in [3, 6]$. Inside, $z^* = 10 + 1\cdot\delta$.</p>
+        <p>HiGHS's ranging report gives $[3, 6]$ with objective 9 and 12 at the ends. The lab's <code>then</code> checks 103 binding rows, and all agree.</p>
+      </div>
+      <p class="small muted">Outside the range the basis changes and the slope changes. A linear prediction there is wrong, which is why lab step 5 must refuse it.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>Degeneracy caveat: at a degenerate optimum, several optimal bases exist and
+    each has its own range, and the left and right derivatives of $z^*$ differ.
+    Solvers report the range for the basis they stopped at. Treat ranging output as
+    "this basis's range", not "the" range.</p>
+    <p>The same analysis works for the objective coefficients: changing $c_j$ keeps
+    the basis feasible and changes reduced costs, so the basis stays optimal while
+    the objective row stays nonnegative. Solvers report both kinds (HiGHS's
+    <code>getRanging</code> has <code>col_cost_up</code>/<code>col_cost_dn</code>
+    next to the row bounds used in the lab).</p>
+    <p>The non-binding rows the lab's <code>then</code> skips: when slack $s_i$ is
+    basic with value $v$, $d = e_r$, so the range is $\delta \ge -v$ with no upper end.
+    You can loosen a non-binding constraint forever, and tighten it until it just
+    binds. HiGHS's report uses a different convention for those rows, so the
+    comparison is restricted to binding ones.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">03 · prices</p>
+  <h2>Sign conventions: an afternoon, as promised</h2>
+  <div class="cols wide-left">
+    <div>
+      <p>The same LP, $\max 3x + 2y$, $x + y \le 4$, $2x + y \le 6$:</p>
+      <table>
+        <thead><tr><th>source</th><th class="num">$y_1$</th><th class="num">$y_2$</th></tr></thead>
+        <tbody>
+          <tr><td>your tableau</td><td class="num">1</td><td class="num">1</td></tr>
+          <tr><td>HiGHS, <code>sense=max</code></td><td class="num">1</td><td class="num">1</td></tr>
+          <tr><td>HiGHS, written as $\min -c^\top x$</td><td class="num">−1</td><td class="num">−1</td></tr>
+          <tr><td>SciPy <code>linprog</code> marginals</td><td class="num">−1</td><td class="num">−1</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="box"><span class="label">one rule covers all four</span>
+      <p>A reported dual is $\partial(\text{objective})/\partial(\text{rhs})$ in the <b>solver's own objective sense</b>.</p>
+      <p class="small">Maximizing, loosening a $\le$ row helps, so the dual is $\ge 0$. Minimizing $-c^\top x$, the same loosening lowers the objective, so it is $\le 0$.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>Every solver documents its convention somewhere, and every modeller has at
+    some point shipped a sign error from forgetting it. Before trusting duals from a
+    solver, solve a two-variable LP whose duals you know, like this one, and look.
+    That is what the curriculum means by "which will take you an afternoon, and
+    should".</p>
+    <p>Two more places where conventions differ: duals of $\ge$ rows (some solvers
+    report them with the opposite sign to $\le$ rows, some don't), and reduced costs
+    of variables at their upper bound in bounded-variable simplex (which have the
+    opposite sign to those at their lower bound). HiGHS, Gurobi and CPLEX each
+    document these; they don't all agree.</p>
+    <p>Gurobi, for reference, reports <code>Pi</code> for constraint duals and
+    <code>RC</code> for reduced costs. It isn't installed here, and no lab
+    depends on it.</p>
+  </aside>
+</section>
+
+<!-- ================================================================== -->
+<section class="divider">
+  <p class="eyebrow">section 4</p>
+  <h2>The dual as an algorithm</h2>
+  <p>Keep optimality, restore feasibility.</p>
+</section>
+
+<section>
+  <p class="eyebrow">03 · dual simplex</p>
+  <h2>The dual simplex method</h2>
+  <div class="cols">
+    <div>
+      <p><b>State:</b> a basis whose objective row is nonnegative (dual feasible) but with some negative right-hand sides (primal infeasible).</p>
+      <ol>
+        <li><b>Leaving row:</b> any row $r$ with $\bar b_r &lt; 0$. The most negative is the usual choice.</li>
+        <li><b>Entering column:</b> among $j$ with $T_{rj} &lt; 0$, minimize $\;\dfrac{T_{mj}}{-T_{rj}}$, the dual ratio test.</li>
+        <li><b>Pivot.</b> If no $T_{rj} &lt; 0$, row $r$ reads "nonnegative combination = negative": the LP is <b>infeasible</b>.</li>
+      </ol>
+    </div>
+    <div>
+      <div class="box thm"><span class="label">why it works</span>
+        <p>It is exactly the primal simplex method applied to the dual LP, run on the same tableau.</p>
+      </div>
+      <p class="small">The dual ratio test keeps every objective-row entry nonnegative after the pivot, and the objective value decreases monotonically toward the optimum from above.</p>
+      <p class="small muted">Row $r$ in the infeasible case is a Farkas certificate: unit 01 again.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>Why the ratio test has that form. Pivoting on $T_{rs}$ subtracts
+    $\frac{T_{ms}}{T_{rs}} \times$ row $r$ from the objective row. For column $j$ the
+    new entry is $T_{mj} - T_{ms}\frac{T_{rj}}{T_{rs}}$. With $T_{rs} &lt; 0$ and
+    $T_{rj} &lt; 0$, this stays $\ge 0$ exactly when
+    $\frac{T_{mj}}{-T_{rj}} \ge \frac{T_{ms}}{-T_{rs}}$, which is what choosing the
+    minimum ratio guarantees. Columns with $T_{rj} \ge 0$ only get larger.</p>
+    <p>Infeasibility: row $r$ says $\sum_j T_{rj} x_j = \bar b_r &lt; 0$ with every
+    coefficient $\ge 0$ and every variable $\ge 0$. The left side cannot be negative.
+    The row is a combination of the original rows, so its multipliers are a Farkas
+    certificate. Lab step 4's third test builds this case on purpose, with the cut
+    $x + y \ge 5$ against $x + y \le 4$.</p>
+    <p>In modern solvers the dual simplex is the default LP algorithm for most
+    problems, not just for re-solves. Dual steepest-edge pricing is cheap to
+    maintain, and on many real LPs the dual is easier to get feasible.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">03 · dual simplex</p>
+  <h2>Why branch-and-cut lives on it</h2>
+  <div class="cols">
+    <div>
+      <p>After an optimal solve, <b>add a cut</b> $a^\top x \le \beta$ (unit 08) or <b>tighten a bound</b> $x_j \le \lfloor x_j^* \rfloor$ (unit 07):</p>
+      <ul>
+        <li>the new row, written in the current basis, leaves the objective row <b>unchanged</b>, so the basis is still dual feasible;</li>
+        <li>only the new row's rhs can be negative, so the tableau is still <b>almost primal feasible</b>.</li>
+      </ul>
+      <p>That is the dual simplex's starting state, and it is typically a few pivots away from optimal.</p>
+    </div>
+    <div>
+      <p class="small">Lab <code>then</code>, 163 random LPs with one added cut:</p>
+      <table>
+        <thead><tr><th></th><th class="num">warm</th><th class="num">cold</th></tr></thead>
+        <tbody>
+          <tr><td>your dual simplex (pivots)</td><td class="num">0.98</td><td class="num">3.34</td></tr>
+          <tr><td>HiGHS (iterations)</td><td class="num">0.96</td><td class="num">3.47</td></tr>
+        </tbody>
+      </table>
+      <p class="small muted">On 4×5 LPs. The ratio widens with size: a cold solve's pivots grow with the LP, while a warm re-solve's pivots grow with the size of the change.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>A branch-and-bound tree with 10 000 nodes solves 10 000 LPs. Each node's LP is
+    its parent's plus one bound change. Warm-starting each from the parent's basis
+    with the dual simplex, instead of solving cold, is the difference between a
+    usable solver and an unusable one. This is also why interior-point methods,
+    which cannot warm-start well (unit 04), are rarely used inside branch-and-bound
+    except at the root.</p>
+    <p>A subtlety for unit 07: a bound change is not an added row in real codes.
+    Bounded-variable simplex handles bounds implicitly, and a changed bound makes one
+    basic variable infeasible. The effect on the dual simplex is the same.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">03 · the load</p>
+  <h2>This unit, wearing seven hats</h2>
+  <table style="font-size:.7em">
+    <tbody>
+      <tr><td><b>08</b> cutting planes</td><td>cuts are new rows; the dual simplex re-optimizes after each round; Gomory cuts are read off the tableau.</td></tr>
+      <tr><td><b>10</b> column generation</td><td>the master's duals are the pricing problem's objective; a column with positive reduced cost enters.</td></tr>
+      <tr><td><b>11</b> Lagrangian relaxation</td><td>price the hard constraints, and the best prices give a bound: a partial dual, climbed by subgradients.</td></tr>
+      <tr><td><b>12</b> Benders</td><td>subproblem duals become cuts on the master: duals as rows instead of columns.</td></tr>
+      <tr><td><b>15</b> matching</td><td>the Hungarian algorithm keeps dual potentials feasible and grows the matching on tight edges: primal–dual, and complementary slackness.</td></tr>
+      <tr><td><b>24</b> primal–dual approximation</td><td>raise duals until constraints go tight, buy what goes tight, and bound the cost by weak duality.</td></tr>
+      <tr><td><b>29</b> KKT</td><td>the conditions of this unit for curved objectives and constraints: feasibility, dual feasibility, complementary slackness.</td></tr>
+    </tbody>
+  </table>
+  <p class="muted">When one of those units feels hard, come back to the slide here that it generalizes.</p>
+  <aside class="notes">
+    <p>The pattern to look for, in every one of them: there is a relaxed problem whose
+    solution gives a bound, the bound is a function of some multipliers, and the
+    algorithm is a method for choosing good multipliers. Weak duality guarantees the
+    bound is valid, and complementary slackness tells you when it is tight.</p>
+  </aside>
+</section>
+
+<!-- ================================================================== -->
+<section>
+  <p class="eyebrow">03 · lab</p>
+  <h2>Lab 03 — what you build</h2>
+  <div class="lab">
+    <span class="label">about 2½ hours · uv run co lab 03 · on unit 02's tableaux</span>
+    <ol>
+      <li><b>The dual transformer</b> for every row sense and variable sign, as an exact involution.</li>
+      <li><b>Duals from the tableau</b>: one slice.</li>
+      <li><b>An optimality certificate</b> checked exactly, with the reason when it fails.</li>
+      <li><b>Warm start</b>: add a cut, then the dual simplex. Agrees with a cold re-solve.</li>
+      <li><b>Sensitivity</b>: ranges, and predictions that must be exact inside and refused outside.</li>
+    </ol>
+  </div>
+<pre><code class="language-bash">uv run co test 03
+uv run co then 03     # sign conventions · ranging vs HiGHS · warm vs cold</code></pre>
+  <aside class="notes">
+    <p>The lab uses unit 02's reference <code>two_phase</code> by default, so you can
+    do this unit without having finished unit 02. <code>CO_MINE=02 uv run co test 03</code>
+    runs the same tests on top of your own simplex, which is a good end-to-end check
+    of both.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">03 · checkpoint</p>
+  <h2>Done when</h2>
+  <div class="box good"><span class="label">checkpoint</span>
+    <ul>
+      <li>All five lab steps are ✓.</li>
+      <li>Given a solved LP, you can read off the shadow price of each constraint, predict the objective change from a small right-hand-side perturbation before re-solving, and be right.</li>
+      <li>You can say why the dual simplex is the method used after adding a cut.</li>
+    </ul>
+  </div>
+  <div class="cols">
+    <div>
+      <h3>Reading</h3>
+      <p class="small">Bertsimas & Tsitsiklis, ch. 4 (§4.1–4.5) and §5.1–5.2.<br>
+      Chvátal, ch. 5 and 10.<br>
+      Gärtner & Matoušek, §6.5–6.6 (optional).</p>
+    </div>
+    <div>
+      <h3>Next</h3>
+      <p class="small"><b>05</b> formulations (IP begins) · <b>04</b> ellipsoid and interior point (branch) · <b>11</b> Lagrangian relaxation, which needs 16 as well · <b>29</b> convexity, if you want the continuous view now.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>Try the checkpoint by hand before looking at the lab sheet's worked version:
+    tighten $2x + y \le 6$ to $\le 5$ on the textbook LP. The shadow price is 1, and
+    $\delta = -1$ is inside the range $[-2, 2]$, so the new optimum is 9. Then confirm
+    with <code>two_phase</code>.</p>
+  </aside>
+</section>
+
+</div></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/plugin/highlight/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<script src="../../slides/deck.js"></script>
+</body>
+</html>

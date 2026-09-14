@@ -1,0 +1,139 @@
+# Hints — lab 27
+
+One rung at a time; then `solution/lab.py` or `solution/functional.py`.
+
+## Step 1 — The assignment model
+
+<details><summary>Rung 1 — pyscipopt in five calls</summary>
+
+`m = Model(); m.hideOutput()`, then `m.addVar(vtype="B", lb=0, ub=1, obj=...)`,
+`m.addCons(quicksum(...) == 1)` and `m.setMinimize()`. An objective coefficient given to `addVar` is
+all the objective setting you need. For the LP relaxation, pass `vtype="C"` with the same bounds.
+</details>
+
+<details><summary>Rung 2 — why the unlinked LP is 1</summary>
+
+Put every item in every bin at 1/nbins and every y_b at 1/nbins. Every x ≤ y row holds, and so does
+every capacity row as long as sum/nbins ≤ capacity. Σy = 1. Linking capacity to y forces
+C·Σy ≥ Σ sizes, which is the continuous bound: that's a formulation doing the work that a hundred
+thousand nodes otherwise would.
+</details>
+
+<details><summary>Functional route</summary>
+
+The model is built by calls, so compute what goes into them first. The variables are dict and list
+comprehensions over `product(range(n), bins)`. The rows are one list whose second half depends on `linked`
+(`load ≤ C·y` per bin, or `load ≤ C` plus `x ≤ y` per pair). A single loop hands that list to `addCons`.
+</details>
+
+## Step 2 — Symmetry breaking
+
+<details><summary>Rung 1</summary>
+
+`y[b] >= y[b + 1]` as rows, and `model.chgVarUb(x[i, b], 0)` for b > i. The second is valid because
+you can renumber the bins of any packing by their smallest item, and then the bin holding item i has
+number at most i.
+</details>
+
+<details><summary>Rung 2 — what SCIP does on its own</summary>
+
+SCIP detects symmetry in the model (`misc/usesymmetry`) and handles it with orbital fixing and
+symretopes. Your constraints and its handling can overlap, and `then` has a row with SCIP's switched
+off so you can see how much it was doing already.
+</details>
+
+<details><summary>Functional route</summary>
+
+Two data first: the ordering rows `y[b] >= y[b + 1]` as a list, and the (item, bin) pairs to fix as a
+generator over the triangle b > i. The loops that add rows and change bounds are the only effects.
+</details>
+
+## Step 3 — Bounds
+
+<details><summary>Rung 1 — L2 by hand</summary>
+
+For each α (0 and every size ≤ C/2), sort items into big (> C − α), medium (C/2 < s ≤ C − α) and
+small (α ≤ s ≤ C/2). Big and medium items each need their own bin, and the smalls have to fit into
+the medium bins' free space or into new bins. Everything below α is ignored, which is what makes a
+larger α sometimes better.
+</details>
+
+<details><summary>Rung 2 — using both bounds</summary>
+
+The upper bound (first-fit decreasing) shrinks the model: no more bins than FFD used. The lower bound
+fixes variables: with symmetry breaking in place, bins 0 … L2−1 must be used. Use
+`model.chgVarLb(y[b], 1)`, and don't add a row.
+</details>
+
+<details><summary>Functional route</summary>
+
+First-fit decreasing as a `reduce` over sorted items with a tuple of bins. L2 as `max(map(bound, alphas))`.
+</details>
+
+## Step 4 — The MIP start
+
+<details><summary>Rung 1 — the pyscipopt calls</summary>
+
+`sol = model.createSol()`, then `model.setSolVal(sol, var, value)` for *every* variable. Then
+`model.checkSol(sol, original=True)` before solving, and `model.addSol(sol, free=True)` if it passes.
+`trySol` isn't allowed before the solve starts (the error says so).
+</details>
+
+<details><summary>Rung 2 — numbering bins</summary>
+
+`sorted(bins, key=min)` puts the bin holding item 0 first, and so on. That numbering always satisfies
+your symmetry breaking, since the k-th smallest minimum is at least k.
+</details>
+
+<details><summary>Functional route</summary>
+
+Compute every start value before touching the solver: rank the FFD bins by their smallest item, and build
+`(variable, value)` pairs for all x and y in one list. Use a list of pairs, not a dict: pyscipopt variables
+aren't hashable. Then create the solution, set the values, `checkSol`, and `addSol` or `freeSol`.
+</details>
+
+## Step 5 — Arc flow
+
+<details><summary>Rung 1 — the graph</summary>
+
+A path from 0 to C is a pattern: its item arcs are the items in one bin and its loss arcs are empty
+space. Integer flow decomposes into z paths, so z bins. Keep arcs in a dict keyed by `(tail, head, size)`
+with size 0 for loss arcs, and build per-node in/out lists once.
+</details>
+
+<details><summary>Rung 2 — why its LP is strong</summary>
+
+The arc-flow LP equals the Gilmore–Gomory pattern LP of unit 10: every fractional flow decomposes into
+fractional patterns. So it inherits the round-up property that almost always holds in practice, where
+the optimum is the LP value rounded up. It has O(C × distinct sizes) variables, which is
+pseudo-polynomial: fine at C = 100 or 1000, hopeless at C = 10⁹.
+</details>
+
+<details><summary>Functional route</summary>
+
+`tz.frequencies(sizes)` for demands and `tz.groupby` on arc tails and heads. The rows are one list
+built before any `addCons`.
+</details>
+
+## Step 6 — Reading the statistics
+
+<details><summary>Rung 1 — the layout</summary>
+
+A line that doesn't start with a space starts a section: `Name : col1 col2 ...`. Indented lines are
+`key : cell cell ...`. Keep the current section's header list, and look columns up by name, not by
+position, because SCIP versions add columns.
+</details>
+
+<details><summary>Rung 2 — traps</summary>
+
+"nodes" appears twice in B&B Tree. You want "nodes (total)", which includes restarts. Separator
+sub-rows start with `>` and repeat their parent's cuts by family. "cut pool" is a pool, not a
+separator. Primal-heuristic rows like "LP solutions" have `-` cells, so compare cell counts to the
+header.
+</details>
+
+<details><summary>Functional route</summary>
+
+Split the text into `(section, header, rows)` triples once, then look columns up by name with a
+dict comprehension.
+</details>

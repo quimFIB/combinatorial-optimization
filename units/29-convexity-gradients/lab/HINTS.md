@@ -1,0 +1,117 @@
+# Hints — lab 29
+
+One rung at a time; then `solution/lab.py` or `solution/functional.py`.
+
+## Step 1 — Functions and gradient checks
+
+<details><summary>Rung 1</summary>
+
+For f = ½xᵀQx − bᵀx with symmetric Q, ∇f = Qx − b. For Rosenbrock, differentiate by hand:
+∂f/∂x = −2(1 − x) − 400x(y − x²) and ∂f/∂y = 200(y − x²).
+</details>
+
+<details><summary>Rung 2 — central, not forward</summary>
+
+(f(x + h) − f(x − h))/2h has error O(h²), and (f(x + h) − f(x))/h has error O(h). With h = 1e−3 on
+x³ that's 1e−6 against 3e−3, and the test can tell. Smaller h isn't always better: below about
+1e−8, rounding error in f takes over.
+</details>
+
+<details><summary>Functional route</summary>
+
+A function and its gradient are a pair of closures, returned together. The gradient check is a comprehension
+over the rows of `h·I`, one central difference per coordinate, compared with `grad(x)` in one vectorised
+`max(abs(...))`.
+</details>
+
+## Step 2 — First-order methods
+
+<details><summary>Rung 1 — the three updates</summary>
+
+GD: x − αg(x). Heavy ball: x − αg(x) + β(x − x_prev). Nesterov: take the momentum step first,
+y = x + (k−1)/(k+2)·(x − x_prev), then the gradient step *at y*. Keep `prev` as the iterate before
+the current one, starting equal to x0.
+</details>
+
+<details><summary>Rung 2 — the rates the tests check</summary>
+
+With step 1/L on an L-smooth convex f: GD has f(x_k) − f* ≤ L‖x0 − x*‖²/(2k), and Nesterov has
+≤ 2L‖x0 − x*‖²/(k+1)². For heavy ball on a quadratic with eigenvalues in [μ, L], step
+4/(√L + √μ)² and β = ((√κ − 1)/(√κ + 1))² give the linear rate (√κ − 1)/(√κ + 1). Heavy ball can
+diverge on non-quadratic convex functions, while Nesterov can't.
+</details>
+
+<details><summary>Functional route</summary>
+
+`tz.take(k + 1, tz.iterate(step, state))` with state `(x, prev, k)`, then keep the x's.
+</details>
+
+## Step 3 — Projection onto the simplex
+
+<details><summary>Rung 1 — the sort-based algorithm</summary>
+
+The projection is max(v − θ, 0) for the θ that makes it sum to 1. Sort v descending as u. With
+prefix sums S_k, the largest k with u_k − (S_k − 1)/k > 0 is ρ, and θ = (S_ρ − 1)/ρ. That's
+O(n log n).
+</details>
+
+<details><summary>Rung 2 — how the tests know it's right</summary>
+
+p is the projection of v onto a convex set C iff (v − p)·(y − p) ≤ 0 for every y in C. For a
+polytope it's enough to check the vertices, and the simplex's vertices are the unit vectors. That's
+unit 03's complementary slackness again, dressed as geometry.
+</details>
+
+<details><summary>Functional route</summary>
+
+The projection is already a chain of numpy expressions: sort descending, take the cumulative sums, compute
+all the thresholds at once, find ρ as the largest index with a positive gap (a boolean mask and `max`), and
+clip. Projected gradient is the same unfold as step 2 with `project` composed after the step:
+`_unfold(lambda x: project(x − step·grad(x)), project(x0), iterations)`.
+</details>
+
+## Step 4 — Frank–Wolfe
+
+<details><summary>Rung 1 — the oracle</summary>
+
+Minimising g·s over {s ≥ 0, As ≤ b} is an LP. Unit 02's `simplex(A, b, c)` *maximises* c·x, so pass
+c = −g. Use `eps=1e-12` with floats. The oracle returns a vertex, which is why Frank–Wolfe iterates are
+convex combinations of few vertices.
+</details>
+
+<details><summary>Rung 2 — the gap</summary>
+
+By convexity f(x*) ≥ f(x) + ∇f(x)·(x* − x) ≥ f(x) + ∇f(x)·(s − x), since s minimises the linear term.
+So ∇f(x)·(x − s) ≥ f(x) − f*: a free certificate of suboptimality at every step, much like the
+duality gap. Step 2/(k+2) gives f(x_k) − f* ≤ 2LD²/(k+2).
+</details>
+
+<details><summary>Functional route</summary>
+
+State `(x, k, last gap)`. Unfold, then split trajectory and gaps, dropping the placeholder gap of the
+initial state.
+</details>
+
+## Step 5 — KKT
+
+<details><summary>Rung 1 — the LP case</summary>
+
+For max c·x, Ax ≤ b, x ≥ 0 with multipliers y for the rows and w for x ≥ 0, stationarity says
+c = Aᵀy − w, so w = Aᵀy − c must be ≥ 0: that's dual feasibility. Complementarity: y_i·(b − Ax)_i = 0
+and x_j·w_j = 0. Those are exactly unit 03's complementary slackness conditions, and seeing that is
+the unit's checkpoint.
+</details>
+
+<details><summary>Rung 2 — residuals, not booleans</summary>
+
+Floating-point optima satisfy KKT to about 1e−9, not exactly. Return magnitudes and let the caller
+choose a tolerance. `then` shows unit 03's exact certificate rejecting a HiGHS optimum rounded to 9
+decimals: exact checks need exact arithmetic.
+</details>
+
+<details><summary>Functional route</summary>
+
+Residuals are values, not booleans, and each is one numpy expression. Compute the row slack and reduced costs
+once, and write a small `worst_negative(*arrays)` helper for the sign conditions. Complementary slackness is
+`max |y · slack|` and `max |x · reduced|`. Pass `initial=0.0` so empty arrays don't raise.
+</details>

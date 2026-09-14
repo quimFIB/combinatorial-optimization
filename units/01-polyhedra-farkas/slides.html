@@ -1,0 +1,798 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>01 · Polyhedra, cones, and Farkas' lemma</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+<link rel="stylesheet" href="../../slides/deck.css">
+</head>
+<body data-trunk="lp">
+<div class="reveal"><div class="slides">
+
+<!-- ================================================================== -->
+<section class="title-slide">
+  <p class="eyebrow">Part I · trunk A · linear programming · spine</p>
+  <div class="unit-no">01</div>
+  <h1>Polyhedra, cones, and Farkas' lemma</h1>
+  <p class="lede">The shape of a feasible region, three names for its corners, and a short
+  proof that a linear system has no solution.</p>
+  <p class="meta"><span>needs 00</span><span>~1½ h slides + 2½ h lab</span><span>lab: <code>uv run co lab 01</code></span></p>
+  <aside class="notes">
+    <h4>Why the course starts here</h4>
+    <p>Integer programming, Part II, is the study of what happens when you take the
+    LP relaxation seriously: the LP you get by dropping integrality. To take it
+    seriously you need to know what its feasible region looks like (a polyhedron),
+    where optima live (at corners), and what kind of object certifies a statement
+    about it. This unit covers those three things. It is geometry and one lemma,
+    with no algorithm for optimizing yet: that is unit 02.</p>
+    <p>Everything is in $\mathbb{R}^n$ with rational data. Rationality matters exactly
+    once, when we ask how large a certificate is.</p>
+    <h4>Notation</h4>
+    <p>$A \in \mathbb{Q}^{m\times n}$ with rows $a_1,\dots,a_m$, $b \in \mathbb{Q}^m$.
+    Vectors are columns. $a_i x$ means the inner product of row $a_i$ with $x$.
+    Inequalities between vectors hold componentwise.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">01 · overview</p>
+  <h2>The route</h2>
+  <div class="fig">
+    <svg viewBox="0 0 1100 150" width="1150" role="img" aria-label="unit roadmap">
+      <defs><marker id="ar1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" class="fill-ink"/></marker></defs>
+      <g font-size="17" text-anchor="middle">
+        <rect x="5" y="40" width="160" height="62" rx="6" class="fill-ground unit" stroke-width="2"/>
+        <text x="85" y="68" font-weight="600">polyhedra</text><text x="85" y="89" font-size="13" class="soft">halfspaces, faces</text>
+        <rect x="200" y="40" width="175" height="62" rx="6" class="fill-ground unit" stroke-width="2"/>
+        <text x="287" y="68" font-weight="600">corners</text><text x="287" y="89" font-size="13" class="soft">vertex = extreme = BFS</text>
+        <rect x="410" y="40" width="175" height="62" rx="6" class="fill-ground unit" stroke-width="2"/>
+        <text x="497" y="68" font-weight="600">Minkowski–Weyl</text><text x="497" y="89" font-size="13" class="soft">H ⇔ V</text>
+        <rect x="620" y="40" width="175" height="62" rx="6" class="fill-ground unit" stroke-width="2"/>
+        <text x="707" y="68" font-weight="600">Fourier–Motzkin</text><text x="707" y="89" font-size="13" class="soft">projection</text>
+        <rect x="830" y="40" width="120" height="62" rx="6" class="fill-soft accent" stroke-width="2"/>
+        <text x="890" y="68" font-weight="600">Farkas</text><text x="890" y="89" font-size="13" class="soft">certificates</text>
+        <rect x="985" y="40" width="110" height="62" rx="6" class="fill-ground unit" stroke-width="2"/>
+        <text x="1040" y="68" font-weight="600">FTLP</text><text x="1040" y="89" font-size="13" class="soft">optima at vertices</text>
+      </g>
+      <g class="ink" stroke-width="1.5" fill="none">
+        <path d="M165,71 L196,71" marker-end="url(#ar1)"/><path d="M375,71 L406,71" marker-end="url(#ar1)"/>
+        <path d="M585,71 L616,71" marker-end="url(#ar1)"/><path d="M795,71 L826,71" marker-end="url(#ar1)"/>
+        <path d="M950,71 L981,71" marker-end="url(#ar1)"/>
+      </g>
+    </svg>
+  </div>
+  <div class="cols">
+    <p><b>The destination is Farkas' lemma.</b> Unit 03 builds LP duality on it, and
+    through duality it reaches most of the course.</p>
+    <p class="muted"><b>The surprise:</b> the constructive proof of Farkas is a
+    bookkeeping exercise on Fourier–Motzkin elimination. You will do it in lab step 5.</p>
+  </div>
+  <aside class="notes">
+    <p>A plan for reading: the section on corners is where the definitions pay off.
+    Read the three-way equivalence proof once properly, because unit 02's simplex
+    method is the BFS characterization turned into an algorithm. Minkowski–Weyl can
+    be taken on trust the first time through. Fourier–Motzkin and Farkas should be
+    read with a pencil, and the lab will make them concrete.</p>
+    <p>FTLP is the fundamental theorem of linear programming: an LP that is feasible
+    and bounded attains its optimum at a vertex, provided a vertex exists.</p>
+  </aside>
+</section>
+
+<!-- ================================================================== -->
+<section class="divider">
+  <p class="eyebrow">section 1</p>
+  <h2>Polyhedra</h2>
+  <p>Finitely many linear inequalities, and the shapes they cut out.</p>
+</section>
+
+<section>
+  <p class="eyebrow">01 · polyhedra</p>
+  <h2>Halfspaces, polyhedra, polytopes</h2>
+  <div class="cols wide-left">
+    <div>
+      <div class="box def"><span class="label">definitions</span>
+        <p>A <b>halfspace</b> is $\{x \in \mathbb{R}^n : a x \le \beta\}$ with $a \ne 0$; its boundary $\{a x = \beta\}$ is a <b>hyperplane</b>.</p>
+        <p>A <b>polyhedron</b> is an intersection of finitely many halfspaces:
+        $$P = \{x : Ax \le b\}.$$</p>
+        <p>A <b>polytope</b> is a bounded polyhedron.</p>
+      </div>
+      <p>Every polyhedron is <b>convex</b> and <b>closed</b>. Equalities, $\ge$, and
+      sign constraints all fit this form.</p>
+    </div>
+    <div class="box"><span class="label">one form to another</span>
+      <p class="small">$a x = \beta \;\to\; a x \le \beta,\ -a x \le -\beta$</p>
+      <p class="small">$a x \ge \beta \;\to\; -a x \le -\beta$</p>
+      <p class="small">free $x_j \;\to\; x_j^+ - x_j^-,\ x_j^\pm \ge 0$</p>
+      <p class="small">$a x \le \beta \;\to\; a x + s = \beta,\ s \ge 0$</p>
+      <p class="small muted">Standard form $\{x : Ax = b,\ x \ge 0\}$ is what simplex works in (unit 02). This unit uses $Ax \le b$.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>Convexity: if $Ax \le b$ and $Ay \le b$ then
+    $A(\lambda x + (1-\lambda)y) \le \lambda b + (1-\lambda) b = b$. Closedness: each
+    halfspace is the preimage of a closed set under a continuous map.</p>
+    <p>The conversions change the dimension and the number of constraints, but not
+    the problem. They are not free for algorithms, though. Splitting a free variable
+    into $x^+ - x^-$ doubles a column, and every value of $x_j$ is then represented
+    in infinitely many ways, which is why solvers handle free variables directly. Adding
+    slacks is what turns the inequality view of this unit into the equality view
+    simplex uses.</p>
+    <p>Beware one convention difference between textbooks: Bertsimas & Tsitsiklis
+    write $Ax \ge b$ as the general form, and many others use $Ax \le b$. Nothing
+    changes except signs, but duality (unit 03) is a place where sign conventions
+    cost an afternoon.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">01 · polyhedra</p>
+  <h2>Faces</h2>
+  <div class="cols wide-left">
+    <div>
+      <div class="box def"><span class="label">definition</span>
+        <p>An inequality $c x \le \delta$ is <b>valid</b> for $P$ if every $x \in P$ satisfies it.
+        A <b>face</b> of $P$ is $F = P \cap \{x : c x = \delta\}$ for a valid inequality.</p>
+      </div>
+      <ul>
+        <li>Faces of dimension $0$: <b>vertices</b>. Dimension $1$: <b>edges</b>.</li>
+        <li>Dimension $\dim P - 1$: <b>facets</b>.</li>
+        <li>Every face is itself a polyhedron: set some of the inequalities of $Ax \le b$ to equality.</li>
+      </ul>
+      <p>A full-dimensional polyhedron has a unique minimal description: <b>one inequality per facet</b>. Every other inequality is redundant.</p>
+    </div>
+    <div class="fig">
+      <svg viewBox="0 0 380 350" width="400" role="img" aria-label="quadrilateral with vertices at (0,0), (1,0), (2.5,1.5), (0,4)">
+        <line x1="60" y1="18" x2="60" y2="332" class="rule" stroke-width="1.5"/>
+        <line x1="20" y1="300" x2="368" y2="300" class="rule" stroke-width="1.5"/>
+        <line x1="30" y1="30" x2="330" y2="330" class="rule" stroke-width="1.5" stroke-dasharray="5 4"/>
+        <line x1="90" y1="330" x2="360" y2="60" class="rule" stroke-width="1.5" stroke-dasharray="5 4"/>
+        <polygon points="60,300 120,300 210,210 60,60" class="fill-soft unit" stroke-width="2.5" style="fill-opacity:.9"/>
+        <line x1="120" y1="300" x2="210" y2="210" class="accent" stroke-width="6"/>
+        <circle cx="60" cy="300" r="6" class="fill-ink"/>
+        <circle cx="120" cy="300" r="6" class="fill-ink"/>
+        <circle cx="210" cy="210" r="8" class="fill-accent"/>
+        <circle cx="60" cy="60" r="6" class="fill-ink"/>
+        <text x="220" y="203" font-size="15">(2.5, 1.5)</text>
+        <text x="68" y="55" font-size="15">(0, 4)</text>
+        <text x="175" y="275" font-size="14" class="soft">facet</text>
+        <text x="300" y="55" font-size="14" class="soft">x − y = 1</text>
+        <text x="265" y="325" font-size="14" class="soft">x + y = 4</text>
+        <text x="100" y="230" font-size="20" font-weight="600">P</text>
+      </svg>
+      <p class="cap">$x \ge 0,\ y \ge 0,\ x+y \le 4,\ x-y \le 1$. Four facets (edges), four vertices.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>The empty set and $P$ itself are faces, called improper: take $0x \le 1$
+    (face $\emptyset$) or $0x \le 0$ (face $P$). Some texts exclude them.</p>
+    <p>The face lattice of a polyhedron (all faces ordered by inclusion) is finite,
+    since each face is obtained by turning a subset of the defining inequalities into
+    equalities, and there are at most $2^m$ subsets. That bound is the first hint of
+    why corners can be enumerated: lab step 3 does it by trying subsets of size $n$.</p>
+    <p>The claim about minimal descriptions: if $P$ is full-dimensional, every
+    inequality in $Ax \le b$ either defines a facet or can be deleted without changing
+    $P$, and the facet-defining inequalities are unique up to positive scaling. For
+    lower-dimensional $P$ there is freedom to add multiples of the equations. This
+    is Schrijver §8.4, and it is why "how many facets does this polytope have" is the
+    honest measure of how hard it is to describe. Unit 05 comes back to it: the TSP
+    polytope has exponentially many facets, and no small extended formulation.</p>
+    <p>The figure is used again for Fourier–Motzkin later in the unit.</p>
+  </aside>
+</section>
+
+<!-- ================================================================== -->
+<section class="divider">
+  <p class="eyebrow">section 2</p>
+  <h2>Three names for a corner</h2>
+  <p>A geometric one, a convexity one, and an algebraic one, and why they agree.</p>
+</section>
+
+<section>
+  <p class="eyebrow">01 · corners</p>
+  <h2>Vertex, extreme point, basic feasible solution</h2>
+  <p>Let $P = \{x : Ax \le b\} \subseteq \mathbb{R}^n$ and $x \in P$. Write $I(x) = \{i : a_i x = b_i\}$ for the rows <b>tight</b> at $x$.</p>
+  <div class="cols three">
+    <div class="box def"><span class="label">vertex · geometry</span>
+      <p>Some $c$ makes $x$ the <b>unique</b> maximizer of $c y$ over $P$.</p></div>
+    <div class="box def"><span class="label">extreme point · convexity</span>
+      <p>$x$ is not $\lambda y + (1-\lambda) z$ for $y \ne z$ in $P$ and $0 &lt; \lambda &lt; 1$.</p></div>
+    <div class="box def"><span class="label">BFS · algebra</span>
+      <p>The tight rows $\{a_i : i \in I(x)\}$ have <b>rank $n$</b>.</p></div>
+  </div>
+  <div class="box thm"><span class="label">theorem</span>
+    <p>For $x \in P$ the three are equivalent.</p>
+  </div>
+  <p class="muted">The geometric definition is what optimization needs. The algebraic one is what a computer can check, and simplex walks on it.</p>
+  <aside class="notes">
+    <p><b>Terminology.</b> "Basic feasible solution" is usually defined in standard
+    form: $x \ge 0$, $Ax = b$, and the columns of $A$ for the positive entries of
+    $x$ are linearly independent. The rank condition here is the same idea in
+    inequality form. Converting one form into the other maps BFSs to BFSs. A
+    <em>basic solution</em> (not necessarily feasible) is a point where $n$ linearly
+    independent rows are tight, feasible or not. Lab step 3 enumerates basic
+    solutions and throws away the infeasible ones.</p>
+    <p><b>Degeneracy.</b> $|I(x)|$ can be larger than $n$: more constraints than
+    necessary pass through the corner, like the apex of a square pyramid, where
+    four facets meet in $\mathbb{R}^3$. The vertex is still one point, but it
+    corresponds to several different choices of $n$ tight rows (several
+    <em>bases</em>). Degeneracy is harmless geometrically and is the reason simplex
+    can cycle (unit 02). The lab's pyramid test exists to catch the double counting
+    it causes.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">01 · corners</p>
+  <h2>Proof, round the cycle</h2>
+  <div class="cols wide-left">
+    <div>
+      <div class="box proof"><span class="label">vertex ⇒ extreme</span>
+        <p class="small">If $x = \lambda y + (1-\lambda) z$ with $y \ne z$, one of them differs from $x$, so $c y &lt; c x$ or $c z &lt; c x$, and neither can exceed $c x$. Then $c x = \lambda c y + (1-\lambda) c z &lt; c x$. Contradiction.</p>
+      </div>
+      <div class="box proof"><span class="label">extreme ⇒ BFS</span>
+        <p class="small">If the tight rows have rank $&lt; n$, pick $d \ne 0$ with $a_i d = 0$ for all $i \in I(x)$. Rows not tight have slack, so $x \pm \varepsilon d \in P$ for small $\varepsilon &gt; 0$, and $x$ is their midpoint. Contradiction.</p>
+      </div>
+      <div class="box proof"><span class="label">BFS ⇒ vertex</span>
+        <p class="small">Take $c = \sum_{i \in I(x)} a_i$. For $y \in P$: $c y = \sum_{I} a_i y \le \sum_I b_i = c x$, with equality only if every $i \in I(x)$ is tight at $y$. Rank $n$ forces $y = x$. $\square$</p>
+      </div>
+    </div>
+    <div class="fig">
+      <svg viewBox="0 0 380 350" width="380" role="img" aria-label="the vertex (2.5,1.5) with its two tight row normals and their sum">
+        <defs><marker id="ar2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" class="fill-ink"/></marker>
+        <marker id="ar3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" class="fill-accent"/></marker></defs>
+        <line x1="60" y1="18" x2="60" y2="332" class="rule" stroke-width="1.5"/>
+        <line x1="20" y1="300" x2="368" y2="300" class="rule" stroke-width="1.5"/>
+        <polygon points="60,300 120,300 210,210 60,60" class="fill-soft unit" stroke-width="2.5" style="fill-opacity:.9"/>
+        <line x1="210" y1="210" x2="210" y2="332" class="accent" stroke-width="1.5" stroke-dasharray="6 5"/>
+        <path d="M210,210 L255,165" class="ink" stroke-width="2" fill="none" marker-end="url(#ar2)"/>
+        <path d="M210,210 L255,255" class="ink" stroke-width="2" fill="none" marker-end="url(#ar2)"/>
+        <path d="M210,210 L300,210" class="accent" stroke-width="3" fill="none" marker-end="url(#ar3)"/>
+        <circle cx="210" cy="210" r="7" class="fill-accent"/>
+        <text x="258" y="160" font-size="15">a₁ = (1, 1)</text>
+        <text x="258" y="272" font-size="15">a₂ = (1, −1)</text>
+        <text x="304" y="205" font-size="15" style="fill:var(--accent)">c = a₁ + a₂</text>
+        <text x="216" y="330" font-size="13" class="soft">level set of c</text>
+      </svg>
+      <p class="cap">At $(2.5, 1.5)$ the tight rows are $x+y\le 4$ and $x-y\le 1$. Their sum $c=(2,0)$ is maximized over $P$ at this point and nowhere else.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>The step to reread is BFS ⇒ vertex, because it is constructive. Adding up the
+    tight constraints gives an objective that certifies the point is a vertex.
+    Adding constraints with nonnegative weights to bound an objective is the move
+    behind LP duality, and it appears here first.</p>
+    <p>In extreme ⇒ BFS, the $\varepsilon$ is concrete: for each row $j \notin I(x)$
+    with $a_j d \ne 0$, you need $\varepsilon |a_j d| \le b_j - a_j x$, and the
+    minimum of those finitely many positive bounds works.</p>
+    <h4>Corollary</h4>
+    <p>A BFS is determined by its tight set: it is the unique solution of
+    $a_i y = b_i,\ i \in I(x)$. So there are at most $\binom{m}{n}$ vertices, and
+    they can be found by trying every $n$-subset of rows. That is lab step 3, and it
+    is lab 00's brute force again, over bases instead of 0/1 vectors.</p>
+    <p>The real maximum is much smaller than $\binom{m}{n}$ but still exponential. By
+    McMullen's upper bound theorem, a polytope in $\mathbb{R}^n$ with $m$ facets has
+    $O(m^{\lfloor n/2 \rfloor})$ vertices, attained by duals of cyclic polytopes. The
+    $n$-cube has $2n$ facets and $2^n$ vertices.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">01 · corners</p>
+  <h2>Not every polyhedron has a corner</h2>
+  <div class="cols">
+    <div>
+      <p>$\{(x, y) : y \ge 0,\ y \le 1\}$ is a strip. It contains whole lines, so
+      no point is extreme.</p>
+      <div class="box thm"><span class="label">theorem</span>
+        <p>For nonempty $P = \{x : Ax \le b\}$, the following are equivalent:</p>
+        <ul>
+          <li>$P$ has a vertex (it is <b>pointed</b>);</li>
+          <li>$P$ contains no line;</li>
+          <li>$\operatorname{rank} A = n$.</li>
+        </ul>
+      </div>
+    </div>
+    <div>
+      <div class="box good"><span class="label">why you rarely notice</span>
+        <p>Any polyhedron inside $x \ge 0$ is pointed: the rows $x_j \ge 0$ already have rank $n$.
+        Standard form is pointed by construction.</p>
+      </div>
+      <p class="muted">So "the optimum is at a vertex" needs a hypothesis. The fundamental theorem at the end of the unit states it.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>Sketch. The <em>lineality space</em> is $\{d : Ad = 0\}$. If it contains
+    $d \ne 0$, then $x + t d \in P$ for all real $t$: a line. Conversely, a line
+    $x + t d$ in $P$ needs $A d \le 0$ and $-A d \le 0$, so $A d = 0$. And
+    $\{d : Ad = 0\} = \{0\}$ exactly when $\operatorname{rank} A = n$.</p>
+    <p>For the vertex direction: if $\operatorname{rank} A = n$, start at any
+    $x \in P$. While the tight rows have rank $&lt; n$, pick $d$ in their null space
+    but not in the null space of $A$, and move along $\pm d$ until a new row becomes
+    tight. Each move increases the rank of the tight set, so after at most $n$ moves
+    you are at a BFS. The same walk is how <em>crossover</em> turns an
+    interior-point solution into a basic one (unit 04).</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">01 · corners</p>
+  <h2>Two descriptions: Minkowski–Weyl</h2>
+  <div class="box thm"><span class="label">theorem (Minkowski 1896, Weyl 1935)</span>
+    <p>$P$ is a polyhedron if and only if $\;P = \operatorname{conv}(V) + \operatorname{cone}(R)\;$ for finite sets $V, R$.</p>
+    <p>In particular, <b>a polytope is the convex hull of its vertices</b>, and the convex hull of finitely many points is a polytope.</p>
+  </div>
+  <div class="cols">
+    <div>
+      <table>
+        <thead><tr><th></th><th>H-description</th><th>V-description</th></tr></thead>
+        <tbody>
+          <tr><td>$n$-cube</td><td class="num">$2n$ facets</td><td class="num">$2^n$ vertices</td></tr>
+          <tr><td>$n$-cross-polytope</td><td class="num">$2^n$ facets</td><td class="num">$2n$ vertices</td></tr>
+        </tbody>
+      </table>
+      <p class="small">Either description can be exponentially larger than the other.</p>
+    </div>
+    <div class="box"><span class="label">definitions</span>
+      <p class="small">$\operatorname{conv}(V) = \{\sum \lambda_v v : \lambda \ge 0,\ \sum \lambda_v = 1\}$</p>
+      <p class="small">$\operatorname{cone}(R) = \{\sum \mu_r r : \mu \ge 0\}$</p>
+      <p class="small">For pointed $P$: $V$ = vertices, $R$ = extreme rays of the <b>recession cone</b> $\{d : Ad \le 0\}$.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>This is the theorem that lets integer programming exist as a subject. The set
+    of integer points in a polytope is finite, so its convex hull is a polytope by
+    the "if" direction, and therefore has <em>some</em> H-description
+    $\{x : Cx \le d\}$. Optimizing a linear function over the integer points is the
+    same as optimizing it over that polytope, which is an LP. The catch is that
+    $C$ is unknown and typically enormous. Cutting planes (unit 08) try to find the
+    parts of $C$ that matter.</p>
+    <p><b>Proof idea</b>, not needed for the lab. H ⇒ V: vertices and extreme rays
+    are finite in number (bases), and every point decomposes. V ⇒ H: write
+    $\operatorname{conv}(V)+\operatorname{cone}(R)$ as the projection of a polyhedron
+    in the variables $(x, \lambda, \mu)$, then eliminate $\lambda$ and $\mu$ with
+    Fourier–Motzkin, the next section's tool. Projections of polyhedra are
+    polyhedra, and that gives the H-description.</p>
+    <p><b>Computing</b> one description from the other is what qhull and cddlib do.
+    For polytopes, whether vertex enumeration can be done in time polynomial in input
+    plus output size is still open. For unbounded polyhedra it is NP-hard to decide
+    whether a given list of vertices is complete (Khachiyan, Boros, Borys, Elbassioni
+    & Gurvich, 2008). Your lab compares a $\binom{m}{n}$ enumeration with qhull.</p>
+  </aside>
+</section>
+
+<!-- ================================================================== -->
+<section class="divider">
+  <p class="eyebrow">section 3</p>
+  <h2>Fourier–Motzkin elimination</h2>
+  <p>Gaussian elimination for inequalities. It is correct and complete, and its output explodes.</p>
+</section>
+
+<section>
+  <p class="eyebrow">01 · fourier–motzkin</p>
+  <h2>Eliminating one variable</h2>
+  <p>Goal: describe the projection $\;\{x' : \exists x_k,\ (x', x_k) \in P\}\;$ by inequalities in $x'$ only.</p>
+  <div class="cols">
+    <div>
+      <p>Sort the rows by the sign of $a_{ik}$:</p>
+      <p>$Z$: $a_{ik} = 0$ — don't mention $x_k$; keep them.</p>
+      <p>$U$: $a_{pk} &gt; 0$ — upper bounds: $\;x_k \le \dfrac{b_p - a_p' x'}{a_{pk}}$</p>
+      <p>$L$: $a_{qk} &lt; 0$ — lower bounds: $\;x_k \ge \dfrac{b_q - a_q' x'}{a_{qk}}$</p>
+    </div>
+    <div class="box thm"><span class="label">theorem (Fourier 1826, Motzkin 1936)</span>
+      <p>$x'$ extends to a point of $P$ if and only if it satisfies the rows in $Z$ and, for every $p \in U,\ q \in L$,
+      $$(-a_{qk})\,(a_p x) + a_{pk}\,(a_q x) \le (-a_{qk})\, b_p + a_{pk}\, b_q,$$
+      a row in which $x_k$ cancels.</p>
+    </div>
+  </div>
+  <p class="muted">Both multipliers are <b>positive</b>. Inequalities survive nonnegative combinations and nothing else, and that is the whole difference from Gaussian elimination.</p>
+  <aside class="notes">
+    <p><b>Proof.</b> Fix $x'$. The feasible values of $x_k$ form the interval
+    $\max_{q\in L} \ell_q(x') \le x_k \le \min_{p \in U} u_p(x')$, intersected with
+    the requirement that the $Z$ rows hold. That interval is nonempty exactly when
+    every lower bound is at most every upper bound: $\ell_q(x') \le u_p(x')$ for
+    all pairs. Clear the denominators. Multiplying by $a_{pk} &gt; 0$ and by
+    $-a_{qk} &gt; 0$ preserves the direction, and you get the displayed combined row.
+    If $U$ or $L$ is empty there are no pairs, the interval is unbounded on one side
+    and nonempty, and only $Z$ survives. The lab's hint ladder calls this out
+    because it is the case people special-case wrongly.</p>
+    <p><b>Integer data stays integer.</b> The multipliers are the coefficients
+    themselves, so no division ever happens. That is why the lab can do everything
+    in exact integers and divide by a gcd only to tidy up.</p>
+    <p><b>Count.</b> The new system has $|Z| + |U|\cdot|L|$ rows. With $m$ rows split
+    evenly that is about $m^2/4$.</p>
+    <p>Fourier described the method in 1826. Motzkin rediscovered it in his 1936
+    thesis, and Dines had it in 1919; the name "Fourier–Motzkin" stuck.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">01 · fourier–motzkin</p>
+  <h2>On the example: eliminate $x$</h2>
+  <div class="cols wide-left">
+    <div>
+      <table style="font-size:.78em">
+        <thead><tr><th>row</th><th>class</th></tr></thead>
+        <tbody>
+          <tr><td>$-x \le 0$</td><td>$L$</td></tr>
+          <tr><td>$-y \le 0$</td><td>$Z$</td></tr>
+          <tr><td>$x + y \le 4$</td><td>$U$</td></tr>
+          <tr><td>$x - y \le 1$</td><td>$U$</td></tr>
+        </tbody>
+      </table>
+      <p>Pairs, with multipliers $1$ and $1$:</p>
+      <p>$(x+y \le 4) + (-x \le 0) \;\Rightarrow\; y \le 4$</p>
+      <p>$(x-y \le 1) + (-x \le 0) \;\Rightarrow\; -y \le 1$ <span class="muted">— redundant</span></p>
+      <p>Keep $Z$: $-y \le 0$. &nbsp; Projection: $\;0 \le y \le 4$. ✓</p>
+    </div>
+    <div class="fig">
+      <svg viewBox="0 0 380 350" width="380" role="img" aria-label="the polygon and its shadow on the y axis from 0 to 4">
+        <line x1="60" y1="18" x2="60" y2="332" class="rule" stroke-width="1.5"/>
+        <line x1="20" y1="300" x2="368" y2="300" class="rule" stroke-width="1.5"/>
+        <polygon points="60,300 120,300 210,210 60,60" class="fill-soft unit" stroke-width="2.5" style="fill-opacity:.9"/>
+        <line x1="22" y1="60" x2="22" y2="300" class="accent" stroke-width="8" stroke-linecap="round"/>
+        <line x1="22" y1="60" x2="60" y2="60" class="accent" stroke-width="1" stroke-dasharray="3 4"/>
+        <text x="32" y="70" font-size="14" style="fill:var(--accent)">4</text>
+        <text x="32" y="294" font-size="14" style="fill:var(--accent)">0</text>
+        <text x="170" y="120" font-size="15" class="soft">shadow on the y-axis</text>
+        <text x="100" y="250" font-size="20" font-weight="600">P</text>
+      </svg>
+      <p class="cap">Projecting along $x$: every $y \in [0, 4]$ has some $x$ that puts $(x,y)$ in $P$.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>Check the redundant row: $-y \le 1$ says $y \ge -1$, which $-y \le 0$
+    already implies. FM has no idea it is redundant. Detecting redundancy exactly
+    means solving an LP per row (is $\max\,(-y)$ over the other rows at most $1$?),
+    so FM carries every such row forward and pairs it again at the next step. That
+    is where the explosion comes from.</p>
+    <p>Two refinements keep most of the junk out. <b>Chernikov's rule</b>: track which
+    original rows each derived row came from, and discard a derived row whose history
+    is a superset of another's. After $k$ eliminations, a row built from more than
+    $k+1$ original rows is redundant. <b>Imbert's</b> acceleration theorems sharpen
+    this. With them the growth is singly exponential, which is the best possible,
+    since projections can have exponentially many facets.</p>
+    <p>The lab doesn't implement these. It deduplicates normalized rows, and
+    <code>then</code> shows you how far that is from enough.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">01 · fourier–motzkin</p>
+  <h2>Deciding feasibility, and the explosion</h2>
+  <div class="cols">
+    <div>
+      <div class="box thm"><span class="label">algorithm</span>
+        <p>Eliminate $x_1, \dots, x_n$ in turn. Every remaining row reads $0 \le c$.</p>
+        <p>$Ax \le b$ is feasible $\iff$ every remaining $c \ge 0$.</p>
+      </div>
+      <p>A complete decision procedure for linear feasibility, in ten lines of Python, needing no LP theory.</p>
+      <p class="muted">Nobody uses it for LP. The table shows why.</p>
+    </div>
+    <div>
+      <p class="small">$n=6$, 14 random cuts + box. Pairwise worst case: $m \to m^2/4$ per step.</p>
+      <table>
+        <thead><tr><th>eliminated</th><th class="num">FM rows</th><th class="num">true facets</th></tr></thead>
+        <tbody>
+          <tr><td>0</td><td class="num">26</td><td class="num">—</td></tr>
+          <tr><td>1</td><td class="num">64</td><td class="num">29</td></tr>
+          <tr><td>2</td><td class="num">601</td><td class="num">38</td></tr>
+          <tr><td>3</td><td class="num">70 996</td><td class="num">39</td></tr>
+          <tr><td>4</td><td class="num">~10⁹ pairs</td><td class="num">—</td></tr>
+        </tbody>
+      </table>
+      <p class="small muted">Reference run of <code>uv run co then 01</code>. True facet counts from qhull.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>Iterating $m \mapsto m^2/4$ gives roughly $4\,(m/4)^{2^k}$ after $k$ steps:
+    doubly exponential in the number of eliminated variables. Even with perfect
+    redundancy removal the output can be exponential, so the problem is not
+    only bad bookkeeping.</p>
+    <p>Look at the table's third column. The projections themselves stay small (under
+    40 facets) while FM's description of them grows past seventy thousand rows. The
+    gap between "the object" and "a description FM can produce" is enormous.</p>
+    <p>FM is still useful. It proves theorems (projection of a polyhedron is a
+    polyhedron; Minkowski–Weyl; Farkas), and it is used in practice where
+    variables are few: in compilers, for loop-bound analysis in the polyhedral model,
+    and in decision procedures for linear arithmetic inside SMT solvers
+    (unit 21), where it is one of the options alongside simplex.</p>
+  </aside>
+</section>
+
+<!-- ================================================================== -->
+<section class="divider">
+  <p class="eyebrow">section 4</p>
+  <h2>Farkas' lemma</h2>
+  <p>A system with no solution always has a short, checkable reason why.</p>
+</section>
+
+<section>
+  <p class="eyebrow">01 · farkas</p>
+  <h2>A certificate of infeasibility</h2>
+  <div class="cols">
+    <div>
+      <div class="box def"><span class="label">definition</span>
+        <p>$y \in \mathbb{R}^m$ is a <b>Farkas certificate</b> for $Ax \le b$ if
+        $$y \ge 0, \qquad y^\top A = 0, \qquad y^\top b &lt; 0.$$</p>
+      </div>
+      <div class="box proof"><span class="label">it proves infeasibility</span>
+        <p>If $Ax \le b$ and $y \ge 0$, then $\;0 = (y^\top A)\,x = y^\top (Ax) \le y^\top b &lt; 0$. $\square$</p>
+      </div>
+    </div>
+    <div>
+      <p><b>In words:</b> a nonnegative combination of the rows whose left side vanishes and whose right side is negative, which gives $0 \le -1$.</p>
+      <p class="small">Example: $x \le 1$ and $-x \le -2$. Take $y = (1, 1)$ and add: $0 \le -1$.</p>
+      <p><b>Checking</b> it needs one matrix–vector product. No solver and no trust: lab step 4.</p>
+      <p class="muted">All three conditions are necessary. $y=0$ gives $0 \le 0$, and a negative $y_i$ flips an inequality.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>This is the easy direction, and it is only one line. The content of Farkas'
+    lemma is the converse: <em>whenever</em> the system is infeasible, such a $y$
+    exists. There is never an infeasible linear system whose infeasibility cannot be
+    shown by adding up its rows.</p>
+    <p>Contrast with unit 00. For vertex cover, a short lower-bound certificate
+    sometimes did not exist (the triangle). For linear systems over the reals, the
+    certificate always exists. That difference, integers versus reals, is roughly
+    the difference between NP-hard and polynomial.</p>
+    <p>In the language of unit 00: linear feasibility has short "yes" certificates
+    (a solution $x$) and short "no" certificates (a Farkas $y$). So it is in
+    NP ∩ coNP. The size argument is on the next slides.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">01 · farkas</p>
+  <h2>Farkas' lemma</h2>
+  <div class="box thm"><span class="label">theorem (Farkas, 1902) · inequality form</span>
+    <p>Exactly one of these holds:</p>
+    <p>$\quad$(I) $\;\exists\, x:\ Ax \le b$
+    $\qquad\qquad$ (II) $\;\exists\, y \ge 0:\ y^\top A = 0,\ y^\top b &lt; 0$</p>
+  </div>
+  <div class="box thm"><span class="label">equivalent · standard form</span>
+    <p>Exactly one of these holds:</p>
+    <p>$\quad$(I′) $\;\exists\, x \ge 0:\ Ax = b$
+    $\qquad\qquad$ (II′) $\;\exists\, y:\ A^\top y \ge 0,\ b^\top y &lt; 0$</p>
+  </div>
+  <p>"Not both" is the one-line proof on the previous slide. <b>"At least one"</b> is the theorem, and there are two proofs worth knowing: <b>constructive</b>, by FM, and <b>geometric</b>, by separation.</p>
+  <aside class="notes">
+    <p>"Not both" for the standard form: if $x \ge 0$, $Ax = b$ and $A^\top y \ge 0$,
+    then $b^\top y = x^\top A^\top y \ge 0$, contradicting $b^\top y &lt; 0$.</p>
+    <p>There are many variants (Gordan, Stiemke, Motzkin's transposition theorem),
+    all "theorems of the alternative", and all can be derived from either form
+    above by rewriting the system. Deriving one yourself is good practice. For
+    example, derive the form for $\{x \ge 0 : Ax \le b\}$: its alternative is
+    $y \ge 0,\ y^\top A \ge 0,\ y^\top b &lt; 0$.</p>
+    <p>Gyula Farkas published the lemma in 1902 in Crelle's journal, after earlier
+    versions with gaps, in work on mechanical equilibrium. It sat unnoticed until
+    von Neumann and Gale, Kuhn and Tucker built LP duality on it in the 1940s.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">01 · farkas</p>
+  <h2>Farkas, constructively</h2>
+  <div class="cols wide-left">
+    <div>
+      <div class="box proof"><span class="label">proof of "at least one"</span>
+        <p><b>Invariant.</b> Every row FM produces is a nonnegative combination $y^\top(A, b)$ of the original rows. This holds by induction, since each new row is a positive combination of two rows that already satisfy it.</p>
+        <p><b>Run FM to the end.</b> Each final row reads $0 \le c$ and carries its $y \ge 0$ with $y^\top A = 0$ and $y^\top b = c$.</p>
+        <p>If some $c &lt; 0$: that $y$ is a certificate, so (II) holds.<br>
+        If every $c \ge 0$: FM's correctness says the system is feasible, so (I) holds. $\square$</p>
+      </div>
+    </div>
+    <div class="box good"><span class="label">in code · lab step 5</span>
+      <p class="small">Append the unit vector $e_i$ to row $i$ as $m$ extra columns that are never eliminated. FM combines rows linearly, so the extra columns accumulate exactly $y$.</p>
+      <p class="small">When a row with zero $x$-part and $b &lt; 0$ appears, its tail <em>is</em> the certificate.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>Read the proof again with the example from two slides back: $x \le 1$,
+    $-x \le -2$. Eliminating $x$ pairs row 1 (upper bound) with row 2 (lower bound)
+    with multipliers $1, 1$, giving $0 \le -1$. With the tails attached the row is
+    $(0 \mid 1, 1) \le -1$, and $y = (1, 1)$ can be read off.</p>
+    <p>The lab asks you to see the proof and the algorithm as the same thing. That
+    habit is useful throughout the course. Many existence theorems in optimization
+    come with an algorithm that finds the object, and many algorithms, run to
+    completion, prove a theorem.</p>
+    <h4>How large is the certificate?</h4>
+    <p>FM's multipliers can have many bits. But if a certificate exists, then
+    $\{y \ge 0 : y^\top A = 0,\ y^\top b = -1\}$ is a nonempty polyhedron. It is
+    pointed, because it lies in $y \ge 0$, so it has a vertex. A vertex solves a
+    square subsystem, so by Cramer's rule its entries have bit size polynomial in
+    that of $(A, b)$. So short certificates always exist, and linear feasibility is
+    in coNP. Together with the solution itself as a "yes" certificate, which also
+    has polynomial size by the same vertex argument, this placed LP in NP ∩ coNP
+    decades before Khachiyan put it in P (unit 04).</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">01 · farkas</p>
+  <h2>Farkas, geometrically</h2>
+  <div class="cols wide-right">
+    <div class="fig">
+      <svg viewBox="0 0 420 300" width="440" role="img" aria-label="a cone generated by a1 and a2, a point b outside it, and a separating line">
+        <defs>
+          <marker id="ar4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" class="fill-ink"/></marker>
+          <marker id="ar5" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--warn)"/></marker>
+          <marker id="ar6" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" class="fill-accent"/></marker>
+          <clipPath id="clip1"><rect x="0" y="0" width="420" height="300"/></clipPath>
+        </defs>
+        <g clip-path="url(#clip1)">
+          <polygon points="190,230 420,115 420,0 267,0" class="fill-soft" style="fill-opacity:.95"/>
+          <line x1="167" y1="298" x2="269" y2="-6" class="accent" stroke-width="2" stroke-dasharray="7 5"/>
+          <path d="M190,230 L280,185" class="ink" stroke-width="2.5" fill="none" marker-end="url(#ar4)"/>
+          <path d="M190,230 L235,95" class="ink" stroke-width="2.5" fill="none" marker-end="url(#ar4)"/>
+          <path d="M190,230 L145,140" class="warn" stroke-width="2.5" fill="none" marker-end="url(#ar5)"/>
+          <path d="M190,230 L250,250" class="accent" stroke-width="2.5" fill="none" marker-end="url(#ar6)"/>
+          <circle cx="190" cy="230" r="4" class="fill-ink"/>
+          <text x="286" y="190" font-size="16">a₁</text>
+          <text x="242" y="96" font-size="16">a₂</text>
+          <text x="118" y="134" font-size="16" style="fill:var(--warn)">b</text>
+          <text x="256" y="262" font-size="16" style="fill:var(--accent)">y</text>
+          <text x="310" y="60" font-size="15" class="soft">cone(a₁, a₂)</text>
+          <text x="186" y="292" font-size="13" class="soft">y·z = 0</text>
+        </g>
+      </svg>
+      <p class="cap">$b \notin \operatorname{cone}(a_1, a_2)$, so a line through the origin separates them. Its normal $y$ has $y \cdot a_j \ge 0$ and $y \cdot b &lt; 0$.</p>
+    </div>
+    <div>
+      <p>Read the standard form geometrically. With $a_j$ the <b>columns</b> of $A$:</p>
+      <p>(I′) says $b \in \operatorname{cone}(a_1, \dots, a_n)$.</p>
+      <p>(II′) says some hyperplane $\{z : y^\top z = 0\}$ has every $a_j$ on one side and $b$ strictly on the other.</p>
+      <div class="box thm"><span class="label">so farkas is</span>
+        <p>a point outside a finitely generated cone can be separated from it by a hyperplane.</p>
+      </div>
+      <p class="small muted">Here $a_1=(2,1)$, $a_2=(1,3)$, $b=(-1,2)$, $y=(3,-1)$: $y\cdot a_1 = 5$, $y \cdot a_2 = 0$, $y\cdot b = -5$.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>The geometric proof: a finitely generated cone $K$ is closed and convex. If
+    $b \notin K$, let $p$ be the point of $K$ nearest to $b$. The vector
+    $y = p - b$ then satisfies $y^\top z \ge y^\top p$ for all $z \in K$, with
+    $y^\top p = 0$ because $K$ is a cone, and $y^\top b &lt; y^\top p$. That is (II′).</p>
+    <p>The subtle step is <b>closedness</b>. It is obvious for a polyhedral cone, but a
+    finitely generated cone is only known to be polyhedral after Minkowski–Weyl, or
+    after Carathéodory's theorem, which writes it as a finite union of cones on
+    linearly independent generators, each of which is closed. For a general convex
+    cone that is not closed the statement fails, which is why duality in conic
+    programming (unit 25, SDP) needs extra "constraint qualification" hypotheses
+    that LP never does.</p>
+    <p>Keep both pictures. FM is the one you compute with. Separation is the one
+    that generalizes to convex optimization (unit 29): KKT conditions are what this
+    picture becomes when the cone is generated by gradients of the active
+    constraints.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">01 · farkas</p>
+  <h2>Why this is the root of the trunk</h2>
+  <div class="cols">
+    <div>
+      <p><b>LP duality (unit 03).</b> "No $x$ has $c^\top x &gt; z$" is an infeasibility statement about $Ax \le b,\ -c^\top x \le -z$ with a small perturbation. Its Farkas certificate is a <b>dual solution</b>. Strong duality is Farkas applied once.</p>
+      <p><b>Solvers return certificates.</b> Gurobi: set <code>InfUnbdInfo=1</code> and read <code>FarkasDual</code>. HiGHS: <code>getDualRay</code>. An infeasible model comes with the $y$ you are building.</p>
+    </div>
+    <div>
+      <p><b>Cutting planes (unit 08).</b> A Chvátal–Gomory cut is a nonnegative combination of rows whose coefficients happen to be integers, with the right side rounded down. It is Farkas plus rounding.</p>
+      <p><b>The KKT conditions (unit 29)</b> are the separation picture for curved sets.</p>
+      <p class="muted">Solvers compute in floating point, so their $y$ satisfies $y^\top A \approx 0$. Your integer $y$ satisfies it exactly. Exact verification of solver claims is a live research area.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>The duality sketch, to be done properly in unit 03. Suppose
+    $\max\{c^\top x : Ax \le b\}$ is feasible with optimum $z^*$. For any
+    $\varepsilon &gt; 0$ the system $Ax \le b,\ -c^\top x \le -(z^* + \varepsilon)$ is
+    infeasible. Farkas gives $(y, t) \ge 0$ with $y^\top A - t\,c^\top = 0$ and
+    $y^\top b - t\,(z^* + \varepsilon) &lt; 0$. Feasibility of $Ax \le b$ forces
+    $t &gt; 0$ (otherwise $y$ alone would be a certificate for $Ax \le b$). Scale to
+    $t = 1$: $y^\top A = c^\top$, $y \ge 0$, and $y^\top b &lt; z^* + \varepsilon$.
+    That $y$ is a dual feasible solution with value within $\varepsilon$ of $z^*$,
+    and a finiteness argument removes the $\varepsilon$.</p>
+    <p>On exactness: the SCIP team's <em>exact SCIP</em> and the VIPR certificate
+    format let a MIP solver emit a proof of optimality that an independent checker
+    verifies in rational arithmetic. For LP, the certificate is exactly the kind of
+    object this unit builds.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">01 · closing the loop</p>
+  <h2>The fundamental theorem of LP</h2>
+  <div class="box thm"><span class="label">theorem</span>
+    <p>Let $P = \{x : Ax \le b\}$ be nonempty and pointed, and $c \in \mathbb{R}^n$. Then either $\max\{c^\top x : x \in P\}$ is unbounded, or it is <b>attained at a vertex</b> of $P$.</p>
+  </div>
+  <div class="box proof"><span class="label">proof, via minkowski–weyl</span>
+    <p>Write $P = \operatorname{conv}(V) + \operatorname{cone}(R)$ with $V$ the vertices. If $c^\top r &gt; 0$ for some $r \in R$, then $x + t r$ is feasible for every $t \ge 0$ and the objective is unbounded. Otherwise, for $x = \sum \lambda_v v + \sum \mu_r r$,
+    $$c^\top x = \textstyle\sum \lambda_v\, c^\top v + \sum \mu_r\, c^\top r \;\le\; \max_{v \in V} c^\top v. \qquad \square$$</p>
+  </div>
+  <p>So an LP is <b>infeasible</b>, <b>unbounded</b>, or <b>solved at a corner</b>. There is no fourth case, and in particular no finite supremum that fails to be attained.</p>
+  <aside class="notes">
+    <p>This is the theorem that makes LP a <em>combinatorial</em> problem in disguise.
+    The optimum lies in a finite set, the vertices, which lab step 3 can enumerate in
+    $\binom{m}{n}$ tries. Simplex (unit 02) is the idea of not enumerating: move from
+    a vertex to an adjacent, better one until none is better. That works because the
+    objective is linear and $P$ is convex, so a local optimum over the vertex graph
+    is global.</p>
+    <p>"No fourth case" is not true for nonlinear problems.
+    $\inf\{e^{-x} : x \ge 0\} = 0$ is finite and never attained. Finitely many
+    linear constraints rule this out.</p>
+    <p>Pointedness is needed only for the words "at a vertex". Without it, a bounded
+    LP still attains its optimum, on a face that contains a line.</p>
+  </aside>
+</section>
+
+<!-- ================================================================== -->
+<section>
+  <p class="eyebrow">01 · lab</p>
+  <h2>Lab 01 — what you build</h2>
+  <div class="lab">
+    <span class="label">about 2½ hours · uv run co lab 01 · exact integers, no solver</span>
+    <ol>
+      <li><b>Eliminate</b> one variable by Fourier–Motzkin. Tested by sampling points against the exact projection.</li>
+      <li><b>Decide feasibility</b> by eliminating everything. Agrees with HiGHS.</li>
+      <li><b>Enumerate vertices</b> over all $\binom{m}{n}$ bases. Agrees with qhull, and survives a degenerate pyramid.</li>
+      <li><b>Check</b> a Farkas certificate.</li>
+      <li><b>Find</b> one, using your own <code>eliminate</code> and the tail trick.</li>
+    </ol>
+  </div>
+<pre><code class="language-bash">uv run co test 01
+uv run co then 01      # FM blow-up vs true facets · your vertices vs qhull · a proof printed</code></pre>
+  <aside class="notes">
+    <p>The lab's rows are <code>(a, b)</code> tuples of Python ints, meaning
+    $a \cdot x \le b$. Integers are deliberate. Floats would need a tolerance, and a
+    proof checked up to a tolerance is not a proof. <code>colib.polyhedra</code>
+    provides <code>solve_exact</code> so you do not write Gaussian elimination
+    again.</p>
+    <p>Budget: steps 1 and 5 are the ones that take thinking, about 40 minutes each.
+    Step 5 has a ten-line solution once you see the trick. Give it ten minutes
+    before opening hint rung 2.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">01 · checkpoint</p>
+  <h2>Done when</h2>
+  <div class="box good"><span class="label">checkpoint</span>
+    <ul>
+      <li>All five lab steps are ✓.</li>
+      <li>Given the infeasible system that <code>then</code> prints, with the certificate hidden, you can produce a Farkas vector by hand and explain <b>without reference to any solver</b> why it proves infeasibility.</li>
+      <li>You can say why vertex, extreme point and BFS coincide, and which of the three your <code>vertices</code> function computes.</li>
+    </ul>
+  </div>
+  <div class="cols">
+    <div>
+      <h3>Reading</h3>
+      <p class="small">Bertsimas & Tsitsiklis, ch. 2 (§2.1–2.6) and §4.6.<br>
+      Gärtner & Matoušek, <em>Understanding and Using LP</em>, §6.1–6.4 (Farkas via FM).<br>
+      Ziegler, <em>Lectures on Polytopes</em>, lecture 1 (optional).</p>
+    </div>
+    <div>
+      <h3>Next</h3>
+      <p class="small"><b>02</b> Simplex, honestly: walking between the vertices you just enumerated, instead of listing all of them.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>The second checkpoint is the one the curriculum names, and it is meant to be
+    done on paper. FM by hand on a 3-variable system with 6 rows takes about ten
+    minutes. You can also often spot a certificate by eye: look for rows whose
+    $x$-coefficients cancel when added.</p>
+    <p>In <code>NOTES.md</code>: your blow-up numbers, and your one-sentence
+    explanation of why the certificate is a proof.</p>
+  </aside>
+</section>
+
+</div></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/plugin/highlight/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<script src="../../slides/deck.js"></script>
+</body>
+</html>

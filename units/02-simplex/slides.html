@@ -1,0 +1,634 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>02 · Simplex, honestly</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+<link rel="stylesheet" href="../../slides/deck.css">
+<style>
+  .tab { font-family: var(--f-mono); font-size: .56em !important; }
+  .tab td { padding: .18em .55em !important; text-align: right !important; }
+  .tab tr.obj td { border-top: 2px solid var(--ink); }
+  .tab td.piv { background: var(--accent-soft); font-weight: 600; outline: 2px solid var(--accent); }
+  .tab td.bas { color: var(--ink-soft); text-align: left !important; }
+</style>
+</head>
+<body data-trunk="lp">
+<div class="reveal"><div class="slides">
+
+<!-- ================================================================== -->
+<section class="title-slide">
+  <p class="eyebrow">Part I · trunk A · linear programming · spine</p>
+  <div class="unit-no">02</div>
+  <h1>Simplex, honestly</h1>
+  <p class="lede">Walking from vertex to better vertex: why it works, when it loops forever, when it takes
+  exponentially long, and why it is still the workhorse.</p>
+  <p class="meta"><span>needs 01</span><span>~1½ h slides + 3 h lab</span><span>lab: <code>uv run co lab 02</code></span></p>
+  <aside class="notes">
+    <p>Unit 01 ended with the fundamental theorem: a bounded, feasible LP over a
+    pointed polyhedron is optimized at a vertex, and vertices are basic feasible
+    solutions. Lab 01 enumerated all $\binom{m}{n}$ bases to find them. This unit
+    replaces enumeration by local search on the graph of vertices. Because the
+    objective is linear and the feasible region convex, local search here is
+    exact: a vertex with no improving neighbour is optimal.</p>
+    <p>"Honestly" in the title means the unit does not stop at the version that
+    works on textbook examples. It covers the three ways the naive method fails:
+    cycling (degeneracy), exponential running time (Klee–Minty), and floating
+    point. Each of them is reproduced in the lab.</p>
+    <p>Convention for the whole unit: $\max\{c^\top x : Ax \le b,\ x \ge 0\}$,
+    $A \in \mathbb{Q}^{m\times n}$, with slacks $s = b - Ax \ge 0$.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">02 · overview</p>
+  <h2>The route</h2>
+  <div class="cols three">
+    <div class="box def"><span class="label">1 · the method</span>
+      <p>Bases and dictionaries. Reduced costs certify optimality. A pivot moves along an edge.</p></div>
+    <div class="box warn"><span class="label">2 · how it fails</span>
+      <p>Degenerate pivots and cycling (Beale). Anti-cycling (Bland). Exponential paths (Klee–Minty).</p></div>
+    <div class="box good"><span class="label">3 · why it wins anyway</span>
+      <p>Two phases. Revised simplex with LU. Steepest-edge pricing. Tolerances, and what they hide.</p></div>
+  </div>
+  <p class="muted">Lab: pivot, pricing rules, the loop with cycle detection, two phases, and Klee–Minty. Then 1000 LPs against HiGHS.</p>
+  <aside class="notes">
+    <p>Reading plan: section 1 is the algorithm, and the worked tableau example should
+    be followed with a pencil. Section 2 is short but carries the two surprising
+    theorems. Section 3 is about implementations. Read it knowing that the lab
+    deliberately builds the <em>textbook</em> version, so you can see what the real
+    ones change.</p>
+  </aside>
+</section>
+
+<!-- ================================================================== -->
+<section class="divider">
+  <p class="eyebrow">section 1</p>
+  <h2>From vertices to bases</h2>
+  <p>An algebraic handle on a geometric walk.</p>
+</section>
+
+<section>
+  <p class="eyebrow">02 · bases</p>
+  <h2>Bases and basic solutions</h2>
+  <div class="cols wide-left">
+    <div>
+      <p>Add slacks: $\;Ax + s = b,\; x, s \ge 0$. Write all $n+m$ variables as one vector with matrix $[A \mid I]$, which has rank $m$.</p>
+      <div class="box def"><span class="label">definition</span>
+        <p>A <b>basis</b> $B$ is a set of $m$ columns of $[A\mid I]$ that are linearly independent. Setting the other ($N$, <b>nonbasic</b>) variables to 0 gives the <b>basic solution</b> $x_B = A_B^{-1} b$.</p>
+        <p>It is <b>feasible</b> when $x_B \ge 0$.</p>
+      </div>
+      <p>Basic feasible solutions are exactly the vertices of unit 01. Different bases can give the same vertex, which is <b>degeneracy</b>.</p>
+    </div>
+    <div class="box"><span class="label">the starting basis</span>
+      <p>If $b \ge 0$, the slacks form a feasible basis: $x = 0,\ s = b$. The origin is a vertex.</p>
+      <p class="small muted">If some $b_i &lt; 0$ it is not feasible. That is what phase 1 (section 3) is for.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>Why BFS = vertex in this form: in $\{(x,s) : Ax + s = b,\ x,s \ge 0\}$ a point
+    is a vertex when the columns of its positive variables are linearly independent.
+    That set can be extended to a basis of $m$ independent columns. This is unit 01's
+    "$n$ tight constraints of rank $n$" rewritten for equality form: the tight
+    constraints are the nonbasic variables' $\ge 0$ bounds.</p>
+    <p>A vertex with fewer than $m$ positive basic variables is <b>degenerate</b>. It
+    extends to a basis in several ways, one per choice of which zero-valued
+    variables to call basic. Degeneracy is not rare: combinatorial LPs such as
+    assignment, matching and set covering are massively degenerate, and it is the
+    reason cycling is a practical concern and not just a curiosity.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">02 · bases</p>
+  <h2>Reduced costs: the optimality certificate</h2>
+  <p>Solve the constraints for the basic variables and substitute into the objective:</p>
+  $$x_B = A_B^{-1} b - A_B^{-1} A_N\, x_N, \qquad c^\top x = \underbrace{c_B^\top A_B^{-1} b}_{\text{current value}} + \underbrace{(c_N^\top - c_B^\top A_B^{-1} A_N)}_{\bar c_N^\top}\, x_N$$
+  <div class="cols">
+    <div class="box thm"><span class="label">optimality criterion</span>
+      <p>If the BFS is feasible and every <b>reduced cost</b> $\bar c_j \le 0$, it is optimal.</p>
+    </div>
+    <div class="box proof"><span class="label">proof</span>
+      <p>Every feasible point has $x_N \ge 0$, so its value is the current value plus $\bar c_N^\top x_N$, which is at most the current value. $\square$</p>
+    </div>
+  </div>
+  <p>If some $\bar c_j &gt; 0$, increasing $x_j$ from 0 improves the objective at rate $\bar c_j$. That $j$ may <b>enter</b> the basis.</p>
+  <aside class="notes">
+    <p>This is the "dictionary" view (Chvátal's term): each basis rewrites the same LP
+    as "basic variables = constants − combinations of nonbasic ones" and
+    "objective = constant + reduced costs times nonbasic ones". A pivot moves to
+    an equivalent rewriting. The optimality test reads the sign pattern of the
+    objective row.</p>
+    <p>The quantity $y^\top = c_B^\top A_B^{-1}$ is the vector of <b>simplex
+    multipliers</b>. Reduced costs are $\bar c_j = c_j - y^\top a_j$, and at an
+    optimal basis $y$ is an optimal <b>dual solution</b>. Unit 03 is about exactly
+    this. The criterion "all $\bar c_j \le 0$" says $A^\top y \ge c$ and
+    $y \ge 0$ (reading the slack columns), which is dual feasibility.</p>
+    <p>Sign convention used by the lab's tableau: the objective row stores
+    $-\bar c$, so optimality is "no negative entries in the objective row". That is
+    the convention of most textbooks that start from the $z - c^\top x = 0$ row.</p>
+    <p>The criterion is sufficient but not necessary for optimality of the
+    <em>point</em>. At a degenerate optimal vertex some bases can show a positive
+    reduced cost even though the vertex is optimal, because the improving direction
+    is blocked at step length 0. That is why simplex sometimes makes degenerate
+    pivots at an optimal vertex before it can prove optimality.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">02 · bases</p>
+  <h2>The ratio test: how far to move</h2>
+  <div class="cols wide-left">
+    <div>
+      <p>Increase entering $x_j$ to $t \ge 0$ with the other nonbasic variables held at 0. The basic variables change linearly:</p>
+      $$x_B(t) = \bar b - t\, d, \qquad \bar b = A_B^{-1}b,\ \ d = A_B^{-1} a_j$$
+      <p>Feasibility needs $\bar b_i - t d_i \ge 0$ for every row, which binds only where $d_i &gt; 0$:</p>
+      $$t^* = \min_{i:\,d_i > 0} \frac{\bar b_i}{d_i}$$
+      <p>The row attaining the minimum <b>leaves</b>: its basic variable hits 0.</p>
+    </div>
+    <div>
+      <div class="box warn"><span class="label">no $d_i &gt; 0$</span>
+        <p>Then $x_j$ can grow forever, and the LP is <b>unbounded</b>. The ray $x_B = \bar b - t d$, $x_j = t$ is a certificate: feasible for all $t$, with objective growing at rate $\bar c_j &gt; 0$.</p>
+      </div>
+      <div class="box"><span class="label">degenerate step</span>
+        <p>If the minimizing $\bar b_i = 0$, then $t^* = 0$. The basis changes but the point does not move.</p>
+      </div>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>Geometrically, the nonbasic variables other than $x_j$ stay at their bound 0,
+    so $n-1$ of the $n$ tight constraints at the current vertex stay tight. The
+    solutions of $n-1$ independent equations form a line, and the move is along the
+    edge of the polyhedron in that line. The ratio test stops at the first new
+    constraint that becomes tight, which is the vertex at the other end of the edge.
+    A pivot is therefore an edge step, and the simplex path is a walk on the graph
+    of the polyhedron.</p>
+    <p>Why only $d_i &gt; 0$: rows with $d_i \le 0$ get larger or stay as $t$ grows,
+    so they never become infeasible. Pivoting on a negative $d_i$ would make the
+    right-hand side of that row negative, which is an infeasible basis. Lab step 2's
+    "think about" asks exactly this.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">02 · bases</p>
+  <h2>A walk on the example polygon</h2>
+  <div class="cols wide-right">
+    <div class="fig">
+      <svg viewBox="0 0 380 350" width="400" role="img" aria-label="simplex path from origin to (1,0) to (2.5,1.5)">
+        <defs><marker id="arp" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" class="fill-accent"/></marker></defs>
+        <line x1="60" y1="18" x2="60" y2="332" class="rule" stroke-width="1.5"/>
+        <line x1="20" y1="300" x2="368" y2="300" class="rule" stroke-width="1.5"/>
+        <polygon points="60,300 120,300 210,210 60,60" class="fill-soft unit" stroke-width="2.5" style="fill-opacity:.9"/>
+        <path d="M60,300 L114,300" class="accent" stroke-width="5" fill="none" marker-end="url(#arp)"/>
+        <path d="M120,300 L205,215" class="accent" stroke-width="5" fill="none" marker-end="url(#arp)"/>
+        <circle cx="60" cy="300" r="7" class="fill-ink"/>
+        <circle cx="120" cy="300" r="7" class="fill-ink"/>
+        <circle cx="210" cy="210" r="8" class="fill-accent"/>
+        <circle cx="60" cy="60" r="6" class="fill-ink"/>
+        <text x="40" y="325" font-size="14" class="mono">z=0</text>
+        <text x="112" y="325" font-size="14" class="mono">z=2</text>
+        <text x="220" y="203" font-size="14" class="mono">z=6.5</text>
+        <text x="70" y="55" font-size="14" class="mono">z=4</text>
+      </svg>
+      <p class="cap">$\max\ 2x+y$ over unit 01's polygon. Dantzig's rule: enter $x$ (coefficient 2), then $y$.</p>
+    </div>
+    <div>
+      <ol>
+        <li><b>Origin.</b> Slack basis. $\bar c = (2, 1)$. Enter $x$. Ratio test: $x-y\le 1$ binds first, at $x=1$.</li>
+        <li><b>$(1, 0)$.</b> Now $x = 1 + y - s_2$ and $z = 2 + 3y - 2s_2$. Enter $y$. $x + y \le 4$ binds at $y = 1.5$.</li>
+        <li><b>$(2.5, 1.5)$.</b> Both reduced costs $\le 0$: optimal, $z = 6.5$.</li>
+      </ol>
+      <p>Two pivots, and the vertex $(0,4)$ was never visited. Simplex visits only an improving path, not the whole vertex set.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>Check step 2 yourself. From $x - y + s_2 = 1$ at the basis $\{s_1, x\}$:
+    $x = 1 + y - s_2$. Substitute into $2x + y$ to get $2 + 3y - 2s_2$. The reduced
+    cost of $y$ is 3 and of $s_2$ is $-2$. Then from $x + y + s_1 = 4$:
+    $s_1 = 3 - 2y + s_2 \ge 0$ gives $y \le 1.5$.</p>
+    <p>At the optimum the reduced costs of the two slacks are
+    $-(\tfrac32, \tfrac12)$: increasing either slack (loosening that constraint the
+    other way) costs objective. Their negatives $y = (\tfrac32, \tfrac12)$ are the
+    shadow prices. Loosen $x+y\le 4$ by one unit and the optimum rises by
+    $\tfrac32$. That is unit 03's first computation, done here for free.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">02 · bases</p>
+  <h2>The tableau: pivots as row operations</h2>
+  <p class="small">$\max 3x + 2y$, $\ x + y \le 4$, $\ 2x + y \le 6$. Columns $x, y, s_1, s_2 \mid$ rhs. Bottom row: $-\bar c$ and $z$. Boxed: the pivot.</p>
+  <div class="cols three" style="gap:.6em">
+    <table class="tab">
+      <tr><td class="bas">s₁</td><td>1</td><td>1</td><td>1</td><td>0</td><td>4</td></tr>
+      <tr><td class="bas">s₂</td><td class="piv">2</td><td>1</td><td>0</td><td>1</td><td>6</td></tr>
+      <tr class="obj"><td class="bas">z</td><td>−3</td><td>−2</td><td>0</td><td>0</td><td>0</td></tr>
+    </table>
+    <table class="tab">
+      <tr><td class="bas">s₁</td><td>0</td><td class="piv">½</td><td>1</td><td>−½</td><td>1</td></tr>
+      <tr><td class="bas">x</td><td>1</td><td>½</td><td>0</td><td>½</td><td>3</td></tr>
+      <tr class="obj"><td class="bas">z</td><td>0</td><td>−½</td><td>0</td><td>3⁄2</td><td>9</td></tr>
+    </table>
+    <table class="tab">
+      <tr><td class="bas">y</td><td>0</td><td>1</td><td>2</td><td>−1</td><td>2</td></tr>
+      <tr><td class="bas">x</td><td>1</td><td>0</td><td>−1</td><td>1</td><td>2</td></tr>
+      <tr class="obj"><td class="bas">z</td><td>0</td><td>0</td><td>1</td><td>1</td><td>10</td></tr>
+    </table>
+  </div>
+  <div class="cols">
+    <p class="small"><b>Pivot 1.</b> Most negative $-\bar c$ is column $x$. Ratios $4/1,\ 6/2$: row 2 leaves.<br>
+    <b>Pivot 2.</b> Column $y$. Ratios $1/\tfrac12 = 2,\ 3/\tfrac12 = 6$: row 1 leaves.</p>
+    <p class="small"><b>End.</b> No negative entries in the bottom row: $x = y = 2$, $z = 10$.<br>
+    The slack columns of the bottom row, $(1, 1)$, are the <b>dual values</b>. Remember them for unit 03.</p>
+  </div>
+  <aside class="notes">
+    <p>This exact LP is <code>SMALL</code> in the lab's tests, and the second tableau
+    is the one <code>test_step1_pivot_makes_a_unit_column_and_updates_basis</code>
+    expects after the first pivot. If your pivot disagrees, compare against these.</p>
+    <p>The tableau is the dictionary written as a matrix. Row $i$ says
+    "basic variable $i$ + (nonbasic combination) = rhs", and the bottom row says
+    "$z - \bar c^\top x_N = $ current value". A pivot is one step of Gauss–Jordan
+    elimination that makes the entering column a unit vector. That is all the
+    algebra there is.</p>
+    <p>Everything in the tableau is $A_B^{-1}$ applied to the original data:
+    the body is $A_B^{-1}[A\mid I]$ and the rhs is $A_B^{-1}b$. In particular
+    the slack columns of the body <em>are</em> $A_B^{-1}$. The revised simplex
+    method (section 3) stores only a factorization of $A_B$ and computes the one
+    column and one row a pivot needs.</p>
+  </aside>
+</section>
+
+<!-- ================================================================== -->
+<section class="divider">
+  <p class="eyebrow">section 2</p>
+  <h2>How the naive method fails</h2>
+  <p>Twice: by never stopping, and by taking exponentially long to stop.</p>
+</section>
+
+<section>
+  <p class="eyebrow">02 · failure</p>
+  <h2>Degeneracy and cycling</h2>
+  <div class="cols wide-left">
+    <div>
+      <p>A <b>degenerate</b> pivot has $t^* = 0$: the basis changes and the point stays. The objective does not increase, so the usual termination argument (strict improvement, finitely many bases) fails.</p>
+      <div class="box warn"><span class="label">Beale, 1955</span>
+        <p>$\max\ \tfrac34 x_1 - 20x_2 + \tfrac12 x_3 - 6x_4$<br>
+        $\tfrac14 x_1 - 8x_2 - x_3 + 9x_4 \le 0$<br>
+        $\tfrac12 x_1 - 12x_2 - \tfrac12 x_3 + 3x_4 \le 0$<br>
+        $x_3 \le 1$</p>
+        <p>With the largest-coefficient rule and ties broken by lowest row, the basis returns to the slacks after <b>6 degenerate pivots</b>, and repeats forever.</p>
+      </div>
+    </div>
+    <div class="box good"><span class="label">optimum</span>
+      <p>$\tfrac54$ at $x = (1, 0, 1, 0)$. Bland's rule reaches it in 6 pivots.</p>
+      <p class="small muted">Both counts come from the lab's reference solution. Your step 3 test reproduces them.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>Finiteness argument without degeneracy: each pivot strictly increases the
+    objective, so no basis repeats, and there are at most $\binom{n+m}{m}$ bases.
+    With degeneracy the objective can stay flat, and a sequence of distinct bases
+    at the same vertex can close into a loop.</p>
+    <p>Cycling was considered a theoretical curiosity for decades: early codes
+    rarely cycled because floating-point noise broke the ties. It is not purely
+    theoretical. Highly degenerate combinatorial LPs stall (long runs of degenerate
+    pivots) in practice, and exact-arithmetic solvers, which have no noise to break
+    ties, do cycle without a rule.</p>
+    <p>The lab detects cycling by remembering bases, which costs memory
+    proportional to the number of pivots. A production code never does this. It
+    prevents cycling instead, by one of the rules on the next slide.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">02 · failure</p>
+  <h2>Bland's rule</h2>
+  <div class="box thm"><span class="label">theorem (Bland, 1977)</span>
+    <p>If the entering variable is always the <b>lowest-index</b> improving one, and ties in the ratio test go to the <b>lowest-index</b> basic variable, the simplex method never cycles.</p>
+  </div>
+  <div class="cols">
+    <div class="box proof"><span class="label">proof idea</span>
+      <p class="small">Suppose it cycles, and let $x_t$ be the largest-index variable that enters and leaves during the cycle. Compare the dictionary where $x_t$ leaves (entering $x_s$, $s &lt; t$) with the one where $x_t$ re-enters. Reduced costs from the second, applied to the move of the first, give an identity whose terms are all $\le 0$ by the index choices, except one that must be $&gt; 0$. Contradiction.</p>
+    </div>
+    <div>
+      <p><b>Other cures:</b> lexicographic ratio test (Dantzig, Orden, Wolfe 1955); perturbing $b$ symbolically or numerically.</p>
+      <p><b>The price:</b> Bland's rule ignores <em>how much</em> a column improves, so it is usually slow. Production codes use good pricing plus perturbation, and fall back to anti-cycling measures only when they detect stalling.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>The full proof is one page in Chvátal ch. 3 or Bertsimas & Tsitsiklis §3.4
+    (they use the lexicographic rule and leave Bland as an exercise with hints).
+    The key identity: in the later dictionary the objective is
+    $z = z_0 + \sum_j \bar c^{*}_j x_j$. The earlier move increases $x_s$ by $t$ and
+    changes basic variables linearly. Since both dictionaries describe the same
+    function, the coefficients of $t$ must agree, and the sign constraints from
+    "lowest index" choices at both pivots make them disagree.</p>
+    <p><b>Perturbation</b> in practice: add tiny random amounts to the right-hand
+    side (primal simplex) or to the costs (dual simplex) so that ties essentially
+    never happen, solve, then remove the perturbation and clean up with a few more
+    pivots. Real dual simplex codes, HiGHS among them, do this, which is part of why
+    they barely ever cycle.</p>
+    <p>Lab check: in <code>then</code>, Bland's rule takes 465 pivots on the $n=12$
+    Klee–Minty cube, against Dantzig's 4095. Bland is not a speed rule; it just happens
+    to do better on an instance built to defeat Dantzig.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">02 · failure</p>
+  <h2>Klee–Minty: exponentially many pivots</h2>
+  <div class="cols">
+    <div>
+      <p>A squashed $n$-cube (Klee & Minty, 1972). In Chvátal's form:</p>
+      $$\max \sum_{j=1}^{n} 10^{n-j} x_j \quad\text{s.t.}\quad 2\sum_{j<i} 10^{i-j} x_j + x_i \le 100^{i-1},\ \ x \ge 0$$
+      <p>From the origin, Dantzig's rule visits <b>all $2^n$ vertices</b>: exactly $2^n - 1$ pivots.</p>
+      <p class="muted small">The cube is deformed so that each coordinate's "high" and "low" faces are nearly parallel, and the largest-coefficient choice always starts the long way round.</p>
+    </div>
+    <div>
+      <table>
+        <thead><tr><th class="num">$n$</th><th class="num">Dantzig</th><th class="num">Bland</th><th class="num">HiGHS</th></tr></thead>
+        <tbody>
+          <tr><td class="num">4</td><td class="num">15</td><td class="num">9</td><td class="num">1</td></tr>
+          <tr><td class="num">6</td><td class="num">63</td><td class="num">25</td><td class="num">1</td></tr>
+          <tr><td class="num">8</td><td class="num">255</td><td class="num">67</td><td class="num">9</td></tr>
+          <tr><td class="num">10</td><td class="num">1 023</td><td class="num">177</td><td class="num">9</td></tr>
+          <tr><td class="num">12</td><td class="num">4 095</td><td class="num">465</td><td class="num">9</td></tr>
+        </tbody>
+      </table>
+      <p class="small muted">Reference run of <code>uv run co then 02</code>. HiGHS: primal simplex, presolve off.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>Bland's counts on this family satisfy $p_n = p_{n-1} + p_{n-2} + 1$, a
+    Fibonacci recurrence, so they grow like $\varphi^n \approx 1.618^n$. That is
+    exponential, just slower. For essentially every deterministic pivoting rule
+    that has been proposed (Dantzig, Bland, steepest edge, greatest improvement,
+    shadow vertex), someone has built a Klee–Minty-style family that forces
+    exponentially many pivots. For randomized rules the best known upper bounds
+    are subexponential (Kalai 1992; Matoušek, Sharir & Welzl), and
+    Friedmann, Hansen & Zwick (2011) proved subexponential lower bounds for some of
+    them.</p>
+    <p>Why HiGHS needs so few: pricing that measures improvement relative to edge
+    length (next section), and a different starting basis ("crash"), neither of
+    which falls for a construction aimed at Dantzig's rule. Don't read "9 iterations"
+    as "HiGHS is polynomial". Read it as "the lower bound is for one rule".</p>
+    <p>A related open question: the <b>polynomial Hirsch conjecture</b>, whether the
+    diameter of the vertex graph of every polytope is polynomial in $m$ and $n$. The
+    original Hirsch conjecture (diameter $\le m - n$) was disproved by Santos
+    (2012). If the polynomial version is false, no pivoting rule at all can be
+    polynomial.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">02 · failure</p>
+  <h2>So why is simplex the workhorse?</h2>
+  <div class="cols">
+    <div class="box good"><span class="label">in practice</span>
+      <p>On real LPs the number of iterations is typically a small multiple of the number of constraints. Worst cases are artificial.</p>
+    </div>
+    <div class="box def"><span class="label">in theory, eventually</span>
+      <p><b>Average case</b> (Borgwardt 1982): polynomial expected pivots for the shadow-vertex rule on a random model.</p>
+      <p><b>Smoothed analysis</b> (Spielman & Teng 2004): add small Gaussian noise to any LP, and shadow-vertex simplex takes polynomial expected time.</p>
+    </div>
+  </div>
+  <p>And a structural reason, which is the one that matters for this course: <b>simplex warm-starts</b>. Change the LP slightly and the old basis is nearly optimal. Branch-and-bound (unit 07) and cutting planes (unit 08) re-solve thousands of slightly changed LPs.</p>
+  <aside class="notes">
+    <p>Smoothed analysis explains why worst-case constructions are fragile. The
+    Klee–Minty cube relies on precise coefficient ratios, and perturbing them
+    destroys the long path. Spielman and Teng received the Gödel Prize (2008) for
+    it. Later work (Dadush & Huiberts, among others) has tightened the bounds
+    considerably.</p>
+    <p>The warm-start point is developed in unit 03 (the dual simplex) and unit 04
+    (why interior-point methods lose it). For a single large, cold LP, interior-point
+    methods are often faster. For a sequence of related LPs, simplex wins, and
+    integer programming is a sequence of related LPs.</p>
+  </aside>
+</section>
+
+<!-- ================================================================== -->
+<section class="divider">
+  <p class="eyebrow">section 3</p>
+  <h2>Starting, and what real codes do</h2>
+  <p>Two phases, the revised method, better pricing, and tolerances.</p>
+</section>
+
+<section>
+  <p class="eyebrow">02 · practice</p>
+  <h2>Getting started: two phases</h2>
+  <div class="cols">
+    <div>
+      <p>If some $b_i &lt; 0$, the slack basis is infeasible. <b>Phase 1:</b> for each such row, negate it and add an <b>artificial</b> $a_i \ge 0$ with coefficient $+1$, then solve</p>
+      $$\max\ -\textstyle\sum_i a_i$$
+      <p>starting from the basis of slacks and artificials, which is feasible by construction.</p>
+      <ul>
+        <li>Optimum $&lt; 0$: the original LP is <b>infeasible</b>. The phase-1 duals give a Farkas certificate, as in unit 01.</li>
+        <li>Optimum $= 0$: pivot remaining artificials out of the basis, drop them, restore the true objective. <b>Phase 2</b> continues from that feasible basis.</li>
+      </ul>
+    </div>
+    <div>
+      <div class="box warn"><span class="label">big-M, and why not</span>
+        <p>Alternative: one phase with objective $c^\top x - M\sum a_i$ for a huge $M$. It is simple to state and numerically poor, because $M$ mixes magnitudes in the reduced costs. The same disease comes back in unit 05 as big-M constraints.</p>
+      </div>
+      <div class="box"><span class="label">redundant rows</span>
+        <p class="small">An artificial stuck in the basis at 0 whose row has no nonzero real entry means that row is a combination of the others. Delete it. The lab's step 4 test includes one.</p>
+      </div>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>The phase-1 objective row must be "priced out" before it is a valid dictionary.
+    The artificials are basic, so their reduced costs must be zero: subtract each
+    artificial's row from the objective row. Forgetting this is the most common
+    phase-1 bug, and hint rung 2 of step 4 is about it.</p>
+    <p>Connection to unit 01: phase 1 is an LP whose optimum is 0 exactly when the
+    original system is feasible. When the optimum is negative, the optimal dual
+    solution of phase 1 is a Farkas vector for the original system. So LP software
+    proves infeasibility with the same object you built by Fourier–Motzkin, obtained
+    much more cheaply.</p>
+    <p>Real codes start differently. A "crash" procedure picks a starting basis with
+    as many structural variables as possible, and the dual simplex method starts from
+    a dual feasible basis instead, which is often easier to find.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">02 · practice</p>
+  <h2>The revised simplex method</h2>
+  <div class="cols wide-left">
+    <div>
+      <p>The tableau stores $A_B^{-1}[A \mid I]$, which is dense, $m \times (n+m)$, and is updated in full at every pivot. A pivot actually needs only:</p>
+      <ol>
+        <li>$y^\top = c_B^\top A_B^{-1}$: one solve with $A_B^\top$ (<b>BTRAN</b>);</li>
+        <li>reduced costs $\bar c_j = c_j - y^\top a_j$ for the candidates (<b>pricing</b>);</li>
+        <li>$d = A_B^{-1} a_j$ for the chosen column: one solve (<b>FTRAN</b>);</li>
+        <li>the ratio test, then an update of the <b>factorization</b> of $A_B$.</li>
+      </ol>
+    </div>
+    <div class="box"><span class="label">in a real solver</span>
+      <ul class="small">
+        <li>$A_B$ is kept as sparse <b>LU factors</b> (Markowitz ordering), not an inverse.</li>
+        <li>Each pivot updates the factors (Forrest–Tomlin), and periodically they are <b>refactorized</b> from scratch to control fill-in and error growth.</li>
+        <li>Real LPs are very sparse, so solves cost far less than $m^2$.</li>
+      </ul>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>For a sparse LP with $m = 10^5$ rows, a dense tableau would have $10^{10}$
+    entries. The revised method never forms it. Each iteration costs two triangular
+    solves with the LU factors plus pricing, and pricing can itself be partial
+    (look at only some columns) when $n$ is huge.</p>
+    <p>Refactorization is a numerical safeguard as much as a speed one. Updates
+    accumulate rounding error, and a fresh LU with threshold pivoting resets it.
+    Solvers also monitor the primal and dual residuals ($\|A_B x_B - b\|$, etc.)
+    and refactorize early when they drift.</p>
+    <p>The lab builds the dense tableau on purpose, because it makes every quantity
+    visible. The comparison with HiGHS in <code>then</code> is between the textbook
+    object and the engineered one.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">02 · practice</p>
+  <h2>Pricing: which column enters</h2>
+  <div class="cols">
+    <div>
+      <p><b>Dantzig</b>: the largest $\bar c_j$. It measures improvement per unit of $x_j$, so it depends on the units $x_j$ is measured in.</p>
+      <p><b>Steepest edge</b> (Goldfarb & Reid 1977): the largest improvement per unit of <em>distance</em> along the edge,</p>
+      $$\max_j \frac{\bar c_j}{\|\eta_j\|}, \qquad \eta_j = \begin{pmatrix} -A_B^{-1} a_j \\ e_j \end{pmatrix}$$
+      <p>where $\eta_j$ is the edge direction in the space of all variables.</p>
+    </div>
+    <div>
+      <div class="box good"><span class="label">what it buys</span>
+        <p>Typically far fewer pivots, and much less sensitivity to how variables are scaled.</p>
+      </div>
+      <div class="box warn"><span class="label">what it costs</span>
+        <p>The norms $\|\eta_j\|$ must be kept current, which takes an extra solve per pivot with clever update formulas. <b>Devex</b> (Harris 1973) approximates them cheaply.</p>
+      </div>
+      <p class="small muted">This is the one-sentence answer the checkpoint asks for.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>Why scaling fools Dantzig: substitute $x_j = 1000\,x'_j$. The column and the
+    cost of $x'_j$ are multiplied by 1000, so $\bar c'_j = 1000\,\bar c_j$ and Dantzig
+    now strongly prefers $x'_j$, although the geometry is unchanged. Steepest edge
+    divides by the edge length, which scales with the column, and so it is far less
+    affected.</p>
+    <p>Empirically, dual steepest edge in the dual simplex is the default in most
+    commercial and open codes for good reason: on benchmark sets it reduces iteration
+    counts substantially compared with Dantzig pricing, enough to more than pay for
+    the extra work per iteration. Forrest & Goldfarb (1992), "Steepest-edge simplex
+    algorithms for linear programming", is the classic study.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">02 · practice</p>
+  <h2>Tolerances, and what they hide</h2>
+  <div class="cols wide-left">
+    <div>
+      <p>Floating-point simplex needs tolerances: a reduced cost counts as negative only below $-10^{-7}$, a pivot element as usable only above some threshold, a constraint as satisfied within $10^{-7}$ or so.</p>
+      <p>The lab's <code>then</code> solves $Hx = H\mathbf{1}$ with $H$ the Hilbert matrix. The only solution is $x = \mathbf 1$, objective $n$:</p>
+      <table>
+        <thead><tr><th class="num">$n$</th><th class="num">cond $H$</th><th class="num">floats: $\max|x-1|$</th><th class="num">HiGHS: $\max|x-1|$</th></tr></thead>
+        <tbody>
+          <tr><td class="num">6</td><td class="num">1.5e7</td><td class="num">1.3e-10</td><td class="num">4.4e-10</td></tr>
+          <tr><td class="num">7</td><td class="num">4.8e8</td><td class="num">3.9e-9</td><td class="num"><b>1.2</b></td></tr>
+          <tr><td class="num">8</td><td class="num">1.5e10</td><td class="num"><b>1.3</b></td><td class="num"><b>1.2</b></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="box warn"><span class="label">the lesson</span>
+      <p>At $n = 8$ both report objective $\approx 8.000$, so the <b>value looks right</b>. The <b>point is wrong</b> by more than 1 in some coordinate.</p>
+      <p>A wrong $x$ at the right value satisfies every constraint to within tolerance. From the solver's side nothing failed.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>The Hilbert matrix is the standard ill-conditioned example: its condition
+    number grows like $e^{3.5n}$. Once the condition number times machine epsilon
+    ($\approx 10^{-16}$) reaches the feasibility tolerance ($\approx 10^{-7}$),
+    points far from the true solution satisfy the constraints "within tolerance".
+    Here that happens at $n \approx 7$–$8$.</p>
+    <p>Real LPs are rarely this badly conditioned, but badly scaled models (big-M
+    constraints with $M = 10^6$ next to coefficients of $10^{-3}$) create the same
+    effect. Solvers scale the model internally, and HiGHS and Gurobi both report
+    warnings about coefficient ranges. Unit 27 comes back to modelling habits that
+    avoid this.</p>
+    <p>Exact rational LP solvers exist (QSopt_ex, SoPlex in exact mode), and they are
+    what exact verification of MIP results relies on. They typically solve in
+    floating point first and then repair and verify the basis in rational
+    arithmetic.</p>
+  </aside>
+</section>
+
+<!-- ================================================================== -->
+<section>
+  <p class="eyebrow">02 · lab</p>
+  <h2>Lab 02 — what you build</h2>
+  <div class="lab">
+    <span class="label">about 3 hours · uv run co lab 02 · exact Fractions</span>
+    <ol>
+      <li><b>Tableau and pivot</b>, the Gauss–Jordan step.</li>
+      <li><b>Pricing and ratio test</b> under Dantzig's and Bland's rules, ties included.</li>
+      <li><b>The loop</b> with cycle detection. Agrees with HiGHS, cycles on Beale, and Bland fixes it.</li>
+      <li><b>Two phases</b> for any $b$, with redundant rows and infeasibility.</li>
+      <li><b>Klee–Minty</b>, and exactly $2^n - 1$ pivots under Dantzig's rule.</li>
+    </ol>
+  </div>
+<pre><code class="language-bash">uv run co test 02
+uv run co then 02     # 1000 LPs vs HiGHS · Klee–Minty table · floats on the Hilbert system</code></pre>
+  <aside class="notes">
+    <p>Step 4 takes the most time (budget an hour). The phase-1 objective must be
+    priced out, and the switch to phase 2 needs the real objective priced out
+    against the basis phase 1 ended with. HINTS.md walks through both.</p>
+    <p>Functional style: pivoting loops run thousands of iterations on Klee–Minty,
+    so write the loop as an iterator (<code>toolz.iterate</code> plus
+    <code>dropwhile</code>), not as recursion. The functional reference solution
+    shows how.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">02 · checkpoint</p>
+  <h2>Done when</h2>
+  <div class="box good"><span class="label">checkpoint</span>
+    <ul>
+      <li>All five lab steps are ✓.</li>
+      <li>Your simplex agrees with HiGHS on 1000 random LPs, and you can exhibit an instance where it cycles without Bland's rule.</li>
+      <li>You can say in one sentence what steepest-edge pricing buys over Dantzig's rule.</li>
+    </ul>
+  </div>
+  <div class="cols">
+    <div>
+      <h3>Reading</h3>
+      <p class="small">Bertsimas & Tsitsiklis, ch. 3 (§3.1–3.7).<br>
+      Chvátal, <em>Linear Programming</em>, ch. 3–4 and 8.<br>
+      Koberstein (2005), thesis, ch. 1–3, for real implementations (optional).</p>
+    </div>
+    <div>
+      <h3>Next</h3>
+      <p class="small"><b>03</b> Duality: the bottom row of your final tableau, read as a solution to a different LP. <b>04</b> (branch): the polynomial-time alternatives.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>Unit 03 starts from the final tableau of this unit. If you finish the lab,
+    keep your <code>two_phase</code>: the unit 03 lab reads duals off the final
+    tableau your code returns (the <code>tableau</code> field of
+    <code>LPResult</code>). By default unit 03 uses the reference solution;
+    <code>CO_MINE=02</code> makes it use yours.</p>
+  </aside>
+</section>
+
+</div></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/plugin/highlight/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<script src="../../slides/deck.js"></script>
+</body>
+</html>

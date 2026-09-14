@@ -1,0 +1,431 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>08 · Cutting planes and branch-and-cut</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+<link rel="stylesheet" href="../../slides/deck.css">
+</head>
+<body data-trunk="ip">
+<div class="reveal"><div class="slides">
+
+<section class="title-slide">
+  <p class="eyebrow">Part II · trunk A · integer programming · spine</p>
+  <div class="unit-no">08</div>
+  <h1>Cutting planes and branch-and-cut</h1>
+  <p class="lede">Inequalities that every integer solution satisfies and the LP optimum doesn't: how to derive them, how to find them, and why solvers throw most of them away.</p>
+  <p class="meta"><span>needs 07</span><span>~1½ h slides + 3 h lab</span><span>lab: <code>uv run co lab 08</code></span></p>
+  <aside class="notes">
+    <p>Unit 05 ended with "a valid inequality never changes the MILP and may tighten its
+    relaxation". Unit 07 ended with a list of hypotheses about why SCIP needs so many
+    fewer nodes, with cuts first on the list. This unit derives cuts in general
+    (Chvátal–Gomory), specifically (knapsack covers and lifting), and as an architecture
+    (branch-and-cut). The lab measures how much of the gap each closes.</p>
+    <p>The history in one line: Gomory proposed pure cutting planes in 1958; they were
+    considered impractical for thirty years; then problem-specific cuts (Crowder, Johnson
+    &amp; Padberg 1983) and branch-and-cut (Padberg &amp; Rinaldi 1991) made them the
+    backbone of every modern MIP solver.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">08 · overview</p>
+  <h2>The route</h2>
+  <div class="cols three">
+    <div class="box def"><span class="label">1 · general cuts</span>
+      <p>Valid inequalities, the separation problem, Chvátal–Gomory rounding, and Gomory cuts read off a tableau. Convergence, and stalling.</p></div>
+    <div class="box def"><span class="label">2 · structural cuts</span>
+      <p>Knapsack covers, exact separation by DP, lifting. The other families: cliques, flow covers, MIR.</p></div>
+    <div class="box def"><span class="label">3 · branch-and-cut</span>
+      <p>Cut loops, efficacy, pool management, local cuts, and what the architecture buys.</p></div>
+  </div>
+  <aside class="notes">
+    <p>Lab steps 1–2 are section 1, and steps 3–5 are section 2 plus the pool from
+    section 3.</p>
+  </aside>
+</section>
+
+<section class="divider">
+  <p class="eyebrow">section 1</p>
+  <h2>General cuts</h2>
+  <p>Rounding a combination of constraints: all of integer programming's valid inequalities, eventually.</p>
+</section>
+
+<section>
+  <p class="eyebrow">08 · general</p>
+  <h2>Valid inequalities and separation</h2>
+  <div class="cols">
+    <div>
+      <div class="box def"><span class="label">definitions</span>
+        <p>For $S$ = the integer feasible set: $a^\top x \le \beta$ is <b>valid</b> if every $x \in S$ satisfies it.</p>
+        <p>A <b>cut</b> for an LP point $x^*$ is a valid inequality with $a^\top x^* &gt; \beta$.</p>
+        <p>The strongest valid inequalities are the <b>facets</b> of $\mathrm{conv}(S)$.</p>
+      </div>
+      <div class="box thm"><span class="label">the separation problem</span>
+        <p>Given $x^*$ and a family of valid inequalities: find a member violated by $x^*$, or prove there is none.</p>
+      </div>
+    </div>
+    <div>
+      <p><b>The cutting-plane method:</b></p>
+      <ol>
+        <li>Solve the LP: $x^*$.</li>
+        <li>If $x^*$ is integral, it is optimal.</li>
+        <li>Separate. If a cut is found, add it and re-solve with the dual simplex (unit 03). Otherwise branch (unit 07).</li>
+      </ol>
+      <p class="small muted">A family whose separation problem is hard is useless in practice, however strong its members. Separation is the central question for every family.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>By Minkowski–Weyl (unit 01) and Meyer's theorem (unit 05), $\mathrm{conv}(S)$ has
+    finitely many facets. If you could separate over all of them, the LP would be
+    exact. Unit 09 makes this precise: separation over a polytope is polynomially
+    equivalent to optimization over it. So for NP-hard problems, exact separation over
+    all facets is NP-hard too. Practical cut families are subfamilies whose separation
+    is tractable, exactly or heuristically.</p>
+    <p>Re-solving after a cut is exactly unit 03's warm-start situation: one new row, a
+    dual feasible basis, and a few dual simplex pivots.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">08 · general</p>
+  <h2>Chvátal–Gomory rounding</h2>
+  <div class="cols">
+    <div>
+      <p>For $Ax \le b$, $x \ge 0$ integer, and any multipliers $u \ge 0$:</p>
+      $$\begin{aligned} u^\top A\, x &\le u^\top b \\ \Longrightarrow\quad \lfloor u^\top A \rfloor x &\le u^\top b \quad (x \ge 0) \\ \Longrightarrow\quad \lfloor u^\top A \rfloor x &\le \lfloor u^\top b \rfloor \quad (x \text{ integer}) \end{aligned}$$
+      <p class="small">Step 1 uses $x \ge 0$ (rounding coefficients down only lowers the left side). Step 2 uses integrality: the left side is an integer.</p>
+      <div class="box good"><span class="label">example</span>
+        <p class="small">$2x_1 + 2x_2 \le 3$ with $u = \tfrac12$: $x_1 + x_2 \le \tfrac32$, which rounds to $x_1 + x_2 \le 1$. The point $(\tfrac34, \tfrac34)$ is cut off.</p>
+      </div>
+    </div>
+    <div>
+      <div class="box thm"><span class="label">Chvátal 1973, Schrijver 1980</span>
+        <p>Adding all CG cuts gives the <b>CG closure</b>. Repeating finitely many times reaches $\mathrm{conv}(S)$ for any bounded pure integer program. So <b>every</b> valid inequality has a finite CG derivation.</p>
+      </div>
+      <p class="small">The number of rounds needed is the <b>CG rank</b>. It can be large: the matching polytope's odd-set inequalities have rank 1, but some inequalities for TSP have rank that grows with $n$.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>This is unit 01's Farkas combination with one rounding step added. Over the
+    reals, nonnegative combinations of rows derive every implied inequality (Farkas).
+    Over the integers, nonnegative combinations plus rounding derive every valid
+    inequality (Chvátal). It makes CG derivations a proof system for integer
+    infeasibility, and they have been studied as such (cutting-plane proofs; lower
+    bounds on their length relate to unit 20's resolution lower bounds).</p>
+    <p>The odd-set inequalities of unit 06: for an odd vertex set $S$, sum the degree
+    constraints of the vertices in $S$ with $u = \tfrac12$. The edges inside $S$ get
+    coefficient 1, and the right side is $|S|/2$, which rounds down to
+    $(|S|-1)/2$. So Edmonds' inequalities are rank-1 CG cuts.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">08 · general</p>
+  <h2>Gomory's cut, read off the tableau</h2>
+  <div class="cols">
+    <div>
+      <p>A tableau row $\;x_i + \sum_{j \in N} \bar a_{ij} z_j = \bar b_i\;$ with $\bar b_i$ fractional. With $f(v) = v - \lfloor v \rfloor$:</p>
+      $$\sum_{j \in N} f(\bar a_{ij})\, z_j \;\ge\; f(\bar b_i)$$
+      <p class="small">It is valid for all integer solutions, and violated by the current vertex, where every nonbasic $z_j = 0$ and so the left side is $0 &lt; f(\bar b_i)$.</p>
+      <p class="small muted">It is the CG cut with multipliers taken from row $i$ of $A_B^{-1}$, rearranged.</p>
+    </div>
+    <div>
+      <p class="small"><b>Worked:</b> $\max x_2$, $3x_1 + 2x_2 \le 6$, $-3x_1 + 2x_2 \le 0$. LP optimum $(1, \tfrac32)$. Final row for $x_2$:</p>
+      $$x_2 + \tfrac14 s_1 + \tfrac14 s_2 = \tfrac32$$
+      <p class="small">Cut: $\tfrac14 s_1 + \tfrac14 s_2 \ge \tfrac12$. Substitute $s_1 = 6 - 3x_1 - 2x_2$ and $s_2 = 3x_1 - 2x_2$:</p>
+      $$\tfrac14(6 - 4x_2) \ge \tfrac12 \iff x_2 \le 1$$
+      <p class="small">One more round adds $x_2 \le x_1$, and the LP reaches the integer optimum $(1, 1)$. Lab step 1's test is this example.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>The derivation is in hint rung 1 of lab step 1. The fractional cut needs all
+    variables, slacks included, to be integers, which is why the lab requires integer
+    $A$ and $b$, and why each cut is scaled to integers before being added: its own
+    slack must be integral for the next round's cuts to be valid.</p>
+    <p>For mixed-integer programs the right version is the <b>Gomory mixed-integer
+    (GMI)</b> cut, which treats continuous variables with a different coefficient
+    formula. GMI cuts are among the most effective general-purpose cuts in modern
+    solvers. They are also equivalent to mixed-integer rounding (MIR) cuts derived from
+    the tableau row.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">08 · general</p>
+  <h2>Convergence in theory, stalling in practice</h2>
+  <div class="cols wide-left">
+    <div>
+      <p class="small">Lab <code>then</code>, pure Gomory on 20 random 3-variable IPs, up to 80 rounds:</p>
+      <table>
+        <thead><tr><th class="num">seed</th><th class="num">LP</th><th class="num">IP</th><th class="num">final</th><th class="num">cuts</th><th class="num">coef digits</th></tr></thead>
+        <tbody>
+          <tr><td class="num">3</td><td class="num">40.54</td><td class="num">35</td><td class="num">35.00</td><td class="num">8</td><td class="num">2</td></tr>
+          <tr><td class="num">7</td><td class="num">21.48</td><td class="num">19</td><td class="num">19.00</td><td class="num">36</td><td class="num">3</td></tr>
+          <tr><td class="num">16</td><td class="num">25.82</td><td class="num">23</td><td class="num"><b>24.50</b></td><td class="num">80</td><td class="num"><b>13</b></td></tr>
+        </tbody>
+      </table>
+      <p class="small">19 of 20 reach the optimum. One stalls, and its coefficients reach 13 digits.</p>
+    </div>
+    <div class="box warn"><span class="label">why solvers ration them</span>
+      <ul class="small">
+        <li>Each round cuts less deeply: the bound improvements shrink geometrically.</li>
+        <li>Coefficients and dense rows grow: the LP gets slower and numerically worse.</li>
+        <li>In floating point, the cuts become invalid, since tableau entries carry rounding error.</li>
+      </ul>
+      <p class="small">Gomory (1963) proved finite convergence with a lexicographic rule, and the proof holds. The practical fix is to stop early and branch.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>The exact arithmetic in the lab hides the third problem. With floats, a tableau
+    entry of 0.9999999 has fractional part 0.9999999, not 0, and the resulting "cut" can
+    remove integer points. Early codes that ran many rounds of Gomory cuts produced
+    wrong answers for exactly this reason. Modern solvers generate GMI cuts from a few
+    rounds of tableau rows, check their numerical safety (coefficient range, dynamism),
+    and discard doubtful ones.</p>
+    <p>Balas, Ceria, Cornuéjols and Natraj (1996) showed that Gomory cuts, when used
+    carefully (a few rounds, in branch-and-cut), are very effective. That paper is the
+    turning point after which Gomory cuts came back into commercial solvers.</p>
+  </aside>
+</section>
+
+<section class="divider">
+  <p class="eyebrow">section 2</p>
+  <h2>Structural cuts</h2>
+  <p>Families derived from one constraint's structure, where separation is cheap.</p>
+</section>
+
+<section>
+  <p class="eyebrow">08 · structural</p>
+  <h2>Knapsack cover inequalities</h2>
+  <div class="cols">
+    <div>
+      <p>One knapsack row $\sum_j w_j x_j \le c$, with $x \in \{0,1\}^n$ and $w \ge 0$.</p>
+      <div class="box def"><span class="label">cover</span>
+        <p>A set $C$ with $\sum_{j \in C} w_j &gt; c$: not all of $C$ fits, so</p>
+        $$\sum_{j \in C} x_j \le |C| - 1.$$
+        <p class="small">It is <b>minimal</b> if removing any item makes it fit.</p>
+      </div>
+    </div>
+    <div>
+      <div class="box thm"><span class="label">separation is a knapsack problem</span>
+        <p>$x^*$ violates the cover inequality for $C$ iff $\sum_{j \in C} (1 - x^*_j) &lt; 1$. So find</p>
+        $$\min \sum_{j \in C} (1 - x_j^*) \quad\text{s.t.}\quad \sum_{j \in C} w_j &gt; c.$$
+        <p class="small">NP-hard in general, but pseudo-polynomial by DP over integer weights (unit 16). That is lab step 3.</p>
+      </div>
+      <p class="small">Solvers usually separate heuristically, sorting by $(1-x_j^*)/w_j$, and exactly only on small rows.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>Crowder, Johnson and Padberg (1983) showed that adding lifted cover inequalities
+    from each knapsack row of large 0/1 problems let them solve instances that had been
+    out of reach. It was the first big practical demonstration of problem-specific
+    cuts.</p>
+    <p>The separation DP is a knapsack in the complement: choose items to <em>exceed</em>
+    the capacity at minimum cost. Because only violated covers matter (cost below 1),
+    solvers can stop the DP early or fix variables with $x_j^* = 0$ out of the cover:
+    they cost 1 and can never be in a violated cover's cheapest version unless forced.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">08 · structural</p>
+  <h2>Lifting: strengthening a cut variable by variable</h2>
+  <div class="cols">
+    <div>
+      <p class="small">$5x_0 + 5x_1 + 5x_2 + 5x_3 + 8x_4 \le 12$, cover $C = \{0,1,2\}$: $\;x_0 + x_1 + x_2 \le 2$.</p>
+      <p><b>Lift $x_3$</b> (weight 5): with $x_3 = 1$, capacity 7 remains, and at most one item of $C$ fits. So $\alpha_3 = 2 - 1 = 1$.</p>
+      <p><b>Lift $x_4$</b> (weight 8): with $x_4 = 1$, capacity 4 remains, and nothing fits. So $\alpha_4 = 2 - 0 = 2$.</p>
+      $$x_0 + x_1 + x_2 + x_3 + 2x_4 \le 2$$
+      <p class="small muted">Checked by enumeration: valid for every feasible 0/1 point.</p>
+    </div>
+    <div>
+      <div class="box def"><span class="label">sequential up-lifting</span>
+        <p class="small">For the next $j \notin C$: $\;\alpha_j = r - \max\{\sum_{\text{lifted}} \alpha_i x_i : \sum w_i x_i \le c - w_j\}$.</p>
+        <p class="small">The largest coefficient that keeps the inequality valid, given the ones already lifted.</p>
+      </div>
+      <div class="box thm"><span class="label">facets</span>
+        <p class="small">For a minimal cover, sequential lifting yields a <b>facet</b> of the knapsack polytope (Balas 1975; Wolsey 1975). A different lifting order can give a different facet.</p>
+      </div>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>Lifting is a general technique, not specific to covers: start from a valid
+    inequality for a restriction of the problem (here, the variables outside $C$ fixed
+    to 0), then bring variables back one at a time, each with the best coefficient
+    that preserves validity. Each lifting step is an optimization problem of the same
+    kind as the original, which is why solvers lift approximately (with superadditive
+    lifting functions) when rows are large.</p>
+    <p>Lab step 4's test checks maximality exactly: raising any lifted coefficient by
+    one must make the inequality invalid for some feasible point.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">08 · structural</p>
+  <h2>The families solvers actually run</h2>
+  <table style="font-size:.68em">
+    <thead><tr><th>family</th><th>from</th><th>separation</th></tr></thead>
+    <tbody>
+      <tr><td><b>Gomory mixed-integer</b></td><td>tableau rows</td><td>read off the final LP basis</td></tr>
+      <tr><td><b>mixed-integer rounding (MIR)</b></td><td>aggregations of rows (Marchand & Wolsey 2001)</td><td>heuristic aggregation, then a rounding formula</td></tr>
+      <tr><td><b>knapsack cover</b></td><td>single knapsack rows</td><td>greedy or DP, with lifting</td></tr>
+      <tr><td><b>flow cover</b></td><td>fixed-charge flow rows, $x \le u y$</td><td>heuristic, with lifting</td></tr>
+      <tr><td><b>clique</b>, <b>odd cycle</b></td><td>the conflict graph of binaries</td><td>greedy clique search; shortest paths for odd cycles</td></tr>
+      <tr><td><b>implied bound</b></td><td>bounds and implications</td><td>table lookup, e.g. $x \le u y$ recovered</td></tr>
+      <tr><td><b>zero-half</b></td><td>CG cuts with $u \in \{0, \tfrac12\}$</td><td>a parity problem on the constraint matrix</td></tr>
+    </tbody>
+  </table>
+  <p class="small muted">Unit 05's weak facility-location models were rescued by implied bound cuts and flow covers, which is why presolve-plus-cuts made them look fine.</p>
+  <aside class="notes">
+    <p>Clique cuts come from the conflict graph: an edge between two binaries (or a binary
+    and a complemented binary) that cannot both be 1. A clique $K$ in that graph gives
+    $\sum_{j \in K} x_j \le 1$, which is much stronger than the pairwise conflicts. Set
+    packing and scheduling models are full of them.</p>
+    <p>Bixby and Rothberg's analyses of CPLEX version histories (around 2004–2007)
+    attributed the largest single share of the performance improvements of that period
+    to cutting planes, with Gomory cuts and MIR among the most important families, and
+    presolve and heuristics next. Unit 27 revisits which features matter on your own
+    models.</p>
+  </aside>
+</section>
+
+<section class="divider">
+  <p class="eyebrow">section 3</p>
+  <h2>Branch-and-cut</h2>
+  <p>Cuts and branching together, and the engineering that makes that work.</p>
+</section>
+
+<section>
+  <p class="eyebrow">08 · architecture</p>
+  <h2>Cut loops and cut management</h2>
+  <div class="cols">
+    <div>
+      <p><b>At the root:</b> several rounds of solve, separate every family, select, add, and re-solve, until the bound stops moving enough.</p>
+      <p><b>Selection</b> scores candidates by:</p>
+      <ul class="small">
+        <li><b>efficacy</b>: the Euclidean distance the cut moves $x^*$, $(a^\top x^* - \beta)/\|a\|$;</li>
+        <li><b>parallelism</b>: skip cuts nearly parallel to one already chosen;</li>
+        <li><b>numerics</b>: skip huge coefficient ranges.</li>
+      </ul>
+    </div>
+    <div>
+      <div class="box def"><span class="label">the pool</span>
+        <p class="small">Cuts that have been slack for several rounds are removed from the LP but kept in a pool, and re-added if violated again. The lab's <code>age_pool</code> is the core of it.</p>
+      </div>
+      <div class="box warn"><span class="label">most cuts are discarded</span>
+        <p class="small">Solvers generate far more cuts than they keep. Each kept cut is a dense row the LP must carry at every node of the tree, so a cut must earn its place.</p>
+      </div>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>The trade-off is the same one strong branching had in unit 07: cuts improve the
+    bound, which means fewer nodes, but make every node's LP larger and slower. A cut
+    that closes 1% of the gap but doubles LP time can be a net loss.</p>
+    <p>Local cuts: cuts derived at a node, valid only in that subtree because they use
+    the node's bound changes. They must be removed when the search leaves the subtree.
+    Global cuts, valid everywhere, go to the pool and can be reused anywhere.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">08 · architecture</p>
+  <h2>What your cuts were worth, and SCIP's</h2>
+  <div class="cols wide-left">
+    <div>
+      <p class="small">Lab <code>then</code>, 20-item, 2-row knapsacks. Root gap closed:</p>
+      <table>
+        <thead><tr><th class="num">seed</th><th class="num">your covers</th><th class="num">SCIP root</th><th class="num">SCIP nodes: cuts off / on</th></tr></thead>
+        <tbody>
+          <tr><td class="num">0</td><td class="num">9%</td><td class="num">78%</td><td class="num">45 / 34</td></tr>
+          <tr><td class="num">2</td><td class="num">8%</td><td class="num">46%</td><td class="num">386 / 322</td></tr>
+          <tr><td class="num">3</td><td class="num">27%</td><td class="num">57%</td><td class="num">88 / 66</td></tr>
+          <tr><td class="num">5</td><td class="num">14%</td><td class="num">45%</td><td class="num">209 / 184</td></tr>
+        </tbody>
+      </table>
+      <p class="small muted">SCIP with presolve off in both columns, so the difference is cuts.</p>
+    </div>
+    <div class="box"><span class="label">reading it</span>
+      <ul class="small">
+        <li>Covers alone close a modest share. SCIP closes 2–9× more by combining families: GMI and MIR act on the <b>aggregate</b> of rows, which single-row covers can't see.</li>
+        <li>Nodes fell by 12–25% here. Cuts matter most on models whose LP is far from the hull, and these knapsacks are already fairly tight.</li>
+      </ul>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>Why single-row cuts are limited here: with two knapsack rows, the hull of the
+    <em>intersection</em> has facets that are not facets of either row alone. Lifted
+    covers of each row separately never see them. MIR and GMI cuts, derived from
+    combinations of rows (an aggregated row, or a tableau row), can.</p>
+    <p>The second checkpoint question asks you to name families SCIP runs that you
+    didn't. The table on the previous slide is the list, and SCIP's statistics output
+    (set <code>display</code> verbosity higher in <code>scip_mip</code>) shows how many cuts
+    of each family it applied.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">08 · lab</p>
+  <h2>Lab 08 — what you build</h2>
+  <div class="lab">
+    <span class="label">about 3 hours · uv run co lab 08</span>
+    <ol>
+      <li><b>A Gomory cut</b> from an exact tableau row, rewritten in the original variables.</li>
+      <li><b>The pure Gomory loop</b>, which converges on most instances and stalls on one.</li>
+      <li><b>Exact cover separation</b> by dynamic programming.</li>
+      <li><b>Sequential lifting</b>, valid and maximal.</li>
+      <li><b>Pool aging and the root cut loop</b> on multi-dimensional knapsacks.</li>
+    </ol>
+  </div>
+<pre><code class="language-bash">uv run co test 08
+uv run co then 08     # Gomory stall and coefficient growth · gap closed vs SCIP · nodes with cuts off/on</code></pre>
+  <aside class="notes">
+    <p>Every cut is checked for validity by enumerating the integer points of small
+    instances. An invalid cut can make a solver return a wrong answer, and a test that
+    only checked the bound moved would not catch it.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">08 · checkpoint</p>
+  <h2>Done when</h2>
+  <div class="box good"><span class="label">checkpoint</span>
+    <ul>
+      <li>All five lab steps are ✓.</li>
+      <li>From a fractional simplex tableau you can write down a valid Gomory cut by hand, and prove it separates the current vertex while excluding no integer point.</li>
+      <li>You can explain why your cover cuts close less of the gap than SCIP's, naming two cut families SCIP runs that you didn't.</li>
+    </ul>
+  </div>
+  <div class="cols">
+    <div>
+      <h3>Reading</h3>
+      <p class="small">Wolsey, ch. 8–9.<br>
+      Conforti, Cornuéjols &amp; Zambelli, ch. 5–7.<br>
+      Cornuéjols (2008), <em>Math. Programming B</em> 112, the survey (optional).</p>
+    </div>
+    <div>
+      <h3>Next</h3>
+      <p class="small"><b>09</b> separation ⇔ optimization, for exponentially many cuts · <b>10</b> column generation, the same idea with columns · <b>27</b> modelling for a real solver.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>Unit 09 takes the separation problem to its logical end: the TSP's subtour
+    inequalities are exponentially many, but separable by a minimum cut, so the LP over
+    all of them is solvable in polynomial time. That is branch-and-cut as Padberg and
+    Rinaldi used it to solve the TSP.</p>
+  </aside>
+</section>
+
+</div></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/plugin/highlight/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<script src="../../slides/deck.js"></script>
+</body>
+</html>

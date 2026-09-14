@@ -1,0 +1,501 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>16 · Dynamic programming</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+<link rel="stylesheet" href="../../slides/deck.css">
+</head>
+<body data-trunk="comb">
+<div class="reveal"><div class="slides">
+
+<section class="title-slide">
+  <p class="eyebrow">Part III · trunk B · combinatorial algorithms · spine</p>
+  <div class="unit-no">16</div>
+  <h1>Dynamic programming over combinatorial structure</h1>
+  <p class="lede">Shortest paths in a DAG of states; knapsack and what "pseudo-polynomial" really means; Held–Karp; trees, treewidth and Courcelle; the vocabulary of parameterised complexity.</p>
+  <p class="meta"><span>needs 15</span><span>~1½ h slides + 3 h lab</span><span>lab: <code>uv run co lab 16</code></span></p>
+  <aside class="notes">
+    <p>Branch-and-bound (unit 07) searches a tree of decisions and prunes with bounds.
+    Dynamic programming searches a DAG of <em>states</em> and prunes by merging. Two
+    partial solutions that reach the same state are interchangeable for the future, so
+    only the better one survives. A DP is exactly as fast as its state space is small.
+    The whole unit is about finding small state spaces in structure: capacities,
+    subsets, subtrees, bags.</p>
+    <p>Two later units depend on this one. Unit 10's column generation prices columns with
+    the knapsack DP, and unit 22's knapsack FPTAS is the DP run on rounded values.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">16 · overview</p>
+  <h2>The route</h2>
+  <div class="cols">
+    <div class="box def"><span class="label">1 · states</span>
+      <p class="small">DP as shortest path in a DAG; knapsack; pseudo-polynomial vs strongly NP-hard.</p></div>
+    <div class="box def"><span class="label">2 · subsets</span>
+      <p class="small">Bitmask DP; Held–Karp's $O(n^2 2^n)$ and where it stands 60 years later.</p></div>
+  </div>
+  <div class="cols">
+    <div class="box def"><span class="label">3 · treewidth</span>
+      <p class="small">Trees, tree decompositions, elimination orderings, DP on bags, Courcelle's theorem.</p></div>
+    <div class="box def"><span class="label">4 · parameters</span>
+      <p class="small">FPT, XP, kernels: the honest way to say "hard but not hopeless".</p></div>
+  </div>
+  <aside class="notes">
+    <p>The lab's <code>then</code> step gives three pictures of "exponential". Held–Karp is
+    exponential in $n$ and loses to a good formulation past $n \approx 15$. Knapsack is
+    exponential in the number of digits. The tree-decomposition DP is exponential in the
+    width only, and its runtime can be predicted from the bag sizes to within a factor of
+    2.</p>
+  </aside>
+</section>
+
+<section class="divider">
+  <p class="eyebrow">section 1</p>
+  <h2>States</h2>
+  <p>Merge partial solutions that have the same future.</p>
+</section>
+
+<section>
+  <p class="eyebrow">16 · states</p>
+  <h2>DP is a shortest path in a DAG of states</h2>
+  <div class="cols">
+    <div>
+      <div class="box def"><span class="label">the recipe</span>
+        <ol class="small">
+          <li>A <b>state</b> summarises a partial solution by exactly what the future needs to know.</li>
+          <li>A <b>transition</b> extends it by one decision, with a cost.</li>
+          <li>The states and transitions form a <b>DAG</b>. The optimum is a shortest (or longest) path, computed in topological order.</li>
+        </ol>
+      </div>
+      <p class="small">Time = (number of states) × (transitions per state). Correctness = <b>optimal substructure</b>: an optimal path's prefixes are optimal paths to their states.</p>
+    </div>
+    <div>
+      <table>
+        <thead><tr><th>problem</th><th>state</th><th class="num">states</th></tr></thead>
+        <tbody>
+          <tr><td>knapsack</td><td>items so far, capacity used</td><td class="num">$nC$</td></tr>
+          <tr><td>Held–Karp</td><td>cities visited, current city</td><td class="num">$n 2^n$</td></tr>
+          <tr><td>tree VC</td><td>vertex, in or out</td><td class="num">$2n$</td></tr>
+          <tr><td>decomposition VC</td><td>bag, subset of it</td><td class="num">$\le n\,2^{w+1}$</td></tr>
+          <tr><td>TSP, naively</td><td>the whole path</td><td class="num">$n!$</td></tr>
+        </tbody>
+      </table>
+      <p class="small muted">The last row is why the others matter. Going from paths to (set, endpoint) merges all orderings of the same set.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>Bellman named it in the 1950s. By his own account, "dynamic programming" was chosen
+    partly because it sounded impressive and was hard to object to in a funding
+    environment. The ideas are older: shortest paths in DAGs, and backwards induction in
+    sequential decision problems.</p>
+    <p>The "same future" test is the thing to practise. For knapsack, the future cares
+    how much capacity remains, not which items produced it. For TSP, it cares which
+    cities remain and where you are, not the order you took. When you can't find such a
+    summary, the problem usually has no good DP. That's an informal version of why some
+    problems stay hard under every parameterisation.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">16 · states</p>
+  <h2>Knapsack in $O(nC)$ — and why that is not P = NP</h2>
+  <div class="cols">
+    <div>
+      $$B_i(c) = \max\bigl(B_{i-1}(c),\ B_{i-1}(c - w_i) + v_i\bigr)$$
+      <p class="small">$n$ items, capacity $C$: $O(nC)$ time. Knapsack is NP-hard. So have we shown P = NP?</p>
+      <div class="box warn"><span class="label">no: count the input</span>
+        <p class="small">$C$ is written in $\log_2 C$ bits. $O(nC) = O(n \cdot 2^{\log C})$ is <b>exponential in the input length</b>. It is polynomial only in the numeric <em>value</em>: a <b>pseudo-polynomial</b> algorithm.</p>
+      </div>
+    </div>
+    <div>
+      <p class="small">Lab <code>then</code>, 50 items, weights scaled by $10^k$:</p>
+      <table>
+        <thead><tr><th class="num">capacity</th><th class="num">your DP s</th><th class="num">HiGHS s</th></tr></thead>
+        <tbody>
+          <tr><td class="num">1 032</td><td class="num">0.000</td><td class="num">0.027</td></tr>
+          <tr><td class="num">103 947</td><td class="num">0.013</td><td class="num">0.020</td></tr>
+          <tr><td class="num">10 404 313</td><td class="num"><b>2.44</b></td><td class="num">0.019</td></tr>
+        </tbody>
+      </table>
+      <div class="box def"><span class="label">weak vs strong NP-hardness</span>
+        <p class="small">Knapsack is <b>weakly</b> NP-hard: hard only when the numbers are huge. Bin packing and TSP are <b>strongly</b> NP-hard: still hard with numbers bounded by a polynomial in $n$. So they have no pseudo-polynomial algorithm unless P = NP.</p>
+      </div>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>The same items at every scale give the same answer. Only the number of digits
+    grew, and the DP paid ×10 per digit. The MIP solver's branch-and-bound doesn't care,
+    because LP bounds are scale-invariant. That's the same contrast as in unit 07,
+    viewed from the other side.</p>
+    <p>A useful variant, used by unit 22's FPTAS: index by <em>value</em> instead of
+    weight. $W_i(p)$ = least weight achieving value $p$ takes $O(n \cdot \sum v)$. Round
+    values down to multiples of $\varepsilon v_{\max} / n$ and the table shrinks to
+    $O(n^3/\varepsilon)$, while the answer loses at most a factor $1 - \varepsilon$.</p>
+    <p>The lab's unbounded variant is unit 10's pricing problem. Given dual prices
+    $\pi_i$ on item demands, find the cutting pattern of maximum total price. A pattern
+    with total price above 1 is a column with negative reduced cost.</p>
+  </aside>
+</section>
+
+<section class="divider">
+  <p class="eyebrow">section 2</p>
+  <h2>Subsets</h2>
+  <p>From $n!$ to $n^2 2^n$.</p>
+</section>
+
+<section>
+  <p class="eyebrow">16 · subsets</p>
+  <h2>Held–Karp (and Bellman), 1962</h2>
+  <div class="cols">
+    <div>
+      $$\begin{aligned} D(\{k\}, k) &= d_{0k} \\ D(S, k) &= \min_{j \in S \setminus \{k\}} D(S \setminus \{k\}, j) + d_{jk} \end{aligned}$$
+      <p class="small">$S \subseteq \{1, \dots, n-1\}$, $k \in S$. Tour length $= \min_k D(\text{all}, k) + d_{k0}$.</p>
+      <ul class="small">
+        <li>$O(n^2 2^n)$ time and $O(n 2^n)$ space. Space is what stops you around $n = 25$ to $30$.</li>
+        <li>Works unchanged for asymmetric distances.</li>
+        <li>A bitmask per subset; masks in increasing order are topologically sorted, since $S \setminus \{k\} &lt; S$.</li>
+      </ul>
+      <div class="box"><span class="label">sixty years on</span>
+        <p class="small">No $O((2 - \varepsilon)^n)$ algorithm is known for general weighted TSP. For undirected Hamiltonicity, Björklund (2014) broke $2^n$ with algebraic methods.</p>
+      </div>
+    </div>
+    <div>
+      <p class="small">Lab <code>then</code>, Euclidean, seconds:</p>
+      <table>
+        <thead><tr><th class="num">n</th><th class="num">Held–Karp</th><th class="num">B&amp;B (07) MTZ</th><th class="num">lazy DFJ (09)</th><th class="num">SCIP MTZ</th></tr></thead>
+        <tbody>
+          <tr><td class="num">8</td><td class="num">0.001</td><td class="num">0.49</td><td class="num">0.023</td><td class="num">0.29</td></tr>
+          <tr><td class="num">12</td><td class="num">0.003</td><td class="num">5.6</td><td class="num">0.006</td><td class="num">0.043</td></tr>
+          <tr><td class="num">14</td><td class="num">0.008</td><td class="num">6.1</td><td class="num">0.014</td><td class="num">1.12</td></tr>
+          <tr><td class="num">16</td><td class="num">0.049</td><td class="num">—</td><td class="num"><b>0.013</b></td><td class="num">0.68</td></tr>
+          <tr><td class="num">18</td><td class="num">0.144</td><td class="num">—</td><td class="num"><b>0.031</b></td><td class="num">5.15</td></tr>
+          <tr><td class="num">20</td><td class="num">0.787</td><td class="num">—</td><td class="num"><b>0.029</b></td><td class="num">0.28</td></tr>
+        </tbody>
+      </table>
+      <p class="small muted">"—": unit 07's pure-Python B&amp;B hit 20 000 nodes on the weak MTZ formulation.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>Three completely different algorithms, one table. Held–Karp's time is a function of
+    $n$ only: steady, predictable, exponential. Branch-and-bound on MTZ depends on how
+    weak the formulation is, and MTZ is very weak (unit 05's lesson). Lazy DFJ uses the
+    subtour relaxation of unit 09, which is within about 1% on Euclidean instances, so
+    it barely branches. The crossover sits between $n = 14$ and $16$. SCIP on MTZ is
+    erratic (5 s at 18, 0.3 s at 20), because its presolve and cuts sometimes recover
+    a lot of the missing strength and sometimes don't.</p>
+    <p>The lab's reference vectorises Held–Karp with numpy, one array operation per
+    (subset size, end city). A plain-Python dict version runs 0.24 s at $n = 14$, which
+    is still fine. The point of the table is the <em>slope</em>, not the constant.</p>
+    <p>Where DP over subsets still wins: small $n$ with complicated side constraints (time
+    windows, precedences) that ruin a MIP formulation but only shrink the DP's state
+    space. It's also the pricing engine of branch-and-price for vehicle routing (unit
+    10), as a resource-constrained shortest path.</p>
+  </aside>
+</section>
+
+<section class="divider">
+  <p class="eyebrow">section 3</p>
+  <h2>Treewidth</h2>
+  <p>How far from a tree is this graph?</p>
+</section>
+
+<section>
+  <p class="eyebrow">16 · treewidth</p>
+  <h2>On trees, NP-hard problems become easy</h2>
+  <div class="cols">
+    <div>
+      <p class="small">Minimum-weight vertex cover on a tree, rooted anywhere:</p>
+      $$\begin{aligned} \mathrm{in}(v) &= w_v + \textstyle\sum_{c} \min(\mathrm{in}(c), \mathrm{out}(c)) \\ \mathrm{out}(v) &= \textstyle\sum_{c} \mathrm{in}(c) \end{aligned}$$
+      <p class="small">$O(n)$. The state is (vertex, in or out) because a subtree talks to the rest of the tree <b>only through its root</b>.</p>
+      <p class="small muted">Lab step 3 runs it on a 5 000-vertex path, so it must not recurse. Python's recursion limit is 1 000.</p>
+    </div>
+    <div>
+      <div class="box thm"><span class="label">the separator idea</span>
+        <p class="small">A tree DP works because removing a vertex splits the tree into independent parts. If a graph splits into independent parts by removing <b>small sets</b> of vertices, recursively, the same DP works with the small set as the state.</p>
+        <p class="small">"Small" is the <b>treewidth</b>, and the state space is $2^{\text{set size}}$ for vertex cover, or $q^{\text{set size}}$ for $q$-colouring.</p>
+      </div>
+      <p class="small">The same argument makes independent set, dominating set, colouring and Hamiltonicity linear-time on trees, and FPT in treewidth.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>Why reconstruction needs care. The table says only the optimal <em>value</em>. To
+    recover the cover, walk parents before children. A root takes the better of in and
+    out. A child <em>must</em> be in when its parent is out, because the edge between them
+    has to be covered. Otherwise the child takes its better option. A mutation that
+    forgets the "must" produces an invalid cover with a smaller weight, and the tests
+    check coverage separately for exactly that reason.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">16 · treewidth</p>
+  <h2>Tree decompositions</h2>
+  <div class="cols wide-right">
+    <div class="fig">
+      <svg viewBox="0 0 320 250" width="320" role="img" aria-label="a 6-cycle and a width-2 path decomposition">
+        <g class="ink" stroke-width="1.6">
+          <line x1="60" y1="30" x2="110" y2="55"/><line x1="110" y1="55" x2="110" y2="105"/>
+          <line x1="110" y1="105" x2="60" y2="130"/><line x1="60" y1="130" x2="10" y2="105"/>
+          <line x1="10" y1="105" x2="10" y2="55"/><line x1="10" y1="55" x2="60" y2="30"/>
+        </g>
+        <g class="fill-ground ink" stroke-width="1.6">
+          <circle cx="60" cy="30" r="10"/><circle cx="110" cy="55" r="10"/><circle cx="110" cy="105" r="10"/>
+          <circle cx="60" cy="130" r="10"/><circle cx="10" cy="105" r="10"/><circle cx="10" cy="55" r="10"/>
+        </g>
+        <g class="mono" font-size="11" text-anchor="middle">
+          <text x="60" y="34">0</text><text x="110" y="59">1</text><text x="110" y="109">2</text>
+          <text x="60" y="134">3</text><text x="10" y="109">4</text><text x="10" y="59">5</text>
+        </g>
+        <g class="ink" stroke-width="1.6"><line x1="190" y1="40" x2="190" y2="220"/></g>
+        <g class="fill-soft ink" stroke-width="1.4">
+          <rect x="150" y="22" width="80" height="30" rx="8"/><rect x="150" y="82" width="80" height="30" rx="8"/>
+          <rect x="150" y="142" width="80" height="30" rx="8"/><rect x="150" y="202" width="80" height="30" rx="8"/>
+        </g>
+        <g class="mono" font-size="12" text-anchor="middle">
+          <text x="190" y="42">0 1 5</text><text x="190" y="102">1 2 5</text>
+          <text x="190" y="162">2 4 5</text><text x="190" y="222">2 3 4</text>
+        </g>
+        <text x="270" y="130" font-size="12" text-anchor="middle" class="muted">width 2</text>
+      </svg>
+      <p class="cap">Every edge sits in a bag, and the bags holding each vertex are contiguous (5 is in the top three, 2 in the bottom three).</p>
+    </div>
+    <div>
+      <div class="box def"><span class="label">definition (Robertson–Seymour)</span>
+        <p class="small">A tree $T$ with a <b>bag</b> $B_t \subseteq V$ per node, such that</p>
+        <ol class="small">
+          <li>every edge $uv$ lies inside some bag;</li>
+          <li>for every vertex $v$, the bags containing $v$ form a connected subtree.</li>
+        </ol>
+        <p class="small"><b>Width</b> $= \max |B_t| - 1$. <b>Treewidth</b> $\mathrm{tw}(G)$ = the minimum width over all decompositions.</p>
+      </div>
+      <p class="small">Trees: 1. Cycles: 2. Series–parallel graphs: $\le 2$. The $k \times k$ grid: $k$. $K_n$: $n - 1$. The lab's $k$-trees: exactly $k$.</p>
+      <p class="small muted">Property 2 is what makes a bag a separator: the parts of the graph below and above it share only the bag's vertices.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>Why the $-1$: so that trees have width 1. The minus one is a historical convenience.
+    The DP's state space depends on the bag size $w + 1$, which is why the runtime
+    formula has $2^{w+1}$.</p>
+    <p>Property 2 is the one people forget, and lab step 4's checker must test it on its
+    own. The test hands it the bags $\{0,1\}, \{2,3\}, \{1,2\}$ in a path whose middle is
+    $\{2,3\}$, so vertex 1's bags are not contiguous. A decomposition without property 2
+    gives a DP that silently counts a vertex's weight twice or assigns it inconsistently.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">16 · treewidth</p>
+  <h2>Finding decompositions: elimination orderings</h2>
+  <div class="cols">
+    <div>
+      <ol class="small">
+        <li>Pick a vertex $v$. Its bag is $v$ plus its current neighbours.</li>
+        <li>Join those neighbours into a clique (the <b>fill-in</b>), then delete $v$.</li>
+        <li>Repeat. Hang each bag off the bag of its earliest-eliminated neighbour.</li>
+      </ol>
+      <div class="box thm"><span class="label">fact</span>
+        <p class="small">$\mathrm{tw}(G) = \min$ over orderings of the largest neighbourhood at elimination time. Every decomposition comes from some ordering.</p>
+      </div>
+      <p class="small">Computing treewidth is NP-hard (Arnborg, Corneil & Proskurowski 1987). For fixed $k$, width $\le k$ is decidable in linear time (Bodlaender 1996), with constants too large to run.</p>
+    </div>
+    <div>
+      <div class="box good"><span class="label">in practice: greedy orderings</span>
+        <p class="small"><b>Min-degree</b>: eliminate the vertex of smallest current degree. <b>Min-fill</b>: the one adding fewest fill edges. Min-fill is exact on chordal graphs (a simplicial vertex adds no fill); both are exact on $k$-trees; both are often close elsewhere.</p>
+      </div>
+      <div class="box warn"><span class="label">orderings matter enormously</span>
+        <p class="small">A star eliminated centre-first turns the leaves into a clique, giving width $n - 1$. Leaves first gives width 1. Lab step 4 tests both.</p>
+      </div>
+      <p class="small muted">networkx ships both heuristics (<code>treewidth_min_degree</code>, <code>treewidth_min_fill_in</code>). Exact solvers from the PACE 2016–17 challenges handle graphs of hundreds of vertices.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>Why the bag of $v$ can hang off its earliest-eliminated later neighbour $u$: when $u$
+    is eliminated, all of $v$'s other remaining neighbours are still present and, thanks
+    to the fill-in, adjacent to $u$. So they're all in $u$'s bag. That gives property 2
+    along the chain of attachments.</p>
+    <p>The same fill-in is what sparse Cholesky factorisation creates, and the same
+    orderings (minimum degree, nested dissection) are used there. It's the reason unit
+    04's interior-point methods care about orderings. Treewidth and sparse linear algebra
+    are two views of one combinatorial object, chordal completions.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">16 · treewidth</p>
+  <h2>DP over a decomposition — and predicting its runtime</h2>
+  <div class="cols">
+    <div>
+      <p class="small">Root the decomposition. For each bag $t$ and each $S \subseteq B_t$ covering the edges inside $B_t$:</p>
+      $$\begin{aligned} T_t(S) &= w(S) + \textstyle\sum_{c\ \text{child}} \beta_c(S \cap B_c) \\ \beta_c(P) &= \min_{S' \subseteq B_c,\ S' \cap B_t = P} T_c(S') - w(P) \end{aligned}$$
+      <p class="small">Group each child's table by its restriction to the shared vertices once, then each parent entry costs $O(1)$ per child. Total $\approx \sum_t 2^{|B_t|}$, times small factors.</p>
+      <p class="small muted">Every restriction has some valid child entry: put all non-shared vertices in the cover.</p>
+    </div>
+    <div>
+      <p class="small">Lab <code>then</code>, partial $k$-trees on 150 vertices, calibrated once at $k = 4$:</p>
+      <table>
+        <thead><tr><th class="num">width</th><th class="num">$\sum 2^{|B_t|}$</th><th class="num">DP s</th><th class="num">predicted</th><th class="num">HiGHS s</th></tr></thead>
+        <tbody>
+          <tr><td class="num">5</td><td class="num">5 406</td><td class="num">0.009</td><td class="num">0.011</td><td class="num">0.022</td></tr>
+          <tr><td class="num">7</td><td class="num">19 166</td><td class="num">0.024</td><td class="num">0.040</td><td class="num">0.042</td></tr>
+          <tr><td class="num">9</td><td class="num">61 934</td><td class="num">0.070</td><td class="num">0.128</td><td class="num">0.054</td></tr>
+          <tr><td class="num">11</td><td class="num">224 990</td><td class="num">0.250</td><td class="num">0.465</td><td class="num">0.073</td></tr>
+        </tbody>
+      </table>
+      <p class="small">The prediction is within 2× at every width. HiGHS doesn't care about the width on these instances.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>The subtraction of $w(S' \cap B_t)$ is the whole trick of combining children. A
+    vertex in both the child bag and the parent bag is counted in the parent's $w(S)$.
+    By property 2, any vertex shared by two children is also in the parent, so it is
+    subtracted from each child and counted exactly once.</p>
+    <p>Textbooks convert to a <b>nice</b> decomposition (introduce, forget and join nodes,
+    each changing one vertex), which makes the $O(2^w \cdot n)$ bound clean and the proofs
+    uniform. The lab skips that. Grouping by restriction gives the same asymptotics with
+    less code.</p>
+    <p>The HiGHS column is the caveat to "FPT is fast". These graphs are easy for LP-based
+    search whatever their width, because the vertex cover LP is half-integral and nearly
+    tight on sparse graphs. A DP exponential in the width is the right tool when the width
+    is genuinely small and the problem is hard for relaxations: counting, many global
+    constraints, or problems without a good LP.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">16 · treewidth</p>
+  <h2>Courcelle's theorem: why all of these work</h2>
+  <div class="cols">
+    <div>
+      <div class="box thm"><span class="label">Courcelle 1990</span>
+        <p class="small">Every graph property expressible in <b>monadic second-order logic</b> (MSO₂: quantify over vertices, edges, <em>and sets</em> of them) can be decided in time $f(k, |\varphi|) \cdot n$ on graphs of treewidth $\le k$.</p>
+      </div>
+      <p class="small">Arnborg, Lagergren & Seese (1991) extended it to optimisation: find a minimum or maximum set satisfying an MSO formula.</p>
+    </div>
+    <div>
+      <p class="small">Vertex cover in MSO:</p>
+      $$\exists S\ \forall u\,\forall v\ \bigl(\mathrm{adj}(u,v) \rightarrow u \in S \lor v \in S\bigr)$$
+      <p class="small">3-colourability, Hamiltonicity, connectivity and dominating set are all expressible too, so all are linear-time for bounded treewidth.</p>
+      <div class="box warn"><span class="label">the catch</span>
+        <p class="small">$f$ is a tower of exponentials whose height grows with the formula's quantifier alternation. Courcelle tells you a DP <b>exists</b>. You still write the $2^w$ one by hand.</p>
+      </div>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>The proof compiles the formula into a finite tree automaton that runs over the
+    decomposition. Its states are exactly the "subset of the bag" states of a hand-written
+    DP, generalised. The tower-of-exponentials blow-up is unavoidable in general: Frick and
+    Grohe (2004) showed that, unless P = NP, no elementary $f$ works for MSO on trees.</p>
+    <p>Why this is the right "general statement": it explains in one theorem why the lab's
+    three DPs all follow the same shape. Each problem is definable in MSO, and each DP is
+    a hand-optimised version of the automaton.</p>
+  </aside>
+</section>
+
+<section class="divider">
+  <p class="eyebrow">section 4</p>
+  <h2>Parameters</h2>
+  <p>Hard, but not hopeless.</p>
+</section>
+
+<section>
+  <p class="eyebrow">16 · parameters</p>
+  <h2>FPT, XP, and kernels</h2>
+  <div class="cols">
+    <div>
+      <div class="box def"><span class="label">with a parameter $k$</span>
+        <ul class="small">
+          <li><b>FPT</b>: time $f(k) \cdot n^{O(1)}$, with the exponential confined to $k$. Vertex cover by solution size: $O(1.2738^k + kn)$ (Chen, Kanj & Xia 2010). Anything MSO by treewidth.</li>
+          <li><b>XP</b>: time $n^{f(k)}$, polynomial for each fixed $k$ but with $k$ in the exponent. $k$-clique by brute force is $O(n^k)$.</li>
+          <li><b>W[1]-hard</b>: believed not FPT. $k$-clique, $k$-independent set.</li>
+        </ul>
+      </div>
+    </div>
+    <div>
+      <div class="box thm"><span class="label">kernelisation</span>
+        <p class="small">A polynomial-time reduction to an equivalent instance of size $g(k)$. A decidable problem is FPT <b>iff</b> it has a kernel.</p>
+        <p class="small"><b>Buss's kernel for vertex cover $\le k$:</b> a vertex of degree $&gt; k$ must be in the cover, so take it and set $k \leftarrow k - 1$. Once none remain, more than $k^2$ edges means "no". Result: $O(k^2)$ edges. The LP (unit 24's half-integrality) gives a $2k$-vertex kernel.</p>
+      </div>
+      <p class="small muted">Kernels are exactly what presolve does in a MIP solver (unit 27), with a guarantee.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>Why this vocabulary is honest. "NP-hard" says only that the worst case over all
+    inputs is bad. Parameterised complexity asks <em>which aspect</em> of the input the
+    hardness lives in. Knapsack's lives in the magnitude of the numbers (pseudo-polynomial).
+    Vertex cover's lives in the solution size and in the treewidth, and not in $n$. Clique's
+    apparently doesn't live in the solution size, since it is W[1]-hard.</p>
+    <p>The "FPT iff kernel" proof is short. Given an $f(k) n^c$ algorithm: if
+    $n \ge f(k)$, run it, which takes $n^{c+1}$ time, polynomial, and output a trivial yes
+    or no instance. Otherwise the instance itself has size $&lt; f(k)$, and it is its own
+    kernel. Hence the interest in <em>polynomial</em> kernels, which not every FPT problem
+    has under standard assumptions.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">16 · lab</p>
+  <h2>Lab 16 — what you build</h2>
+  <div class="lab">
+    <span class="label">about 3 hours · uv run co lab 16</span>
+    <ol>
+      <li><b>Knapsack</b>, 0/1 and unbounded, with reconstruction. Unit 10's pricer.</li>
+      <li><b>Held–Karp</b> exact TSP.</li>
+      <li><b>Vertex cover on a forest</b>, iterative.</li>
+      <li><b>Tree decompositions</b>: width, a four-property checker, min-degree elimination.</li>
+      <li><b>Vertex cover over a tree decomposition.</b></li>
+    </ol>
+  </div>
+<pre><code class="language-bash">uv run co test 16
+uv run co then 16     # TSP race vs units 07, 09 and SCIP · knapsack scaling · runtime vs width</code></pre>
+  <aside class="notes">
+    <p>Every returned solution is checked for feasibility and against its own claimed
+    value, as well as for optimality. A DP whose value is right but whose reconstruction
+    is wrong is a common, silent bug, and unit 10 would inherit it through the pricer.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">16 · checkpoint</p>
+  <h2>Done when</h2>
+  <div class="box good"><span class="label">checkpoint</span>
+    <ul>
+      <li>All five lab steps are ✓.</li>
+      <li>You can compute a decomposition's width and predict the DP's runtime from it to within an order of magnitude.</li>
+      <li>You can explain in one sentence why $O(nC)$ for knapsack does not show P = NP.</li>
+    </ul>
+  </div>
+  <div class="cols">
+    <div>
+      <h3>Reading</h3>
+      <p class="small">Kleinberg & Tardos, ch. 6 and §10.4.<br>
+      Cygan et al., <em>Parameterized Algorithms</em>, ch. 2 (kernels), 7 (treewidth).<br>
+      Held & Karp, <em>J. SIAM</em> 10 (1962).<br>
+      Bodlaender, "A tourist guide through treewidth" (1993).</p>
+    </div>
+    <div>
+      <h3>Next</h3>
+      <p class="small"><b>10</b> column generation, with your knapsack as the pricer · <b>11</b> Lagrangian relaxation · <b>22</b> the knapsack FPTAS.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>The one-sentence answer for the checkpoint: the input encodes $C$ in $\log C$ bits,
+    so $O(nC)$ is exponential in the input length, and a polynomial algorithm must be
+    polynomial in $n \log C$.</p>
+  </aside>
+</section>
+
+</div></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/plugin/highlight/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<script src="../../slides/deck.js"></script>
+</body>
+</html>

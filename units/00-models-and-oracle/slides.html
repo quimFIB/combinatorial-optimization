@@ -1,0 +1,728 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>00 · Models, instances, and an oracle you trust</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+<link rel="stylesheet" href="../../slides/deck.css">
+</head>
+<body data-trunk="root">
+<div class="reveal"><div class="slides">
+
+<!-- ================================================================== -->
+<section class="title-slide">
+  <p class="eyebrow">Part 0 · the ground floor · spine</p>
+  <div class="unit-no">00</div>
+  <h1>Models, instances, and an oracle you trust</h1>
+  <p class="lede">What a combinatorial problem is, the nine you will meet all course, and the
+  one tool that lets you believe your own code.</p>
+  <p class="meta"><span>needs nothing</span><span>~1 h slides + 2 h lab</span><span>lab: <code>uv run co lab 00</code></span></p>
+  <aside class="notes">
+    <h4>How to use these slides</h4>
+    <p>These are written for reading on your own, not for presenting. The slide carries
+    the statement; the notes carry the explanation you would otherwise get from a
+    lecturer or a textbook paragraph. Read both.</p>
+    <ul>
+      <li><b>N</b> shows the notes beside the slide (and remembers it).</li>
+      <li><b>R</b> switches to reading mode: all slides in one scroll with the notes
+      beside each (stacked underneath on a narrow window). Best for a second pass or for looking something up.</li>
+      <li><b>Esc</b> gives the overview grid.</li>
+    </ul>
+    <h4>What this unit is for</h4>
+    <p>Nothing here is deep. It is the unit you will use most. Every later lab checks
+    your code against a slow, obviously correct solver on small instances, and this
+    is where that solver and that habit come from. It also introduces the question
+    that runs through the whole course: what does it take to <em>prove</em> that a
+    solution is optimal?</p>
+  </aside>
+</section>
+
+<!-- ================================================================== -->
+<section>
+  <p class="eyebrow">00 · overview</p>
+  <h2>Three things to leave with</h2>
+  <div class="cols three">
+    <div class="box def"><span class="label">vocabulary</span>
+      <p>Problem vs instance. A feasible set described implicitly. Decision, optimization,
+      counting.</p></div>
+    <div class="box def"><span class="label">the nine problems</span>
+      <p>Knapsack, set cover, assignment, bin packing, colouring, max-cut, TSP, job-shop,
+      vertex cover.</p></div>
+    <div class="box def"><span class="label">two habits</span>
+      <p>Test every algorithm against an oracle. Ask what would <em>prove</em> an answer
+      optimal, not just what the answer is.</p></div>
+  </div>
+  <p class="muted" style="margin-top:1em">Roadmap: definitions → the nine → spaces and symmetry → certificates →
+  the oracle and the harness → the wall.</p>
+  <aside class="notes">
+    <p>The course is built on one working method: build the naive thing, check it
+    against brute force, then compare it with an industrial solver. This unit sets
+    up the first two parts of that method.</p>
+    <p>The certificates section is short, and it is the one to read slowly. Duality
+    (unit 03), the Hungarian algorithm (15), cutting planes (08) and primal–dual
+    approximation (24) can all be seen as ways of producing the second kind of
+    certificate introduced here.</p>
+  </aside>
+</section>
+
+<!-- ================================================================== -->
+<section class="divider">
+  <p class="eyebrow">section 1</p>
+  <h2>What makes a problem combinatorial</h2>
+  <p>Finite, but only in the least useful sense of the word.</p>
+</section>
+
+<section>
+  <p class="eyebrow">00 · definitions</p>
+  <h2>Problems and instances</h2>
+  <div class="box def"><span class="label">definition</span>
+    <p>An <b>optimization problem</b> is a set of <b>instances</b>. An instance is a pair
+    $(F, c)$: a <b>feasible set</b> $F$ and an <b>objective</b> $c : F \to \mathbb{R}$. We
+    want $x^* \in F$ with $c(x^*) \le c(x)$ for all $x \in F$ (or $\ge$, for maximization).</p>
+  </div>
+  <div class="box def"><span class="label">combinatorial</span>
+    <p>$F$ is <b>finite</b>, and given <b>implicitly</b>: a simple, enumerable space $S$ and
+    constraints, $\;F = \{x \in S : x \text{ satisfies the constraints}\}$.</p>
+  </div>
+  <p>Example. <b>Vertex cover</b>: an instance is a graph $G=(V,E)$. The space is
+  $S = \{0,1\}^V$, the constraints are $x_u + x_v \ge 1$ for every $uv \in E$, and
+  the objective is $c(x) = \sum_v x_v$, to be minimized.</p>
+  <aside class="notes">
+    <p>The distinction between problem and instance matters from the first complexity
+    statement onward. "Vertex cover is NP-hard" is a claim about the problem, meaning
+    all graphs. "This graph has a cover of size 12" is a claim about an instance.
+    Running times are functions of the <em>encoding size</em> of an instance: the
+    bits needed to write down the graph, the weights, the capacity.</p>
+    <p><b>Finite</b> is what separates this from continuous optimization. Nothing
+    here needs limits, derivatives or convergence arguments: in principle you can
+    look at every element of $F$. <b>Implicit</b> is what makes that useless. $F$ is
+    never handed to you as a list. You get a short description that generates an
+    exponentially large set, and the whole subject is about reasoning over that
+    set without listing it.</p>
+    <p>The formal definition is Papadimitriou & Steiglitz ch. 1. Korte & Vygen use the
+    same idea with more machinery.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">00 · definitions</p>
+  <h2>Finite, and astronomically so</h2>
+  <div class="cols wide-left">
+    <div>
+      <table>
+        <thead><tr><th>space</th><th>size</th><th class="num">at $n = 50$</th></tr></thead>
+        <tbody>
+          <tr><td>subsets, $\{0,1\}^n$</td><td>$2^n$</td><td class="num">$1.1 \times 10^{15}$</td></tr>
+          <tr><td>set partitions</td><td>Bell $B_n$</td><td class="num">$1.9 \times 10^{47}$</td></tr>
+          <tr><td>tours from a fixed city</td><td>$(n-1)!$</td><td class="num">$6.1 \times 10^{62}$</td></tr>
+        </tbody>
+      </table>
+      <p>Enumerating is always <b>correct</b> and almost always <b>useless</b>.</p>
+      <p class="muted">Almost always useless, but it is not worthless: for $n \lesssim 20$
+      it is the only solver whose correctness you can see by reading it.</p>
+    </div>
+    <div class="box warn"><span class="label">scale</span>
+      <p>At a billion candidates a second, $2^{50}$ takes 13 days. $(50-1)!$ takes
+      about $10^{46}$ years.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>Check the arithmetic once, so the numbers feel real. $2^{50} \approx 1.13\times10^{15}$,
+    and at $10^9$ per second that is $1.13\times10^6$ seconds, about 13 days.
+    $49! \approx 6.08\times10^{62}$, so $6\times10^{53}$ seconds, or about
+    $2\times10^{46}$ years. The universe is about $1.4\times10^{10}$ years old.</p>
+    <p>The course could be described as a list of reasons you do not have to enumerate:</p>
+    <ul>
+      <li>structure that makes greedy exact (matroids, unit 13);</li>
+      <li>a continuous relaxation that is already integral (total unimodularity, 06);</li>
+      <li>bounds that prune most of the tree (branch and bound, 07);</li>
+      <li>propagation that removes values before search reaches them (CP, 17);</li>
+      <li>and, when none of these works, settling for a guaranteed approximation (Part V).</li>
+    </ul>
+    <p>Your lab's <code>then</code> step measures where enumeration stops being possible
+    on your own machine. Those numbers set the size of every small instance used in
+    later tests.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">00 · definitions</p>
+  <h2>Four questions about one instance</h2>
+  <table style="font-size:.78em">
+    <thead><tr><th>version</th><th>asks</th><th>vertex cover example</th></tr></thead>
+    <tbody>
+      <tr><td><b>decision</b></td><td>is there $x \in F$ with $c(x) \le k$?</td><td>is there a cover with at most 12 vertices?</td></tr>
+      <tr><td><b>evaluation</b></td><td>what is $\min_{x\in F} c(x)$?</td><td>the smallest cover has 11 vertices</td></tr>
+      <tr><td><b>search / optimization</b></td><td>find an $x^*$ achieving it</td><td>here are the 11 vertices</td></tr>
+      <tr><td><b>counting</b></td><td>how many $x \in F$ have $c(x) \le k$?</td><td>how many covers of size 11 exist?</td></tr>
+    </tbody>
+  </table>
+  <div class="box"><span class="label">fact</span>
+    <p>For integer objectives of polynomial bit size, the first three are
+    polynomially equivalent. Counting can be much harder.</p>
+  </div>
+  <aside class="notes">
+    <p><b>Decision to evaluation:</b> the optimum lies in a range of integers whose
+    width is exponential in the bit size, so binary search needs polynomially many
+    calls to the decision version.</p>
+    <p><b>Evaluation to search:</b> <em>self-reducibility</em>. For vertex cover, try
+    deleting vertex $v$ and its edges and ask whether the optimum of the rest is one
+    less. If it is, $v$ belongs to some optimal cover: commit to it and recurse.
+    That is $|V|$ more evaluation calls.</p>
+    <p><b>Counting</b> is a different world. Deciding whether a bipartite graph has
+    a perfect matching takes polynomial time (unit 15). <em>Counting</em> perfect
+    matchings is #P-complete (Valiant 1979), and so is computing the permanent of a
+    0/1 matrix. The course is almost entirely about decision and optimization; this
+    is here so that "easy" is never assumed to mean "easy to count".</p>
+    <p>Complexity classes are defined on decision versions, which is why hardness
+    statements are phrased as "is there a solution of value at most $k$?"</p>
+  </aside>
+</section>
+
+<!-- ================================================================== -->
+<section class="divider">
+  <p class="eyebrow">section 2</p>
+  <h2>The nine problems</h2>
+  <p>Each one is the textbook example of at least one technique later in the course.</p>
+</section>
+
+<section>
+  <p class="eyebrow">00 · the nine</p>
+  <h2>The cast</h2>
+  <div class="cards">
+    <div class="card k-bin"><b>Knapsack</b><span class="space">{0,1}ⁿ · max</span>
+      <span class="use">DP (16), cover cuts (08), weakly NP-hard, FPTAS (22)</span></div>
+    <div class="card k-bin"><b>Set cover</b><span class="space">{0,1}ᵐ · min</span>
+      <span class="use">greedy $H_n$ (23), LP rounding & primal–dual (24)</span></div>
+    <div class="card k-perm"><b>Assignment</b><span class="space">permutations · min</span>
+      <span class="use">integral LP (06), Hungarian (15), Sinkhorn (31)</span></div>
+    <div class="card k-part"><b>Bin packing</b><span class="space">set partitions · min</span>
+      <span class="use">strongly NP-hard, column generation (10)</span></div>
+    <div class="card k-part"><b>Graph colouring</b><span class="space">set partitions · min</span>
+      <span class="use">SAT encodings (20), symmetry (27), Lovász θ (25)</span></div>
+    <div class="card k-bin"><b>Max-cut</b><span class="space">{0,1}ⁿ · max</span>
+      <span class="use">no constraints at all, Goemans–Williamson 0.878 (25)</span></div>
+    <div class="card k-perm"><b>TSP</b><span class="space">tours · min</span>
+      <span class="use">subtour separation (09), Held–Karp (11, 16), Christofides (23), 2-opt (26)</span></div>
+    <div class="card k-sched"><b>Job-shop</b><span class="space">machine orders · min</span>
+      <span class="use">disjunctive & cumulative (18), LNS (19), CP-SAT (21)</span></div>
+    <div class="card k-bin"><b>Vertex cover</b><span class="space">{0,1}ⁿ · min</span>
+      <span class="use">2-approx (23), half-integral LP (24), FPT (16), UGC (22)</span></div>
+  </div>
+  <p class="legend"><i style="background:var(--c-lp)"></i>subsets <i style="background:var(--c-ip)"></i>orderings
+  <i style="background:var(--c-cp)"></i>partitions <i style="background:var(--c-apx)"></i>schedules</p>
+  <aside class="notes">
+    <p>You don't need to memorize this grid now. It is here so that when a later
+    unit says "recall knapsack" you have met it. All nine are in
+    <code>colib.problems</code> with a random generator, so any later lab can say
+    <code>Knapsack.random(12, seed=3)</code>.</p>
+    <p>Things to notice already:</p>
+    <ul>
+      <li><b>Assignment is the odd one out:</b> it is solvable in polynomial time. It
+      is on the list because it is the clearest case where the LP relaxation is
+      already integral. Solving the LP solves the problem.</li>
+      <li><b>Knapsack and bin packing are both NP-hard, in different ways.</b>
+      Knapsack has a pseudo-polynomial DP, $O(nC)$, which is fast whenever the
+      capacity $C$ is small. Bin packing stays NP-hard even when every number is
+      small (<em>strongly</em> NP-hard). Unit 22 makes that precise.</li>
+      <li><b>Max-cut has no constraints.</b> Every subset is feasible. All of the
+      difficulty is in the objective, which is why it is the natural testbed for
+      relaxations (unit 25).</li>
+      <li><b>Vertex cover</b> is the one you will model yourself in the lab, and the
+      one used for the certificate example below.</li>
+    </ul>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">00 · the nine</p>
+  <h2>One problem, three descriptions</h2>
+  <div class="cols three" style="gap:1em">
+    <div>
+      <h3>As a predicate</h3>
+      <p class="small">what an oracle needs</p>
+<pre><code class="language-python">def feasible(G, x):
+    return all(x[u] or x[v]
+               for u, v in G.edges)
+
+def objective(G, x):
+    return sum(x)</code></pre>
+    </div>
+    <div>
+      <h3>As an integer program</h3>
+      <p class="small">Parts I–II</p>
+      $$\begin{aligned}\min\ & \textstyle\sum_{v} x_v \\ \text{s.t. } & x_u + x_v \ge 1 \quad \forall uv \in E \\ & x \in \{0,1\}^V\end{aligned}$$
+    </div>
+    <div>
+      <h3>As a constraint model</h3>
+      <p class="small">Part IV</p>
+<pre><code class="language-python">x = [model.NewBoolVar(f"x{v}")
+     for v in V]
+for u, v in E:
+    model.AddBoolOr(x[u], x[v])
+model.Minimize(sum(x))</code></pre>
+    </div>
+  </div>
+  <p>Same feasible set, three languages. What differs is <b>what a solver can infer
+  from the description</b> without enumerating.</p>
+  <aside class="notes">
+    <p>The predicate is a black box. The only thing you can do with it is evaluate
+    it at a point, so enumeration is the only algorithm it admits. The integer
+    program exposes <em>linear</em> structure: drop $x \in \{0,1\}$ to
+    $0 \le x \le 1$ and you get an LP whose optimum is a lower bound. For vertex
+    cover that LP has a surprising property (unit 24): some optimal solution uses
+    only the values $0$, $\tfrac12$, $1$. The constraint model exposes
+    <em>logical</em> structure: once $x_u$ is false, $x_v$ must be true, and a
+    propagator can deduce that without search.</p>
+    <p>A theme to watch for: the same problem, written two ways that are logically
+    equivalent, can differ in solve time by orders of magnitude. Unit 05 measures
+    this for MIP formulations and unit 18 for global constraints.</p>
+    <p>The third block is OR-Tools CP-SAT syntax, shown only to recognize later.
+    Nothing in this unit uses a solver.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">00 · spaces</p>
+  <h2>The space is a modelling choice</h2>
+  <div class="cols">
+    <div>
+      <p>Bin packing, $n$ items. Two spaces, the same feasible packings:</p>
+      <table>
+        <thead><tr><th>space</th><th class="num">size</th><th class="num">$n = 10$</th></tr></thead>
+        <tbody>
+          <tr><td>every map item → bin</td><td class="num">$n^n$</td><td class="num">10 000 000 000</td></tr>
+          <tr><td>set partitions</td><td class="num">$B_n$</td><td class="num">115 975</td></tr>
+        </tbody>
+      </table>
+      <p>The first space counts every relabelling of the bins as a new packing.
+      The second counts each packing once: <b>86 000× fewer</b>.</p>
+    </div>
+    <div class="box def"><span class="label">restricted growth strings</span>
+      <p>$a_0 = 0,\quad a_i \le 1 + \max(a_0,\dots,a_{i-1})$</p>
+      <p>$a_i$ is item $i$'s bin. Bins are opened in order, so each partition of
+      $\{0,\dots,n-1\}$ has exactly one string. For $n=3$:</p>
+      <p class="center"><code>000 001 010 011 012</code></p>
+    </div>
+  </div>
+  <p class="muted">This is <b>symmetry breaking</b>. Later it is the biggest single lever on real MIP and CP models (units 05, 27).</p>
+  <aside class="notes">
+    <p>Why the strings work: read left to right, and give each new block the next
+    unused label. Every partition has exactly one such canonical labelling, and
+    every restricted growth string is canonical, so the map is a bijection with
+    partitions. Counting them gives the Bell numbers
+    $1, 1, 2, 5, 15, 52, 203, 877, 4140, 21147, 115975, \dots$</p>
+    <p>The same idea elsewhere: a TSP tour is a cyclic order, so fixing city 0 first
+    cuts $n!$ to $(n-1)!$. For symmetric distances, identifying a tour with its
+    reverse halves it again. Colouring has the same symmetry as bin packing,
+    since colours are interchangeable.</p>
+    <p>Symmetry matters far beyond enumeration. A branch-and-bound solver on a
+    symmetric model proves the same subtree infeasible once for every relabelling.
+    Solvers detect and break symmetry automatically (orbital fixing, orbitopes), but
+    a model that avoids it is still better. You will write the enumerator in lab
+    step 2.</p>
+  </aside>
+</section>
+
+<!-- ================================================================== -->
+<section class="divider">
+  <p class="eyebrow">section 3</p>
+  <h2>Certificates</h2>
+  <p>"Here is the answer" and "here is why nothing is better" are different objects.</p>
+</section>
+
+<section>
+  <p class="eyebrow">00 · certificates</p>
+  <h2>Two kinds of evidence</h2>
+  <div class="cols">
+    <div class="box good"><span class="label">upper bound · "at most k"</span>
+      <p>Exhibit $x \in F$ with $c(x) = k$.</p>
+      <p>Anyone checks it by evaluating the constraints and the objective. For all
+      nine problems that takes polynomial time. <b>This is exactly what puts the
+      decision versions in NP.</b></p>
+    </div>
+    <div class="box warn"><span class="label">lower bound · "at least k"</span>
+      <p>Show that <b>no</b> $x \in F$ has $c(x) &lt; k$.</p>
+      <p>Enumeration proves it, but the proof is exponentially long. Is there a
+      <em>short</em> proof? For NP-hard problems, in general, it is believed there
+      is not: that is NP ≠ coNP.</p>
+    </div>
+  </div>
+  <p>Yet for particular instances, and for whole problem classes, short lower-bound
+  proofs do exist. <b>Finding them is most of the course.</b></p>
+  <aside class="notes">
+    <p>For a minimization problem, a feasible solution gives an <em>upper</em> bound on
+    the optimum, and it is its own certificate. A <em>lower</em> bound needs an
+    argument about every solution at once.</p>
+    <p>In complexity terms, the decision question "is the optimum at most $k$?"
+    has short, checkable "yes" certificates, which is NP. Short checkable "no"
+    certificates would put it in coNP. If any NP-complete problem were in coNP,
+    then NP = coNP, which is widely believed false. So no <em>general</em> short
+    lower-bound certificate is expected for vertex cover.</p>
+    <p>That is a worst-case statement. On a given instance there is often a short
+    proof, and the machinery of the course exists to find one:</p>
+    <ul>
+      <li><b>LP duality</b> (03): a dual solution is a lower-bound certificate for the LP.</li>
+      <li><b>Branch and bound</b> (07): the search tree together with the LP bounds at its leaves is the certificate.</li>
+      <li><b>Cutting planes</b> (08): the derivation of the cuts.</li>
+      <li><b>DRAT proofs</b> (20): SAT solvers emit a checkable proof of unsatisfiability.</li>
+    </ul>
+    <p>Linear programming is the example that matters most: it had short certificates
+    in both directions, so it was known to be in NP ∩ coNP, years before
+    Khachiyan (1979) showed it is in P. Unit 01 builds the "no" certificate for
+    feasibility.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">00 · certificates</p>
+  <h2>A lower bound for vertex cover</h2>
+  <div class="cols wide-left">
+    <div>
+      <div class="box thm"><span class="label">lemma</span>
+        <p>If $M$ is a matching and $C$ a vertex cover in the same graph, then $|C| \ge |M|$.</p>
+      </div>
+      <div class="box proof"><span class="label">proof</span>
+        <p>Each edge of $M$ needs an endpoint in $C$. The edges of $M$ share no
+        endpoints, so those are $|M|$ distinct vertices. $\square$</p>
+      </div>
+      <p>So a cover and a matching <b>of the same size</b> prove each other optimal.</p>
+    </div>
+    <div class="fig">
+      <svg viewBox="0 0 300 150" width="400" role="img" aria-label="path on four vertices with a cover of size two and a matching of size two">
+        <line x1="40" y1="50" x2="260" y2="50" class="rule" stroke-width="3"/>
+        <line x1="40" y1="50" x2="113" y2="50" class="accent" stroke-width="7"/>
+        <line x1="187" y1="50" x2="260" y2="50" class="accent" stroke-width="7"/>
+        <circle cx="40" cy="50" r="15" class="fill-ground ink" stroke-width="2"/>
+        <circle cx="113" cy="50" r="15" class="fill-unit ink" stroke-width="2"/>
+        <circle cx="187" cy="50" r="15" class="fill-unit ink" stroke-width="2"/>
+        <circle cx="260" cy="50" r="15" class="fill-ground ink" stroke-width="2"/>
+        <text x="40" y="95" text-anchor="middle" class="mono soft" font-size="14">0</text>
+        <text x="113" y="95" text-anchor="middle" class="mono soft" font-size="14">1</text>
+        <text x="187" y="95" text-anchor="middle" class="mono soft" font-size="14">2</text>
+        <text x="260" y="95" text-anchor="middle" class="mono soft" font-size="14">3</text>
+        <text x="150" y="132" text-anchor="middle" font-size="14" class="soft">cover {1, 2} · matching {01, 23}</text>
+      </svg>
+      <p class="cap">Filled vertices: a cover of size 2. Thick edges: a matching of size 2. Each proves the other optimal.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>This is the first duality argument of the course, in miniature. Write
+    $\nu(G)$ for the largest matching and $\tau(G)$ for the smallest cover. The lemma
+    says $\nu(G) \le \tau(G)$ for every graph: <b>weak duality</b>. Any matching is
+    a lower bound on any cover, just as, in unit 03, any dual feasible solution
+    bounds any primal one.</p>
+    <p>The certificate is short (at most $|V|/2$ edges) and quick to check: are
+    these edges of $G$, and are they disjoint? You will write the checker in lab
+    step 4.</p>
+    <p>A second look at the proof: it only used that matched edges are disjoint and
+    that each needs a cover vertex. That is the LP inequality
+    $\sum_{uv \in M} (x_u + x_v) \ge |M|$ together with
+    $\sum_v x_v \ge \sum_{uv\in M}(x_u+x_v)$, the second holding because $M$ is a
+    matching. Adding up constraints with nonnegative weights to bound the objective
+    is exactly what an LP dual does.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">00 · certificates</p>
+  <h2>When the bound is not enough</h2>
+  <div class="cols wide-left">
+    <div>
+      <p>On a triangle, the largest matching has <b>1</b> edge, and the smallest cover
+      needs <b>2</b> vertices. No matching certifies the optimum. The gap is real.</p>
+      <div class="box thm"><span class="label">könig, 1931</span>
+        <p>In a <b>bipartite</b> graph, $\max |M| = \min |C|$. The certificate always exists.</p>
+      </div>
+      <p class="muted">The triangle is the smallest odd cycle, and odd cycles are exactly
+      what bipartite graphs lack. That coincidence is where polyhedral combinatorics
+      starts (units 06, 15).</p>
+    </div>
+    <div class="fig">
+      <svg viewBox="0 0 220 200" width="290" role="img" aria-label="triangle: matching of size one, cover of size two">
+        <line x1="110" y1="30" x2="35" y2="160" class="rule" stroke-width="3"/>
+        <line x1="110" y1="30" x2="185" y2="160" class="accent" stroke-width="7"/>
+        <line x1="35" y1="160" x2="185" y2="160" class="rule" stroke-width="3"/>
+        <circle cx="110" cy="30" r="15" class="fill-unit ink" stroke-width="2"/>
+        <circle cx="35" cy="160" r="15" class="fill-unit ink" stroke-width="2"/>
+        <circle cx="185" cy="160" r="15" class="fill-ground ink" stroke-width="2"/>
+        <text x="110" y="196" text-anchor="middle" font-size="14" class="soft">ν = 1 &lt; 2 = τ</text>
+      </svg>
+      <p class="cap">Any edge is a maximum matching (1). Any two vertices form a minimum cover (2).</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>Can the gap be large? Not in ratio, and it is worth seeing why: the endpoints of a <em>maximal</em> matching always form a cover, so
+    $\tau \le 2\nu$. The matching bound is never off by more than a factor of 2, and
+    this is the 2-approximation for vertex cover in unit 23, which is this slide
+    turned into an algorithm.</p>
+    <p>The fractional view (unit 24): relax both to LPs. The fractional vertex cover
+    $x_v = \tfrac12$ on the triangle costs $\tfrac32$, and the fractional matching
+    $y_e = \tfrac12$ has value $\tfrac32$. These two LPs are duals, so their optima
+    coincide:
+    $$\nu = 1 \;\le\; \nu^* = \tfrac32 = \tau^* \;\le\; \tau = 2.$$
+    All of the gap comes from <em>integrality</em>, not from duality. On bipartite
+    graphs the constraint matrix is totally unimodular (unit 06), so the LPs have
+    integral optima, and König's theorem follows from LP duality.</p>
+    <p>The lab's step 4 test runs your checker over every cover and every edge set
+    of the triangle, and expects every certificate to be rejected.</p>
+  </aside>
+</section>
+
+<!-- ================================================================== -->
+<section class="divider">
+  <p class="eyebrow">section 4</p>
+  <h2>An oracle you trust</h2>
+  <p>Slow, obviously correct, and the reference every later lab is checked against.</p>
+</section>
+
+<section>
+  <p class="eyebrow">00 · oracle</p>
+  <h2>Brute force, done once and done right</h2>
+  <div class="cols wide-left">
+<pre><code class="language-python">def brute_force(problem):
+    best = best_x = None
+    feasible = examined = 0
+    for x in problem.space():
+        examined += 1
+        if not problem.is_feasible(x):
+            continue
+        feasible += 1
+        v = problem.objective(x)
+        if best is None or better(v, best, problem.sense):
+            best, best_x = v, x
+    return Result(best, best_x, feasible, examined)</code></pre>
+    <div>
+      <p><b>Obviously correct</b>: it is the definition of the optimum, executed.</p>
+      <p><b>Self-certifying</b>: <code>examined == space.size()</code> is the lower-bound proof.</p>
+      <p><b>Generic</b>: one function for all nine problems, because every problem has
+      the same interface.</p>
+      <p class="muted">Where people slip: initializing <code>best</code> to 0 or ∞
+      (wrong for one sense), and reporting a value on infeasible instances.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>The value of an oracle comes entirely from being easy to believe. That rules
+    out anything clever. No pruning, no early exit, no incremental evaluation: each
+    of those is a new place for a bug to hide, and a buggy oracle is worse than
+    none, because it teaches you to trust wrong answers.</p>
+    <p>The interface, <code>space()</code>, <code>is_feasible</code>,
+    <code>objective</code>, <code>sense</code>, is what makes the oracle generic.
+    Every problem in <code>colib</code> has it. When a later unit adds a problem, it
+    gets an oracle for free.</p>
+    <p>Keeping both counts, <code>feasible</code> and <code>examined</code>, costs
+    nothing and gives two sanity checks. <code>examined</code> must equal the size of
+    the space. And <code>feasible</code> tells you how constrained an instance is:
+    random set cover instances are mostly infeasible, max-cut instances are all
+    feasible. That changes how informative a random test is.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">00 · oracle</p>
+  <h2>Differential testing</h2>
+  <div class="fig">
+    <svg viewBox="0 0 900 230" width="1000" role="img" aria-label="generator feeds instances smallest first to algorithm and oracle; a checker compares feasibility and value">
+      <defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" class="fill-ink"/></marker></defs>
+      <rect x="10" y="80" width="170" height="70" rx="6" class="fill-soft accent" stroke-width="1.5"/>
+      <text x="95" y="110" text-anchor="middle" font-size="17" font-weight="600">generator</text>
+      <text x="95" y="132" text-anchor="middle" font-size="13" class="soft">n = 1, 2, 3 … × seeds</text>
+      <rect x="290" y="20" width="190" height="60" rx="6" class="fill-ground ink" stroke-width="1.5"/>
+      <text x="385" y="56" text-anchor="middle" font-size="17" font-weight="600">your algorithm</text>
+      <rect x="290" y="150" width="190" height="60" rx="6" class="fill-ground ink" stroke-width="1.5"/>
+      <text x="385" y="186" text-anchor="middle" font-size="17" font-weight="600">brute force</text>
+      <rect x="590" y="80" width="170" height="70" rx="6" class="fill-ground ink" stroke-width="1.5"/>
+      <text x="675" y="110" text-anchor="middle" font-size="17" font-weight="600">compare</text>
+      <text x="675" y="132" text-anchor="middle" font-size="13" class="soft">feasible? value?</text>
+      <path d="M180,105 L285,55" class="ink" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+      <path d="M180,125 L285,175" class="ink" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+      <path d="M480,50 L585,105" class="ink" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+      <path d="M480,180 L585,125" class="ink" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+      <path d="M760,115 L800,115" class="warn" stroke-width="2" fill="none" marker-end="url(#ar)"/>
+      <text x="808" y="108" font-size="14" class="fill-warn" style="fill:var(--warn)">stop and print</text>
+      <text x="808" y="127" font-size="14" class="fill-warn" style="fill:var(--warn)">the instance</text>
+    </svg>
+  </div>
+  <div class="cols three">
+    <p class="small"><b>Smallest first.</b> The first failure is the smallest counterexample the sweep contains, and so the easiest one to draw.</p>
+    <p class="small"><b>Feasibility checked separately.</b> A "better than optimal" answer is always an infeasible one.</p>
+    <p class="small"><b>Ratio mode.</b> For approximation algorithms, pass <code>ratio=2</code> and check a guarantee, not equality.</p>
+  </div>
+  <aside class="notes">
+    <p>This is property-based testing with a problem-specific property. The
+    property is "agrees with the definition". If you have used Hypothesis or
+    QuickCheck, the harness is a hand-rolled version, with instance generators in
+    place of strategies and size ordering in place of shrinking.</p>
+    <p>Why smallest first instead of shrinking? For combinatorial instances a
+    general shrinker is awkward to write (what is a smaller job-shop?), while
+    sweeping sizes $1,2,3,\dots$ with many seeds is trivial and nearly as good. A
+    failure at $n=6$ is a picture you can draw; a failure at $n=40$ is not.</p>
+    <p>Random instances have blind spots. They rarely produce the structured cases
+    (complete bipartite graphs, instances with many ties, degenerate LPs) that
+    break algorithms in practice. Later labs add hand-built instances next to the
+    random sweep for this reason. Unit 28 treats instance selection as a
+    methodological question in its own right.</p>
+    <p>The call is one line:
+    <code>differential(my_alg, instances(VertexCover, sizes=range(1, 13)))</code>.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">00 · oracle</p>
+  <h2>The harness catches what you believe</h2>
+  <div class="cols wide-right">
+    <div class="fig">
+      <svg viewBox="0 0 420 270" width="440" role="img" aria-label="spider graph: centre vertex with three legs of length two">
+        <line x1="210" y1="40" x2="90" y2="130" class="rule" stroke-width="3"/>
+        <line x1="210" y1="40" x2="210" y2="130" class="rule" stroke-width="3"/>
+        <line x1="210" y1="40" x2="330" y2="130" class="rule" stroke-width="3"/>
+        <line x1="90" y1="130" x2="90" y2="220" class="accent" stroke-width="7"/>
+        <line x1="210" y1="130" x2="210" y2="220" class="accent" stroke-width="7"/>
+        <line x1="330" y1="130" x2="330" y2="220" class="accent" stroke-width="7"/>
+        <circle cx="210" cy="40" r="22" fill="none" class="warn" stroke-width="3" stroke-dasharray="5 4"/>
+        <circle cx="210" cy="40" r="14" class="fill-ground ink" stroke-width="2"/>
+        <circle cx="90" cy="130" r="14" class="fill-unit ink" stroke-width="2"/>
+        <circle cx="210" cy="130" r="14" class="fill-unit ink" stroke-width="2"/>
+        <circle cx="330" cy="130" r="14" class="fill-unit ink" stroke-width="2"/>
+        <circle cx="90" cy="220" r="14" class="fill-ground ink" stroke-width="2"/>
+        <circle cx="210" cy="220" r="14" class="fill-ground ink" stroke-width="2"/>
+        <circle cx="330" cy="220" r="14" class="fill-ground ink" stroke-width="2"/>
+        <text x="250" y="30" font-size="14" style="fill:var(--warn)">greedy's first pick</text>
+        <text x="210" y="262" text-anchor="middle" font-size="14" class="soft">optimum {middle row} = 3 · greedy = 4</text>
+      </svg>
+    </div>
+    <div>
+      <p><b>"Take the vertex covering the most uncovered edges."</b></p>
+      <p>On this spider it takes the centre (degree 3). The three leg-ends are then
+      disjoint edges, and each costs one more vertex: <b>4</b>.</p>
+      <p>The middle row covers everything with <b>3</b>, and the three thick edges are a
+      matching of size 3, so <b>3 is provably optimal</b>.</p>
+      <p class="muted">No graph with fewer vertices makes max-degree greedy fail
+      <em>whatever</em> the tie-breaking. In lab step 5 you
+      write the heuristic, and the harness has to find a case like this on its own.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>The counterexample was found by exhaustive search over all graphs with up to 7
+    vertices, looking for graphs where every tie-breaking choice of the greedy gives a
+    suboptimal cover. There are none on 6 or fewer vertices; on 7, the spider with
+    three legs of length 2 has the fewest edges. With a fixed tie-breaking rule, smaller failures exist,
+    and the harness usually finds one around $n=6$.</p>
+    <p>The heuristic is not just occasionally wrong. There are bipartite families
+    on which max-degree greedy is off by a factor of $\Theta(\log n)$, while
+    the trivial "take both endpoints of an uncovered edge" rule is never worse than
+    2×. The more intuitive algorithm has the worse guarantee. Unit 23 has the
+    construction.</p>
+    <p>Notice the slide uses both halves of this unit at once. The harness found that
+    greedy is wrong; the matching certifies what right looks like, with no
+    enumeration needed. On a graph of 1 000 vertices you could not run the oracle,
+    but you could still check a matching.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">00 · oracle</p>
+  <h2>The wall</h2>
+  <div class="cols wide-left">
+    <div>
+      <p>Pure-Python brute force, reference machine, extrapolated from µs per candidate:</p>
+      <table>
+        <thead><tr><th>space</th><th class="num">1 minute</th><th class="num">1 hour</th><th class="num">1 year</th></tr></thead>
+        <tbody>
+          <tr><td>$2^n$ — vertex cover</td><td class="num">26</td><td class="num">32</td><td class="num">45</td></tr>
+          <tr><td>$(n-1)!$ — TSP</td><td class="num">11</td><td class="num">13</td><td class="num">16</td></tr>
+          <tr><td>$B_n$ — bin packing</td><td class="num">13</td><td class="num">15</td><td class="num">19</td></tr>
+        </tbody>
+      </table>
+      <p>A year of computing buys <b>five more TSP cities</b> than a minute does.</p>
+    </div>
+    <div class="box"><span class="label">rule for the rest of the course</span>
+      <p>Tests against brute force use $n \le 12$ for subset spaces, $n \le 8$ for
+      tours and partitions. Anything larger needs a certificate or a trusted solver.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>Your <code>uv run co then 00</code> reproduces this table on your machine.
+    Rewriting the oracle in C would buy about 100×. For $2^n$ that is
+    $\log_2 100 \approx 6.6$ more items. For $(n-1)!$ it is barely one more city,
+    since going from $n$ to $n+1$ already multiplies the work by $n$. Exponential
+    walls do not move much for constant factors, and factorial ones move even less.</p>
+    <p>The test sizes in the box are chosen so that a full lab test run finishes in
+    seconds, not minutes. Tests you have to wait for stop getting run.</p>
+  </aside>
+</section>
+
+<!-- ================================================================== -->
+<section>
+  <p class="eyebrow">00 · lab</p>
+  <h2>Lab 00 — what you build</h2>
+  <div class="lab">
+    <span class="label">about 2 hours · uv run co lab 00</span>
+    <ol>
+      <li><b>Model it</b>: feasibility and objective for vertex cover and bin packing.</li>
+      <li><b>Set partitions</b>: the restricted-growth-string enumerator.</li>
+      <li><b>The oracle</b>: generic brute force, checked against the reference on all nine problems.</li>
+      <li><b>A certificate</b>: the matching lower bound, and a checker that rejects the triangle.</li>
+      <li><b>Break it</b>: a heuristic you believe, and the harness proving you wrong.</li>
+    </ol>
+  </div>
+<pre><code class="language-bash">uv run co test 00      # after each step: · not started  ✗ failing  ✓ done
+uv run co then 00      # find your wall</code></pre>
+  <aside class="notes">
+    <p>The library provides everything that is not the lesson: the nine problem
+    classes, the spaces, the harness, file readers. You write the parts that are
+    the lesson, about 80 lines. <code>HINTS.md</code> has a ladder of increasingly
+    specific hints for each step. <code>solution/lab.py</code> exists: read it when
+    the ladder runs out, then close it and write your own.</p>
+    <p>Do step 1 without reading <code>colib/problems.py</code>. Writing the model
+    blind is the exercise; the test compares you against it.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">00 · checkpoint</p>
+  <h2>Done when</h2>
+  <div class="box good"><span class="label">checkpoint</span>
+    <ul>
+      <li>All five lab steps are ✓.</li>
+      <li>You can generate and exactly solve an instance of any of the nine problems at the sizes your wall allows.</li>
+      <li>The harness caught your deliberately wrong heuristic without you pointing it at the failure.</li>
+      <li>Without notes, you can explain the two kinds of certificate, and use the triangle to show why a matching cannot always certify a cover.</li>
+    </ul>
+  </div>
+  <div class="cols">
+    <div>
+      <h3>Reading</h3>
+      <p class="small">Papadimitriou & Steiglitz, <em>Combinatorial Optimization</em>, ch. 1.<br>
+      Korte & Vygen, <em>Combinatorial Optimization</em>, §1.1–1.3 (optional).</p>
+    </div>
+    <div>
+      <h3>Next</h3>
+      <p class="small">Any of three roots: <b>01</b> polyhedra (LP trunk), <b>13</b> matroids
+      (combinatorial trunk), <b>17</b> propagation (constraint trunk).</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>The trunks are independent. If you enjoyed the certificate section, go to 01:
+    it builds the certificate of infeasibility for linear systems, the first step
+    towards duality. If you enjoyed the greedy counterexample, go to 13, which
+    characterizes exactly when greedy is optimal.</p>
+    <p>Write your smallest counterexample and your wall numbers in the lab's
+    <code>NOTES.md</code>. Unit 28 will ask you to regenerate claims like these from
+    one command, so recording them now is cheap practice.</p>
+  </aside>
+</section>
+
+</div></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/plugin/highlight/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<script src="../../slides/deck.js"></script>
+</body>
+</html>

@@ -1,0 +1,349 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>28 · Experimental method</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+<link rel="stylesheet" href="../../slides/deck.css">
+</head>
+<body data-trunk="prac">
+<div class="reveal"><div class="slides">
+
+<section class="title-slide">
+  <p class="eyebrow">Part VI · making it real · spine</p>
+  <div class="unit-no">28</div>
+  <h1>Experimental method</h1>
+  <p class="lede">Summaries that don't lie, pictures that answer the right question, intervals and tests for claims about randomised and chaotic solvers, and an audit of this course's own earlier conclusions.</p>
+  <p class="meta"><span>needs 27</span><span>~1 h slides + 2½ h lab</span><span>lab: <code>uv run co lab 28</code></span></p>
+  <aside class="notes">
+    <p>Unit 27 ended with a table that looked like a staircase of improvements and turned out to be mostly
+    noise. This unit is the method that would have told you so in advance: store runs, not summaries;
+    choose the summary for the question; attach uncertainty; correct for the number of questions asked.</p>
+    <p>The curriculum says: "Expect at least one earlier conclusion not to survive; that is the unit
+    working." It happened. Unit 19's claim that restarts worsen the median has been withdrawn.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">28 · overview</p>
+  <h2>The route</h2>
+  <div class="cols">
+    <div class="box def"><span class="label">1 · summaries</span>
+      <p class="small">Why the arithmetic mean of times misleads; shifted geometric means; timeouts and penalties.</p></div>
+    <div class="box def"><span class="label">2 · pictures</span>
+      <p class="small">Performance profiles, time-to-target plots, the virtual best solver.</p></div>
+  </div>
+  <div class="cols">
+    <div class="box def"><span class="label">3 · inference</span>
+      <p class="small">Seeds, paired bootstrap intervals, Wilcoxon, Holm; instance selection; negative results.</p></div>
+    <div class="box def"><span class="label">4 · the audit</span>
+      <p class="small">Unit 07's branching claim survives, quantified. Unit 19's median claim doesn't.</p></div>
+  </div>
+  <aside class="notes">
+    <p>The checkpoint: every performance claim in your notes regenerates from one command, and survives,
+    or is corrected in place. The lab's harness stores runs in SQLite, so regeneration after the first run
+    is re-analysis, not re-solving.</p>
+  </aside>
+</section>
+
+<section class="divider">
+  <p class="eyebrow">section 1</p>
+  <h2>Summaries</h2>
+  <p>One number per solver, chosen with care.</p>
+</section>
+
+<section>
+  <p class="eyebrow">28 · summaries</p>
+  <h2>Arithmetic, geometric, shifted geometric</h2>
+  <div class="cols">
+    <div>
+      <p class="small">Two solvers, ten instances:</p>
+      <table class="dense">
+        <thead><tr><th></th><th class="num">9 instances</th><th class="num">1 instance</th><th class="num">arith. mean</th><th class="num">geo. mean</th><th class="num">SGM, shift 10</th></tr></thead>
+        <tbody>
+          <tr><td>A</td><td class="num">1 s each</td><td class="num">1 000 s</td><td class="num">100.9</td><td class="num">2.0</td><td class="num">7.3</td></tr>
+          <tr><td>B</td><td class="num">2 s each</td><td class="num">100 s</td><td class="num">11.8</td><td class="num">3.0</td><td class="num">5.0</td></tr>
+        </tbody>
+      </table>
+      <p class="small">The arithmetic mean is one instance's number. The geometric mean treats 1 s → 2 s like 500 s → 1 000 s: <b>ratios</b>, which is what comparisons are about. The shift keeps trivial instances from dominating.</p>
+      $$\mathrm{SGM}_s(t) = \exp\Big(\tfrac1n \textstyle\sum_i \log(t_i + s)\Big) - s$$
+    </div>
+    <div>
+      <div class="box def"><span class="label">timeouts</span>
+        <p class="small">An unsolved run has no time, only a lower bound. <b>PAR-k</b> counts it as $k \times$ the limit. The result depends on the limit and on $k$, so report both, and report the solved count separately.</p>
+      </div>
+      <div class="box warn"><span class="label">censoring, in this course</span>
+        <p class="small">Unit 19 reported a mean of 153.6 nodes with a 3 000-node cap. Three capped runs contributed 90 of it: without them the mean is 65.6. A higher cap would give a higher mean. The number described the cap as much as the solver.</p>
+      </div>
+      <p class="small muted">SCIP and most MIP benchmark reports use shift 10 s (Achterberg 2007). For sub-second runs, pick a shift on their scale: the lab's audit uses 0.1 s.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>The numbers in the table: A's geometric mean is 1000^(1/10) ≈ 2.0 and B's is 2^(9/10) · 100^(1/10) ≈
+    3.0. With shift 10, A is exp((9 log 11 + log 1010)/10) − 10 ≈ 7.3 and B is exp((9 log 12 + log 110)/10) − 10 ≈ 5.0
+    (all checked by computation). A wins the geometric mean, and B wins the other two. None
+    of them is wrong, and each answers a different question. Pick it before looking at the data.</p>
+    <p>For node counts, shifted geometric means work the same way. Unit 28's audit uses shift 10 nodes.</p>
+  </aside>
+</section>
+
+<section class="divider">
+  <p class="eyebrow">section 2</p>
+  <h2>Pictures</h2>
+  <p>Distributions, not averages.</p>
+</section>
+
+<section>
+  <p class="eyebrow">28 · pictures</p>
+  <h2>Performance profiles (Dolan & Moré 2002)</h2>
+  <div class="cols">
+    <div>
+      <p class="small">For problem $p$ and solver $s$: $r_{p,s} = t_{p,s} / \min_{s'} t_{p,s'}$, or $\infty$ if $s$ failed.</p>
+      $$\rho_s(\tau) = \tfrac{1}{|P|}\,\big|\{p : r_{p,s} \le \tau\}\big|$$
+      <ul class="small">
+        <li>$\rho_s(1)$: the share of problems $s$ wins (ties count for everyone).</li>
+        <li>$\rho_s(\tau)$ for large $\tau$: the share $s$ solves at all.</li>
+        <li>A curve that starts high is fast; one that ends high is robust. They can cross.</li>
+      </ul>
+      <div class="box warn"><span class="label">a known trap</span>
+        <p class="small">Ratios are to the best solver <em>in the comparison</em>. Adding or removing a solver can reorder the others' curves (Gould & Scott 2016). Compare two at a time when the question is two-way.</p>
+      </div>
+    </div>
+    <div>
+      <p class="small">Lab <code>then</code>, unit 07's branching rules on 24 knapsacks, time:</p>
+      <table class="dense">
+        <thead><tr><th>τ</th><th class="num">1</th><th class="num">1.25</th><th class="num">1.5</th><th class="num">2</th><th class="num">3</th><th class="num">5</th></tr></thead>
+        <tbody>
+          <tr><td>most-fractional</td><td class="num">0.08</td><td class="num">0.75</td><td class="num">1.00</td><td class="num">1.00</td><td class="num">1.00</td><td class="num">1.00</td></tr>
+          <tr><td>pseudocost</td><td class="num"><b>0.92</b></td><td class="num">1.00</td><td class="num">1.00</td><td class="num">1.00</td><td class="num">1.00</td><td class="num">1.00</td></tr>
+          <tr><td>strong</td><td class="num">0.00</td><td class="num">0.00</td><td class="num">0.00</td><td class="num">0.04</td><td class="num">0.92</td><td class="num">1.00</td></tr>
+        </tbody>
+      </table>
+      <div class="box def"><span class="label">virtual best solver</span>
+        <p class="small">Per problem, the fastest solver's time. It's the ceiling for any portfolio of these solvers, and the gap to it says how much choosing per instance could buy. Here pseudocost is the virtual best on 22 of 24.</p>
+      </div>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>Time-to-target plots (unit 26) are the per-instance analogue for randomised algorithms: a
+    distribution over seeds on one instance, where a profile is a distribution over instances. Use TTT
+    plots when the question is "how long until good enough, and how reliably"; use profiles when it's
+    "across a benchmark set, how often and by how much".</p>
+    <p>Gould and Scott's note ("A note on performance profiles for benchmarking software", ACM TOMS 2016)
+    shows the reordering effect concretely. The fix is simple: keep pairwise profiles for pairwise claims.</p>
+  </aside>
+</section>
+
+<section class="divider">
+  <p class="eyebrow">section 3</p>
+  <h2>Inference</h2>
+  <p>How sure, and about what?</p>
+</section>
+
+<section>
+  <p class="eyebrow">28 · inference</p>
+  <h2>Seeds, pairing, intervals, and many tests</h2>
+  <div class="cols">
+    <div>
+      <ul class="small">
+        <li><b>Seeds.</b> A deterministic MIP solver still varies with seeds and model permutations (unit 27). Run several, and treat (instance, seed) as the unit of observation.</li>
+        <li><b>Pairing.</b> Two solvers on the same instances: analyse the per-instance log ratios, not two independent means. Most of the variance is between instances, and pairing removes it.</li>
+        <li><b>Bootstrap.</b> Resample the per-instance ratios, recompute the geometric mean each time, and take percentiles. No normality assumption.</li>
+      </ul>
+      $$\text{ratio} = \exp\Big(\tfrac1n\textstyle\sum_i \log\frac{a_i + s}{b_i + s}\Big)$$
+    </div>
+    <div>
+      <div class="box def"><span class="label">Wilcoxon signed-rank</span>
+        <p class="small">Paired, rank-based: do the differences tend to be positive? Its p-value answers "is there a difference", and the bootstrap interval answers "how big". Report both.</p>
+      </div>
+      <div class="box warn"><span class="label">multiple comparisons</span>
+        <p class="small">Three solvers mean three pairwise tests. At α = 0.05 each, the chance of at least one false positive is about 14% if nothing differs. <b>Holm</b>: sort the p-values, multiply the $k$-th smallest by $m - k$, and keep them monotone. Uniformly more powerful than Bonferroni.</p>
+      </div>
+      <p class="small muted">Holm (1979), <em>Scand. J. Statistics</em> 6.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>What the bootstrap interval is and isn't: an estimate of how much the summary would move if the
+    instances were drawn again from the same distribution. It says nothing about instances from a
+    different distribution. That's instance selection, the next slide's topic, and no statistics can fix
+    it.</p>
+    <p>Why 14%: 1 − 0.95³ ≈ 0.14 for three independent tests. Pairwise tests on shared data aren't
+    independent, but Holm's guarantee doesn't need independence.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">28 · inference</p>
+  <h2>Instance selection, per-instance claims, negative results</h2>
+  <div class="cols">
+    <div>
+      <div class="box warn"><span class="label">instance selection bias</span>
+        <ul class="small">
+          <li>Instances chosen because the new method does well on them (or generated by a generator tuned during development).</li>
+          <li>Instances "too easy" or "too hard" dropped after seeing results.</li>
+          <li>One family standing in for a problem: unit 27's triplets and uniform instances disagreed about arc flow.</li>
+        </ul>
+        <p class="small">Fix the instance set <b>before</b> running, and say how it was chosen.</p>
+      </div>
+    </div>
+    <div>
+      <div class="box def"><span class="label">per-instance or aggregate?</span>
+        <p class="small">"Faster on average" (an aggregate claim) and "faster on most instances" (a per-instance claim) are different. Unit 28's audit reports both: pseudocost has the lower SGM <em>and</em> wins 22 of 24.</p>
+      </div>
+      <div class="box good"><span class="label">a negative result worth reading</span>
+        <p class="small">State the hypothesis, the instances and budget, the effect size with its interval, and what it rules out. "Restarts don't reliably change the median on QCP(12, 55%): 3/8 instances worse, p = 0.79, and the original instance's intervals overlap" rules out a specific claim, which is useful.</p>
+      </div>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>Hooker's 1995 paper ("Testing heuristics: we have it all wrong") argued for exactly this: experiments
+    designed to test hypotheses about why an algorithm works, rather than competitions. Thirty years on
+    it's still the right criticism of much of the heuristics literature.</p>
+  </aside>
+</section>
+
+<section class="divider">
+  <p class="eyebrow">section 4</p>
+  <h2>The audit</h2>
+  <p>This course's own conclusions, re-run.</p>
+</section>
+
+<section>
+  <p class="eyebrow">28 · audit</p>
+  <h2>Unit 07: branching rules, from 3 instances to 24</h2>
+  <div class="cols">
+    <div>
+      <p class="small"><b>Claim</b> (totals over 3 instances): strong branching uses the fewest nodes; pseudocost is fastest.</p>
+      <table class="dense">
+        <thead><tr><th>rule</th><th class="num">SGM nodes</th><th class="num">SGM s</th><th class="num">fewest nodes</th><th class="num">fastest</th></tr></thead>
+        <tbody>
+          <tr><td>most-fractional</td><td class="num">800</td><td class="num">0.58</td><td class="num">0</td><td class="num">2</td></tr>
+          <tr><td>pseudocost</td><td class="num">708</td><td class="num"><b>0.53</b></td><td class="num">1</td><td class="num"><b>22</b></td></tr>
+          <tr><td>strong</td><td class="num"><b>543</b></td><td class="num">1.34</td><td class="num"><b>23</b></td><td class="num">0</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div>
+      <table class="dense">
+        <thead><tr><th>paired ratio</th><th>nodes, 95% CI</th><th>seconds, 95% CI</th></tr></thead>
+        <tbody>
+          <tr><td>strong / pseudocost</td><td>0.77 [0.72, 0.82]</td><td>2.31 [2.15, 2.47]</td></tr>
+          <tr><td>strong / most-frac.</td><td>0.68 [0.63, 0.74]</td><td>2.10 [1.94, 2.28]</td></tr>
+          <tr><td>pseudocost / most-frac.</td><td>0.89 [0.84, 0.93]</td><td>0.91 [0.88, 0.95]</td></tr>
+        </tbody>
+      </table>
+      <p class="small muted">Holm-adjusted Wilcoxon p ≤ 0.0001 for all six.</p>
+      <div class="box good"><span class="label">verdict: survives, now quantified</span>
+        <p class="small">Strong branching saves about a quarter of the nodes and costs 2.3× the time. Pseudocost is 9% faster than most-fractional.</p>
+      </div>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>What changed besides the verdict: the claim is now per-instance as well as aggregate, it has an effect
+    size with an interval, and it's on 24 instances chosen by a rule (all seeds 0–7 at three sizes)
+    before running. The node saving of strong branching is also much smaller than the three-instance totals
+    suggested, where one instance dominated.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">28 · audit</p>
+  <h2>Unit 19: restarts, with intervals and eight more instances</h2>
+  <div class="cols">
+    <div>
+      <p class="small"><b>Claims</b> (one instance, 100 seeds, 3 000-node cap): restarts cut the mean from 153.6 to 52.1, and <b>make the median worse</b>, 31 → 49.5.</p>
+      <table class="dense">
+        <thead><tr><th>strategy</th><th class="num">capped</th><th class="num">mean [95% CI]</th><th class="num">median [95% CI]</th></tr></thead>
+        <tbody>
+          <tr><td>first-fail</td><td class="num">3</td><td class="num">153.6 [66.6, 267.5]</td><td class="num">31.0 [28.5, 35.0]</td></tr>
+          <tr><td>Luby restarts</td><td class="num">0</td><td class="num">52.1 [45.0, 59.7]</td><td class="num">49.5 [28.5, 53.5]</td></tr>
+        </tbody>
+      </table>
+      <p class="small">Eight more instances, 30 seeds each: restarts lower the mean on <b>7/8</b> (p = 0.03) and raise the median on <b>3/8</b> (p = 0.79).</p>
+    </div>
+    <div>
+      <div class="box warn"><span class="label">verdict: the median claim is withdrawn</span>
+        <p class="small">The intervals overlap on the original instance, and the family shows no consistent direction. Unit 19's lab sheet and slides have been corrected in place.</p>
+      </div>
+      <div class="box good"><span class="label">what survives</span>
+        <p class="small">Restarts cut the <b>tail</b>. On the two instances where first-fail hit the cap 6 times in 30, restarts never did (means 1 067 → 194 and 1 141 → 191).</p>
+      </div>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>How the wrong claim arose: a difference in medians on one instance, from one set of seeds, with a
+    mechanism that sounded right ("every run pays for aborted starts"). A possible reason it didn't
+    generalise, untested here: the first Luby restart comes after 30 nodes, close to a typical run's median,
+    so aborted starts may touch the median only on some instances. A plausible story plus one number is the
+    pattern to distrust.</p>
+    <p>The mean claim is also restated. The mean of capped counts isn't a property of the solver alone, so
+    the surviving claim is about the tail (capped runs and upper quantiles), not about "the mean".</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">28 · lab</p>
+  <h2>Lab 28 — what you build</h2>
+  <div class="lab">
+    <span class="label">about 2½ hours · uv run co lab 28</span>
+    <ol>
+      <li><b>A run store</b> in SQLite.</li>
+      <li><b>A resumable runner</b> that records timeouts honestly.</li>
+      <li><b>Shifted geometric means</b> and penalised times.</li>
+      <li><b>Performance profiles</b> and the virtual best solver.</li>
+      <li><b>Bootstrap intervals</b>, including paired geometric ratios.</li>
+      <li><b>Holm and Wilcoxon</b> for many paired comparisons.</li>
+    </ol>
+  </div>
+<pre><code class="language-bash">uv run co test 28
+uv run co then 28     # audit unit 07 (24 instances) and unit 19 (intervals + 8 instances) · out/profile.png</code></pre>
+  <aside class="notes">
+    <p>The harness is deliberately small: one table, one runner, pure analysis functions. That's enough to
+    make every claim regenerable, which is the checkpoint. A production harness adds subprocess isolation
+    for hard timeouts, machine metadata, and version pinning of the solvers under test.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">28 · checkpoint</p>
+  <h2>Done when</h2>
+  <div class="box good"><span class="label">checkpoint</span>
+    <ul>
+      <li>All six lab steps are ✓.</li>
+      <li>Every performance claim in your notes regenerates from one command, and survives the regeneration, or has been corrected in place.</li>
+      <li>For a given comparison you can say which of SGM, profile, TTT plot or paired interval answers the question being asked.</li>
+    </ul>
+  </div>
+  <div class="cols">
+    <div>
+      <h3>Reading</h3>
+      <p class="small">Dolan & Moré, <em>Math. Programming</em> 91 (2002).<br>
+      Hooker, <em>J. Heuristics</em> 1 (1995).<br>
+      McGeoch, <em>A Guide to Experimental Algorithmics</em> (2012).<br>
+      Beiranvand, Hare & Lucet, <em>Optim. Eng.</em> 18 (2017).</p>
+    </div>
+    <div>
+      <h3>Next</h3>
+      <p class="small">Part VII, the coda: <b>29</b> convexity and gradients · <b>30</b> automatic differentiation · <b>31</b> where discrete meets differentiable.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>End of Part VI. The coda changes subject, from discrete to continuous, but keeps the method. Unit 31's
+    checkpoint explicitly asks for its learned branching rule to be evaluated "in terms of unit 28's
+    methodology rather than anecdote".</p>
+  </aside>
+</section>
+
+</div></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/plugin/highlight/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<script src="../../slides/deck.js"></script>
+</body>
+</html>

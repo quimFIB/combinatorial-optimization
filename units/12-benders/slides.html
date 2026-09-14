@@ -1,0 +1,379 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>12 · Benders decomposition</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+<link rel="stylesheet" href="../../slides/deck.css">
+</head>
+<body data-trunk="ip">
+<div class="reveal"><div class="slides">
+
+<section class="title-slide">
+  <p class="eyebrow">Part II · trunk A · integer programming · branch</p>
+  <div class="unit-no">12</div>
+  <h1>Benders decomposition</h1>
+  <p class="lede">Fix the hard variables, let the easy ones' duals write an inequality about the choice, and repeat. Row generation — the mirror image of unit 10.</p>
+  <p class="meta"><span>needs 10</span><span>~1¼ h slides + 2½ h lab</span><span>lab: <code>uv run co lab 12</code></span></p>
+  <aside class="notes">
+    <p>Jacques Benders published the method in 1962 for mixed-integer programs: integer
+    variables in a master problem, continuous variables in an LP subproblem. Its natural home
+    turned out to be stochastic programming. A first-stage decision is followed by many
+    scenarios, each a separate LP once the first stage is fixed.</p>
+    <p>The unit has one conceptual goal, the duality with Dantzig–Wolfe, and one practical
+    lesson from the lab. Whether Benders beats the monolithic model depends on how many
+    iterations it needs, and that depends on the instance, not only on its size.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">12 · overview</p>
+  <h2>The route</h2>
+  <div class="cols">
+    <div class="box def"><span class="label">1 · splitting</span>
+      <p class="small">The value function, optimality and feasibility cuts, the loop and its bounds.</p></div>
+    <div class="box def"><span class="label">2 · the mirror of unit 10</span>
+      <p class="small">Rows vs columns: Benders and Dantzig–Wolfe on one page.</p></div>
+  </div>
+  <div class="cols">
+    <div class="box def"><span class="label">3 · stochastic programming</span>
+      <p class="small">Two-stage recourse, the L-shaped method, multi-cut, and the measured crossover.</p></div>
+    <div class="box def"><span class="label">4 · modern Benders</span>
+      <p class="small">Inside branch-and-cut, Pareto-optimal cuts, LP-first, logic-based Benders.</p></div>
+  </div>
+  <aside class="notes">
+    <p>The lab builds everything in sections 1 and 3 and the two accelerations of section 4 that
+    fit in a pure loop: Magnanti–Wong cuts and the LP-first phase. Benders inside a single
+    branch-and-bound tree needs solver callbacks, which is why it's on the slides and not in the
+    lab.</p>
+  </aside>
+</section>
+
+<section class="divider">
+  <p class="eyebrow">section 1</p>
+  <h2>Splitting</h2>
+  <p>A hard decision, then an easy one.</p>
+</section>
+
+<section>
+  <p class="eyebrow">12 · splitting</p>
+  <h2>The value function of the easy part</h2>
+  <div class="cols">
+    <div>
+      $$\begin{aligned} & \min_{y \in Y}\ f^\top y + Q(y) \\ & Q(y) = \min_{x \ge 0} \{\, c^\top x : Wx \ge h - Ty \,\} \end{aligned}$$
+      <p class="small">$y$: the complicating variables (integer, few). For fixed $y$ the inner problem is an LP, often separable into blocks. Its value is $Q(y)$.</p>
+      <div class="box thm"><span class="label">by LP duality (unit 03)</span>
+        $$\begin{aligned} Q(y) &= \max_{\pi \in \Pi}\ \pi^\top (h - Ty) \\ \Pi &= \{\pi \ge 0 : W^\top \pi \le c\} \end{aligned}$$
+        <p class="small">$\Pi$ doesn't depend on $y$. So $Q$ is the maximum of finitely many affine functions (one per vertex of $\Pi$): <b>convex and piecewise linear</b>. If $Q(y) = \infty$, an extreme ray of $\Pi$ certifies it.</p>
+      </div>
+    </div>
+    <div>
+      <p class="small">The lab's facility location, for scenario $s$:</p>
+      $$\begin{aligned} Q_s(y) = \min\ & \textstyle\sum c_{ij} x_{ij} + p \sum z_j \\ & \textstyle\sum_i x_{ij} + z_j \ge d_{sj} && (v_j) \\ & \textstyle\sum_j x_{ij} \le u_i y_i && (\alpha_i) \end{aligned}$$
+      $$Q_s(y) = \max_{v, \alpha}\ \textstyle\sum_j d_{sj} v_j - \sum_i u_i \alpha_i\, y_i$$
+      <p class="small muted">Dual feasibility: $v_j - \alpha_i \le c_{ij}$, $0 \le v_j \le p$, $\alpha \ge 0$. None of it involves $y$.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>Compare with unit 11, where the Lagrangian function was a <em>minimum</em> of affine
+    functions (concave) and was maximised. Here the value function is a <em>maximum</em> of
+    affine functions (convex) and is minimised. Benders builds $Q$ from below with its affine
+    pieces, one per cut, just as Kelley's cutting-plane method builds a convex function from
+    below.</p>
+    <p>The whole method rests on "$\Pi$ doesn't depend on $y$". A dual solution computed at one
+    $y$ is still dual feasible at every other $y$, so its objective is a valid lower bound on
+    $Q$ everywhere. That's the optimality cut on the next slide.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">12 · splitting</p>
+  <h2>Optimality and feasibility cuts</h2>
+  <div class="cols">
+    <div>
+      <div class="box thm"><span class="label">optimality cut</span>
+        <p class="small">Solve at $\bar y$ and take an optimal dual $\bar\pi$. For <b>every</b> $y$:</p>
+        $$\theta \ge \bar\pi^\top (h - Ty)$$
+        <p class="small">It's tight at $\bar y$, and valid elsewhere by weak duality.</p>
+      </div>
+      <div class="box thm"><span class="label">feasibility cut</span>
+        <p class="small">If the LP at $\bar y$ is infeasible, a ray $\bar r$ of $\Pi$ has $\bar r^\top (h - T\bar y) &gt; 0$. Every feasible $y$ needs</p>
+        $$\bar r^\top (h - Ty) \le 0$$
+        <p class="small">In practice: solve the phase-one LP $\min \sum z$, whose duals are bounded ($v \le 1$). A positive value gives the ray.</p>
+      </div>
+    </div>
+    <div>
+      <p class="small">Lab step 2's tests, on every $y \in \{0, 1\}^F$:</p>
+      <ul class="small">
+        <li>each optimality cut equals $Q_s(\bar y)$ at $\bar y$ and stays below $Q_s(y)$, computed independently by scipy, at every $y$;</li>
+        <li>each feasibility cut excludes its $\bar y$ and keeps every $y$ at which the scenario is feasible.</li>
+      </ul>
+      <div class="box warn"><span class="label">complete recourse</span>
+        <p class="small">A penalty for unmet demand makes every $y$ feasible, so feasibility cuts disappear. That's common modelling practice. Without it, $y = 0$ is the master's first answer and every scenario returns a feasibility cut.</p>
+      </div>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>For the facility problem the simplest feasibility cut is visible by hand. Take $v = 1$
+    for every customer and $\alpha = 1$ for every facility: the cut is
+    $\sum_j d_{sj} \le \sum_i u_i y_i$, total capacity at least total demand. The phase-one
+    duals give that cut or a sharper one restricted to a subset of customers.</p>
+    <p>Why the phase-one LP instead of a ray: LP solvers report dual rays inconsistently, and
+    some only after a re-solve with presolve off (unit 03's HiGHS lesson). The phase-one LP is
+    always feasible and bounded, so its duals are an ordinary optimal solution.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">12 · splitting</p>
+  <h2>The loop, and why it ends</h2>
+  <div class="cols">
+    <div>
+      <p class="small"><b>Master</b> over $y$ and $\theta$ with the cuts so far:</p>
+      $$\min f^\top y + \theta \quad \text{s.t. cuts},\ y \in Y$$
+      <ol class="small">
+        <li>Solve the master: $\text{LB} = $ its value, giving $\bar y$.</li>
+        <li>Solve the subproblem(s) at $\bar y$: add a feasibility or optimality cut.</li>
+        <li>If feasible, $\text{UB} = \min(\text{UB},\ f^\top \bar y + Q(\bar y))$.</li>
+        <li>Stop when $\text{UB} - \text{LB} \le \varepsilon$.</li>
+      </ol>
+    </div>
+    <div>
+      <div class="box thm"><span class="label">finite convergence</span>
+        <p class="small">$\Pi$ has finitely many vertices and extreme rays, so there are finitely many distinct cuts. A cut regenerated at an unchanged $\bar y$ means the master's $\theta$ already equals $Q(\bar y)$, and then LB = UB.</p>
+      </div>
+      <p class="small">The master is a MIP that grows by a row per iteration and is re-solved each time. That re-solve is the method's cost centre, and section 4 is mostly about avoiding it.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>The lower bounds are monotone because the master only gains constraints. The upper bounds
+    are not monotone in raw form, so the lab records the best seen, as in unit 10's Farley bound.
+    The tests check both sequences and that the final gap is closed.</p>
+    <p>One subtlety the tests catch: the master's θ must start bounded below. With nonnegative
+    costs, $\theta \ge 0$ is valid, and the lab uses it. Without any lower bound the first master
+    is unbounded.</p>
+  </aside>
+</section>
+
+<section class="divider">
+  <p class="eyebrow">section 2</p>
+  <h2>The mirror of unit 10</h2>
+  <p>Rows for one, columns for the other.</p>
+</section>
+
+<section>
+  <p class="eyebrow">12 · the mirror</p>
+  <h2>Benders and Dantzig–Wolfe on one page</h2>
+  <div class="cols">
+    <div>
+      <table class="dense">
+        <thead><tr><th></th><th>Dantzig–Wolfe (10)</th><th>Benders (12)</th></tr></thead>
+        <tbody>
+          <tr><td>structure</td><td>linking <b>constraints</b></td><td>linking <b>variables</b></td></tr>
+          <tr><td>matrix</td><td>$\begin{matrix} D_1 &amp; D_2 \\ B_1 &amp; \\ &amp; B_2 \end{matrix}$</td><td>$\begin{matrix} A &amp; &amp; \\ T_1 &amp; W_1 &amp; \\ T_2 &amp; &amp; W_2 \end{matrix}$</td></tr>
+          <tr><td>generates</td><td>columns (variables)</td><td>rows (cuts)</td></tr>
+          <tr><td>master sees</td><td>convex combinations of block solutions</td><td>the hard variables, plus θ</td></tr>
+          <tr><td>subproblem gets</td><td>the master's <b>duals</b> as prices</td><td>the master's <b>primal</b> $\bar y$</td></tr>
+          <tr><td>subproblem returns</td><td>a column with negative reduced cost</td><td>a violated inequality</td></tr>
+          <tr><td>master bound</td><td>upper (restricted primal)</td><td>lower (relaxed primal)</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div>
+      <div class="box thm"><span class="label">the duality</span>
+        <p class="small">For an LP, Benders on the primal is Dantzig–Wolfe on its dual. The transpose of the second matrix has the shape of the first: linking variables become linking constraints, and generated rows become generated columns.</p>
+      </div>
+      <div class="box good"><span class="label">where unit 03 sits</span>
+        <p class="small"><b>DW:</b> reduced costs $c - \pi^\top A_j$ decide which column enters.<br><b>Benders:</b> dual solutions $\pi$ of the subproblem <em>are</em> the cut coefficients.<br>In both, the same LP duality moves information between master and subproblem, in opposite directions.</p>
+      </div>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>That is the curriculum's checkpoint. A check that you've got it: write the LP
+    $\min\{c^\top x + d^\top y : Ay \ge b,\ Tx + Wy \ge h\}$. Apply Benders with $y$ as master
+    variables. Now dualise the whole LP and apply Dantzig–Wolfe with the dual constraints
+    corresponding to $x$ as the block. The restricted master of one is the dual of the relaxed
+    master of the other, iteration by iteration.</p>
+    <p>For integer $y$ the symmetry breaks. Benders keeps integrality in the master, which is
+    exactly why the method was invented. Dantzig–Wolfe keeps it in the pricing problem, which
+    is what gives unit 10 its strong bound.</p>
+  </aside>
+</section>
+
+<section class="divider">
+  <p class="eyebrow">section 3</p>
+  <h2>Stochastic programming</h2>
+  <p>Decide now, adapt later, pay the expectation.</p>
+</section>
+
+<section>
+  <p class="eyebrow">12 · stochastic programming</p>
+  <h2>Two-stage recourse and the L-shaped method</h2>
+  <div class="cols">
+    <div>
+      $$\min_{y \in Y}\ f^\top y + \sum_{s=1}^S p_s\, Q_s(y)$$
+      <p class="small">The <b>deterministic equivalent</b> (extensive form) copies the second-stage variables once per scenario: size $\times S$, one MIP. Given $y$, the scenarios decouple into $S$ independent LPs.</p>
+      <ul class="small">
+        <li><b>L-shaped method</b> (Van Slyke & Wets 1969): Benders with one aggregated cut $\theta \ge \sum_s p_s(\cdot)$.</li>
+        <li><b>Multi-cut</b> (Birge & Louveaux 1988): one $\theta_s$ and one cut per scenario. It passes more information, so fewer iterations, but the master is bigger.</li>
+        <li>The scenario LPs are embarrassingly parallel.</li>
+      </ul>
+    </div>
+    <div>
+      <div class="box def"><span class="label">where scenarios come from</span>
+        <p class="small"><b>Sample average approximation</b> (Kleywegt, Shapiro & Homem-de-Mello 2002): draw $S$ samples, solve, and repeat with fresh samples to estimate the optimality gap statistically. More scenarios means a better estimate and a bigger model, which is exactly the regime where decomposition should win.</p>
+      </div>
+      <p class="small muted">The expected value of perfect information and the value of the stochastic solution (EVPI, VSS) measure whether solving the stochastic model was worth it. Birge & Louveaux ch. 4.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>The lab's instances draw scenario demands as the base demand times a log-normal factor
+    (σ = 0.35) and add a penalty of 50 per unit unmet. They are small enough that the
+    extensive form is always solvable, which is what lets the <code>then</code> step measure a
+    crossover instead of asserting one.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">12 · stochastic programming</p>
+  <h2>The crossover, measured</h2>
+  <div class="cols">
+    <div>
+      <p class="small">Lab <code>then</code>, 10 facilities, 30 customers, seconds (Benders iterations):</p>
+      <table class="dense">
+        <thead><tr><th>S</th><th class="num">tight: DE</th><th class="num">multi</th><th class="num">single</th><th class="num">loose: DE</th><th class="num">multi</th><th class="num">single</th></tr></thead>
+        <tbody>
+          <tr><td>5</td><td class="num">0.55</td><td class="num"><b>0.17</b> (7)</td><td class="num">0.29</td><td class="num"><b>0.40</b></td><td class="num">2.42 (29)</td><td class="num">3.30</td></tr>
+          <tr><td>25</td><td class="num">2.36</td><td class="num"><b>1.12</b> (10)</td><td class="num">1.67</td><td class="num"><b>2.31</b></td><td class="num">4.61 (21)</td><td class="num">3.68</td></tr>
+          <tr><td>50</td><td class="num">4.54</td><td class="num"><b>1.45</b> (8)</td><td class="num">1.53</td><td class="num"><b>3.18</b></td><td class="num">45.9 (48)</td><td class="num">11.2</td></tr>
+          <tr><td>100</td><td class="num">6.33</td><td class="num">8.46 (14)</td><td class="num"><b>3.18</b></td><td class="num">8.47</td><td class="num">20.2 (24)</td><td class="num"><b>6.13</b></td></tr>
+          <tr><td>400</td><td class="num">31.4</td><td class="num">16.2 (9)</td><td class="num"><b>10.8</b></td><td class="num"></td><td class="num"></td><td class="num"></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div>
+      <ul class="small">
+        <li><b>Tight capacities</b> (1.6× demand): Benders wins from $S = 5$. A handful of cuts settles which facilities must open.</li>
+        <li><b>Loose capacities</b> (3×): many near-equivalent facility sets, 20–60 iterations. The extensive form wins until single-cut overtakes it between $S = 50$ and $100$.</li>
+        <li>Multi-cut always uses fewer iterations, and pays for each with a master that has $S\times$ more rows.</li>
+      </ul>
+      <p class="small">The crossover depends on <b>iterations × cost per iteration</b>, and the instance family controls the first factor. Report it as a plot per family, never as one number.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>The numbers are noisy: tight, S = 100, multi-cut took 8.5 s where S = 200 took 1.9 s.
+    Each master is a fresh MIP solve whose time varies with the cut set. The printed log-scale
+    plot in <code>then</code> shows the spread better than the table.</p>
+    <p>The extensive-form times grow roughly linearly in S here because HiGHS's presolve and
+    root LP handle the block structure well. On harder second stages (integer recourse,
+    thousands of scenarios) the extensive form stops fitting, and decomposition is the only
+    option.</p>
+  </aside>
+</section>
+
+<section class="divider">
+  <p class="eyebrow">section 4</p>
+  <h2>Modern Benders</h2>
+  <p>Stop re-solving the master.</p>
+</section>
+
+<section>
+  <p class="eyebrow">12 · modern</p>
+  <h2>One tree, and better cuts</h2>
+  <div class="cols">
+    <div>
+      <div class="box good"><span class="label">branch-and-Benders-cut</span>
+        <p class="small">Solve the master <b>once</b>, with a solver callback. Whenever branch-and-bound finds an integer (or even fractional) $\bar y$, solve the subproblems and add violated cuts as lazy constraints. No re-solving, and one search tree. Fischetti, Ljubić & Sinnl (2017) solved facility location instances with thousands of customers this way.</p>
+      </div>
+      <div class="box def"><span class="label">LP first (McDaniel & Devine 1977)</span>
+        <p class="small">Generate cuts at the master's LP relaxation first. They're cheap, and valid for integer $y$. Lab <code>then</code>, loose, S = 25: integer iterations 21 → 13, but no wall-time gain in this re-solving implementation.</p>
+      </div>
+    </div>
+    <div>
+      <div class="box def"><span class="label">Pareto-optimal cuts (Magnanti & Wong 1981)</span>
+        <p class="small">When the subproblem's dual is degenerate, many cuts are tight at $\bar y$. Choose the one highest at a core point $y^0$ in the relative interior of $\mathrm{conv}(Y)$, which needs one extra LP. Lab: on this capacitated family, the same iteration count and slower. Degeneracy is rare here, and the classic gains are on uncapacitated location.</p>
+      </div>
+      <div class="box"><span class="label">beyond LP subproblems</span>
+        <p class="small"><b>Combinatorial Benders</b> (Codato & Fischetti 2006): no-good cuts from infeasible subsets. <b>Logic-based Benders</b> (Hooker & Ottosson 2003): any subproblem, CP or SAT included, as long as it returns an inference about the master's choice. It returns in unit 21.</p>
+      </div>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>The honest summary of this unit's measurements is that the textbook accelerations did
+    little on this instance family, and the structural choice (multi- vs single-cut) mattered
+    more. That's typical. Benders performance depends on the family, and the published
+    speed-ups are measured on families chosen to show them. Lab step 4's degenerate hand
+    instance is where Magnanti–Wong visibly does something: a cut worth 15 at the core point
+    instead of 10.</p>
+    <p>Other stabilisation for Benders mirrors unit 10: in-out separation (Ben-Ameur & Neto 2007)
+    separates at a point between the master solution and a core point. Partial decomposition
+    (Crainic et al.) keeps a few representative scenarios in the master.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">12 · lab</p>
+  <h2>Lab 12 — what you build</h2>
+  <div class="lab">
+    <span class="label">about 2½ hours · uv run co lab 12</span>
+    <ol>
+      <li><b>The recourse LP</b> and its duals.</li>
+      <li><b>Optimality and feasibility cuts</b>, checked against every $y$.</li>
+      <li><b>The master and the loop</b>: multi-cut and single-cut.</li>
+      <li><b>Magnanti–Wong Pareto-optimal cuts</b>.</li>
+      <li><b>LP-first</b> warm start.</li>
+    </ol>
+  </div>
+<pre><code class="language-bash">uv run co test 12
+uv run co then 12     # extensive form vs Benders as the scenario count grows, tight and loose</code></pre>
+  <aside class="notes">
+    <p>The tests compute every recourse value with scipy, independently of your LP code, and
+    brute-force the first stage on small instances. A sign error in the capacity duals shows up
+    in step 1's strong-duality check before it can corrupt any cut.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">12 · checkpoint</p>
+  <h2>Done when</h2>
+  <div class="box good"><span class="label">checkpoint</span>
+    <ul>
+      <li>All five lab steps are ✓.</li>
+      <li>You can draw Dantzig–Wolfe and Benders on one page as duals of each other (rows vs columns, master vs subproblem) and point at where unit 03 sits in both.</li>
+      <li>You can explain, from iteration counts and per-iteration cost, why the crossover moves with the instance family.</li>
+    </ul>
+  </div>
+  <div class="cols">
+    <div>
+      <h3>Reading</h3>
+      <p class="small">Benders, <em>Numerische Mathematik</em> 4 (1962).<br>
+      Rahmaniani et al., <em>EJOR</em> 259 (2017), survey.<br>
+      Magnanti & Wong, <em>Operations Research</em> 29 (1981).<br>
+      Birge & Louveaux, <em>Intro. to Stochastic Programming</em>, ch. 5.</p>
+    </div>
+    <div>
+      <h3>Next</h3>
+      <p class="small">Part III starts: <b>13</b> matroids · Benders returns in logic-based form in <b>21</b>, lazy clause generation.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>If you drew the one-page picture, check it against slide "Benders and Dantzig–Wolfe on
+    one page". The row that people most often get backwards is "master bound": Dantzig–Wolfe's
+    restricted master gives an upper bound on the LP (it lacks columns), and Benders' relaxed
+    master gives a lower bound (it lacks rows).</p>
+  </aside>
+</section>
+
+</div></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/plugin/highlight/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<script src="../../slides/deck.js"></script>
+</body>
+</html>

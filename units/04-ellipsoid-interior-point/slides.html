@@ -1,0 +1,509 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>04 · Polynomial-time LP: ellipsoid and interior point</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+<link rel="stylesheet" href="../../slides/deck.css">
+</head>
+<body data-trunk="lp">
+<div class="reveal"><div class="slides">
+
+<!-- ================================================================== -->
+<section class="title-slide">
+  <p class="eyebrow">Part I · trunk A · linear programming · branch</p>
+  <div class="unit-no">04</div>
+  <h1>Polynomial-time LP: ellipsoid and interior point</h1>
+  <p class="lede">Two ways through the middle of the polyhedron: one that settled a theoretical question and is never used, and one that runs in every modern solver.</p>
+  <p class="meta"><span>needs 02</span><span>feeds 09</span><span>~1½ h slides + 2½ h lab</span></p>
+  <aside class="notes">
+    <p>This is a branch unit, so the express route skips it. It is worth doing for
+    two reasons. First, unit 09's separation–optimization equivalence runs on the
+    ellipsoid method, and that theorem makes much of Part II's machinery
+    (exponentially many cuts, lazy constraints) theoretically respectable. Second,
+    choosing between simplex and interior point is a real decision you make whenever
+    you configure a solver, and this unit gives you the reasons.</p>
+    <p>Convention: $\max\{c^\top x : Ax \le b\}$ with $A \in \mathbb{R}^{m\times n}$ and no
+    separate sign constraints. The barrier needs every inequality as a row.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">04 · overview</p>
+  <h2>The route</h2>
+  <div class="cols three">
+    <div class="box def"><span class="label">1 · is LP in P?</span>
+      <p>Why the question stayed open after simplex, and what "polynomial" means for an LP.</p></div>
+    <div class="box def"><span class="label">2 · ellipsoid</span>
+      <p>Cut an ellipsoid in half, wrap the half in a smaller one, repeat. Polynomial, and impractical.</p></div>
+    <div class="box def"><span class="label">3 · interior point</span>
+      <p>A barrier keeps you inside, and following the central path reaches the optimum in a few dozen Newton steps.</p></div>
+  </div>
+  <p class="muted">Then: the pure barrier method breaks down in floating point past $t \approx 10^6$. HiGHS's IPM beats its simplex 7× cold at $n = 3000$, and loses 4× on the warm re-solve.</p>
+  <aside class="notes">
+    <p>The numbers in the last line are from this unit's <code>then</code>, part 3
+    (cold: 0.14 s IPM vs 0.95 s simplex) and part 4 (after adding a row: 0.033 s
+    simplex vs 0.136 s IPM).</p>
+  </aside>
+</section>
+
+<!-- ================================================================== -->
+<section class="divider">
+  <p class="eyebrow">section 1</p>
+  <h2>Is LP in P?</h2>
+  <p>Open from 1947 until 1979, even though LPs were being solved every day.</p>
+</section>
+
+<section>
+  <p class="eyebrow">04 · history</p>
+  <h2>What was known, and what wasn't</h2>
+  <div class="cols">
+    <div>
+      <ul>
+        <li><b>1947</b> Dantzig's simplex method. Fast in practice.</li>
+        <li><b>1972</b> Klee–Minty: exponential on a built family (unit 02).</li>
+        <li><b>1970s</b> LP is in <b>NP ∩ coNP</b>: short certificates both ways (units 01, 03). No NP-hardness was expected, but no polynomial algorithm was known.</li>
+        <li><b>1979</b> Khachiyan: the <b>ellipsoid method</b> solves LP in polynomial time.</li>
+        <li><b>1984</b> Karmarkar: a polynomial <b>interior-point method</b> that also looked practical.</li>
+        <li><b>1990s–</b> primal–dual IPMs (Mehrotra 1992) in every commercial solver.</li>
+      </ul>
+    </div>
+    <div class="box def"><span class="label">"polynomial" for LP</span>
+      <p>Polynomial in the <b>bit size</b> $L$ of the input: the number of bits needed to write $A, b, c$ as integers.</p>
+      <p class="small">Whether there is a <b>strongly</b> polynomial LP algorithm, polynomial in $m$ and $n$ alone, independent of the numbers, is still open. It is one of Smale's problems for the 21st century.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>Why bit size matters: both polynomial methods converge to the optimum
+    geometrically and stop when the accuracy is fine enough to round to the exact
+    vertex. How fine "fine enough" is depends on how many bits the vertex's
+    coordinates can have. By Cramer's rule that is polynomial in $L$, and that is
+    where $L$ enters the running time.</p>
+    <p>Strongly polynomial algorithms are known for special LPs: network flows
+    (Tardos 1985, unit 14), and LPs whose constraint matrix has small integer
+    entries (Tardos 1986, where the running time depends only on the size of $A$,
+    not of $b$ and $c$). The general question remains open.</p>
+  </aside>
+</section>
+
+<!-- ================================================================== -->
+<section class="divider">
+  <p class="eyebrow">section 2</p>
+  <h2>The ellipsoid method</h2>
+  <p>Binary search in $n$ dimensions, with ellipsoids as the intervals.</p>
+</section>
+
+<section>
+  <p class="eyebrow">04 · ellipsoid</p>
+  <h2>The idea</h2>
+  <div class="cols wide-right">
+    <div class="fig">
+      <svg viewBox="0 0 400 320" width="400" role="img" aria-label="a circle cut in half, and the smaller ellipse containing the kept half">
+        <circle cx="200" cy="160" r="110" fill="none" class="rule" stroke-width="2.5"/>
+        <path d="M200,50 A110,110 0 0,0 200,270 Z" class="fill-soft" style="fill-opacity:.9"/>
+        <line x1="200" y1="30" x2="200" y2="290" class="warn" stroke-width="2.5" stroke-dasharray="7 5"/>
+        <ellipse cx="163.3" cy="160" rx="73.3" ry="127" fill="none" class="accent" stroke-width="3"/>
+        <circle cx="200" cy="160" r="5" class="fill-ink"/>
+        <circle cx="163.3" cy="160" r="5" class="fill-accent"/>
+        <text x="208" y="152" font-size="14">old centre</text>
+        <text x="96" y="152" font-size="14" style="fill:var(--accent)">new</text>
+        <text x="212" y="302" font-size="13" style="fill:var(--warn)">a·z = a·centre</text>
+        <text x="282" y="80" font-size="14" class="soft">discarded:</text>
+        <text x="282" y="98" font-size="14" class="soft">centre violates</text>
+        <text x="282" y="116" font-size="14" class="soft">a·z ≤ β here</text>
+      </svg>
+      <p class="cap">In 2-D the new ellipse has semi-axes $\tfrac23$ and $\tfrac{2}{\sqrt3}$ of the old radius, and $\tfrac23 \cdot \tfrac{2}{\sqrt3} \approx 0.77$ of the area.</p>
+    </div>
+    <div>
+      <ol>
+        <li>Start with a ball $E_0$ of radius $R$ that contains the feasible set, if nonempty.</li>
+        <li>If the centre is feasible, stop.</li>
+        <li>Otherwise a violated row $a^\top z \le \beta$ separates the centre from every feasible point. Keep the half $\{a^\top z \le a^\top \text{centre}\}$.</li>
+        <li>Replace $E_k$ by the <b>smallest ellipsoid containing that half</b>, and repeat.</li>
+      </ol>
+      <p>Each step shrinks the volume by a fixed factor, so the ellipsoid soon becomes too small to contain the feasible set. The set was therefore empty, or the centre found it.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>Why a half-ellipsoid and not the exact intersection with the feasible set:
+    the exact region would be a complicated polytope, and the method's power comes
+    from keeping a description of constant size (a centre and a matrix) no matter
+    how many cuts have been made.</p>
+    <p>The figure is exact for $n = 2$ and the unit ball cut through the centre. The
+    new centre moves $\tfrac{1}{n+1} = \tfrac13$ of the radius away from the cut. The
+    semi-axis along the cut normal is $\tfrac{n}{n+1} = \tfrac23$, and the others are
+    $\tfrac{n}{\sqrt{n^2-1}} = \tfrac{2}{\sqrt3}$. The new ellipse passes through the
+    three extreme points of the kept half-disc: the leftmost point, and the two
+    endpoints of the cut.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">04 · ellipsoid</p>
+  <h2>The update, and why the volume shrinks</h2>
+  <div class="cols">
+    <div>
+      <p>For $E = \{z : (z-x)^\top P^{-1}(z-x) \le 1\}$ and cut normal $a$:</p>
+      $$g = \frac{P a}{\sqrt{a^\top P a}}, \qquad x' = x - \frac{g}{n+1}$$
+      $$P' = \frac{n^2}{n^2-1}\left(P - \frac{2}{n+1}\, g g^\top\right)$$
+      <p class="small">An affine map takes $E$ to the unit ball and $a$ to $e_1$, so it suffices to check the unit ball, where the new ellipsoid has the axes on the previous slide.</p>
+    </div>
+    <div>
+      <div class="box thm"><span class="label">volume ratio</span>
+        $$\begin{aligned} \frac{\mathrm{vol}\,E'}{\mathrm{vol}\,E} &= \frac{n}{n+1}\left(\frac{n}{\sqrt{n^2-1}}\right)^{n-1} \\ &< e^{-1/(2(n+1))} \end{aligned}$$
+      </div>
+      <div class="box good"><span class="label">so, with lab step 5</span>
+        <p>If the feasible set, when nonempty, contains a ball of radius $r$ inside the ball of radius $R$, then after</p>
+        $$k \ge 2(n+1)\, n \ln(R/r)$$
+        <p>steps the ellipsoid is smaller than that ball, and the method may stop.</p>
+      </div>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>The inequality: using $1 + u \le e^u$,
+    $\frac{n}{n+1} = 1 - \frac{1}{n+1} \le e^{-1/(n+1)}$ and
+    $\left(\frac{n^2}{n^2-1}\right)^{(n-1)/2} = \left(1 + \frac{1}{n^2-1}\right)^{(n-1)/2} \le e^{(n-1)/(2(n^2-1))} = e^{1/(2(n+1))}$.
+    Multiplying gives $e^{-1/(n+1) + 1/(2(n+1))} = e^{-1/(2(n+1))}$. The first
+    inequality is strict, so the whole thing is.</p>
+    <p>Lab step 4's test checks both properties numerically. It samples 400 points of
+    the kept half and checks they lie in the new ellipsoid, and it compares the
+    determinant ratio with the bound.</p>
+    <p>Step 5's bound: $\mathrm{vol}(E_k) &lt; e^{-k/(2(n+1))}\mathrm{vol}(B_R)$, and
+    $\mathrm{vol}(B_r) = (r/R)^n \mathrm{vol}(B_R)$. The ellipsoid is smaller than the
+    $r$-ball once $e^{-k/(2(n+1))} &lt; (r/R)^n$, that is, once
+    $k &gt; 2n(n+1)\ln(R/r)$.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">04 · ellipsoid</p>
+  <h2>From feasibility to polynomial-time LP</h2>
+  <div class="cols">
+    <div>
+      <p>Three gaps between the lab's version and Khachiyan's theorem:</p>
+      <ul>
+        <li><b>$R$ from the data.</b> If a solution exists, one exists with $\|x\|_\infty \le 2^{O(L)}$ (Cramer's rule on a basis).</li>
+        <li><b>$r$ from the data.</b> A feasible polytope may be flat. Relax each $b_i$ by $2^{-O(L)}$: the system stays feasible exactly when the original is, and now contains a ball of radius $2^{-O(L)}$.</li>
+        <li><b>Optimization.</b> Add $c^\top x \ge \gamma$ and search over $\gamma$, or use "sliding objective" cuts.</li>
+      </ul>
+    </div>
+    <div>
+      <div class="box thm"><span class="label">Khachiyan, 1979</span>
+        <p>LP feasibility is decided in $O(n^2 L)$ ellipsoid iterations, each with polynomially many bits of precision. So LP ∈ P.</p>
+      </div>
+      <p class="small">Lab <code>then</code>, part 5 (shifted random polytopes, $R = 100$):</p>
+      <table class="small">
+        <thead><tr><th class="num">$n$</th><th class="num">mean iterations</th><th class="num">bound</th></tr></thead>
+        <tbody>
+          <tr><td class="num">2</td><td class="num">7.8</td><td class="num">61</td></tr>
+          <tr><td class="num">5</td><td class="num">29</td><td class="num">363</td></tr>
+          <tr><td class="num">8</td><td class="num">74</td><td class="num">882</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>The exact constant in the iteration count depends on how $L$ is defined and on
+    the variant; $O(n^2 L)$ is the order usually quoted. Each iteration must also be
+    carried out with rounding, keeping $O(nL)$ bits per number, and the analysis has
+    to show that the rounding errors don't break the volume argument. That is the
+    technical heart of the proof, in Grötschel, Lovász & Schrijver ch. 3.</p>
+    <p>The relaxation trick for flat polytopes: if $Ax \le b$ has an integral
+    description with bit size $L$, then $Ax \le b + \varepsilon\mathbf 1$ with
+    $\varepsilon = 2^{-O(L)}$ is feasible if and only if $Ax \le b$ is. Proof sketch:
+    if the relaxed system is feasible, its Farkas certificate for infeasibility of the
+    original, which has bounded size, would still apply for tiny $\varepsilon$.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">04 · ellipsoid</p>
+  <h2>Useless in practice, indispensable in theory</h2>
+  <div class="cols">
+    <div class="box warn"><span class="label">why nobody solves LPs with it</span>
+      <ul class="small">
+        <li>The iteration count is close to its worst case on every instance. It never gets lucky the way simplex does.</li>
+        <li>It needs high numerical precision, and double precision breaks the volume argument.</li>
+        <li>Each iteration uses a dense $n \times n$ matrix, so sparsity doesn't help.</li>
+      </ul>
+    </div>
+    <div class="box good"><span class="label">what it really needs</span>
+      <p>Look at step 3 again. The method never reads the constraint matrix. It only asks, of one point: <b>"is this feasible, and if not, give me a violated inequality."</b></p>
+      <p>That is a <b>separation oracle</b>. It works even when there are <b>exponentially many</b> constraints, provided violated ones can be found efficiently. This is unit 09.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>The consequence, due to Grötschel, Lovász and Schrijver (1981): optimization
+    over a polytope is polynomial if and only if separation over it is polynomial.
+    For example, the matching polytope has exponentially many odd-set inequalities,
+    but a violated one can be found by a minimum cut computation, so maximum-weight
+    matching can be solved as an LP in polynomial time, via the ellipsoid method,
+    without Edmonds' algorithm. Unit 09 develops this for subtour elimination in the
+    TSP.</p>
+    <p>The same "only needs a separation oracle" property is why cutting-plane
+    methods for convex optimization (Vaidya, and more recent work) are studied. They
+    are the practical descendants of the ellipsoid method.</p>
+  </aside>
+</section>
+
+<!-- ================================================================== -->
+<section class="divider">
+  <p class="eyebrow">section 3</p>
+  <h2>Interior-point methods</h2>
+  <p>Stay away from the boundary until the very end.</p>
+</section>
+
+<section>
+  <p class="eyebrow">04 · interior point</p>
+  <h2>The log barrier and the central path</h2>
+  <div class="cols wide-right">
+    <div class="fig">
+      <svg viewBox="0 0 380 350" width="380" role="img" aria-label="central path from near the analytic centre to the optimal vertex">
+        <defs><marker id="arc" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" class="fill-accent"/></marker></defs>
+        <line x1="60" y1="18" x2="60" y2="332" class="rule" stroke-width="1.5"/>
+        <line x1="20" y1="300" x2="368" y2="300" class="rule" stroke-width="1.5"/>
+        <polygon points="60,300 120,300 210,210 60,60" class="fill-soft unit" stroke-width="2.5" style="fill-opacity:.9"/>
+        <polyline points="105.9,172.3 109,170.3 139.1,171.9 198.9,204.2 208.8,209.4 209.9,209.9" fill="none" class="accent" stroke-width="3" marker-end="url(#arc)"/>
+        <circle cx="105.9" cy="172.3" r="4.5" class="fill-accent"/>
+        <circle cx="109" cy="170.3" r="3.5" class="fill-accent"/>
+        <circle cx="139.1" cy="171.9" r="3.5" class="fill-accent"/>
+        <circle cx="198.9" cy="204.2" r="3.5" class="fill-accent"/>
+        <circle cx="210" cy="210" r="7" class="fill-ink"/>
+        <text x="70" y="160" font-size="13" class="mono">t = 0.01</text>
+        <text x="140" y="245" font-size="13" class="mono">t = 7.3</text>
+        <text x="220" y="203" font-size="13" class="mono">optimum</text>
+      </svg>
+      <p class="cap">Central path of $\max 2x + y$ on unit 01's polygon, computed by the lab's reference solution ($t = 0.01 \cdot 3^k$).</p>
+    </div>
+    <div>
+      <p>Replace the constraints by a penalty that is infinite on the boundary:</p>
+      $$\min_x\; f_t(x) = -t\, c^\top x - \sum_{i=1}^m \log(b_i - a_i^\top x)$$
+      <ul>
+        <li>$t \to 0$: the objective hardly matters, and the minimizer is the <b>analytic centre</b>.</li>
+        <li>$t \to \infty$: the objective dominates, and the minimizer tends to an optimal point.</li>
+      </ul>
+      <p>The minimizers $x^*(t)$ form a smooth curve, the <b>central path</b>.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>$f_t$ is strictly convex whenever $A$ has full column rank: the Hessian
+    $A^\top \mathrm{diag}(1/s^2) A$ is positive definite. So each $t$ has a unique
+    minimizer, found by Newton's method. That is lab step 2.</p>
+    <p>The path bends sharply near the optimum, visible in the figure between
+    $t = 0.81$ and $t = 7.3$. Each centering starts from the previous centre, which is
+    close, so Newton converges quadratically in a handful of steps: about 6 per
+    centre in the lab's runs.</p>
+    <p>The analytic centre depends on the <em>description</em> of the polytope, not
+    just its shape: adding a redundant constraint moves it. That matters when the same
+    polytope is written two ways (unit 05), and it is one of the reasons IPM behaviour
+    is sensitive to the formulation.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">04 · interior point</p>
+  <h2>Duality comes for free on the path</h2>
+  <div class="cols">
+    <div>
+      <p>At the minimizer the gradient vanishes. With $s = b - Ax$:</p>
+      $$\begin{aligned} &-t\,c + A^\top (1/s) = 0 \\ \Longrightarrow\;\; &A^\top y = c \quad\text{for}\quad y = \frac{1}{t\, s} > 0 \end{aligned}$$
+      <p>So $y$ is <b>dual feasible</b>, and the duality gap is exactly</p>
+      $$b^\top y - c^\top x = y^\top (b - Ax) = \sum_i \frac{s_i}{t\, s_i} = \frac{m}{t}.$$
+    </div>
+    <div>
+      <div class="box thm"><span class="label">consequence</span>
+        <p>$x^*(t)$ is within $m/t$ of optimal, with a certificate. To reach accuracy $\varepsilon$, run until $t \ge m/\varepsilon$.</p>
+      </div>
+      <p><b>Path following:</b> centre at $t$, then set $t \leftarrow \mu t$ and re-centre from there. With $\mu = 10$ the number of centerings is $\lceil \log_{10}(m/(t_0\varepsilon)) \rceil$.</p>
+      <p class="small muted">Theory: with $\mu = 1 + 1/\sqrt{m}$, each centering needs $O(1)$ Newton steps, for $O(\sqrt m \log(m/\varepsilon))$ in total.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>Compare with complementary slackness (unit 03), which asks for $y_i s_i = 0$.
+    On the central path $y_i s_i = 1/t$ for every $i$: approximate complementary
+    slackness, with the same value in every row. Primal–dual interior-point methods
+    are built exactly on this. They solve the perturbed KKT system
+    $Ax + s = b$, $A^\top y = c$, $y_i s_i = \mu$ by Newton's method in all of
+    $(x, y, s)$ together, and drive $\mu$ to zero.</p>
+    <p>The $O(\sqrt m \log(1/\varepsilon))$ bound comes from self-concordance theory
+    (Nesterov & Nemirovski, 1994), which also explains why the log barrier is the
+    right choice. Practical codes use long steps and a predictor–corrector scheme
+    (Mehrotra 1992), and take 20–60 iterations almost regardless of problem size.
+    The lab's <code>then</code> saw 10 to 25 as $n$ went from 100 to 20 000.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">04 · interior point</p>
+  <h2>Where floating point ends the pure barrier method</h2>
+  <div class="cols wide-left">
+    <div>
+      <table>
+        <thead><tr><th class="num">$t$</th><th class="num">$m/t$</th><th class="num">$b^\top y - c^\top x$</th><th class="num">Newton steps</th></tr></thead>
+        <tbody>
+          <tr><td class="num">1e4</td><td class="num">1.40e-3</td><td class="num">1.40e-3</td><td class="num">6</td></tr>
+          <tr><td class="num">1e5</td><td class="num">1.40e-4</td><td class="num">1.40e-4</td><td class="num">6</td></tr>
+          <tr><td class="num">1e6</td><td class="num">1.40e-5</td><td class="num">1.42e-5</td><td class="num">6</td></tr>
+          <tr><td class="num">1e7</td><td class="num">1.40e-6</td><td class="num"><b>1.31e-3</b></td><td class="num"><b>100</b></td></tr>
+        </tbody>
+      </table>
+      <p class="small muted">Lab <code>then</code>, part 2: 3 variables, 14 rows.</p>
+    </div>
+    <div class="box warn"><span class="label">why</span>
+      <p>The Hessian $A^\top \mathrm{diag}(1/s^2) A$ has entries of size $1/s_i^2$. Near the optimum some slacks are $\approx 10^{-7}$ and others $\approx 1$, so its condition number reaches $10^{14}$ and beyond, and the Newton direction becomes numerical noise.</p>
+      <p class="small">Production IPMs solve the primal–dual system with careful factorizations, and hand over to simplex (<b>crossover</b>) for an exact vertex.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>At $t = 10^7$ the Newton iteration hit its 100-step cap without meeting the
+    stopping test, and the resulting point is worse than at $t = 10^6$. At $t = 10^8$ it
+    happened to recover. Erratic behaviour past a threshold is the signature of
+    floating-point breakdown, not of a bug. The lab's tests stop checking centrality
+    at $t = 10^5$ for this reason, and the default stopping gap is $10^{-5}$.</p>
+    <p>Crossover: an IPM returns a point in the relative interior of the optimal face.
+    Simplex-based branch-and-bound and sensitivity analysis need a basis (a vertex).
+    Crossover (Megiddo 1991) pushes the interior point to a vertex of the same
+    objective value with a sequence of simplex-like steps. It is usually quick, and
+    occasionally the slowest part of the whole solve.</p>
+  </aside>
+</section>
+
+<!-- ================================================================== -->
+<section class="divider">
+  <p class="eyebrow">section 4</p>
+  <h2>Choosing between them</h2>
+  <p>Cold solves favour interior point, and warm solves favour simplex.</p>
+</section>
+
+<section>
+  <p class="eyebrow">04 · practice</p>
+  <h2>Cold solves: IPM iterations barely grow</h2>
+  <div class="cols wide-left">
+    <div>
+      <p class="small">HiGHS, random sparse LPs with 4 nonzeros per column and $m = n/2$, presolve off:</p>
+      <table>
+        <thead><tr><th class="num">$n$</th><th class="num">simplex s</th><th class="num">iterations</th><th class="num">IPM s</th><th class="num">iterations</th></tr></thead>
+        <tbody>
+          <tr><td class="num">300</td><td class="num">0.006</td><td class="num">283</td><td class="num">0.006</td><td class="num">13</td></tr>
+          <tr><td class="num">1 000</td><td class="num">0.069</td><td class="num">1 359</td><td class="num">0.025</td><td class="num">17</td></tr>
+          <tr><td class="num">3 000</td><td class="num">0.95</td><td class="num">5 268</td><td class="num">0.14</td><td class="num">18</td></tr>
+          <tr><td class="num">20 000</td><td class="num">199</td><td class="num">66 941</td><td class="num">12</td><td class="num">25</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div>
+      <p>Simplex iterations grew faster than $n$ here. Each IPM iteration is more expensive (a sparse Cholesky factorization), but there are few of them.</p>
+      <p class="small">Crossover on this family is at $n \approx 300$.</p>
+      <p class="small muted">The $n = 20\,000$ row comes from <code>then --big</code>. Structured real LPs vary widely: some favour simplex even at large sizes, which is why solvers can run several methods concurrently.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>What determines the cost of an IPM iteration is the sparsity of
+    $A\,\mathrm{diag}(y/s)\,A^\top$ and of its Cholesky factor. For random sparse
+    matrices the fill-in stays manageable. For LPs with a few dense columns (a column
+    touching every row) the normal-equations matrix becomes dense, and IPMs slow down
+    badly unless the dense columns are handled specially.</p>
+    <p>Gurobi's and HiGHS's default "concurrent" or "choose" settings exist because no
+    rule predicts the winner reliably. If you care about one class of LPs, measure it,
+    which is exactly what unit 28 is about.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">04 · practice</p>
+  <h2>Warm solves: why branch-and-bound wants simplex</h2>
+  <div class="cols">
+    <div>
+      <p class="small">Same LP family, $n = 3000$. Solve, add one constraint that cuts off the optimum, re-solve:</p>
+      <table>
+        <thead><tr><th></th><th class="num">cold</th><th class="num">re-solve</th></tr></thead>
+        <tbody>
+          <tr><td>HiGHS simplex</td><td class="num">0.832 s</td><td class="num"><b>0.033 s</b> (22 it)</td></tr>
+          <tr><td>HiGHS IPM</td><td class="num">0.131 s</td><td class="num">0.136 s (18 it)</td></tr>
+        </tbody>
+      </table>
+      <p>Simplex re-solves 25× faster than it solves cold. IPM re-solves no faster than cold.</p>
+    </div>
+    <div class="box def"><span class="label">why IPMs can't warm-start well</span>
+      <p>The old optimum sits <b>on the boundary</b>, with some slacks $\approx 0$. That is the worst starting point for a barrier method, which needs to begin well inside and on the central path. The old basis, by contrast, is one dual simplex pivot or so from optimal (unit 03).</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>So in branch-and-bound (unit 07), solvers often use IPM or concurrent solving at
+    the root LP, crossover to a basis, and dual simplex at every node after that. The
+    tree's thousands of re-solves dominate the total time, and each is a small change
+    from its parent.</p>
+    <p>Warm-starting IPMs is an active research topic. Techniques exist (shifting the
+    old point inward, or storing an earlier iterate from before the path reached the
+    boundary), but they give modest speedups compared with a simplex warm start.</p>
+    <p>This slide is the second half of the curriculum's checkpoint: explain why
+    branch-and-bound still wants simplex at every node.</p>
+  </aside>
+</section>
+
+<!-- ================================================================== -->
+<section>
+  <p class="eyebrow">04 · lab</p>
+  <h2>Lab 04 — what you build</h2>
+  <div class="lab">
+    <span class="label">about 2½ hours · uv run co lab 04 · numpy, floats</span>
+    <ol>
+      <li><b>The barrier</b>: value, gradient and Hessian, checked by finite differences.</li>
+      <li><b>Newton centering</b> with backtracking that also keeps you feasible.</li>
+      <li><b>Path following</b>, with the dual point $y = 1/(ts)$ and the gap $m/t$ checked on every point.</li>
+      <li><b>The ellipsoid method</b>: the update, and a search for a feasible point.</li>
+      <li><b>The iteration bound</b> from the volume argument, which your method must respect.</li>
+    </ol>
+  </div>
+<pre><code class="language-bash">uv run co test 04
+uv run co then 04        # central path plot · float breakdown · IPM vs simplex cold and warm · ellipsoid</code></pre>
+  <aside class="notes">
+    <p>Tests use floats with tolerances throughout, unlike units 01–03. The steps
+    where a small bug still passes a loose tolerance have a second, independent test,
+    such as the exact ratio between consecutive <em>t</em>, or the Newton decrement at
+    every recorded centre.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">04 · checkpoint</p>
+  <h2>Done when</h2>
+  <div class="box good"><span class="label">checkpoint</span>
+    <ul>
+      <li>All five lab steps are ✓.</li>
+      <li>You can choose between simplex and barrier for a given LP and defend it: size, sparsity, and whether a warm start is available.</li>
+      <li>You can explain why branch-and-bound still wants simplex at every node.</li>
+    </ul>
+  </div>
+  <div class="cols">
+    <div>
+      <h3>Reading</h3>
+      <p class="small">Bertsimas & Tsitsiklis, ch. 8 (§8.1–8.3) and ch. 9 (§9.1–9.5).<br>
+      Boyd & Vandenberghe, <em>Convex Optimization</em>, §11.1–11.3 (free PDF).<br>
+      Grötschel, Lovász & Schrijver, ch. 3, if you want the full ellipsoid proof.</p>
+    </div>
+    <div>
+      <h3>Next</h3>
+      <p class="small"><b>05</b> formulations, where integer programming starts. <b>09</b> separation ⇔ optimization, where the ellipsoid method pays off, after 08.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>If you are following the express route and skipped this unit, the one thing to
+    carry forward is the last slide before the lab: simplex warm-starts and IPM
+    doesn't, so branch-and-bound uses simplex inside the tree.</p>
+  </aside>
+</section>
+
+</div></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/plugin/highlight/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<script src="../../slides/deck.js"></script>
+</body>
+</html>

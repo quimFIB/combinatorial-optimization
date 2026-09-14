@@ -1,0 +1,142 @@
+# Hints — lab 03
+
+One rung at a time. After the last one: `solution/lab.py` or
+`solution/functional.py`, read, close, rewrite. `FUNCTIONAL.md` at the project
+root maps Haskell names to Python and toolz.
+
+## Step 1 — The dual transformer
+
+<details><summary>Rung 1 — the table, for a max primal</summary>
+
+| primal (max) | dual (min) |
+|---|---|
+| row *i* is `<=` | *yᵢ* `>=0` |
+| row *i* is `>=` | *yᵢ* `<=0` |
+| row *i* is `=` | *yᵢ* `free` |
+| *xⱼ* `>=0` | dual row *j* is `>=` |
+| *xⱼ* `<=0` | dual row *j* is `<=` |
+| *xⱼ* `free` | dual row *j* is `=` |
+
+For a min primal, apply the same table and then flip every `>=0`/`<=0` and
+every `>=`/`<=`.
+</details>
+
+<details><summary>Rung 2 — shapes</summary>
+
+`A` transposed as tuples: `tuple(zip(*lp.A))`, whose rows are the primal
+columns. Then `c = tuple(lp.b)` and `b = tuple(lp.c)`. The dual has `lp.n` rows and
+`lp.m` variables. Return every field as a tuple, or the equality test with the
+original fails even when the values are right.
+</details>
+
+<details><summary>Functional route</summary>
+
+Three dicts (`ROW_TO_SIGN`, `SIGN_TO_ROW`, `FLIP`) and a one-line `adjust`
+that is `FLIP.get` for a min primal and the identity for a max primal. The
+result is a single `GeneralLP(...)` constructor call with a generator expression
+per field.
+</details>
+
+## Step 2 — Duals from the tableau
+
+<details><summary>Rung 1</summary>
+
+The objective row holds *−c̄* for every column. A slack *sᵢ* has cost 0 and
+column *eᵢ*, so its reduced cost is *0 − yᵀeᵢ = −yᵢ*, and the row stores
+*+yᵢ*.
+</details>
+
+<details><summary>Rung 2</summary>
+
+`tuple(res.tableau[-1][n + i] for i in range(m))`. Phase 1's row negations and
+deleted redundant rows don't affect it, because reduced costs are properties of
+columns, not rows.
+</details>
+
+<details><summary>Functional route</summary>
+
+Nothing to fold: once you know where the duals are (the objective row, under the slack columns), this is one
+slice turned into a tuple, `tuple(res.tableau[-1][n:n + m])`. Raise for a non-optimal result instead of
+returning a sentinel.
+</details>
+
+## Step 3 — Certify optimality
+
+<details><summary>Rung 1</summary>
+
+Six checks, in order: *x ≥ 0*; *Ax ≤ b*; *y ≥ 0*; *Aᵀy ≥ c*;
+for every row *i*, *yᵢ = 0* or row *i* is tight; for every column *j*, *xⱼ = 0*
+or dual row *j* is tight. Compute `Ax` and `Aty` once each.
+</details>
+
+<details><summary>Functional route</summary>
+
+```python
+checks = (
+    (all(v >= 0 for v in x), "x has a negative entry"),
+    ...
+)
+return next(((False, why) for ok, why in checks if not ok), (True, "optimal"))
+```
+
+The tuple is built eagerly, but every check is cheap, and the first failing
+reason is still the one reported.
+</details>
+
+## Step 4 — Add a cut, run the dual simplex
+
+<details><summary>Rung 1 — add_constraint</summary>
+
+Insert a 0 into every existing row at index `width` (just before the rhs). The
+new row starts as `a + [0]*(width - n) + [1, beta]`: the original columns, zeros
+for the old slacks, 1 for the new slack, and the rhs. Then, for each basic column
+`j` in row `i`, subtract `new[j] * T[i]` from the new row. Insert it before the
+objective row and append the new slack column to `basis`.
+</details>
+
+<details><summary>Rung 2 — why the objective row is untouched</summary>
+
+The new slack column is 0 in the objective row, and the objective row already
+has zeros on every basic column. So adding the row keeps dual feasibility. Only
+the new row's rhs can be negative, and that is exactly the state the dual
+simplex starts from.
+</details>
+
+<details><summary>Rung 3 — dual simplex pivot choice</summary>
+
+Row `r` has `T[r][-1] < 0`. Candidates are columns with `T[r][j] < 0`, since
+pivoting on them makes the rhs positive. The ratio `T[-1][j] / -T[r][j]` is the
+dual analogue of the ratio test: the smallest one keeps every objective-row entry
+nonnegative after the pivot. Pivot with `simplex.pivot`.
+</details>
+
+<details><summary>Functional route</summary>
+
+The same `State` + `step` + `iterate`/`dropwhile` pattern as unit 02's
+functional reference. `add_constraint` is a fold over `enumerate(basis)` that
+eliminates one basic column from the new row per step.
+</details>
+
+## Step 5 — Sensitivity
+
+<details><summary>Rung 1</summary>
+
+Changing *bᵢ* by δ changes the final rhs column by δ times the final tableau's
+column `n + i`. For each row *r* with value *v* and column entry *d*, you need
+*v + δ d ≥ 0*: if *d > 0* that gives δ ≥ −v/d, a lower bound, and if *d < 0*
+it gives δ ≤ −v/d, an upper bound.
+</details>
+
+<details><summary>Rung 2</summary>
+
+Reduced costs don't depend on *b*, so the basis stays **optimal** exactly as
+long as it stays **feasible**. Inside the range the objective is linear in δ with
+slope *yᵢ*, so `predict_objective` is `res.value + y[i] * delta`.
+</details>
+
+<details><summary>Functional route</summary>
+
+No state. Pair each row's entry in slack column i with its right-hand side, split the ratios by the sign of
+the entry into two lists, and take `max(lows)` and `min(highs)`, each `None` when its list is empty.
+`predict_objective` is a conditional expression over that interval.
+</details>

@@ -1,0 +1,395 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>07 · Branch and bound</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+<link rel="stylesheet" href="../../slides/deck.css">
+</head>
+<body data-trunk="ip">
+<div class="reveal"><div class="slides">
+
+<section class="title-slide">
+  <p class="eyebrow">Part II · trunk A · integer programming · spine</p>
+  <div class="unit-no">07</div>
+  <h1>Branch and bound</h1>
+  <p class="lede">Split the problem, bound each piece with an LP, and throw away every piece that cannot win. What to split on and which piece to look at next decide everything.</p>
+  <p class="meta"><span>needs 05</span><span>~1½ h slides + 3 h lab</span><span>lab: <code>uv run co lab 07</code></span></p>
+  <aside class="notes">
+    <p>Branch and bound (Land & Doig, 1960) is the skeleton of every MILP solver.
+    Cutting planes (08), primal heuristics, presolve, conflict analysis and
+    parallelism are all additions to this tree. The lab builds the skeleton
+    and measures it against SCIP and HiGHS. The gap in node counts is what the next
+    units explain.</p>
+    <p>Convention throughout: minimization. LP bounds are lower bounds, and the
+    incumbent (best integer solution found) is an upper bound.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">07 · overview</p>
+  <h2>The route</h2>
+  <div class="cols">
+    <div class="box def"><span class="label">1 · the tree</span>
+      <p>Branching on a fractional variable, three reasons to prune, the global bound, and the gap.</p></div>
+    <div class="box def"><span class="label">2 · node selection</span>
+      <p>Depth-first finds solutions. Best-first proves optimality. What solvers actually ship.</p></div>
+    <div class="box def"><span class="label">3 · branching</span>
+      <p>Most-fractional (as good as random), pseudocosts, strong branching, and reliability branching.</p></div>
+    <div class="box def"><span class="label">4 · the other job</span>
+      <p>Primal heuristics, reading the gap, and a list of what makes SCIP 5–75× better than yours.</p></div>
+  </div>
+  <aside class="notes">
+    <p>The factor range quoted comes from this unit's <code>then</code>: the lab's
+    best node count divided by SCIP's default node count, on the three instances used
+    there.</p>
+  </aside>
+</section>
+
+<section class="divider">
+  <p class="eyebrow">section 1</p>
+  <h2>The tree</h2>
+  <p>Divide the feasible set, and conquer only the pieces that could still contain the optimum.</p>
+</section>
+
+<section>
+  <p class="eyebrow">07 · tree</p>
+  <h2>LP-based branch and bound</h2>
+  <div class="cols wide-right">
+    <div class="fig">
+      <svg viewBox="0 0 440 330" width="440" role="img" aria-label="a small branch and bound tree">
+        <defs><marker id="arbb" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" class="fill-ink"/></marker></defs>
+        <g font-size="13">
+          <rect x="155" y="10" width="130" height="46" rx="6" class="fill-ground ink" stroke-width="1.5"/>
+          <text x="220" y="30" text-anchor="middle" font-weight="600">root</text>
+          <text x="220" y="48" text-anchor="middle" class="mono">LP 12.4, x₃ = 0.6</text>
+          <rect x="40" y="110" width="140" height="46" rx="6" class="fill-ground ink" stroke-width="1.5"/>
+          <text x="110" y="130" text-anchor="middle" class="mono">x₃ ≤ 0</text>
+          <text x="110" y="148" text-anchor="middle" class="mono">LP 13.1, x₇ = 0.5</text>
+          <rect x="260" y="110" width="140" height="46" rx="6" class="fill-ground warn" stroke-width="2"/>
+          <text x="330" y="130" text-anchor="middle" class="mono">x₃ ≥ 1</text>
+          <text x="330" y="148" text-anchor="middle" style="fill:var(--warn)">infeasible: prune</text>
+          <rect x="0" y="220" width="130" height="46" rx="6" class="fill-soft accent" stroke-width="2"/>
+          <text x="65" y="240" text-anchor="middle" class="mono">x₇ ≤ 0</text>
+          <text x="65" y="258" text-anchor="middle" style="fill:var(--accent)">integral 14: incumbent</text>
+          <rect x="150" y="220" width="130" height="46" rx="6" class="fill-ground warn" stroke-width="2"/>
+          <text x="215" y="240" text-anchor="middle" class="mono">x₇ ≥ 1</text>
+          <text x="215" y="258" text-anchor="middle" style="fill:var(--warn)">LP 14.3 ≥ 14: prune</text>
+        </g>
+        <g class="ink" stroke-width="1.5" fill="none">
+          <path d="M195,56 L125,108" marker-end="url(#arbb)"/><path d="M245,56 L315,108" marker-end="url(#arbb)"/>
+          <path d="M95,156 L70,218" marker-end="url(#arbb)"/><path d="M125,156 L200,218" marker-end="url(#arbb)"/>
+        </g>
+        <text x="300" y="250" font-size="13" class="soft">illustration:</text>
+        <text x="300" y="268" font-size="13" class="soft">optimum 14, proved</text>
+        <text x="300" y="286" font-size="13" class="soft">after 5 nodes</text>
+      </svg>
+    </div>
+    <div>
+      <ol class="small">
+        <li>Solve the root LP. If its solution is integral, done.</li>
+        <li>Otherwise pick a fractional $x_j = v$ and create two children: $x_j \le \lfloor v \rfloor$ and $x_j \ge \lceil v \rceil$. Every integer solution is in exactly one child.</li>
+        <li>Solve each child's LP, and repeat on the open nodes.</li>
+      </ol>
+      <div class="box def"><span class="label">prune a node when</span>
+        <ul class="small">
+          <li>its LP is <b>infeasible</b>;</li>
+          <li>its LP is <b>integral</b>: it becomes the incumbent if better;</li>
+          <li>its LP bound is $\ge$ the <b>incumbent</b>: nothing below it can win.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>Correctness in two lines. The children partition the parent's integer feasible
+    points: no integer satisfies $\lfloor v \rfloor &lt; x_j &lt; \lceil v \rceil$.
+    And each child's LP bound is a valid lower bound on every integer point in it. So
+    pruning never discards a better solution, and the search is finite because
+    bounded integer variables can only be tightened finitely often.</p>
+    <p>The fractional point itself is cut off in both children ($x_j = v$ violates both
+    new bounds), so the same LP solution never repeats. That is why branching on a
+    fractional variable makes progress, where branching on an integral one wouldn't.</p>
+    <p>The numbers in the figure are an illustration, not a lab run.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">07 · tree</p>
+  <h2>Two bounds, one gap</h2>
+  <div class="cols">
+    <div>
+      <p><b>Upper bound</b> $U$: the incumbent's objective value, or $+\infty$ before one is found.</p>
+      <p><b>Lower bound</b> $L$: the smallest LP bound among open nodes. Every unexplored integer point lies in some open node.</p>
+      $$L \le z^* \le U, \qquad \text{gap} = \frac{U - L}{|U|}$$
+      <p>The solver stops when the gap is 0, or below a tolerance (HiGHS and Gurobi default to a relative gap of $10^{-4}$; SCIP to 0).</p>
+    </div>
+    <div class="box good"><span class="label">two hard jobs</span>
+      <p><b>Push $U$ down</b>: find good integer solutions early, so pruning by bound starts early.</p>
+      <p><b>Push $L$ up</b>: branch and cut so the open nodes' bounds rise toward $z^*$.</p>
+      <p class="small muted">Everything in a MILP solver serves one of these two. A solver log is two columns, "primal bound" and "dual bound", converging.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>Default gap tolerances are one reason a solver's "optimal" can differ slightly
+    from the true optimum. A relative gap of $10^{-4}$ on an objective of $10^6$ allows
+    100 units of difference. Unit 05's tests use a gap of 0 when comparing solvers for
+    exactly this reason, and the lab's own tree runs to a zero gap.</p>
+    <p>An instance can be "solved" in two senses. The primal side is having a
+    solution, which is often all a practitioner needs. The dual side is having proved
+    it optimal, which can take orders of magnitude longer. For many real models, most
+    of the run time is spent raising $L$ after the eventual optimal solution was
+    already found.</p>
+  </aside>
+</section>
+
+<section class="divider">
+  <p class="eyebrow">section 2</p>
+  <h2>Node selection</h2>
+  <p>Which open node to look at next.</p>
+</section>
+
+<section>
+  <p class="eyebrow">07 · selection</p>
+  <h2>Depth-first against best-first</h2>
+  <div class="cols">
+    <div>
+      <div class="box def"><span class="label">depth-first</span>
+        <p class="small">Always a child of the last node. Reaches integral leaves quickly, so an incumbent exists early. Small memory. It can spend a long time in a bad subtree.</p>
+      </div>
+      <div class="box def"><span class="label">best-first</span>
+        <p class="small">Always the open node with the smallest bound. That raises $L$ as fast as possible. The frontier can grow huge, and incumbents come late.</p>
+      </div>
+      <div class="box thm"><span class="label">why best-first minimizes nodes</span>
+        <p class="small">Every node whose bound is below $z^*$ must be branched on by any search with the same branching rule. Best-first branches on no other node, apart from ties at exactly $z^*$.</p>
+      </div>
+    </div>
+    <div>
+      <p class="small">Lab <code>then</code>, most-fractional branching:</p>
+      <table>
+        <thead><tr><th>instance</th><th class="num">DFS</th><th class="num">best</th></tr></thead>
+        <tbody>
+          <tr><td>knapsack 22×3 #0</td><td class="num">1 373</td><td class="num">251</td></tr>
+          <tr><td>knapsack 22×3 #1</td><td class="num">3 681</td><td class="num">1 593</td></tr>
+          <tr><td>UFL 8×20, M = 10C</td><td class="num">87</td><td class="num">79</td></tr>
+        </tbody>
+      </table>
+      <p class="small"><b>What solvers ship:</b> hybrids. Dive depth-first from a promising node to find a solution, then jump back to a node with a good bound or a good estimate ("best estimate" selection), with periodic plunges.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>The best-first argument. Take any node $N$ with LP bound strictly below $z^*$.
+    No incumbent can ever have value below $z^*$, so $N$ is never pruned by bound. It
+    must be branched on unless its LP is integral, which is impossible because its value
+    would then be below $z^*$. Conversely, best-first only pops nodes in bound order.
+    Once the optimal solution has been found, every remaining node has bound at least
+    $z^*$ and is pruned. Lab step 2's extra test checks this directly: the bounds of
+    branched nodes come out nondecreasing and never above the optimum.</p>
+    <p>DFS's weakness in the numbers: on knapsack #0 it needed 5.5× the nodes. Its
+    strength doesn't show in node counts, because the lab has no time limit. Under a
+    time limit, DFS usually has a much better incumbent to report when time runs out.</p>
+  </aside>
+</section>
+
+<section class="divider">
+  <p class="eyebrow">section 3</p>
+  <h2>Branching</h2>
+  <p>Which variable to split on. The single biggest influence on tree size.</p>
+</section>
+
+<section>
+  <p class="eyebrow">07 · branching</p>
+  <h2>Most fractional, and why it's weak</h2>
+  <div class="cols">
+    <div>
+      <p>Intuition: a variable at 0.5 is "most undecided", so decide it.</p>
+      <p>Measured: <b>about as good as branching on a random fractional variable</b> (Achterberg, Koch & Martin 2005, on MIPLIB).</p>
+      <p>Fractionality says nothing about <b>how much the bound will move</b>. A variable at 0.5 with a zero-cost column changes nothing when fixed, while a variable at 0.9 on a tight constraint can end the subtree.</p>
+    </div>
+    <div class="box good"><span class="label">what a good rule estimates</span>
+      <p>For each candidate $j$, the bound improvements $\Delta_j^-$ and $\Delta_j^+$ of the two children, combined with the <b>product score</b></p>
+      $$\text{score}_j = \max(\Delta_j^-, \varepsilon) \cdot \max(\Delta_j^+, \varepsilon)$$
+      <p class="small">A product rewards moving <b>both</b> children, and a zero on one side isn't fatal because of the $\varepsilon$.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>Why the product: the tree size is roughly driven by the worse of the two
+    children. Branching that improves one child hugely and the other not at all barely
+    helps, since the unimproved child is essentially the parent again. The older
+    "linear" score $(1-\mu)\min + \mu\max$ with small $\mu$ captures the same intuition;
+    Achterberg's experiments found the product consistently better.</p>
+    <p>The $\varepsilon$ matters: without it, a variable with a zero gain on one side
+    scores 0 no matter how large the other side is, and many variables tie at 0 early
+    in the search. Lab step 3's test checks that.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">07 · branching</p>
+  <h2>Strong branching and pseudocosts</h2>
+  <div class="cols">
+    <div class="box def"><span class="label">strong branching</span>
+      <p class="small">Compute $\Delta^\pm_j$ exactly: solve both child LPs for each candidate, then branch on the best. The best node counts known, and the most LP solves by far.</p>
+      <p class="small">Lab totals, best-first: <b>1 271 nodes</b> but <b>4 641 LP solves, 3.2 s</b>, against most-fractional's 1 923 nodes and 1.3 s.</p>
+    </div>
+    <div class="box def"><span class="label">pseudocost branching</span>
+      <p class="small">Estimate $\Delta^\pm_j$ from history: the average gain <b>per unit of fractionality</b> seen when branching on $x_j$ before, times the current fractionality. Costs nothing per node.</p>
+      <p class="small">Weak at the top of the tree, where there's no history yet. Lab totals: 1 581 nodes, barely better than most-fractional.</p>
+    </div>
+  </div>
+  <div class="box good"><span class="label">reliability branching (Achterberg, Koch & Martin 2005)</span>
+    <p>Use strong branching on a variable until its pseudocosts are <b>reliable</b> (a few observations each way), then trust the pseudocosts. This is the default rule in SCIP, and the node count of strong branching at roughly the cost of pseudocosts.</p>
+  </div>
+  <aside class="notes">
+    <p>The curriculum's checkpoint is the strong-branching trade-off. Strong branching
+    wins on nodes because every branching decision is informed by exact child bounds.
+    It loses on time because each node costs up to $2k + 1$ LP solves ($k$ candidates)
+    instead of 1. In the lab, 3.7 LP solves per node on average. Whether it pays depends
+    on how expensive an LP is compared with a node's other work, and on how much it
+    shrinks the tree.</p>
+    <p>Real strong branching is cheaper than the lab's. Solvers limit the dual simplex
+    iterations per probe (a partial solve gives a lower bound on the gain), probe only
+    the most promising candidates, and reuse the parent's basis as a warm start (unit 03).</p>
+    <p>Pseudocost initialization is the whole problem with pseudocosts. The lab uses
+    the average of what has been seen, or 1.0, for unseen variables, which is
+    uninformative, and that is why pseudocosts barely beat most-fractional here. Reliability
+    branching exists to fix exactly this.</p>
+  </aside>
+</section>
+
+<section class="divider">
+  <p class="eyebrow">section 4</p>
+  <h2>The other job, and the gap to SCIP</h2>
+  <p>Finding good solutions early, and what else solvers do.</p>
+</section>
+
+<section>
+  <p class="eyebrow">07 · primal side</p>
+  <h2>Primal heuristics</h2>
+  <div class="cols">
+    <div>
+      <p>A good incumbent early lets bound pruning start early. Solvers spend a share of their time on heuristics that find one:</p>
+      <ul class="small">
+        <li><b>Rounding:</b> round the LP solution in a way that keeps feasibility where possible (simple rounding, ZI rounding).</li>
+        <li><b>Diving:</b> fix a variable, re-solve the LP, repeat, down one branch without keeping the tree.</li>
+        <li><b>RINS</b> (Danna, Rothberg & Le Pape 2005): fix the variables where the incumbent and the LP agree, and solve the small sub-MILP that remains.</li>
+        <li><b>Feasibility pump</b> (Fischetti, Glover & Lodi 2005): alternate between the LP polytope and the nearest integer point.</li>
+      </ul>
+    </div>
+    <div class="box"><span class="label">in the lab's tree</span>
+      <p class="small">No heuristics: incumbents only come from integral LP leaves. That is one reason the DFS runs in <code>then</code> are so much larger than SCIP's. SCIP typically has a near-optimal solution before its tree has a dozen nodes.</p>
+      <p class="small muted">Unit 26's local search and unit 19's LNS are the same idea used as stand-alone methods.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>RINS is worth singling out, because it is a template that appears again in unit
+    19. It defines a neighbourhood from the disagreement between two solutions, a
+    relaxed one and an integer one, and searches it exactly with the solver itself.
+    That is large neighbourhood search with a MILP as the repair operator.</p>
+    <p>Heuristics are also run at nodes deeper in the tree, with their frequency tuned
+    so that their cost doesn't dominate. SCIP's log shows which heuristic found each
+    improving solution. Reading that column is part of the <code>then</code>
+    assignment.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">07 · the gap</p>
+  <h2>Your factor of shame</h2>
+  <div class="cols wide-left">
+    <div>
+      <table style="font-size:.7em">
+        <thead><tr><th>instance</th><th class="num">yours, best</th><th class="num">SCIP bare*</th><th class="num">SCIP</th><th class="num">HiGHS</th></tr></thead>
+        <tbody>
+          <tr><td>knapsack 22×3 #0</td><td class="num">157</td><td class="num">87</td><td class="num">8</td><td class="num">9</td></tr>
+          <tr><td>knapsack 22×3 #1</td><td class="num">1 039</td><td class="num">203</td><td class="num">161</td><td class="num">208</td></tr>
+          <tr><td>UFL 8×20, M = 10C</td><td class="num">75</td><td class="num">41</td><td class="num">1</td><td class="num">1</td></tr>
+        </tbody>
+      </table>
+      <p class="small muted">"Yours, best": the fewest nodes among your six variants. * SCIP with presolve and cuts off.</p>
+    </div>
+    <div class="box"><span class="label">hypotheses to test</span>
+      <ul class="small">
+        <li><b>Cutting planes</b> raise the root bound (unit 08). Default vs bare SCIP isolates them plus presolve.</li>
+        <li><b>Presolve</b> tightens bounds and coefficients (units 05, 27).</li>
+        <li><b>Branching:</b> reliability branching vs yours. Bare SCIP still wins by 2–5×.</li>
+        <li><b>Heuristics</b> give an early incumbent, and more pruning.</li>
+        <li><b>Conflict analysis</b> learns from infeasible nodes (the SAT idea of unit 20).</li>
+      </ul>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>The two columns for SCIP separate the effects roughly. Going from yours to SCIP
+    bare shows the effect of better branching and better LP handling. Going from SCIP
+    bare to SCIP default shows the effect of cuts, presolve and heuristics. On the
+    facility-location model almost the whole gap is in the second column, which is unit
+    05's lesson again: the solver repairs the weak formulation.</p>
+    <p>The curriculum asks you to write your hypotheses down now and test them in units
+    08 and 27. Writing them before reading on is the point.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">07 · lab</p>
+  <h2>Lab 07 — what you build</h2>
+  <div class="lab">
+    <span class="label">about 3 hours · uv run co lab 07 · LPs solved for you</span>
+    <ol>
+      <li><b>Most fractional</b> and the two children.</li>
+      <li><b>The tree</b>: prune, accept incumbents, branch, best-first or DFS, and record pseudocost history.</li>
+      <li><b>The product score.</b></li>
+      <li><b>Pseudocost branching</b> from the recorded history.</li>
+      <li><b>Strong branching</b>, with its probes counted.</li>
+    </ol>
+  </div>
+<pre><code class="language-bash">uv run co test 07
+uv run co then 07     # the 3x2 matrix, SCIP bare, SCIP and HiGHS default, factor of shame</code></pre>
+  <aside class="notes">
+    <p>Step 2 is the long one. Its tests check more than the answer: best-first must
+    branch in bound order and never above the optimum, and an infeasible MILP whose LP
+    is feasible must be reported infeasible. That last case catches trees that forget
+    to handle "no incumbent was ever found".</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">07 · checkpoint</p>
+  <h2>Done when</h2>
+  <div class="box good"><span class="label">checkpoint</span>
+    <ul>
+      <li>All five lab steps are ✓.</li>
+      <li>Your strong-branching variant beats your most-fractional variant on node count while losing on wall time, and you can explain that trade-off in terms of LP solves per node.</li>
+      <li>You can say what reliability branching is and why it exists.</li>
+    </ul>
+  </div>
+  <div class="cols">
+    <div>
+      <h3>Reading</h3>
+      <p class="small">Wolsey, ch. 7.<br>
+      Achterberg, Koch & Martin, "Branching rules revisited", <em>ORL</em> 33 (2005).<br>
+      Achterberg (2007), thesis, ch. 5–6 (optional).</p>
+    </div>
+    <div>
+      <h3>Next</h3>
+      <p class="small"><b>08</b> cutting planes, which test the first hypothesis · <b>16</b> DP, where a third exact method meets this one · <b>31</b> learns a branching rule for this tree.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>Unit 31 comes back to this exact tree: it trains a classifier to imitate your
+    strong-branching choices from cheap features, then uses it in place of strong
+    branching. Keep your implementation.</p>
+  </aside>
+</section>
+
+</div></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/plugin/highlight/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<script src="../../slides/deck.js"></script>
+</body>
+</html>

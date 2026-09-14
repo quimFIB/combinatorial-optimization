@@ -1,0 +1,441 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>14 · Network flows</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+<link rel="stylesheet" href="../../slides/deck.css">
+</head>
+<body data-trunk="comb">
+<div class="reveal"><div class="slides">
+
+<section class="title-slide">
+  <p class="eyebrow">Part III · trunk B · combinatorial algorithms · spine</p>
+  <div class="unit-no">14</div>
+  <h1>Network flows</h1>
+  <p class="lede">Max-flow min-cut, three algorithms and why each exists, costs and potentials, and the skill that matters most: recognizing a flow in disguise.</p>
+  <p class="meta"><span>needs 13</span><span>~1½ h slides + 3 h lab</span><span>lab: <code>uv run co lab 14</code></span></p>
+  <aside class="notes">
+    <p>Flows are the workhorse of trunk B. Matching (unit 15) is a special case,
+    subtour separation (unit 09) used a cut, and a surprising range of problems
+    reduce to "find a maximum flow" or "find a minimum cut". This unit's
+    checkpoint is about exactly that recognition skill.</p>
+    <p>Unit 06 already told you the flow LP has integral vertices (its constraint
+    matrix is TU). The algorithms here are fast combinatorial ways to find those
+    vertices, and the max-flow min-cut theorem is LP duality specialized to
+    networks.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">14 · overview</p>
+  <h2>The route</h2>
+  <div class="cols three">
+    <div class="box def"><span class="label">1 · max flow, min cut</span>
+      <p>The duality, augmenting paths, Edmonds–Karp, Dinic, push–relabel, and today's frontier.</p></div>
+    <div class="box def"><span class="label">2 · costs</span>
+      <p>Min-cost flow, negative cycles, successive shortest paths with potentials.</p></div>
+    <div class="box def"><span class="label">3 · reductions</span>
+      <p>Matching, project selection, baseball elimination, segmentation: flows in disguise.</p></div>
+  </div>
+  <aside class="notes">
+    <p>The lab builds all three max-flow algorithms. That is deliberate, because the
+    <code>then</code> step shows the "best" algorithm depends on the graph family: Dinic
+    wins on layered networks and push–relabel on random sparse ones, while OR-Tools
+    beats both everywhere.</p>
+  </aside>
+</section>
+
+<section class="divider">
+  <p class="eyebrow">section 1</p>
+  <h2>Max flow, min cut</h2>
+  <p>The first min–max theorem of combinatorial optimization.</p>
+</section>
+
+<section>
+  <p class="eyebrow">14 · max flow</p>
+  <h2>Flows, cuts, and weak duality</h2>
+  <div class="cols wide-right">
+    <div class="fig">
+      <svg viewBox="0 0 360 230" width="360" role="img" aria-label="small network with a minimum cut">
+        <defs><marker id="arf" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" class="fill-ink"/></marker></defs>
+        <rect x="10" y="20" width="160" height="190" rx="10" class="fill-soft" style="fill-opacity:.6"/>
+        <g class="ink" stroke-width="1.8" fill="none">
+          <path d="M60,115 L140,55" marker-end="url(#arf)"/><path d="M60,115 L140,175" marker-end="url(#arf)"/>
+          <path d="M160,60 L160,165" marker-end="url(#arf)"/>
+          <path d="M170,50 L280,105" marker-end="url(#arf)" class="warn" style="stroke:var(--warn)"/>
+          <path d="M170,180 L280,125" marker-end="url(#arf)" class="warn" style="stroke:var(--warn)"/>
+        </g>
+        <g class="fill-ground ink" stroke-width="2">
+          <circle cx="45" cy="115" r="16"/><circle cx="155" cy="45" r="16"/><circle cx="155" cy="185" r="16"/><circle cx="295" cy="115" r="16"/>
+        </g>
+        <text x="45" y="120" text-anchor="middle" font-size="14" class="mono">s</text>
+        <text x="155" y="50" text-anchor="middle" font-size="14" class="mono">a</text>
+        <text x="155" y="190" text-anchor="middle" font-size="14" class="mono">b</text>
+        <text x="295" y="120" text-anchor="middle" font-size="14" class="mono">t</text>
+        <text x="85" y="72" font-size="13" class="mono">3</text><text x="85" y="170" font-size="13" class="mono">2</text>
+        <text x="168" y="118" font-size="13" class="mono">1</text>
+        <text x="228" y="66" font-size="13" class="mono" style="fill:var(--warn)">3</text><text x="228" y="172" font-size="13" class="mono" style="fill:var(--warn)">2</text>
+        <text x="20" y="224" font-size="12" class="soft">source side S</text>
+      </svg>
+      <p class="cap">Lab step 1's textbook network. Max flow 5. The cut $S = \{s, a, b\}$ has capacity $3 + 2 = 5$, which proves it.</p>
+    </div>
+    <div>
+      <div class="box def"><span class="label">definitions</span>
+        <p class="small">A <b>flow</b> respects capacities ($0 \le f \le c$) and conservation at every node except $s$ and $t$. Its value is the net flow out of $s$.</p>
+        <p class="small">An <b>$s$–$t$ cut</b> is a set $S \ni s$, $t \notin S$. Its capacity is the total capacity of arcs leaving $S$.</p>
+      </div>
+      <div class="box thm"><span class="label">weak duality</span>
+        <p>Every flow's value is at most every cut's capacity.</p>
+        <p class="small">Proof: value = (flow out of $S$) − (flow into $S$) ≤ capacity out of $S$.</p>
+      </div>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>The flow value across any cut is the same: sum the conservation equations over
+    the nodes of $S$, and everything internal cancels. That is the one-line proof of
+    weak duality, and it is unit 00's certificate pattern once more. A cut is a short
+    proof that no flow is larger.</p>
+    <p>For this network: arcs s→a (3), s→b (2), a→b (1), a→t (3), b→t (2). The flow
+    sends 3 along s→a→t and 2 along s→b→t, so the a→b arc is unused. The cut {s, a, b}
+    crosses a→t and b→t, capacity 5.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">14 · max flow</p>
+  <h2>Max-flow min-cut</h2>
+  <div class="cols">
+    <div>
+      <div class="box thm"><span class="label">Ford & Fulkerson 1956</span>
+        <p>The maximum flow value equals the minimum cut capacity. With integer capacities there is an integral maximum flow.</p>
+      </div>
+      <div class="box proof"><span class="label">proof, via the residual graph</span>
+        <p class="small">Residual arcs: $u \to v$ with capacity $c - f$, and $v \to u$ with capacity $f$. If $t$ is reachable from $s$, augment along the path: the flow isn't maximum. Otherwise let $S$ = nodes reachable from $s$. Every arc leaving $S$ is saturated and every arc entering $S$ is empty, so the flow value equals $S$'s capacity. $\square$</p>
+      </div>
+    </div>
+    <div>
+      <p>The proof <b>is</b> the algorithm, and it produces the certificate:</p>
+      <ol class="small">
+        <li>While an augmenting path exists, push its bottleneck.</li>
+        <li>At the end, the reachable set is a minimum cut. That is lab step 1's <code>min_cut</code>, and the test checks its capacity equals your flow.</li>
+      </ol>
+      <p class="small muted">It is LP duality (unit 03) for the flow LP, whose dual is the cut LP, with integrality from total unimodularity (unit 06).</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>Integrality follows from the algorithm: starting from zero flow with integer
+    capacities, every bottleneck is an integer, so every intermediate flow is
+    integral. The TU argument (unit 06) gives the same conclusion without an
+    algorithm. Both are asked for in the checkpoint.</p>
+    <p>The name "residual graph" hides one important idea: backward arcs let an
+    algorithm undo earlier decisions. Without them, greedy path-pushing gets stuck at
+    non-maximum flows. With them, local improvement is exact, like simplex on a
+    polytope.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">14 · max flow</p>
+  <h2>Choosing paths: Ford–Fulkerson to Edmonds–Karp to Dinic</h2>
+  <div class="cols">
+    <div>
+      <div class="box warn"><span class="label">any augmenting path</span>
+        <p class="small">With bad path choices, integer capacities can take time proportional to the flow value, so it is not polynomial. With irrational capacities it may <b>never terminate</b>, and may even converge to a non-maximum value (Zwick's golden-ratio example).</p>
+      </div>
+      <div class="box good"><span class="label">Edmonds–Karp (1972)</span>
+        <p class="small"><b>Shortest</b> augmenting paths by BFS: $O(VE^2)$. Distances from $s$ never decrease, and each arc is a bottleneck $O(V)$ times.</p>
+      </div>
+    </div>
+    <div>
+      <div class="box good"><span class="label">Dinic (1970)</span>
+        <p class="small">Group all shortest paths of the same length into one phase: BFS levels, then a <b>blocking flow</b> in the level graph by DFS with current-edge pointers. $O(V)$ phases, $O(VE)$ each, so $O(V^2 E)$ overall.</p>
+        <p class="small">On unit-capacity networks, $O(E\sqrt V)$. On bipartite matching networks this <b>is</b> Hopcroft–Karp (unit 15).</p>
+      </div>
+      <p class="small muted">In lab <code>then</code>, on a 40×40 layered network, Edmonds–Karp took 0.24 s and Dinic 0.057 s.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>The Edmonds–Karp argument in one paragraph. Let $d(v)$ be the BFS distance from
+    $s$ in the residual graph. Augmenting along a shortest path never decreases any
+    $d(v)$. When an arc $u \to v$ is a bottleneck it disappears, and it can only come back
+    after flow is pushed on $v \to u$, which needs $d(u) = d(v) + 1$ at that later time.
+    So $d(u)$ has grown by 2. Distances are at most $V$, so each arc is a bottleneck
+    $O(V)$ times, there are $O(VE)$ augmentations, and each costs $O(E)$.</p>
+    <p>Dinic's current-edge pointer: within a phase, once an edge leads to a dead end or
+    is saturated, it stays useless for the rest of the phase, because levels don't
+    change until the next BFS. Skipping it permanently is what makes the phase
+    $O(VE)$.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">14 · max flow</p>
+  <h2>Push–relabel, and the heuristics that make it fast</h2>
+  <div class="cols">
+    <div>
+      <p><b>Goldberg & Tarjan (1988).</b> No augmenting paths. Maintain a <b>preflow</b> (nodes may have excess) and <b>heights</b>:</p>
+      <ul class="small">
+        <li><b>push</b> excess from $u$ along a residual arc to $v$ with $h(u) = h(v) + 1$;</li>
+        <li><b>relabel</b> $u$ to $1 + \min h(v)$ over residual neighbours when it can't push.</li>
+      </ul>
+      <p class="small">$O(V^2 E)$ generic, $O(V^3)$ FIFO, $O(V^2\sqrt E)$ with the highest-label rule.</p>
+    </div>
+    <div>
+      <p class="small">Lab <code>then</code>, seconds, plain FIFO without heuristics:</p>
+      <table>
+        <thead><tr><th>family</th><th class="num">Dinic</th><th class="num">push–relabel</th><th class="num">OR-Tools</th></tr></thead>
+        <tbody>
+          <tr><td>layered 40×40</td><td class="num"><b>0.057</b></td><td class="num">3.706</td><td class="num">0.003</td></tr>
+          <tr><td>random n = 1500</td><td class="num">0.036</td><td class="num"><b>0.027</b></td><td class="num">0.004</td></tr>
+          <tr><td>bipartite 300×300</td><td class="num">0.006</td><td class="num">0.007</td><td class="num">0.001</td></tr>
+        </tbody>
+      </table>
+      <p class="small">Production push–relabel adds the <b>gap</b> heuristic (if no node has height $k$, lift everything above $k$ at once) and periodic <b>global relabelling</b> (exact heights by a backward BFS from $t$). Without them it climbs deep layered networks one height at a time.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>Why heights certify optimality at the end. Valid heights satisfy
+    $h(u) \le h(v) + 1$ on every residual arc, with $h(s) = n$ and $h(t) = 0$. A residual
+    path from $s$ to $t$ would need at least $n$ steps each decreasing height by at most
+    1, but a simple path has at most $n - 1$ arcs. So no augmenting path exists, and
+    once no excess remains the preflow is a maximum flow. That is lab step 3's "think
+    about".</p>
+    <p>OR-Tools' SimpleMaxFlow is a push–relabel implementation with these heuristics,
+    written in C++. It is 10–20× faster than the lab's best on every family here, which
+    is the usual factor for a good compiled implementation of the same algorithm.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">14 · max flow</p>
+  <h2>The theoretical frontier moved recently</h2>
+  <div class="cols">
+    <div>
+      <ul>
+        <li><b>1956</b> Ford–Fulkerson: augmenting paths.</li>
+        <li><b>1970–72</b> Dinic, Edmonds–Karp: polynomial.</li>
+        <li><b>1988</b> Goldberg–Tarjan: push–relabel.</li>
+        <li><b>1998</b> Goldberg–Rao: $\tilde O(\min(E^{1/2}, V^{2/3})\, E \log U)$.</li>
+        <li><b>2013</b> Orlin: $O(VE)$, strongly polynomial.</li>
+        <li><b>2022</b> Chen, Kyng, Liu, Peng, Probst Gutenberg & Sachdeva: <b>almost-linear time</b>, $E^{1+o(1)}$, for max flow and min-cost flow.</li>
+      </ul>
+    </div>
+    <div class="box"><span class="label">why the 2022 result matters here</span>
+      <p class="small">It solves the min-cost flow <b>LP</b> with an interior-point method (unit 04) whose linear systems are solved by specialized graph data structures. Continuous optimization produced the fastest known combinatorial flow algorithm.</p>
+      <p class="small muted">Nobody runs it in practice yet: its constants are enormous. Push–relabel and network simplex remain what solvers ship.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>The 2022 paper won the FOCS best paper award. The method is an interior-point
+    method on the min-cost flow LP, run for $m^{1+o(1)}$ iterations, each iteration
+    needing only approximate changes to the solution. A dynamic data structure
+    maintains those changes over a shrinking hierarchy of approximating trees. It is a
+    striking instance of this course's premise that the discrete and the continuous are
+    closely linked.</p>
+  </aside>
+</section>
+
+<section class="divider">
+  <p class="eyebrow">section 2</p>
+  <h2>Costs</h2>
+  <p>The cheapest way to send a given amount.</p>
+</section>
+
+<section>
+  <p class="eyebrow">14 · costs</p>
+  <h2>Min-cost flow</h2>
+  <div class="cols">
+    <div>
+      <div class="box def"><span class="label">problem</span>
+        <p>Send $d$ units from $s$ to $t$ minimizing $\sum_e \text{cost}_e f_e$, subject to capacities.</p>
+      </div>
+      <div class="box thm"><span class="label">optimality</span>
+        <p>A feasible flow is minimum-cost iff its residual graph has <b>no negative-cost cycle</b>.</p>
+      </div>
+      <p class="small">Algorithms: <b>cycle canceling</b> (Klein 1967: push around negative cycles); <b>network simplex</b> (unit 02, specialized to trees); <b>successive shortest paths</b> (the lab).</p>
+    </div>
+    <div>
+      <div class="box good"><span class="label">successive shortest paths with potentials</span>
+        <ol class="small">
+          <li>Bellman–Ford once for potentials $\pi$.</li>
+          <li>Repeat: Dijkstra on reduced costs $c_\pi(u,v) = c(u,v) + \pi(u) - \pi(v) \ge 0$; update $\pi \mathrel{+}= \text{dist}$; augment along the shortest path.</li>
+        </ol>
+        <p class="small">Reverse arcs carry cost $-c$, but reduced costs stay nonnegative, so Dijkstra stays valid. The potentials are exactly the <b>dual variables</b> of the min-cost flow LP.</p>
+      </div>
+      <p class="small muted">Strongly polynomial algorithms exist (Tardos 1985; Orlin 1993).</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>Why reduced costs stay nonnegative. After Dijkstra, $\text{dist}(v) \le
+    \text{dist}(u) + c_\pi(u,v)$ for every residual arc, so the new reduced cost
+    $c_\pi(u,v) + \text{dist}(u) - \text{dist}(v) \ge 0$. Arcs on the shortest path have
+    new reduced cost exactly 0, so their reverse arcs, created by augmenting, also have
+    reduced cost 0.</p>
+    <p>A detail from building the lab: a lazy-deletion Dijkstra that re-inserts nodes
+    when their distance improves still returns correct answers without potentials, as
+    long as there is no negative cycle. It becomes a label-correcting search, and its
+    running time can blow up. The mutation check found this: removing the potentials
+    passed every test and ran out of memory on a random search. So potentials are what
+    make it <em>efficient</em>, not only correct.</p>
+    <p>Complementary slackness (unit 03) for flows: an arc with positive reduced cost
+    carries no flow, an arc with negative reduced cost is saturated, and arcs strictly
+    in between have reduced cost 0. The potentials at the end of successive shortest
+    paths satisfy exactly this, which certifies optimality.</p>
+  </aside>
+</section>
+
+<section class="divider">
+  <p class="eyebrow">section 3</p>
+  <h2>Reductions</h2>
+  <p>Flows in disguise, which is the skill the checkpoint asks for.</p>
+</section>
+
+<section>
+  <p class="eyebrow">14 · reductions</p>
+  <h2>Project selection: a maximum closure is a minimum cut</h2>
+  <div class="cols wide-right">
+    <div class="fig">
+      <svg viewBox="0 0 380 240" width="380" role="img" aria-label="project selection network">
+        <defs><marker id="arp2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" class="fill-ink"/></marker></defs>
+        <g class="ink" stroke-width="1.8" fill="none">
+          <path d="M55,120 L135,65" marker-end="url(#arp2)"/><path d="M55,120 L135,175" marker-end="url(#arp2)"/>
+          <path d="M170,65 L240,115" marker-end="url(#arp2)" stroke-dasharray="5 4"/><path d="M170,175 L240,125" marker-end="url(#arp2)" stroke-dasharray="5 4"/>
+          <path d="M275,120 L330,120" marker-end="url(#arp2)"/>
+        </g>
+        <g class="fill-ground ink" stroke-width="2">
+          <circle cx="40" cy="120" r="16"/><circle cx="152" cy="60" r="18"/><circle cx="152" cy="180" r="18"/><circle cx="258" cy="120" r="18"/><circle cx="346" cy="120" r="16"/>
+        </g>
+        <text x="40" y="125" text-anchor="middle" font-size="14" class="mono">s</text>
+        <text x="346" y="125" text-anchor="middle" font-size="14" class="mono">t</text>
+        <text x="152" y="65" text-anchor="middle" font-size="12" class="mono">p₁</text>
+        <text x="152" y="185" text-anchor="middle" font-size="12" class="mono">p₂</text>
+        <text x="258" y="125" text-anchor="middle" font-size="12" class="mono">q</text>
+        <text x="75" y="80" font-size="13" class="mono">8</text><text x="75" y="170" font-size="13" class="mono">5</text>
+        <text x="210" y="80" font-size="13" class="mono">∞</text><text x="210" y="168" font-size="13" class="mono">∞</text>
+        <text x="295" y="112" font-size="13" class="mono">6</text>
+        <text x="152" y="30" text-anchor="middle" font-size="12" class="soft">profit +8</text>
+        <text x="152" y="222" text-anchor="middle" font-size="12" class="soft">profit +5</text>
+        <text x="258" y="160" text-anchor="middle" font-size="12" class="soft">cost 6</text>
+      </svg>
+      <p class="cap">Two projects both need tool $q$. Min cut: cut $q \to t$ (6), with source side $\{s, p_1, p_2, q\}$. Best profit $= 13 - 6 = 7$.</p>
+    </div>
+    <div>
+      <p>Choose projects, each with a profit (possibly negative), closed under "requires".</p>
+      <ul class="small">
+        <li>$s \to p$ with capacity profit, for positive profits;</li>
+        <li>$p \to t$ with capacity $-$profit, for negative ones;</li>
+        <li>$p \to q$ with capacity $\infty$ if $p$ requires $q$.</li>
+      </ul>
+      <p>A finite cut can't cut an $\infty$ arc, so its source side is a <b>closed</b> set. Its capacity is (profit forgone) + (costs paid), so</p>
+      $$\text{best profit} = \textstyle\sum \text{positive profits} - \text{min cut}.$$
+      <p class="small muted">Picard (1976): maximum-weight closure. Lab step 5.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>Check the figure's alternatives: take nothing (profit 0, cut 13); take only $q$
+    (not useful); take $p_1$ and $q$ (8 − 6 = 2); take all three (13 − 6 = 7). The
+    minimum cut capacity 6 corresponds to "take all three", and $13 - 6 = 7$ matches.</p>
+    <p>Many real problems are closures in disguise: open-pit mining (a block can be
+    mined only if the blocks above it are), selecting features with prerequisite
+    features, choosing which dependencies of a software build to include.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">14 · reductions</p>
+  <h2>More flows in disguise</h2>
+  <div class="cols">
+    <div class="box def"><span class="label">bipartite matching</span>
+      <p class="small">$s$ → left (capacity 1), left → right along edges (1), right → $t$ (1). Max flow = max matching, and the min cut gives König's vertex cover. Unit 15 does it faster.</p>
+    </div>
+    <div class="box def"><span class="label">baseball elimination (Schwartz 1966)</span>
+      <p class="small">Can team $x$ still finish first? Give $x$ all its remaining wins. For each remaining game between other teams, a node with capacity = games left, feeding into the two teams; each team → $t$ with capacity (wins $x$ can reach − wins so far). $x$ is still alive iff the max flow saturates every game arc.</p>
+    </div>
+    <div class="box def"><span class="label">image segmentation</span>
+      <p class="small">Pixels as nodes; $s$/$t$ arcs weighted by how foreground/background each pixel looks; neighbour arcs weighted by similarity. The minimum cut is the best labelling (Greig, Porteous & Seheult 1989; graph cuts in vision).</p>
+    </div>
+    <div class="box def"><span class="label">scheduling with deadlines</span>
+      <p class="small">Jobs → time slots within their windows, with capacities for processing time and machine count. A flow saturating all jobs is a feasible schedule.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>The recognition questions to ask of any new problem:</p>
+    <ul>
+      <li>Is there a quantity that moves and is conserved?</li>
+      <li>Are the decisions "cut or not cut" with pairwise costs? If so, try a minimum cut.</li>
+      <li>Are the constraints "at most $c$ from this group", with integer answers wanted?
+      Then flow integrality (unit 06) gives integrality for free.</li>
+    </ul>
+    <p>Baseball elimination is the checkpoint exercise. It is worth doing before reading
+    Kleinberg & Tardos §7.12, because the reduction's elegance is in how the capacities
+    encode "how many more wins can each team afford".</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">14 · lab</p>
+  <h2>Lab 14 — what you build</h2>
+  <div class="lab">
+    <span class="label">about 3 hours · uv run co lab 14</span>
+    <ol>
+      <li><b>Edmonds–Karp</b>, and the minimum cut that certifies it.</li>
+      <li><b>Dinic</b>: level graphs and blocking flows.</li>
+      <li><b>FIFO push–relabel.</b></li>
+      <li><b>Min-cost flow</b> by successive shortest paths with potentials.</li>
+      <li><b>Project selection</b> as a minimum cut.</li>
+    </ol>
+  </div>
+<pre><code class="language-bash">uv run co test 14
+uv run co then 14     # three families vs OR-Tools and networkx · min-cost flow vs OR-Tools</code></pre>
+  <aside class="notes">
+    <p>Every flow you return is checked for capacities, conservation and value, not just
+    for the value. A wrong flow with the right value would be a silent bug in step 5,
+    because the minimum cut is read off the flow.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">14 · checkpoint</p>
+  <h2>Done when</h2>
+  <div class="box good"><span class="label">checkpoint</span>
+    <ul>
+      <li>All five lab steps are ✓.</li>
+      <li>Handed a problem you have not seen, you can decide whether it is a flow in disguise and write the reduction, including the capacities that encode the objective.</li>
+      <li>You can explain integrality of maximum flows two ways: augmenting paths, and total unimodularity.</li>
+    </ul>
+  </div>
+  <div class="cols">
+    <div>
+      <h3>Reading</h3>
+      <p class="small">Korte & Vygen, ch. 8–9.<br>
+      Kleinberg & Tardos, <em>Algorithm Design</em>, ch. 7.<br>
+      Goldberg & Tarjan, <em>JACM</em> 35 (1988) (optional).</p>
+    </div>
+    <div>
+      <h3>Next</h3>
+      <p class="small"><b>15</b> matching: Hopcroft–Karp, the Hungarian algorithm, blossoms · <b>18</b> uses this unit's ideas for alldifferent filtering.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>Baseball elimination, in brief, for checking your answer. If the max flow fails to
+    saturate the game arcs, the minimum cut names a set $T$ of teams whose games
+    against each other must produce more wins than $T$ can absorb without some team
+    passing $x$. That set is a short, human-readable certificate of elimination, as in
+    unit 00.</p>
+  </aside>
+</section>
+
+</div></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/plugin/highlight/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<script src="../../slides/deck.js"></script>
+</body>
+</html>

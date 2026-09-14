@@ -1,0 +1,375 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>11 · Lagrangian relaxation</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+<link rel="stylesheet" href="../../slides/deck.css">
+</head>
+<body data-trunk="ip">
+<div class="reveal"><div class="slides">
+
+<section class="title-slide">
+  <p class="eyebrow">Part II · trunk A · integer programming · spine</p>
+  <div class="unit-no">11</div>
+  <h1>Lagrangian relaxation and subgradient methods</h1>
+  <p class="lede">Price the hard constraints into the objective and solve what is left. Every price gives a bound; the best price gives exactly the bound you can predict in advance.</p>
+  <p class="meta"><span>needs 03, 16</span><span>~1¼ h slides + 2½ h lab</span><span>lab: <code>uv run co lab 11</code></span></p>
+  <aside class="notes">
+    <p>Unit 10 reached a strong bound by building an LP with exponentially many columns.
+    This unit reaches the <em>same</em> bound without any LP solver: pick prices for the
+    complicating constraints, solve an easy combinatorial problem, and adjust the prices.
+    The two methods are dual views of one convexification, and the unit's main theorem
+    (Geoffrion) says precisely which bound you get.</p>
+    <p>Lagrangian relaxation was the dominant bounding technique for combinatorial
+    optimisation from the 1970s until LP solvers became fast in the 1990s. It is still the
+    method of choice when the relaxed problem has a fast specialised algorithm: spanning
+    trees, shortest paths, knapsacks.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">11 · overview</p>
+  <h2>The route</h2>
+  <div class="cols">
+    <div class="box def"><span class="label">1 · dualising</span>
+      <p class="small">The Lagrangian function, weak duality, concavity; Geoffrion's theorem and the integrality property.</p></div>
+    <div class="box def"><span class="label">2 · subgradients</span>
+      <p class="small">Step rules, why it is not an ascent method, and the zig-zag.</p></div>
+  </div>
+  <div class="cols">
+    <div class="box def"><span class="label">3 · Held–Karp</span>
+      <p class="small">1-trees, the bound that equals the subtour LP, and what LKH does with it.</p></div>
+    <div class="box def"><span class="label">4 · using the multipliers</span>
+      <p class="small">Lagrangian heuristics, and fixing variables by reduced cost.</p></div>
+  </div>
+  <aside class="notes">
+    <p>The checkpoint is a prediction skill: given a problem and a choice of constraints to
+    dualise, say before coding whether the bound will beat the LP relaxation. The lab's GAP
+    experiment has one relaxation of each kind, and the answer comes out exactly as
+    Geoffrion's theorem says.</p>
+  </aside>
+</section>
+
+<section class="divider">
+  <p class="eyebrow">section 1</p>
+  <h2>Dualising</h2>
+  <p>Move the hard constraints into the objective.</p>
+</section>
+
+<section>
+  <p class="eyebrow">11 · dualising</p>
+  <h2>The Lagrangian function</h2>
+  <div class="cols">
+    <div>
+      $$z = \min \{\, c^\top x : Ax \ge b,\ x \in X \,\}$$
+      <p class="small">$Ax \ge b$ are the <b>complicating</b> constraints; optimising over $X$ alone is easy. For $u \ge 0$:</p>
+      $$L(u) = \min_{x \in X}\ c^\top x + u^\top (b - Ax)$$
+      <div class="box thm"><span class="label">weak duality</span>
+        <p class="small">For any feasible $x$ and $u \ge 0$, $u^\top(b - Ax) \le 0$, so $L(u) \le c^\top x$. Hence $L(u) \le z$.</p>
+      </div>
+      <p class="small">Equality constraints get free-sign multipliers. The GAP lab dualises "each job exactly once" with $u \in \mathbb R^n$.</p>
+    </div>
+    <div class="fig">
+      <svg viewBox="0 0 330 230" width="330" role="img" aria-label="concave piecewise-linear Lagrangian">
+        <g class="ink" stroke-width="1.2">
+          <line x1="30" y1="200" x2="320" y2="200"/><line x1="30" y1="200" x2="30" y2="15"/>
+        </g>
+        <g class="soft" stroke-width="1.2" fill="none" style="stroke:var(--ink-faint)">
+          <line x1="30" y1="190" x2="320" y2="20"/>
+          <line x1="30" y1="120" x2="320" y2="100"/>
+          <line x1="99.3" y1="15" x2="320" y2="190"/>
+          <line x1="30" y1="30" x2="320" y2="90"/>
+        </g>
+        <path d="M30,190 L165.4,110.7 L215.6,107.2 L320,190" fill="none" style="stroke:var(--accent);stroke-width:3"/>
+        <circle cx="215.6" cy="107.2" r="5" class="fill-accent"/>
+        <text x="228" y="128" font-size="12" class="mono">max L(u)</text>
+        <text x="175" y="222" font-size="12" text-anchor="middle">u</text>
+        <text x="40" y="30" font-size="11" class="muted">one line per x ∈ X</text>
+      </svg>
+      <p class="cap">$L$ is the lower envelope of the affine functions $u \mapsto c^\top x + u^\top(b - Ax)$, one per $x \in X$. So it is <b>concave and piecewise linear</b>, and non-differentiable exactly at its maximum.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>The Lagrangian dual is $z_{LD} = \max_{u \ge 0} L(u)$, a concave maximisation, so there
+    are no local maxima to get stuck in. The price is non-smoothness. Its kinks are where two
+    solutions $x \in X$ tie, and the optimum is almost always at a kink. That's why gradient
+    methods don't apply directly, and section 2 uses subgradients.</p>
+    <p>Interpretation: $u_i$ is a price per unit of violation of constraint $i$. Too low, and
+    the relaxed solution ignores the constraint. Too high, and it over-satisfies it. The
+    best prices balance the two, which is the same economics as the duals in unit 03.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">11 · dualising</p>
+  <h2>Geoffrion 1974: which bound you get</h2>
+  <div class="cols">
+    <div>
+      <div class="box thm"><span class="label">theorem</span>
+        $$z_{LD} = \min \{\, c^\top x : Ax \ge b,\ x \in \mathrm{conv}(X) \,\}$$
+        <p class="small">So $z_{LP} \le z_{LD} \le z$, where $z_{LP}$ also relaxes $X$ to its LP description $\bar X$.</p>
+      </div>
+      <div class="box good"><span class="label">integrality property</span>
+        <p class="small">If $\mathrm{conv}(X) = \bar X$ (the easy problem's LP has integral vertices), then $z_{LD} = z_{LP}$. The Lagrangian relaxation gives <b>nothing the LP didn't</b>, though it may compute it faster.</p>
+      </div>
+      <p class="small muted">It is the same bound as Dantzig–Wolfe (unit 10), whose master convexifies $X$ explicitly.</p>
+    </div>
+    <div>
+      <p class="small">Lab <code>then</code>, GAP, 300 iterations:</p>
+      <table>
+        <thead><tr><th>m × n</th><th class="num">opt</th><th class="num">LP</th><th class="num">A: knapsacks</th><th class="num">B: one agent per job</th></tr></thead>
+        <tbody>
+          <tr><td>5 × 25</td><td class="num">452</td><td class="num">444.13</td><td class="num"><b>452.00</b></td><td class="num">444.12</td></tr>
+          <tr><td>5 × 40</td><td class="num">682</td><td class="num">671.18</td><td class="num"><b>682.00</b></td><td class="num">671.12</td></tr>
+          <tr><td>8 × 60</td><td class="num">905</td><td class="num">892.37</td><td class="num"><b>902.83</b></td><td class="num">892.33</td></tr>
+          <tr><td>10 × 80</td><td class="num">1084</td><td class="num">1072.32</td><td class="num"><b>1083.71</b></td><td class="num">1072.27</td></tr>
+        </tbody>
+      </table>
+      <p class="small"><b>A</b> leaves one knapsack per agent, which has no integrality property, so it closes 83–100% of the gap. <b>B</b> leaves "each job picks an agent", whose LP is integral, so it stops at the LP, as predicted.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>Proof sketch. $L(u) = \min_{x \in \mathrm{conv}(X)} c^\top x + u^\top(b - Ax)$, because a
+    linear function is minimised at an extreme point of the hull. Maximising over $u \ge 0$ is
+    then LP duality applied to $\min\{c^\top x : Ax \ge b, x \in \mathrm{conv}(X)\}$, with only
+    $Ax \ge b$ dualised.</p>
+    <p>The design choice in every Lagrangian relaxation: dualise enough that the rest is easy,
+    but keep a subproblem <em>without</em> the integrality property, or you have reinvented
+    the LP bound. The Held–Karp bound is the famous case where the subproblem has the property
+    and that's still a good trade. The LP it matches (the subtour LP) has exponentially many
+    rows, and the 1-tree avoids them.</p>
+  </aside>
+</section>
+
+<section class="divider">
+  <p class="eyebrow">section 2</p>
+  <h2>Subgradients</h2>
+  <p>Climbing a function with no gradient.</p>
+</section>
+
+<section>
+  <p class="eyebrow">11 · subgradients</p>
+  <h2>Subgradient ascent</h2>
+  <div class="cols">
+    <div>
+      <div class="box def"><span class="label">subgradient</span>
+        <p class="small">If $x(u)$ attains $L(u)$, then $g = b - Ax(u)$ satisfies $L(v) \le L(u) + g^\top (v - u)$ for all $v$. Computing it is free: the violation of the dualised constraints.</p>
+      </div>
+      $$u \leftarrow \bigl[u + t_k\, g\bigr]_+$$
+      <ul class="small">
+        <li><b>Diminishing</b> $t_k$ with $\sum t_k = \infty$ and $\sum t_k^2 &lt; \infty$ converges, slowly: $O(1/\varepsilon^2)$ iterations.</li>
+        <li><b>Polyak</b>: $t_k = \lambda_k (\bar z - L(u))/\lVert g\rVert^2$, with $\bar z$ an upper bound. <b>Held–Wolfe–Crowder</b>: halve $\lambda$ when progress stalls. That's lab step 2.</li>
+      </ul>
+    </div>
+    <div>
+      <div class="box warn"><span class="label">not an ascent method</span>
+        <p class="small">A subgradient step can <b>decrease</b> $L$, even with a tiny step. The subgradient guarantees getting closer to the optimal multipliers, not a higher value. Always keep the best bound so far.</p>
+      </div>
+      <p class="small">Lab <code>then</code>, bound A on GAP 8 × 60, 300 iterations:</p>
+      <table>
+        <thead><tr><th>rule</th><th class="num">best</th><th class="num">steps down</th></tr></thead>
+        <tbody>
+          <tr><td>λ = 2, halve after 20 fails</td><td class="num"><b>902.83</b></td><td class="num">144 / 299</td></tr>
+          <tr><td>λ = 2 fixed</td><td class="num">900.40</td><td class="num">142 / 299</td></tr>
+          <tr><td>λ = 0.1 fixed</td><td class="num">895.93</td><td class="num">96 / 299</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>Why a step can go down: the subgradient inequality says the whole function lies below
+    the tangent plane through $u$. Moving along $g$ keeps the optimal $u^*$ on the side
+    $g^\top(u^* - u) \ge L(u^*) - L(u) \ge 0$. So the distance to $u^*$ shrinks for small
+    enough steps, but the function value along the path can fall. The Polyak step is the one
+    that minimises the guaranteed distance bound when the optimum value is known.</p>
+    <p>The sparklines printed by <code>then</code> show the three behaviours. A fixed large λ
+    bounces between 887 and 899 indefinitely. A fixed small λ climbs smoothly and stalls
+    well short. Halving on stalls combines the fast start with the settling.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">11 · subgradients</p>
+  <h2>Beyond plain subgradients</h2>
+  <div class="cols">
+    <div>
+      <div class="box def"><span class="label">cutting planes on the dual = column generation</span>
+        <p class="small">Every $x \in X$ you've seen gives an affine upper piece of $L$. Maximising the envelope of the pieces so far is an LP: Kelley's cutting-plane method. Its dual <b>is</b> unit 10's restricted master, and its columns are the $x$'s. It has the same wild oscillation that unit 10 stabilised.</p>
+      </div>
+    </div>
+    <div>
+      <ul class="small">
+        <li><b>Bundle methods</b> (Lemaréchal, Kiwiel): the cutting-plane model plus a quadratic proximal term. The stabilisation that works, with convergence guarantees.</li>
+        <li><b>Volume algorithm</b> (Barahona & Anbil 2000): a subgradient method that also averages the relaxed solutions into an approximate <b>primal</b> LP solution.</li>
+        <li>Primal recovery from subgradients: averages of $x(u_k)$ with suitable weights converge to an optimal solution over $\mathrm{conv}(X)$.</li>
+      </ul>
+      <p class="small muted">Rule of thumb: subgradients for speed and simplicity with a cheap oracle; bundle or column generation when you need the exact bound or primal information.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>The equivalence is worth checking by hand once. The LP $\max\{\eta : \eta \le c^\top x^k +
+    u^\top(b - Ax^k)\ \forall k,\ u \ge 0\}$ has one dual variable $\lambda_k \ge 0$ per known
+    solution $x^k$, with $\sum \lambda_k = 1$. Writing out its dual gives $\min \sum_k \lambda_k
+    c^\top x^k$ subject to $\sum_k \lambda_k Ax^k \ge b$: the Dantzig–Wolfe master over the known
+    columns. Pricing is evaluating $L$ at the new $u$.</p>
+  </aside>
+</section>
+
+<section class="divider">
+  <p class="eyebrow">section 3</p>
+  <h2>Held–Karp</h2>
+  <p>A spanning tree, priced into a tour.</p>
+</section>
+
+<section>
+  <p class="eyebrow">11 · Held–Karp</p>
+  <h2>1-trees and the Held–Karp bound (1970–71)</h2>
+  <div class="cols">
+    <div>
+      <p class="small">A <b>1-tree</b> is a spanning tree on $\{1, \dots, n-1\}$ plus two edges at vertex 0. Every tour is a 1-tree with all degrees 2.</p>
+      <p class="small">Dualise "degree = 2" with $\pi_v$: edge costs become $d_{ij} + \pi_i + \pi_j$, and</p>
+      $$L(\pi) = \min_{T \text{ 1-tree}} \sum_{ij \in T} (d_{ij} + \pi_i + \pi_j) - 2 \sum_v \pi_v$$
+      <p class="small">Subgradient: $g_v = \deg_T(v) - 2$. Raise the price of vertices with too many edges. If $g = 0$, the 1-tree is a tour, and it's optimal.</p>
+    </div>
+    <div>
+      <div class="box thm"><span class="label">the bound equals the subtour LP</span>
+        <p class="small">The 1-tree polytope's LP description is integral (a matroid-type polytope, unit 13), so by Geoffrion</p>
+        $$\max_\pi L(\pi) = z_{\text{subtour LP}}$$
+      </div>
+      <table>
+        <thead><tr><th class="num">n</th><th class="num">opt</th><th class="num">degree LP</th><th class="num">subtour LP</th><th class="num">Held–Karp</th></tr></thead>
+        <tbody>
+          <tr><td class="num">30</td><td class="num">482</td><td class="num">470.5</td><td class="num">480.50</td><td class="num">480.50</td></tr>
+          <tr><td class="num">60</td><td class="num">627</td><td class="num">572.5</td><td class="num">621.50</td><td class="num">621.50</td></tr>
+          <tr><td class="num">100</td><td class="num">776</td><td class="num">744.0</td><td class="num">771.50</td><td class="num">771.50</td></tr>
+          <tr><td class="num">150</td><td class="num">921</td><td class="num">873.0</td><td class="num">918.75</td><td class="num">918.27</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>This is the curriculum's "then" step: the Held–Karp bound and the root LP bound are close,
+    and the reason is Geoffrion's theorem. The subtour LP is what a MIP solver reaches at the
+    root after separating subtour cuts (unit 09), and the Lagrangian dual of the 1-tree
+    relaxation is the same number. At $n = 150$ the ascent stopped at the 1000-iteration limit,
+    0.05% short.</p>
+    <p>Historically, Held and Karp's bound let branch-and-bound solve TSPs of 50–100 cities
+    in the early 1970s. Concorde now uses LP with cutting planes instead, because an LP gives
+    duals for cut separation and is exact. But LKH, the best heuristic, uses the Held–Karp
+    multipliers to build its candidate edge lists (α-nearness, Helsgaun 2000). An edge's
+    α-value is exactly lab step 3's "cost of the cheapest 1-tree containing it".</p>
+  </aside>
+</section>
+
+<section class="divider">
+  <p class="eyebrow">section 4</p>
+  <h2>Using the multipliers</h2>
+  <p>A bound is also a guide.</p>
+</section>
+
+<section>
+  <p class="eyebrow">11 · using the multipliers</p>
+  <h2>Fixing variables, and repairing solutions</h2>
+  <div class="cols">
+    <div>
+      <div class="box thm"><span class="label">reduced-cost fixing</span>
+        <p class="small">If every solution with $x_e = 1$ has Lagrangian value at least $L(u) + \rho_e$, and $L(u) + \rho_e &gt; \bar z$, then $x_e = 0$ in every solution better than the incumbent $\bar z$.</p>
+        <p class="small">For 1-trees: $\rho_e = c_e - (\text{heaviest edge on the tree path})$, the matroid exchange of unit 13.</p>
+      </div>
+      <p class="small">Lab <code>then</code>, with the optimum as $\bar z$: <b>89% / 89% / 93% / 96%</b> of edges eliminated at $n$ = 30 / 60 / 100 / 150.</p>
+    </div>
+    <div>
+      <div class="box def"><span class="label">Lagrangian heuristics</span>
+        <p class="small">The relaxed solution violates only the dualised constraints, and often only slightly. Repair it. For GAP from relaxation A: every agent is within capacity, jobs are over- or under-assigned, so keep the cheapest copy and place the rest by regret (lab step 5).</p>
+      </div>
+      <table>
+        <thead><tr><th>m × n</th><th class="num">opt</th><th class="num">bound A</th><th class="num">repair</th></tr></thead>
+        <tbody>
+          <tr><td>5 × 25</td><td class="num">452</td><td class="num">452.00</td><td class="num">452</td></tr>
+          <tr><td>5 × 40</td><td class="num">682</td><td class="num">682.00</td><td class="num">682</td></tr>
+          <tr><td>8 × 60</td><td class="num">905</td><td class="num">902.83</td><td class="num">stuck</td></tr>
+          <tr><td>10 × 80</td><td class="num">1084</td><td class="num">1083.71</td><td class="num">1178</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>Fixing is the same logic as LP reduced-cost fixing in MIP solvers (unit 07's node LPs
+    provide the reduced costs). It needs an upper bound, which is why good heuristics and good
+    bounds reinforce each other. A better incumbent fixes more variables, and a smaller problem
+    makes the next bound cheaper and tighter.</p>
+    <p>The repair heuristic's results are mixed, and honestly so. On tight instances a greedy
+    repair can get stuck (8 × 60) or land 9% above the optimum (10 × 80) even from an excellent
+    bound. Production codes run the repair every few iterations from different multipliers and
+    follow it with local search.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">11 · lab</p>
+  <h2>Lab 11 — what you build</h2>
+  <div class="lab">
+    <span class="label">about 2½ hours · uv run co lab 11</span>
+    <ol>
+      <li><b>The minimum 1-tree</b> under multipliers.</li>
+      <li><b>Subgradient ascent</b> (Polyak step, halving) and the <b>Held–Karp bound</b>.</li>
+      <li><b>Edge fixing</b> by 1-tree reduced costs.</li>
+      <li><b>Two relaxations of GAP</b>: one that can beat the LP, one that cannot.</li>
+      <li><b>A Lagrangian repair heuristic</b>.</li>
+    </ol>
+  </div>
+<pre><code class="language-bash">uv run co test 11
+uv run co then 11     # HK vs degree LP and subtour LP · GAP bounds · the zig-zag</code></pre>
+  <aside class="notes">
+    <p>Step 3's test compares your fixed set with a brute-force computation of "the cheapest
+    1-tree forced to contain e" for every edge and three thresholds, so an off-by-one in the
+    path maximum or the vertex-0 case shows up immediately.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">11 · checkpoint</p>
+  <h2>Done when</h2>
+  <div class="box good"><span class="label">checkpoint</span>
+    <ul>
+      <li>All five lab steps are ✓.</li>
+      <li>Before writing any code, you can predict whether dualising a given constraint set will beat the LP relaxation, using the integrality property.</li>
+      <li>You can say why the Held–Karp bound equals the subtour LP.</li>
+    </ul>
+  </div>
+  <div class="cols">
+    <div>
+      <h3>Reading</h3>
+      <p class="small">Geoffrion, <em>Math. Programming Study</em> 2 (1974).<br>
+      Held & Karp, <em>Operations Research</em> 18 (1970); <em>Math. Prog.</em> 1 (1971).<br>
+      Fisher, <em>Management Science</em> 27 (1981).<br>
+      Held, Wolfe & Crowder, <em>Math. Prog.</em> 6 (1974).</p>
+    </div>
+    <div>
+      <h3>Next</h3>
+      <p class="small"><b>12</b> Benders decomposition, the row-generation twin · <b>23</b> Christofides, whose analysis uses the subtour LP bound again · <b>26</b> LKH's candidate sets.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>A worked prediction. Uncapacitated facility location, dualising "every customer is
+    served": the subproblem for facility $i$ is $\min f_i y_i + \sum_j (c_{ij} - u_j) x_{ij}$
+    with $x_{ij} \le y_i$ and binary variables. Its LP $\{0 \le x_{ij} \le y_i \le 1\}$ has
+    integral vertices, so the bound equals the strong (disaggregated) LP of unit 05. It is
+    still worth doing: that LP can be large, and the subproblem is solved by inspection.</p>
+  </aside>
+</section>
+
+</div></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/plugin/highlight/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<script src="../../slides/deck.js"></script>
+</body>
+</html>

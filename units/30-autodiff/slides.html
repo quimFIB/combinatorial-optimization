@@ -1,0 +1,350 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>30 · Automatic differentiation</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+<link rel="stylesheet" href="../../slides/deck.css">
+</head>
+<body data-trunk="coda">
+<div class="reveal"><div class="slides">
+
+<section class="title-slide">
+  <p class="eyebrow">Part VII · coda · the continuous cousin</p>
+  <div class="unit-no">30</div>
+  <h1>Automatic differentiation</h1>
+  <p class="lede">Dual numbers and forward mode, the tape and reverse mode, why a full gradient costs one backward pass, what it costs in memory, and where the answers quietly stop being derivatives.</p>
+  <p class="meta"><span>needs 29, 28</span><span>~1 h slides + 2½ h lab</span><span>lab: <code>uv run co lab 30</code></span></p>
+  <aside class="notes">
+    <p>Unit 29 assumed gradients were given. This unit builds the machine that produces them for any
+    program. The one fact that explains modern machine learning's existence is in section 2: reverse mode
+    computes a full gradient in a constant number of passes, regardless of the number of parameters.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">30 · overview</p>
+  <h2>The route</h2>
+  <div class="cols">
+    <div class="box def"><span class="label">1 · three kinds of derivative</span>
+      <p class="small">Symbolic, numerical, automatic; dual numbers and forward mode.</p></div>
+    <div class="box def"><span class="label">2 · reverse mode</span>
+      <p class="small">The Wengert tape, one backward sweep, and the cost measured.</p></div>
+  </div>
+  <div class="cols">
+    <div class="box def"><span class="label">3 · memory and higher order</span>
+      <p class="small">Tape size, checkpointing, JVPs and VJPs, Hessian-vector products.</p></div>
+    <div class="box def"><span class="label">4 · real data, and lies</span>
+      <p class="small">An MLP on terrain elevations; non-smooth points, branches, argmax.</p></div>
+  </div>
+  <aside class="notes">
+    <p>The checkpoint: your reverse-mode engine trains an MLP on a real dataset, and you compute the tape's
+    memory in bytes before running it. The lab's then step predicts 233 480 bytes per batch and measures
+    233 480.</p>
+  </aside>
+</section>
+
+<section class="divider">
+  <p class="eyebrow">section 1</p>
+  <h2>Three kinds of derivative</h2>
+  <p>Only one of them is exact and cheap.</p>
+</section>
+
+<section>
+  <p class="eyebrow">30 · kinds</p>
+  <h2>Symbolic, numerical, automatic</h2>
+  <div class="cols">
+    <div>
+      <table class="dense">
+        <thead><tr><th>method</th><th>what it does</th><th>failure mode</th></tr></thead>
+        <tbody>
+          <tr><td><b>symbolic</b></td><td>rewrites the formula</td><td>expression swell; no loops or branches</td></tr>
+          <tr><td><b>numerical</b></td><td>$\frac{f(x+h) - f(x-h)}{2h}$</td><td>truncation error $O(h^2)$ against rounding error $O(\epsilon/h)$; one evaluation pair per input</td></tr>
+          <tr><td><b>automatic</b></td><td>chain rule on the operations the program executed</td><td>differentiates the program, not the function (section 4)</td></tr>
+        </tbody>
+      </table>
+      <p class="small">Numerical derivatives are the <b>test oracle</b>: every op in the lab is gradient-checked against central differences.</p>
+    </div>
+    <div>
+      <div class="box def"><span class="label">forward mode: dual numbers</span>
+        $$\begin{aligned}(a + b\varepsilon)(c + d\varepsilon) &= ac + (ad + bc)\varepsilon, \quad \varepsilon^2 = 0 \\ g(a + b\varepsilon) &= g(a) + g'(a)\, b\,\varepsilon\end{aligned}$$
+        <p class="small">Seed $x = x_0 + 1\varepsilon$, run the program, read $f'(x_0)$ off the $\varepsilon$ part. For $f: \mathbb{R}^n \to \mathbb{R}$, one pass per input direction: <b>n passes</b> for a gradient.</p>
+      </div>
+      <p class="small muted">Lab step 1: twelve operators and five functions. The same code also accepts a Dual whose value is a Dual.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>The finite-difference trade-off: with h too large the Taylor remainder dominates, and with h too small
+    the subtraction f(x+h) − f(x−h) loses digits to rounding. For central differences in double precision
+    the sweet spot is around h ≈ 1e−5 to 1e−6, giving about 10 correct digits. The lab tests use exactly
+    that, and compare to 1e−4 or 1e−6 relative tolerance.</p>
+    <p>Expression swell: the symbolic derivative of a product of n factors has n terms, each with n − 1
+    factors. Automatic differentiation keeps the intermediate values instead of expanding the formula,
+    which is why its cost stays proportional to the program's.</p>
+  </aside>
+</section>
+
+<section class="divider">
+  <p class="eyebrow">section 2</p>
+  <h2>Reverse mode</h2>
+  <p>The whole gradient in one backward pass.</p>
+</section>
+
+<section>
+  <p class="eyebrow">30 · reverse</p>
+  <h2>The Wengert tape</h2>
+  <div class="cols">
+    <div>
+      <p class="small">Record every operation with its inputs and local derivatives. Then sweep backwards, with adjoints $\bar v = \partial f / \partial v$:</p>
+      $$\bar u \mathrel{+}= \bar v \cdot \frac{\partial v}{\partial u}$$
+      <p class="small">for each edge $u \to v$, visiting nodes in reverse topological order.</p>
+      <div class="box proof"><span class="label">the cost argument</span>
+        <p class="small">Each operation's backward step costs a small constant times its forward step. So a <b>full gradient</b> costs a constant multiple of <b>one function evaluation</b>, whatever the number of inputs. Griewank's cheap gradient principle bounds that constant by a small number, about 4 to 5 for standard operation sets.</p>
+      </div>
+      <p class="small muted">Wengert (1964) for the recorded list; Linnainmaa (1970) for reverse accumulation; backpropagation (Rumelhart, Hinton & Williams 1986) is reverse mode on a network.</p>
+    </div>
+    <div>
+      <p class="small">Lab <code>then</code>, gradient of $\sum_i \sin(x_i)\, x_{i+1}$:</p>
+      <table class="dense">
+        <thead><tr><th class="num">n</th><th class="num">forward (n passes)</th><th class="num">reverse (1 sweep)</th><th class="num">jax.grad, jit</th></tr></thead>
+        <tbody>
+          <tr><td class="num">10</td><td class="num">0.000 s</td><td class="num">0.0001 s</td><td class="num">0.0002 s</td></tr>
+          <tr><td class="num">100</td><td class="num">0.014 s</td><td class="num">0.0007 s</td><td class="num">0.0004 s</td></tr>
+          <tr><td class="num">1 000</td><td class="num"><b>1.55 s</b></td><td class="num"><b>0.0057 s</b></td><td class="num">0.0021 s</td></tr>
+        </tbody>
+      </table>
+      <p class="small">Forward mode grows like $n^2$, reverse like $n$. At a million parameters, forward mode is a million passes and reverse mode is one.</p>
+      <div class="box warn"><span class="label">two traps in the sweep</span>
+        <p class="small"><b>Each node once</b>: a graph with $2^{30}$ paths but 33 nodes must take 33 steps. <b>No recursion</b>: a 20 000-deep graph overflows Python's stack. Lab step 2 tests both.</p>
+      </div>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>For f: Rⁿ → Rᵐ, forward mode computes one Jacobian column per pass (a JVP) and reverse mode one row per
+    pass (a VJP). So forward mode wins when m ≫ n, as for a function of one parameter with many outputs,
+    and reverse mode wins when n ≫ m, which is every loss function.</p>
+    <p>Why the jit column is faster than the lab's reverse mode at n = 1 000: the lab's scalar tape
+    allocates a Python object per operation. JAX traces the program once into array operations. The
+    asymptotics are the same; the constant differs by Python's per-object overhead.</p>
+  </aside>
+</section>
+
+<section class="divider">
+  <p class="eyebrow">section 3</p>
+  <h2>Memory and higher order</h2>
+  <p>The tape is the price.</p>
+</section>
+
+<section>
+  <p class="eyebrow">30 · memory</p>
+  <h2>What the tape holds, and checkpointing</h2>
+  <div class="cols">
+    <div>
+      <p class="small">Reverse mode must keep every intermediate its backward steps need until the sweep reaches them. For the lab's MLP, the distinct arrays are:</p>
+      <ul class="small">
+        <li>the input batch: batch × in</li>
+        <li>per layer: W (m × n), matmul output and bias-add output (batch × n each)</li>
+        <li>per hidden layer: the tanh output (batch × n), which its vjp reuses</li>
+        <li>the loss's difference array (batch × out), and the scalar loss</li>
+      </ul>
+      <p class="small">MLP [2, 64, 64, 1], batch 64: <b>predicted 233 480 bytes, measured 233 480 bytes.</b></p>
+    </div>
+    <div>
+      <div class="box def"><span class="label">checkpointing</span>
+        <p class="small">Keep only some intermediates and recompute the rest during the backward sweep. Keeping every $\sqrt{L}$-th layer of an $L$-layer chain costs $O(\sqrt L)$ memory and about one extra forward pass (Chen et al. 2016). Griewank's <b>revolve</b> gets $O(\log L)$ memory for $O(\log L)$ times the compute, which is optimal for chains.</p>
+      </div>
+      <div class="box good"><span class="label">why memory, not time, is the limit</span>
+        <p class="small">Activation memory grows with batch × width × depth and must coexist on the device. Parameters are a fixed cost. That's why large-model training is designed around the tape.</p>
+      </div>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>What isn't on the tape matters as much. The biases aren't: add_bias's vjp needs only the incoming
+    gradient. The matmul's saved input for layers after the first is the previous tanh output, which is
+    already counted. Counting by array identity rather than by operation is what makes the prediction exact.</p>
+    <p>In-place mutation is the classic way to break a tape: if an array saved for backward is modified
+    during the forward pass, the vjp silently uses the wrong values. PyTorch tracks version counters on
+    tensors to detect exactly this, and JAX forbids mutation of traced arrays.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">30 · higher order</p>
+  <h2>JVPs, VJPs, and Hessian-vector products</h2>
+  <div class="cols">
+    <div>
+      <table class="dense">
+        <thead><tr><th>primitive</th><th>computes</th><th>by</th></tr></thead>
+        <tbody>
+          <tr><td>JVP</td><td>$J v$ (one Jacobian column combination)</td><td>forward mode</td></tr>
+          <tr><td>VJP</td><td>$u^\top J$ (one row combination)</td><td>reverse mode</td></tr>
+          <tr><td>HVP</td><td>$H v = \frac{d}{d\varepsilon} \nabla f(x + \varepsilon v)$</td><td>forward over reverse</td></tr>
+        </tbody>
+      </table>
+      <div class="box proof"><span class="label">forward over reverse in the lab</span>
+        <p class="small">Write the reverse-mode tape so its values can be dual numbers. Seed inputs $x_i + v_i\varepsilon$, sweep backwards, and the $\varepsilon$ parts of the gradient are $Hv$. One forward and one backward pass: no Hessian is ever formed.</p>
+      </div>
+    </div>
+    <div>
+      <p class="small">Lab <code>then</code>, float64, 20 random points, largest absolute difference:</p>
+      <table class="dense">
+        <thead><tr><th>yours</th><th>against</th><th class="num">difference</th></tr></thead>
+        <tbody>
+          <tr><td>reverse-mode gradient</td><td><code>jax.grad</code></td><td class="num">8.9e−16</td></tr>
+          <tr><td>forward-mode Jacobian</td><td><code>jacfwd</code>, <code>jacrev</code></td><td class="num">8.9e−16</td></tr>
+          <tr><td>forward-over-reverse HVP</td><td><code>jax.hessian</code> @ v</td><td class="num">1.6e−15</td></tr>
+          <tr><td>an MLP batch's gradients</td><td><code>jax.grad</code></td><td class="num">3.9e−16</td></tr>
+        </tbody>
+      </table>
+      <p class="small">HVPs are what Newton-CG and truncated-Newton methods use, and what "is this point a saddle?" needs, at the cost of about two gradients.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>Agreement to machine precision is the expected result when both implementations apply the same chain
+    rule to the same operations in double precision. A difference of 1e−8 would indicate a bug or a
+    different operation (for example a fused kernel), not "numerical noise".</p>
+    <p>The dual-number trick generalises: nesting dual numbers gives higher derivatives (hyper-dual numbers),
+    and forward-over-reverse is the standard composition in JAX (jax.jvp of jax.grad).</p>
+  </aside>
+</section>
+
+<section class="divider">
+  <p class="eyebrow">section 4</p>
+  <h2>Real data, and lies</h2>
+  <p>What you get, and what you get wrong.</p>
+</section>
+
+<section>
+  <p class="eyebrow">30 · real data</p>
+  <h2>An MLP on terrain elevations</h2>
+  <div class="cols">
+    <div>
+      <p class="small">matplotlib's sample elevation model of the Jacksboro fault region: 344 × 403 heights, standard deviation 162.5 m. Learn elevation from grid coordinates: MLP 2 → 64 → 64 → 1, tanh, batch 64, 60 epochs of SGD. Train on 6 000 points, test on 6 000 others.</p>
+      <table class="dense">
+        <thead><tr><th>model</th><th class="num">test RMSE</th><th class="num">seconds</th></tr></thead>
+        <tbody>
+          <tr><td>predict the mean</td><td class="num">161.3 m</td><td></td></tr>
+          <tr><td>linear in (x, y)</td><td class="num">144.9 m</td><td></td></tr>
+          <tr><td><b>your MLP</b></td><td class="num"><b>90.4 m</b></td><td class="num">1.8</td></tr>
+          <tr><td>same in JAX (jit)</td><td class="num">90.4 m</td><td class="num">2.6</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div>
+      <ul class="small">
+        <li><b>It learns</b>: 90 m against 145 m for a plane, on data it didn't train on (train RMSE 88.6 m).</li>
+        <li><b>Identical to JAX</b>: same initial weights and batch order give the same test error, as they should when the gradients agree to 1e−16.</li>
+        <li><b>JAX was slower</b> at this size. With 64-unit layers, per-step overhead plausibly outweighs compilation. That's a statement about this size, not about JAX.</li>
+      </ul>
+      <p class="small muted">The dataset choice: sklearn isn't installed and downloads need permission, so the lab uses real data already shipped with matplotlib.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>90 m of error on a 160 m spread is modest. The terrain has ridges and valleys at scales a 64-unit tanh
+    network trained for 60 epochs can't represent. Coordinate networks with Fourier features, or simply
+    more epochs and width, do much better. The point of the exercise is the engine, and the baselines keep
+    the claim honest: the network does beat a plane by a wide margin.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">30 · lies</p>
+  <h2>Where autodiff quietly lies</h2>
+  <div class="cols">
+    <div>
+      <table class="dense">
+        <thead><tr><th>expression</th><th class="num">JAX's gradient</th><th>truth</th></tr></thead>
+        <tbody>
+          <tr><td><code>jnp.maximum(x, 0)</code> at 0</td><td class="num">0.5</td><td>undefined (one-sided 0 and 1)</td></tr>
+          <tr><td><code>jax.nn.relu</code> at 0</td><td class="num">0.0</td><td>same function, other convention</td></tr>
+          <tr><td><code>jnp.abs</code> at 0</td><td class="num">1.0</td><td>undefined (one-sided −1, 1)</td></tr>
+          <tr><td><code>sqrt(x²)</code> at 0</td><td class="num">nan</td><td>undefined; 0 · ∞ in the chain rule</td></tr>
+          <tr><td><code>where(x != 1, x, 1.0)</code> at 1</td><td class="num">0.0</td><td>the identity: 1</td></tr>
+          <tr><td><code>argmax([x, 0.5])</code> at 0.2</td><td class="num">0.0</td><td>0 a.e., a jump at 0.5</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div>
+      <div class="box warn"><span class="label">the rule</span>
+        <p class="small">Autodiff differentiates <b>the program that ran</b>, branch by branch. Where the program branches on a value, or uses a function at a kink, the result is a convention, not a derivative.</p>
+      </div>
+      <ul class="small">
+        <li><b>Non-smooth points</b>: a subgradient if you're lucky, a library convention otherwise.</li>
+        <li><b>Control flow</b>: the derivative of the branch taken, blind to the other branch.</li>
+        <li><b>In-place mutation</b>: saved values overwritten before backward.</li>
+        <li><b>argmax, sorting, rounding</b>: derivatives exist and are zero almost everywhere, which is useless for learning.</li>
+      </ul>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>The last bullet is the bridge to unit 31. Every discrete decision in this course (a branching
+    variable, a matching, a tour) is an argmax. Its derivative is zero almost everywhere and undefined at
+    the switching points. Unit 31 asks what to do about that: relax the discrete choice (Sinkhorn,
+    Gumbel-softmax), estimate gradients another way (straight-through, REINFORCE), or differentiate the
+    optimality conditions of a continuous relaxation (the implicit function theorem on KKT).</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">30 · lab</p>
+  <h2>Lab 30 — what you build</h2>
+  <div class="lab">
+    <span class="label">about 2½ hours · uv run co lab 30</span>
+    <ol>
+      <li><b>Dual numbers</b> and forward-mode gradients.</li>
+      <li><b>A scalar reverse-mode tape</b>, and Hessian-vector products by forward over reverse.</li>
+      <li><b>An array tape</b> with four ops, their vjps, and a gradient checker.</li>
+      <li><b>An MLP</b>: loss, gradients, training, and its tape size predicted from the architecture.</li>
+    </ol>
+  </div>
+<pre><code class="language-bash">uv run co test 30
+uv run co then 30     # agreement with JAX · forward vs reverse cost · terrain MLP · where autodiff lies</code></pre>
+  <aside class="notes">
+    <p>The four steps are ordered so each engine tests the next: dual numbers check the scalar tape, the scalar
+    tape's design produces HVPs, finite differences check the array ops, and the array tape's memory is
+    predicted in closed form before any training runs.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">30 · checkpoint</p>
+  <h2>Done when</h2>
+  <div class="box good"><span class="label">checkpoint</span>
+    <ul>
+      <li>All four lab steps are ✓.</li>
+      <li>Your reverse-mode engine trains an MLP on a real dataset, and you can compute the tape's memory cost in bytes before you run it.</li>
+      <li>You can say, for a given program, where its autodiff gradient is a convention rather than a derivative.</li>
+    </ul>
+  </div>
+  <div class="cols">
+    <div>
+      <h3>Reading</h3>
+      <p class="small">Baydin et al., <em>JMLR</em> 18 (2018).<br>
+      Griewank & Walther, <em>Evaluating Derivatives</em> (2008).<br>
+      Chen, Xu, Zhang & Guestrin, "Training deep nets with sublinear memory cost", arXiv (2016).<br>
+      Karpathy, <em>micrograd</em> (2020).</p>
+    </div>
+    <div>
+      <h3>Next</h3>
+      <p class="small"><b>31</b> where discrete meets differentiable: Sinkhorn, Gumbel, argmin layers, and a learned branching rule.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>Unit 31 uses this unit's engine ideas with JAX doing the bookkeeping, and turns to the question section
+    4 raised: gradients through discrete decisions.</p>
+  </aside>
+</section>
+
+</div></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/plugin/highlight/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<script src="../../slides/deck.js"></script>
+</body>
+</html>

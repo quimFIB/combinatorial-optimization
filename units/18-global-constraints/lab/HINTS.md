@@ -1,0 +1,119 @@
+# Hints — lab 18
+
+One rung at a time; then `solution/lab.py` or `solution/functional.py`.
+
+## Step 1 — The value graph
+
+<details><summary>Rung 1</summary>
+
+`values = sorted({a + o for x, o in zip(xs, offsets) for a in dom[x]})`, then
+`index = {v: k for k, v in enumerate(values)}`, and edges
+`(i, index[a + o])` for each position i and each a in `dom[xs[i]]`. The matching is
+`hopcroft_karp(len(xs), len(values), edges)`.
+</details>
+
+<details><summary>Functional route</summary>
+
+Two comprehensions: the sorted set of shifted values, and the edges `(position, value index)` read through an
+index dict. The matching is unit 15's Hopcroft–Karp, which is a pure call from here.
+</details>
+
+## Step 2 — Régin
+
+<details><summary>Rung 1 — orientation</summary>
+
+Give variables node ids 0..n−1 and value k the id n + k. For each edge (i, k): if
+`matching[i] == k`, add the arc n + k → i; otherwise add i → n + k. A path in this graph
+alternates unmatched and matched edges.
+</details>
+
+<details><summary>Rung 2 — the three reasons to keep an edge</summary>
+
+- matched;
+- i and n + k in the same strongly connected component (an even alternating cycle);
+- n + k can reach a free value node (an even alternating path ending at a free value).
+
+For the third, collect the free value nodes and search **backwards** (along reversed arcs)
+from them. Every node found can reach a free value.
+</details>
+
+<details><summary>Rung 3 — SCCs without recursion</summary>
+
+Recursive Tarjan hits Python's recursion limit on large domains. Either write it with an
+explicit stack of (node, next-successor index), or use Kosaraju: DFS finishing order on the
+graph, then DFS on the reversed graph in decreasing finish order. For the lab's sizes,
+"u and w reach each other", checked with two searches, is also fine.
+</details>
+
+<details><summary>Rung 4 — the Hall set</summary>
+
+Search forwards from the removed value's node. If you reach x itself, or a free value, the
+edge was supported: return None. Otherwise every value you reached is matched to a variable
+you reached, and every variable you reached has all its values among them. That set of
+variables is a Hall set, and it contains a's value but not x.
+</details>
+
+<details><summary>Functional route</summary>
+
+Reachability is a fixpoint over frozensets: `grow(seen)` adds every successor, `tz.iterate` repeats it, and
+`tz.sliding_window(2, ...)` stops at the first unchanged set. Adjacency is `tz.valmap` over `tz.groupby` of the
+oriented arcs, in either direction. Instead of Tarjan, two vertices share an SCC when each reaches the other,
+which is two closures. That's quadratic, but it's the definition. An edge is kept if it's matched, if it
+reaches a free value backwards, or if both ends are in one SCC. The same closure gives the Hall set.
+</details>
+
+## Step 3 — Cumulative
+
+<details><summary>Rung 1</summary>
+
+For each task: `lst = max(dom[s])`, `ect = min(dom[s]) + d`, part = `range(lst, ect)` when
+`lst < ect`. Add each part's demand to a dict profile, failing as soon as a time exceeds
+capacity. For task i and start t, test every u in `range(t, t + d)`: remove i's own demand from
+`profile[u]` if u is in its own part, then add it back as if placed at t.
+</details>
+
+<details><summary>Rung 2 — why subtract its own part</summary>
+
+Without it, a task's compulsory part collides with itself: a task fixed at 3 would see its own
+demand at 3 and reject its only start value.
+</details>
+
+<details><summary>Functional route</summary>
+
+No state: the compulsory parts are ranges, the profile is `tz.merge_with(sum, ...)` over one singleton dict
+per (task, time), and filtering is a frozenset comprehension per start variable. "Subtract its own part" is
+the conditional term inside `fits`.
+</details>
+
+## Step 4 — Models
+
+<details><summary>Rung 1 — queens and sudoku</summary>
+
+`AllDifferent(range(n))`, `AllDifferent(range(n), [i for i in range(n)])` and
+`AllDifferent(range(n), [-i for i in range(n)])`. For sudoku, reuse unit 17's groups, one
+AllDifferent each.
+</details>
+
+<details><summary>Rung 2 — job-shop</summary>
+
+`ops = [(j, k) for j, job in enumerate(shop.jobs) for k in range(len(job))]` and
+`var[op] = its index`. The chain inside a job is `cp.LinearLe([s_k, s_{k+1}], [1, -1], -d_k)`.
+The makespan var is `len(ops)`. Pairwise machine constraints:
+`cp.Binary(a, b, lambda s, t, da=da, db=db: s + da <= t or t + db <= s)`. Bind da and db as
+defaults, or every lambda sees the last loop values.
+</details>
+
+<details><summary>Rung 3 — minimise</summary>
+
+Loop: `sols, st = cp.solve(domains, props + extra, node_limit=remaining)`, accumulating stats.
+If there's no solution, stop, and completeness is `st.extra["complete"]`. Otherwise record the
+value and set `extra = [cp.LinearLe([objective], [1], value - 1)]`.
+</details>
+
+<details><summary>Functional route</summary>
+
+Models are comprehensions over data, with `tz.groupby` giving the operations on each machine. `minimise` is
+an unfold over `(best, best solution, trace, accumulated Stats, done)`: each step re-solves with one more
+`LinearLe` bounding the objective below the incumbent, and builds a fresh `Stats` with the totals rather than
+adding to one in place.
+</details>

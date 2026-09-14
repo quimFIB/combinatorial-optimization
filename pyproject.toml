@@ -1,0 +1,39 @@
+[project]
+name = "colib"
+version = "0.1.0"
+description = "Shared scaffolding for the combinatorial optimization curriculum: problems, oracle, harness, lab runner."
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "numpy>=2.0",
+    "scipy>=1.13",
+    "matplotlib>=3.8",
+    "pytest>=8.0",
+    "toolz>=1.0",       # functional toolkit: pipe, curry, groupby, reduceby, unique …
+    # The industrial tools each lab's "then" step compares against. Gurobi is
+    # never required: a lab uses it only if gurobipy is installed and licensed.
+    "highspy==1.13.1",     # LP/MIP (HiGHS). 1.15 clashes with ortools 9.15 in one process; 1.14.0 has a MIP presolve bug (unit 05)
+    "pyscipopt>=5.0",      # branch-and-cut with callbacks (SCIP)
+    "ortools>=9.10",       # CP-SAT, max-flow, min-cost flow, routing
+    "python-sat>=1.8.dev0",# CaDiCaL / MiniSat / Glucose bindings
+    "networkx>=3.2",       # graph algorithms for cross-checks
+    "cvxpy>=1.5",          # SDP (unit 25), convex (29, 31)
+    "jax>=0.4",            # autodiff reference (units 30-31), CPU
+]
+
+
+[project.scripts]
+co = "colib.cli:main"
+
+[project.entry-points.pytest11]
+colib = "colib.testing"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["colib"]
+
+[tool.pytest.ini_options]
+testpaths = ["units"]
+addopts = "-q --import-mode=importlib"

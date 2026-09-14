@@ -1,0 +1,223 @@
+# Hints — capstone
+
+One rung at a time; then `solution/lab.py` or `solution/functional.py`.
+
+## Step 1 — Schedules and a certificate
+
+<details><summary>Rung 1 — the forward pass</summary>
+
+Keep the current time and the last vertex, starting at (ready₀, depot). For each customer c, the service
+start is max(ready_c, time + service_last + dist(last, c)). Waiting is free: that `max` is the whole
+time-window model. Check the due time as you go, the capacity once, and the return to the depot at the end.
+</details>
+
+<details><summary>Rung 2 — the backward pass</summary>
+
+latest_starts is the same recurrence run from the other end, with `min` in place of `max`: the vehicle
+must be back by due₀, so the last customer must start by due₀ − s − d(last, 0), and by its own due time.
+Step 5 uses the pair: an insertion is feasible exactly when the pushed-forward start at the next
+customer is still no later than that customer's latest start.
+</details>
+
+<details><summary>Rung 3 — routes from arcs</summary>
+
+Build successor lists. Vertex 0 may have many successors (one per route); any other vertex with two is an
+error. Walk from each successor of 0 until you're back at 0. If you meet a vertex twice, or a vertex with
+no successor, the walk never returns. At the end, count: every route of k customers uses k + 1 arcs, and
+if the total is less than the number of arcs, the rest form a subtour.
+</details>
+
+<details><summary>Functional route</summary>
+
+`schedule` is `accumulate` over the legs `zip((0, *route), route)` with `initial=ready[0]`.
+`latest_starts` is the same over the reversed legs, reversed back. `violations` is set algebra over
+`tz.frequencies` of the customers. In `routes_from_arcs`, `tz.iterate` of "the successor of v", with
+`takewhile(v != 0)`, is a walk; cap it with `tz.take(len(arcs) + 1, ...)` so a cycle can't run forever.
+</details>
+
+## Step 2 — (a) Branch-and-cut on SCIP
+
+<details><summary>Rung 1 — why capacity can be left out of the model</summary>
+
+The big-M time constraints already rule out subtours: around a cycle of customers, each start would
+have to exceed the previous one by s_i + d_ij, which is positive in every instance here (service times are
+positive), back to itself. What they don't enforce is load.
+An integer x that respects the degree and time constraints is a set of depot routes, and a route
+carrying more than Q is a customer set S with only one arc entering it but ⌈q(S)/Q⌉ ≥ 2. That's a
+violated rounded capacity inequality, so a handler that separates them on integer solutions makes the
+model exact.
+</details>
+
+<details><summary>Rung 2 — separation by components</summary>
+
+Treat the support (arcs between customers with x > eps) as an undirected graph and take its connected
+components, with union–find or `networkx.connected_components`. For each component S, add up x on the
+arcs entering it from outside (the depot included) and compare with ⌈q(S)/Q⌉. On an integer solution
+the components are exactly the routes. On a fractional one this finds some violated cuts, not all:
+exact separation of rounded capacity inequalities is NP-hard, and CVRPSEP (Lysgaard) is what serious
+codes use.
+</details>
+
+<details><summary>Rung 3 — building the SCIP model</summary>
+
+`Model()`, `hideOutput()`, `setParam("limits/time", ...)`. One binary per arc with the distance as its
+objective coefficient, `addVar(lb=..., ub=...)` for each t_c. The degree rows are two `quicksum`s per
+customer. Then `lazy_cut_handler(m, x, separate)`, where `separate(values)` returns
+`[(entering arcs, rhs), ...]`. With `cuts=False`, return `[]` whenever some value is fractional, so cuts
+are only used to reject integer solutions. Read routes with `getSolVal(getBestSol(), x[a]) > 0.5` and
+`routes_from_arcs`. The bound is `getDualbound()`, rounded up because distances are integers.
+</details>
+
+<details><summary>Functional route</summary>
+
+The separator is pure: components, then a comprehension that keeps the violated ones. The model builder is
+imperative because SCIP's API is. Keep its loops to comprehensions over `tz.groupby(0, arcs)` and
+`tz.groupby(1, arcs)` for the degree rows.
+</details>
+
+## Step 3 — (b) Branch-and-price
+
+<details><summary>Rung 1 — the label and its extension</summary>
+
+A label is (reduced cost, load, start time, mask, route). Extending from v to w adds dist(v, w) − π_w,
+adds demand_w, sets the start to max(ready_w, t + s_v + d_vw), and sets bit w. Then add to the mask every
+customer that the new label can no longer reach, by load or by time. Closing a label at the depot adds
+dist(v, 0), and is only allowed if the vehicle is back by due₀.
+</details>
+
+<details><summary>Rung 2 — dominance</summary>
+
+At the same vertex, L dominates L′ when L is no worse in every resource (cost, load, time) and L can
+still visit everything L′ can (L's mask ⊆ L′'s: `a & b == a`). Every completion of L′ is then also a
+completion of L, at no greater cost. Before adding a label, check whether an existing one dominates it;
+if not, remove the labels it dominates. The Feillet mask makes dominance fire more often: two labels
+that visited different customers can still nest once unreachable customers count as visited.
+</details>
+
+<details><summary>Rung 3 — the master and its duals</summary>
+
+With HiGHS, add n equality rows first, then columns with `addCol(cost, 0, inf, len, rows, ones)`:
+the artificial singletons (cost 2 Σ max distance + 1), then the real columns. After `run()`,
+`getSolution().row_dual` gives π, in the convention reduced cost = c − Σ π. Keep one `Highs` object for
+the whole loop and add columns as pricing finds them; rebuilding the LP every iteration works, but
+is slower.
+</details>
+
+<details><summary>Rung 4 — branching and the tree</summary>
+
+Node state is just the frozen set of forbidden arcs. Filter the shared columns by it, and give the pricer
+only the allowed successors. Forcing arc (i, j) means forbidding the alternatives, which keeps pricing a
+plain shortest-path problem. If all arc flows are integral, each customer has one arc in and one out with
+flow 1, so every column in the support follows the same successors: λ is integral too. A best-first heap
+of (bound, counter, forbidden) orders the nodes. When time runs out, the proven bound is the smallest
+bound left in the heap.
+</details>
+
+<details><summary>Rung 5 — when it's slow</summary>
+
+The time goes into exact pricing on wide windows, where routes are long and labels rarely dominate each
+other. The standard remedies, none required here, are ng-route relaxation (the mask only remembers
+customers in a small neighbourhood), bidirectional labelling, completion bounds, and strengthening the
+master with subset-row cuts. `then` shows where the pure-Python pricer stops keeping up.
+</details>
+
+<details><summary>Functional route</summary>
+
+The pricer can be a fixpoint: `buckets` is a dict of tuples, `merge(buckets, label)` returns a new dict,
+and a round extends the frontier and keeps the labels that survived. Stop when the frontier is empty.
+Branch-and-price is an unfold over (open nodes as a sorted tuple, columns, incumbent, node count, stopped).
+The HiGHS master is a live object you add columns to, so it stays mutable, local to `column_generation`.
+</details>
+
+## Step 4 — (c) CP-SAT
+
+<details><summary>Rung 1 — the model</summary>
+
+`add_multiple_circuit([(i, j, literal), ...])` treats node 0 as the depot, which may have many circuits
+through it, and every other node must be on exactly one of them. That constraint replaces the degree
+rows and the subtour logic at once. Time and load are then enforced by
+`m.add(t[j] >= t[i] + s_i + d_ij).only_enforce_if(b)`: no big-M, because CP-SAT propagates the
+implication directly.
+</details>
+
+<details><summary>Rung 2 — hints and strategies</summary>
+
+`model.add_hint(literal, value)` for every arc gives a complete hint. CP-SAT tries the hinted values
+first, so a complete, feasible hint usually becomes an early incumbent. The test checks the hint with
+`fix_variables_to_their_hinted_value`. `add_decision_strategy(literals, CHOOSE_FIRST, SELECT_MAX_VALUE)`
+fixes the branching order, but with one worker it's only followed under `search_branching = FIXED_SEARCH`.
+Otherwise the solver's own search takes over. Whether your strategy is an improvement is a question for
+`then`, not for the test.
+</details>
+
+<details><summary>Functional route</summary>
+
+Nothing much changes: CP-SAT's model is built by calls, like SCIP's. The set of arcs used by a hint is one
+comprehension over `_path_arcs(route)`.
+</details>
+
+## Step 5 — (d) ALNS
+
+<details><summary>Rung 1 — constant-time insertion</summary>
+
+Insert c between p and q. The new start at c is max(ready_c, start_p + s_p + d_pc); it must be ≤ due_c.
+The new arrival at q is that + s_c + d_cq; q's start is max(ready_q, arrival), and it must be
+≤ latest_starts[q]. Everything after q is then fine, by definition of latest. Waiting absorbs any push
+that doesn't exceed a latest start. The test compares with a full reschedule at every position.
+</details>
+
+<details><summary>Rung 2 — regret</summary>
+
+For each uninserted customer, take its best position in each route (one option per route) and add a new
+route of its own as one more option. Sort the options. Regret-k is Σ_{h=2..k} (option_h − option_1): how
+much it costs to postpone this customer if the best options fill up. Greedy (k = 1) has regret 0
+everywhere, so the tie-break, the cheapest best option, decides. Without the new-route option, repair can
+never increase the number of routes, and ALNS gets stuck with too few.
+</details>
+
+<details><summary>Rung 3 — Shaw removal</summary>
+
+Relatedness combines three normalised distances: in space, in service start time, and in demand. After the
+seed, each pick chooses an anchor among those already removed, ranks the rest by relatedness to it, and
+draws an index with u⁶ · len, which strongly favours the front of the list without always taking it.
+Follow the rng calls in exactly the documented order: the test replays them.
+</details>
+
+<details><summary>Rung 4 — the loop</summary>
+
+Unit 26's ALNS, with three destroy operators and three repair operators, each with its own roulette
+weights. It uses simulated annealing instead of a threshold. When a time limit rather than an iteration
+count ends the run, the fraction of time elapsed drives the temperature.
+</details>
+
+<details><summary>Functional route</summary>
+
+`shaw_removal` and `regret_insertion` are folds over range(q − 1) and range(len(removed)), with state
+(removed, remaining) and (routes, customers left). ALNS is an unfold over an 11-tuple state: iteration,
+current, best, both weight vectors, scores and uses. Stop when the iteration count or the clock says so.
+</details>
+
+## Step 6 — The referee
+
+<details><summary>Rung 1 — trust nothing</summary>
+
+Unit 00's lesson, applied to your own four methods: a result is only a claim. The adapter re-checks every
+solution with `violations` and recomputes its cost. `contradictions` catches the other kind of lie: a
+method claiming optimality while another has a strictly better valid solution. Both should come out
+empty in `then`. If one doesn't, you've found a bug, which is the point of the check.
+</details>
+
+<details><summary>Rung 2 — what to compare</summary>
+
+ALNS never proves anything and always uses its full time, so time to proof can't compare it. Primal gap at
+the limit can compare all four. Among the exact methods, PAR1 seconds (unit 28) compares time to proof.
+Average over seeds per instance, pair by instance, test with Wilcoxon, and correct with Holm, because
+`then` makes six comparisons at once. "Indistinguishable" is a result, not a failure to find one.
+</details>
+
+<details><summary>Functional route</summary>
+
+`references` is a `tz.groupby("instance", ...)` and a min. `head_to_head` builds the per-(solver, instance)
+means with `tz.valmap` over a `groupby`. Each pair is a pure function, and the Holm-adjusted verdicts are a
+`zip`.
+</details>

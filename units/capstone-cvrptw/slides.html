@@ -1,0 +1,469 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Capstone · One problem, four traditions</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+<link rel="stylesheet" href="../../slides/deck.css">
+</head>
+<body>
+<div class="reveal"><div class="slides">
+
+<section class="title-slide">
+  <p class="eyebrow">Capstone · everything converges</p>
+  <div class="unit-no">∗</div>
+  <h1>One problem, four traditions</h1>
+  <p class="lede">Vehicle routing with time windows, solved by branch-and-cut, branch-and-price, CP-SAT and ALNS, then refereed on Solomon's instances with unit 28's method.</p>
+  <p class="meta"><span>needs 07, 08, 10, 18–19, 26, 28</span><span>~1 h slides + 12–15 h lab</span><span>lab: <code>uv run co lab capstone</code></span></p>
+  <aside class="notes">
+    <p>The capstone is the one place in the course where the four traditions meet on a single problem:
+    polyhedral (a MIP with your cuts), decomposition (column generation inside a tree), constraint
+    programming (a circuit constraint and propagation), and local search (ALNS). Each has been built on its
+    own in earlier units. Here they have to be compared fairly, which is harder than building any of them.</p>
+    <p>The brief in the curriculum asks for "a defensible account of which instance characteristics favour
+    which method". So the deliverable is the report in <code>NOTES.md</code>, and the code is the means to
+    it. A method that wins nowhere is still a finding, if the evidence is attached.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">capstone · the problem</p>
+  <h2>VRPTW</h2>
+  <div class="cols">
+    <div>
+      <div class="box def"><span class="label">vehicle routing with time windows</span>
+        <p class="small">A depot 0 and customers $1..n$. Customer $i$ has demand $q_i$, a window $[a_i, b_i]$ in which service must <b>start</b>, and a service time $s_i$. Identical vehicles of capacity $Q$ leave the depot no earlier than $a_0$ and return by $b_0$. Travel time equals distance $d_{ij}$. Arriving early means waiting.</p>
+        <p class="small">Find routes that serve every customer once, within capacity and windows, minimising <b>total distance</b>. The fleet is unlimited.</p>
+      </div>
+      <p class="small">Along a route, service starts satisfy
+      $$t_j = \max\bigl(a_j,\; t_i + s_i + d_{ij}\bigr) \le b_j.$$
+      Waiting is free, so this recurrence is the entire time-window model.</p>
+    </div>
+    <div>
+      <table class="dense">
+        <thead><tr><th>Solomon (1987) series</th><th>customers</th><th>windows</th></tr></thead>
+        <tbody>
+          <tr><td>C1, C2</td><td>clustered</td><td rowspan="3">series 1: short horizon, tight windows, short routes<br>series 2: long horizon, wide windows, long routes</td></tr>
+          <tr><td>R1, R2</td><td>uniform random</td></tr>
+          <tr><td>RC1, RC2</td><td>mixed</td></tr>
+        </tbody>
+      </table>
+      <p class="small">56 instances of 100 customers, and the literature's 25- and 50-customer versions: the first $n$ customers of each file. <code>uv run co data</code> downloads them from SINTEF's mirror.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>Solomon's instances are forty years old and still the standard, because they vary exactly the two
+    things that change which method works: how customers are spread (clustered, random, mixed) and how
+    long the routes can be (series 1 against series 2). Series 2's horizons are several times longer,
+    so routes of 30 or more customers are feasible, which matters enormously for pricing in (b).</p>
+    <p>Gehring and Homberger's instances extend the same design to 200–1000 customers. They're
+    out of reach for the exact methods here, and the capstone doesn't use them.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">capstone · conventions</p>
+  <h2>Two objectives, and why the numbers are in tenths</h2>
+  <div class="cols">
+    <div class="box warn"><span class="label">the heuristic tables</span>
+      <p class="small">Minimise <b>vehicles first</b>, then distance, with double-precision Euclidean distances. SINTEF's best-known table uses this: R101 at 100 customers is 19 vehicles, 1650.80.</p>
+    </div>
+    <div class="box def"><span class="label">the exact literature, and this lab</span>
+      <p class="small">Minimise <b>distance only</b>, with $d_{ij} = \lfloor 10 \cdot \mathrm{euclid}(i, j) \rfloor / 10$, truncated to one decimal (Kallehauge et al. 2005; Baldacci, Mingozzi & Roberti 2011). Everything is stored as integers in tenths.</p>
+    </div>
+  </div>
+  <ul class="small">
+    <li><b>Integers</b> keep CP-SAT exact, make "equal cost" mean equal, and let a bound be rounded up: a node whose LP is 617.03 can't hold a solution under 617.1.</li>
+    <li><b>Truncation can break the triangle inequality</b> by up to 0.1. So set partitioning uses $= 1$, not $\ge 1$, where dropping a customer from a route could lengthen it.</li>
+    <li>The two objectives' results <b>aren't comparable</b>. A distance-only optimum may use more vehicles and less distance than the hierarchical best-known.</li>
+  </ul>
+  <p class="small">Check on convention: all four methods give R101.25 = 617.1, C101.25 = 191.3, RC101.25 = 461.1 and R201.25 = 463.3. As far as can be checked from memory, these match the optima reported in the exact literature.</p>
+  <aside class="notes">
+    <p>Mixing these conventions is the commonest way to produce a meaningless comparison table in VRPTW
+    papers. A heuristic that reports "1 % above best known" against the hierarchical table while
+    minimising distance only can look worse than it is, or better, depending on the instance.</p>
+    <p>The last line is deliberately hedged. The values were not looked up during the build: Solomon's own
+    page, which lists the small instances' optima, was unreachable. They're the values remembered from the
+    exact-methods literature, and they agree to the tenth on four instances across three series. That is
+    strong evidence the convention is right, but it isn't a citation.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">capstone · overview</p>
+  <h2>The four traditions, and the referee</h2>
+  <div class="cols">
+    <div class="box def"><span class="label">(a) polyhedral · step 2</span>
+      <p class="small">Arc variables on SCIP, big-M time propagation, and <b>your</b> rounded capacity cuts through a constraint handler. Units 05, 08, 09, 27.</p></div>
+    <div class="box def"><span class="label">(b) decomposition · step 3</span>
+      <p class="small">Set partitioning over routes, priced by an elementary shortest path with capacity and time windows, branching on arcs. Units 07, 10.</p></div>
+  </div>
+  <div class="cols">
+    <div class="box def"><span class="label">(c) constraint programming · step 4</span>
+      <p class="small">CP-SAT's multiple-circuit constraint with enforced time and load, plus a hint and a chosen strategy. Units 17–21.</p></div>
+    <div class="box def"><span class="label">(d) local search · step 5</span>
+      <p class="small">ALNS with constant-time feasible insertion, Shaw removal and regret repair. Units 19, 26.</p></div>
+  </div>
+  <div class="box good"><span class="label">the referee · steps 1 and 6</span>
+    <p class="small">A checker that trusts no method, primal gaps against the best any method found, paired tests with Holm's correction, and the verdict "indistinguishable" when the data say so. Units 00, 28.</p>
+  </div>
+  <aside class="notes">
+    <p>Step 1 comes first for the same reason unit 00 did: before any method runs, you need a way to tell
+    whether its answer is right. Here that means schedules, a violation checker and routes from arcs,
+    which all four methods reuse.</p>
+    <p>A practical note on scale: the capstone is several labs' worth of work. Steps 2–5 are each roughly one
+    earlier lab. The tests are fast (under ten seconds against the reference) because they check every
+    method against brute force on instances of up to about ten customers.</p>
+  </aside>
+</section>
+
+<section class="divider">
+  <p class="eyebrow">section 1</p>
+  <h2>Four models of one problem</h2>
+  <p>What each tradition writes down, and what it leaves to the solver.</p>
+</section>
+
+<section>
+  <p class="eyebrow">capstone · (a) branch-and-cut</p>
+  <h2>A compact model whose capacity lives in your cuts</h2>
+  <div class="cols">
+    <div>
+      <p class="small">$x_{ij} \in \{0,1\}$ for arcs that some route could use, and start times $t_i \in [a_i, b_i]$:</p>
+      $$\begin{aligned}
+      \min\ & \textstyle\sum d_{ij} x_{ij} \\
+      & x(\delta^+(i)) = x(\delta^-(i)) = 1 \quad i \ne 0 \\
+      & t_j \ge t_i + s_i + d_{ij} - M_{ij}(1 - x_{ij})
+      \end{aligned}$$
+      <p class="small">with $M_{ij} = \max(0,\ b_i + s_i + d_{ij} - a_j)$, the smallest $M$ that's valid.</p>
+      <p class="small">The time rows already rule out subtours: around a cycle, each start would exceed the previous one by $s_i + d_{ij} &gt; 0$. They don't limit <b>load</b>.</p>
+    </div>
+    <div>
+      <div class="box thm"><span class="label">rounded capacity inequalities</span>
+        <p class="small">For every customer set $S$: $\;x(\delta^-(S)) \ge \lceil q(S) / Q \rceil$.</p>
+      </div>
+      <p class="small">Separation by <b>connected components</b> of the support graph. On an integer point the components are the routes, so an overloaded route always yields a violated cut. That makes the handler exact as a lazy constraint. On a fractional point it's a heuristic: exact separation is NP-hard (CVRPSEP is the standard code).</p>
+      <p class="small"><code>colib.vrptw.lazy_cut_handler</code> supplies SCIP's plumbing; you supply <code>separate(values)</code>.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>The curriculum's brief says "cover and subtour cuts". For VRPTW the rounded capacity inequality is the
+    natural family: with $\lceil q(S)/Q \rceil$ replaced by 1 it's the subtour elimination constraint of unit
+    09, and it plays the role that covers played for knapsack rows in unit 08. The lab uses it for both
+    purposes. There are no knapsack rows here for classical covers to act on.</p>
+    <p>Big-M time windows give famously weak LP bounds. That's the price of a compact model, and it's what
+    section 3's tables show: the MIP proves small tight-window instances fast and stalls as horizons widen.
+    Stronger compact models exist (time-indexed or path-based), but they're larger, and at that point the
+    extended formulation in (b) is the better tool.</p>
+    <p>The "commercial solver" of the brief becomes SCIP, as throughout the course. That costs speed, not
+    the lesson.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">capstone · (b) branch-and-price</p>
+  <h2>Routes as columns, found by labelling</h2>
+  <div class="cols">
+    <div>
+      $$\min \sum_{r \in \Omega} c_r \lambda_r \quad \text{s.t.} \sum_{r \ni i} \lambda_r = 1\ \ \forall i,\quad \lambda \ge 0$$
+      <p class="small">$\Omega$ is every feasible route, too many to write down. Unit 10's loop: solve over a few, read duals $\pi$, and find a route with $c_r - \sum_{i \in r} \pi_i &lt; 0$.</p>
+      <div class="box def"><span class="label">a label at vertex v</span>
+        <p class="small">(reduced cost, load, start time, unreachable set, route). Extend along allowed arcs. $L$ <b>dominates</b> $L'$ when it's no worse in cost, load and time, and its unreachable set is a subset of $L'$'s.</p>
+      </div>
+    </div>
+    <div>
+      <ul class="small">
+        <li><b>Feillet et al. (2004)</b>: count customers you <em>can't reach</em> any more as visited. Dominance then fires between labels whose routes differ.</li>
+        <li><b>Branch on arc flows</b> $\sum_r [ij \in r] \lambda_r$. Forbidding an arc keeps pricing the same problem on a smaller graph; forcing $ij$ forbids its alternatives.</li>
+        <li>Integral arc flows mean integral $\lambda$: each customer has one arc in and one out with flow 1, so every column in the support follows them.</li>
+        <li>Bound $\lceil LP \rceil$ because distances are integers. A <b>restricted master IP</b> at the root gives the first incumbent.</li>
+      </ul>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>Pricing is the whole game. On series 1 routes are short, windows prune extensions early, and labelling
+    is fast. On series 2 a route can hold dozens of customers, labels rarely dominate each other, and exact
+    pricing in pure Python stops keeping up. Section 3 measures exactly where.</p>
+    <p>What state-of-the-art codes add (Pessoa et al.'s VRPSolver, Baldacci et al.): ng-route relaxation,
+    bidirectional labelling with a midpoint, completion bounds, subset-row cuts in the master, and strong
+    branching. On hard instances each can be worth an order of magnitude or more. With them, exact codes
+    solve Solomon's 100-customer instances, which pure-Python labelling can't approach.</p>
+    <p>The heuristic pricing pass (keep eight labels per vertex) finds negative columns cheaply during most
+    of the column-generation run. Only the final "prove there's none" pass must be exact. That is why the
+    stub asks for a label limit.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">capstone · (c) CP-SAT</p>
+  <h2>A circuit constraint, enforced implications, and a strategy</h2>
+  <div class="cols">
+    <div>
+<pre><code class="python">m.add_multiple_circuit([(i, j, x[i, j]) for i, j in arcs])
+for (i, j), b in x.items():
+    if i and j:
+        m.add(t[j] >= t[i] + s[i] + d[i][j]).only_enforce_if(b)
+        m.add(u[j] >= u[i] + q[j]).only_enforce_if(b)
+m.minimize(sum(d[i][j] * b for (i, j), b in x.items()))</code></pre>
+      <p class="small">Vertex 0 may carry many circuits; every other vertex is on exactly one. That replaces the degree rows and subtour elimination at once. No big-M: the implication is propagated directly, and lazy clause generation (unit 21) learns from its failures.</p>
+    </div>
+    <div>
+      <div class="box def"><span class="label">search choices you make</span>
+        <ul class="small">
+          <li><b>A hint</b>: a complete solution (from ALNS) that CP-SAT tries first.</li>
+          <li><b>A decision strategy</b>: branch on short arcs first, value 1. With one worker it's only followed under <code>FIXED_SEARCH</code>.</li>
+          <li><b>Workers</b>: CP-SAT is a portfolio. One worker is a fair comparison with the single-threaded methods; eight is how it's meant to be run.</li>
+        </ul>
+      </div>
+      <p class="small muted">The brief asks for a strategy chosen deliberately. Deliberate includes measuring whether it helps and dropping it if it doesn't.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>On 25-customer instances in the prototype runs, default one-worker CP-SAT proved RC101.25 in 0.2 s, but
+    the nearest-arc fixed strategy took 2.2 s and 84 000 branches. A plausible reading is that the fixed
+    order overrides CP-SAT's learned heuristics without supplying better information. That's one instance,
+    and the full comparison belongs in NOTES.md with the harness behind it.</p>
+    <p>The same model with eight workers solved most small instances an order of magnitude faster in
+    branches. Whether that's fair depends on the question. If the question is which algorithm, one
+    thread each. If the question is what to deploy, give each method the machine.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">capstone · (d) ALNS</p>
+  <h2>Feasible insertion in constant time</h2>
+  <div class="cols">
+    <div>
+      <p class="small">Keep, per route, the forward starts $t_k$ and the <b>latest starts</b> $\ell_k$:</p>
+      $$\begin{aligned} \ell_k &= \min\bigl(b_k,\; \ell_{k+1} - s_k - d_{k,k+1}\bigr), \\ \ell_{\text{depot}} &= b_0. \end{aligned}$$
+      <p class="small">Inserting $c$ between $p$ and $q$ is feasible iff
+      $$\begin{aligned}
+      t_c &= \max(a_c,\ t_p + s_p + d_{pc}) \le b_c, \\
+      &\max(a_q,\ t_c + s_c + d_{cq}) \le \ell_q,
+      \end{aligned}$$
+      plus the load. Waiting absorbs any push up to $\ell_q$, so nothing after $q$ needs rechecking.</p>
+    </div>
+    <div>
+      <ul class="small">
+        <li><b>Shaw removal</b>: take out customers related in space, time and demand, so repair has room to rearrange them.</li>
+        <li><b>Regret-k repair</b>: insert first the customer with most to lose, $\sum_{h=2}^{k} (\text{cost}_h - \text{cost}_1)$, over its best position per route.</li>
+        <li><b>A new route is always an option</b>. Without it, repair can never increase the number of routes, and minimising distance sometimes needs more of them. The first prototype lacked it and got stuck 13 % above optimal on R201.25.</li>
+        <li>Annealing acceptance, and three destroy × three repair operators with adaptive weights (unit 26).</li>
+      </ul>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>The constant-time test is due to Savelsbergh (1992), and every serious VRPTW heuristic uses a form of it.
+    The lab's test checks it against a full reschedule at every position of 40 routes on six instances.</p>
+    <p>The missing new-route option is worth dwelling on, because it's a design bug no test for "valid
+    output" would catch. Every solution was feasible. It was simply confined to a region of the search space.
+    It surfaced only by comparing with the exact methods' optima, which is what the capstone's structure is
+    for.</p>
+    <p>Hybrid genetic search (Vidal 2022) is the heuristic state of the art for CVRP and its time-window
+    variants. ALNS here is the unit-26 design carried over, not a competitor to HGS.</p>
+  </aside>
+</section>
+
+<section class="divider">
+  <p class="eyebrow">section 2</p>
+  <h2>Refereeing</h2>
+  <p>A result is a claim. The referee checks it.</p>
+</section>
+
+<section>
+  <p class="eyebrow">capstone · referee</p>
+  <h2>What the harness holds fixed, and what it measures</h2>
+  <div class="cols">
+    <div>
+      <table class="dense">
+        <thead><tr><th>held fixed</th><th>how</th></tr></thead>
+        <tbody>
+          <tr><td>budget</td><td>60 s wall clock per run; the method gets the limit, the harness 5 s of grace</td></tr>
+          <tr><td>threads</td><td>one each: SCIP, HiGHS, CP-SAT with <code>num_workers=1</code>, Python</td></tr>
+          <tr><td>instances</td><td>all 56 Solomon instances at 25, 50 and 100 customers</td></tr>
+          <tr><td>trust</td><td>every solution re-checked, every cost recomputed</td></tr>
+          <tr><td>runaways</td><td>killed 30 s past the limit or beyond 2.5 GB, and recorded</td></tr>
+        </tbody>
+      </table>
+      <p class="small">Six runs side by side on eight cores, so absolute seconds include some contention. Every method pays it.</p>
+    </div>
+    <div>
+      <div class="box def"><span class="label">primal gap (Berthold 2013)</span>
+        <p class="small">$\gamma(v, v^*) = |v - v^*| / \max(|v|, |v^*|)$, 1 with no solution. $v^*$ is the best value <b>any</b> method found.</p>
+      </div>
+      <div class="box def"><span class="label">two questions, two metrics</span>
+        <p class="small"><b>Who finds good solutions?</b> Primal gap at the limit, all four methods. <b>Who proves optimality fastest?</b> PAR1 seconds, the three exact methods. ALNS never proves anything, so it has no place in the second.</p>
+      </div>
+      <p class="small">Paired over instances, Wilcoxon signed-rank, Holm over all pairs at once.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>The two-metric split is the main methodological decision. Folding "found the optimum" and "proved it"
+    into one score either penalises ALNS for not proving (unfair), or rewards the exact methods' proofs at
+    nothing (uninformative).</p>
+    <p>The limitation that matters most: each (method, instance) runs once, with seed 0. Unit 27 found that
+    SCIP's seed alone moves run times by large factors, and CP-SAT's single-worker search and ALNS are random
+    too. So the verdicts are about this instance set, not about seed-to-seed variation. The honest
+    extension is five seeds, averaged per instance before pairing, which <code>head_to_head</code> already
+    supports. It needs five times the 11 hours of CPU.</p>
+    <p>A second limitation: a primal gap at a fixed limit throws away when each method got there. A primal
+    integral (the area under the gap-versus-time curve) would keep it, but needs each method to log its
+    incumbents over time.</p>
+  </aside>
+</section>
+
+<section class="divider">
+  <p class="eyebrow">section 3</p>
+  <h2>What the referee found</h2>
+  <p>672 runs, and no claim refuted.</p>
+</section>
+
+<section>
+  <p class="eyebrow">capstone · measured</p>
+  <h2>Proofs and gaps, by size</h2>
+  <div class="cols">
+    <div>
+      <p class="small">Proven optimal of 56 (mean primal gap at 60 s against the best found):</p>
+      <table class="dense">
+        <thead><tr><th class="num">n</th><th class="num">(a) B&amp;C</th><th class="num">(b) B&amp;P</th><th class="num">(c) CP-SAT</th><th class="num">(d) ALNS</th><th class="num">any</th></tr></thead>
+        <tbody>
+          <tr><td class="num">25</td><td class="num">33 (1.6%)</td><td class="num"><b>49</b> (9.2%)</td><td class="num">36 (0.08%)</td><td class="num">– (0.43%)</td><td class="num">51</td></tr>
+          <tr><td class="num">50</td><td class="num">16 (11.2%)</td><td class="num">16 (53.9%)</td><td class="num">14 (6.2%)</td><td class="num">– (<b>0.20%</b>)</td><td class="num">21</td></tr>
+          <tr><td class="num">100</td><td class="num">11 (28.9%)</td><td class="num">0 (96.5%)</td><td class="num">6 (18.9%)</td><td class="num">– (<b>0.15%</b>)</td><td class="num">11</td></tr>
+        </tbody>
+      </table>
+      <p class="small">Integrity: no invalid solution, no crash, no "optimal" refuted, no two different proven optima.</p>
+    </div>
+    <div>
+      <ul class="small">
+        <li><b>B&amp;P is all or nothing.</b> Its gaps are runs with <em>no</em> solution: 3, 26 and 49 of 56. Ten runs overran the limit inside one uninterruptible pricing call.</li>
+        <li><b>ALNS's gaps flatter it</b>, because the "best found" is often its own value. Against proven optima: 47 of 51 at n = 25, 20 of 21 at 50, 9 of 11 at 100. The worst miss is 7.7%, on C205.100.</li>
+        <li>Proven at n = 100: C101 827.3, C201 589.1, R101 1637.7. As far as can be checked from memory, these match the exact literature.</li>
+      </ul>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>The two readings of the gap column show why a single summary number misleads. Mean primal gap
+    punishes a method that sometimes returns nothing (B&amp;P) far more than one that is always a little off
+    (the MIP), and it rewards whichever method defines the reference.</p>
+    <p>The SINTEF sanity check: at n = 100 the best distance found is a median 0.996 of SINTEF's
+    hierarchical best-known distance. The objectives differ, so that says only that the solutions are of the
+    right quality, not that they compete with the table.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">capstone · measured</p>
+  <h2>Which characteristics favour which method</h2>
+  <table class="dense">
+    <thead><tr><th>series</th><th class="num">window / horizon</th><th>n = 25</th><th>n = 50</th><th>n = 100</th></tr></thead>
+    <tbody>
+      <tr><td>C1</td><td class="num">0.25</td><td>B&amp;C 8, B&amp;P 1</td><td>B&amp;C 6, ALNS 2, B&amp;P 1</td><td>ALNS 5, B&amp;C 4</td></tr>
+      <tr><td>C2</td><td class="num">0.27</td><td>B&amp;C 4, CP-SAT 4</td><td>B&amp;C 5, ALNS 2, CP-SAT 1</td><td>B&amp;C 6, ALNS 2</td></tr>
+      <tr><td>R1</td><td class="num">0.38</td><td><b>B&amp;P 11</b>, B&amp;C 1</td><td>B&amp;P 5, ALNS 5, B&amp;C 1, CP-SAT 1</td><td>ALNS 11, B&amp;C 1</td></tr>
+      <tr><td>R2</td><td class="num">0.45</td><td>B&amp;P 5, CP-SAT 4, B&amp;C 1, ALNS 1</td><td><b>ALNS 9</b>, B&amp;C 1, CP-SAT 1</td><td>ALNS 10, CP-SAT 1</td></tr>
+      <tr><td>RC1</td><td class="num">0.36</td><td>B&amp;P 5, B&amp;C 2, CP-SAT 1</td><td>ALNS 7, CP-SAT 1</td><td>ALNS 8</td></tr>
+      <tr><td>RC2</td><td class="num">0.38</td><td>B&amp;P 4, CP-SAT 3, B&amp;C 1</td><td>ALNS 6, B&amp;C 1, CP-SAT 1</td><td>ALNS 8</td></tr>
+    </tbody>
+  </table>
+  <p class="small muted">Per instance: smallest primal gap, then fastest proof.</p>
+  <div class="cols">
+    <div class="box good"><span class="label">supported by the paired tests</span>
+      <ul class="small">
+        <li><b>Tight windows, random, 25 customers → B&amp;P</b>: proves all 20 R1/RC1, fastest proofs overall (Holm p ≤ 0.02).</li>
+        <li><b>Clustered → the compact MIP</b> makes most proofs. At n = 100, SCIP made all 11: ten clustered, plus R101.</li>
+        <li><b>Past 25 customers → ALNS</b> for solution quality on every series; every pair decisive (Holm p ≤ 6·10⁻⁶).</li>
+      </ul>
+    </div>
+    <div class="box warn"><span class="label">indistinguishable</span>
+      <ul class="small">
+        <li>n = 25, solution quality: CP-SAT vs ALNS, and B&amp;P vs each of the other three.</li>
+        <li>n = 50, time to proof: B&amp;P vs B&amp;C, and B&amp;P vs CP-SAT.</li>
+      </ul>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>The window / horizon column is the mean window width divided by the depot's horizon. It's a crude
+    feature. Series 2's horizons are several times longer, so a similar ratio hides much longer absolute
+    windows, and route length is what actually drives labelling cost. A better report would regress the
+    winner on route length in the best solution, which the stored runs allow.</p>
+    <p>"Indistinguishable" at n = 25 is mostly ties: on 33 to 45 of 56 instances both methods reach the same
+    value. The tests aren't weak there. The methods genuinely agree.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">capstone · honest</p>
+  <h2>What this run can't tell you</h2>
+  <div class="cols">
+    <div>
+      <table class="dense">
+        <thead><tr><th>limitation</th><th>why it matters</th><th>the extra experiment</th></tr></thead>
+        <tbody>
+          <tr><td>one seed per run</td><td>SCIP and CP-SAT times move a lot with the seed (unit 27)</td><td>five seeds, averaged per instance</td></tr>
+          <tr><td>six jobs on eight cores</td><td>C104.25: B&amp;P proved it in 39.5 s in a lighter prototype run, and found nothing in 60 s here</td><td>one job at a time</td></tr>
+          <tr><td>Python against C++</td><td>B&amp;P's and ALNS's results are partly implementation findings</td><td>state it; or ng-routes and bidirectional labelling</td></tr>
+          <tr><td>one thread for CP-SAT</td><td>a portfolio solver, run against its design</td><td>8 workers, reported beside the 1-worker result</td></tr>
+          <tr><td>gap at one time limit</td><td>ignores when each method got there</td><td>log incumbents; primal integral</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div>
+      <div class="box def"><span class="label">the report's rule</span>
+        <p class="small">Every sentence of <code>NOTES.md</code> ties a method to an instance <b>characteristic</b>, points at a table, and names the test behind it. Where the test says indistinguishable, the sentence says so.</p>
+      </div>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>The C104.25 example is the most useful line on this slide. The same code on the same instance proved
+    optimality in 39.5 s during the prototype run, with one other job running. In the benchmark it ran with five
+    others and hit the limit with nothing. Near-limit results are fragile, and the only defence is replication.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">capstone · checkpoint</p>
+  <h2>Done when</h2>
+  <div class="box good"><span class="label">checkpoint</span>
+    <ul>
+      <li>All six lab steps are ✓, and <code>then</code> reports no invalid solution and no refuted claim.</li>
+      <li><code>NOTES.md</code> says, for each series and size, which method wins on quality and on proof time, with the paired test behind each claim and "indistinguishable" where it applies.</li>
+      <li>It states its limitations, and the experiment that would remove each.</li>
+    </ul>
+  </div>
+  <div class="cols">
+    <div>
+      <h3>Reading</h3>
+      <p class="small">Solomon, <em>Oper. Res.</em> 35 (1987).<br>
+      Kallehauge et al., in <em>Column Generation</em> (2005).<br>
+      Feillet et al., <em>Networks</em> 44 (2004).<br>
+      Baldacci, Mingozzi &amp; Roberti, <em>Oper. Res.</em> 59 (2011).<br>
+      Savelsbergh, <em>ORSA J. Comput.</em> 4 (1992).<br>
+      Ropke &amp; Pisinger, <em>Transp. Sci.</em> 40 (2006).<br>
+      Berthold, <em>Oper. Res. Lett.</em> 41 (2013).</p>
+    </div>
+    <div>
+      <h3>After the course</h3>
+      <p class="small">VRPSolver (Pessoa et al. 2020) for exact routing, HGS (Vidal 2022) for heuristics, and Gehring–Homberger's 200–1000 customers to see where each one stops.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>The capstone's lesson isn't a ranking. Each tradition won somewhere on these instances, and lost
+    badly somewhere else, and the characteristics that separate them (clustering, window width, size) are
+    visible in the data. That's the account the curriculum asked for.</p>
+  </aside>
+</section>
+
+
+</div></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/plugin/highlight/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<script src="../../slides/deck.js"></script>
+</body>
+</html>

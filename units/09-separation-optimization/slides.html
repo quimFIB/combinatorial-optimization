@@ -1,0 +1,374 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>09 · Separation ⇔ optimization</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+<link rel="stylesheet" href="../../slides/deck.css">
+</head>
+<body data-trunk="ip">
+<div class="reveal"><div class="slides">
+
+<section class="title-slide">
+  <p class="eyebrow">Part II · trunk A · integer programming · branch · deep theory</p>
+  <div class="unit-no">09</div>
+  <h1>Separation ⇔ optimization</h1>
+  <p class="lede">You can optimize over a polytope in polynomial time exactly when you can find a violated inequality in polynomial time. Exponentially many constraints are fine.</p>
+  <p class="meta"><span>needs 04, 08</span><span>~1½ h slides + 2½ h lab</span><span>lab: <code>uv run co lab 09</code></span></p>
+  <aside class="notes">
+    <p>The curriculum calls this the most beautiful result in the course, and the branch
+    unit it would fight to keep. It turns the ellipsoid method (unit 04), which is
+    useless for solving LPs, into the reason we can trust formulations with
+    exponentially many constraints. It also explains why lazy constraints, which every
+    solver supports, are sound engineering and not a hack.</p>
+    <p>The lab makes it concrete on the oldest example: Dantzig, Fulkerson and
+    Johnson's 1954 subtour formulation of the TSP.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">09 · overview</p>
+  <h2>The route</h2>
+  <div class="cols three">
+    <div class="box def"><span class="label">1 · the theorem</span>
+      <p>Optimization and separation oracles, the Grötschel–Lovász–Schrijver equivalence, and why the ellipsoid method is the bridge.</p></div>
+    <div class="box def"><span class="label">2 · subtours</span>
+      <p>The subtour LP, separation by minimum cut, and Stoer–Wagner.</p></div>
+    <div class="box def"><span class="label">3 · in practice</span>
+      <p>Lazy constraints, cut callbacks, how good the bound is, and Concorde.</p></div>
+  </div>
+  <p class="muted">Lab <code>then</code>: at 200 cities there are 8 × 10⁵⁹ subtour rows. The LP bound needed 56, the optimal tour 70.</p>
+  <aside class="notes">
+    <p>Section 1 is theory with no lab counterpart, because the ellipsoid method is never
+    run in practice. Sections 2 and 3 use a simplex-based LP solver with the same
+    separation oracle. That is exactly the gap between "polynomial in theory" and "fast
+    in practice" that unit 04 described.</p>
+  </aside>
+</section>
+
+<section class="divider">
+  <p class="eyebrow">section 1</p>
+  <h2>The theorem</h2>
+  <p>Two oracles for a polytope, and the fact that they are equally powerful.</p>
+</section>
+
+<section>
+  <p class="eyebrow">09 · theorem</p>
+  <h2>Two ways to be given a polytope</h2>
+  <div class="cols">
+    <div class="box def"><span class="label">optimization oracle</span>
+      <p>Given $c$: return $\arg\max\{c^\top x : x \in P\}$, or report $P = \emptyset$.</p>
+      <p class="small">"Solve the problem for any objective."</p>
+    </div>
+    <div class="box def"><span class="label">separation oracle</span>
+      <p>Given $y$: either certify $y \in P$, or return an inequality $a^\top x \le \beta$ valid for $P$ with $a^\top y &gt; \beta$.</p>
+      <p class="small">"Find a violated constraint, if there is one."</p>
+    </div>
+  </div>
+  <p>A polytope with exponentially many facets can have a <b>short</b> separation oracle, one that searches its facets implicitly. For subtour rows it is a minimum cut, and for matching's odd-set rows a minimum odd cut.</p>
+  <p class="small muted">For the theorem, $P$ must be "well-described": its facets have bounded encoding size $\varphi$, and the running time may be polynomial in $\varphi$ and $n$.</p>
+  <aside class="notes">
+    <p>The encoding bound is what lets the ellipsoid method start and stop. From $\varphi$
+    you get an initial ball radius $R = 2^{O(n\varphi)}$ and a minimum volume below
+    which a full-dimensional $P$ can't hide (unit 04's $R$ and $r$). Lower-dimensional
+    polytopes need extra work, since they contain no ball. GLS handle this by finding
+    the affine hull first, which is one of the technical parts of their book.</p>
+    <p>"Strong" versions of the oracles, the exact ones above, are what the theorem is
+    about. There are also "weak" versions with an $\varepsilon$ tolerance, which are the
+    natural notion for general convex bodies. The equivalences between all of them are
+    GLS chapter 4.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">09 · theorem</p>
+  <h2>Grötschel, Lovász & Schrijver (1981)</h2>
+  <div class="box thm"><span class="label">theorem</span>
+    <p>For a family of well-described polyhedra, the <b>optimization</b> problem is solvable in polynomial time if and only if the <b>separation</b> problem is.</p>
+  </div>
+  <div class="cols">
+    <div class="box proof"><span class="label">separation ⇒ optimization</span>
+      <p class="small">Run the ellipsoid method on $P \cap \{c^\top x \ge \gamma\}$. Its cuts come from the separation oracle, or from the objective row when the centre is feasible (a "sliding objective"). The volume argument bounds the number of iterations, and rounding at the end gives an exact optimal vertex.</p>
+    </div>
+    <div class="box proof"><span class="label">optimization ⇒ separation</span>
+      <p class="small">With $0$ in the interior, look at the <b>polar</b> $P^\circ = \{a : a^\top x \le 1\ \forall x \in P\}$. Separating $y$ from $P$ means finding $a \in P^\circ$ with $a^\top y &gt; 1$, which is optimization over $P^\circ$. A separation oracle for $P^\circ$ is "maximize $a^\top x$ over $P$", which is exactly the optimization oracle we have. Apply the first direction to $P^\circ$.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>The first direction is the one the lab's intuition uses. The ellipsoid method never
+    needs the constraint list, only an answer to "is this centre feasible, and if not,
+    which inequality does it violate?" (unit 04, slide "Useless in practice,
+    indispensable in theory").</p>
+    <p>The second direction is the elegant one. The polar of a polytope has a vertex for
+    each facet of $P$ and a facet for each vertex of $P$. An optimization oracle for
+    $P$ answers "which vertex of $P$ maximizes this direction", which is exactly "which
+    facet of $P^\circ$ is most violated by this point". So optimizing over $P$ is
+    separating over $P^\circ$. Running ellipsoid over $P^\circ$ with that oracle finds a
+    most-violated facet of $P$.</p>
+    <p>Practical meaning of the second direction: if a problem is NP-hard to optimize
+    over, like the TSP, then separating over its full convex hull is NP-hard too. That
+    is why TSP codes separate only chosen families (subtours, combs, …), and never "all
+    facets".</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">09 · theorem</p>
+  <h2>What it bought</h2>
+  <table style="font-size:.7em">
+    <thead><tr><th>result</th><th>via</th></tr></thead>
+    <tbody>
+      <tr><td><b>Maximum-weight matching</b> as an LP in polynomial time</td><td>odd-set inequalities (unit 06) separated by a minimum odd cut (Padberg & Rao 1982)</td></tr>
+      <tr><td>The first polynomial algorithm for <b>submodular function minimization</b></td><td>separation over the base polytope by a greedy algorithm (unit 13)</td></tr>
+      <tr><td><b>Maximum stable set in perfect graphs</b></td><td>Lovász's theta function, an SDP, separated over the theta body (unit 25)</td></tr>
+      <tr><td><b>Subtour LP</b> for the TSP in polynomial time</td><td>subtour rows separated by a global minimum cut (this lab)</td></tr>
+      <tr><td>NP-hardness of separation for hard polytopes</td><td>the other direction, contrapositive</td></tr>
+    </tbody>
+  </table>
+  <p class="muted small">Some of these (stable sets in perfect graphs, submodular minimization, for a long time) had no other known polynomial algorithm. The ellipsoid method was the only route.</p>
+  <aside class="notes">
+    <p>Combinatorial polynomial algorithms for submodular function minimization came
+    much later: Iwata, Fleischer & Fujishige, and Schrijver, both in 2000. For
+    maximum-weight stable set in perfect graphs, no combinatorial polynomial algorithm
+    is known to this day. The only polynomial algorithm goes through the ellipsoid
+    method or other convex optimization over the theta body.</p>
+    <p>For matching, Edmonds' blossom algorithm (1965) was already polynomial. GLS gave
+    a second proof, "because the LP over its polytope is polynomially separable",
+    that doesn't need the algorithm at all.</p>
+  </aside>
+</section>
+
+<section class="divider">
+  <p class="eyebrow">section 2</p>
+  <h2>Subtours</h2>
+  <p>The constraint family that started it all, and its minimum-cut oracle.</p>
+</section>
+
+<section>
+  <p class="eyebrow">09 · subtours</p>
+  <h2>The subtour elimination LP</h2>
+  <div class="cols wide-right">
+    <div class="fig">
+      <svg viewBox="0 0 380 230" width="380" role="img" aria-label="two triangles joined by two half edges">
+        <g class="accent" stroke-width="5">
+          <line x1="60" y1="50" x2="30" y2="170"/><line x1="60" y1="50" x2="130" y2="120"/><line x1="30" y1="170" x2="130" y2="120"/>
+          <line x1="320" y1="50" x2="350" y2="170"/><line x1="320" y1="50" x2="250" y2="120"/><line x1="350" y1="170" x2="250" y2="120"/>
+        </g>
+        <line x1="130" y1="120" x2="250" y2="120" class="warn" stroke-width="3" stroke-dasharray="7 5"/>
+        <line x1="60" y1="50" x2="320" y2="50" class="warn" stroke-width="3" stroke-dasharray="7 5"/>
+        <g class="fill-ground ink" stroke-width="2">
+          <circle cx="60" cy="50" r="13"/><circle cx="30" cy="170" r="13"/><circle cx="130" cy="120" r="13"/>
+          <circle cx="320" cy="50" r="13"/><circle cx="350" cy="170" r="13"/><circle cx="250" cy="120" r="13"/>
+        </g>
+        <text x="190" y="40" text-anchor="middle" font-size="14" style="fill:var(--warn)" class="mono">0.75</text>
+        <text x="190" y="112" text-anchor="middle" font-size="14" style="fill:var(--warn)" class="mono">0.75</text>
+        <text x="190" y="210" text-anchor="middle" font-size="14" class="soft">cut between the triangles: 1.5 &lt; 2</text>
+      </svg>
+      <p class="cap">A connected fractional point that still violates a subtour row. Degrees don't match 2 exactly here: it is lab step 3's separation example, not an LP vertex.</p>
+    </div>
+    <div>
+      <p>Edge variables $x_e$ on the complete graph (Dantzig, Fulkerson & Johnson 1954):</p>
+      $$\begin{aligned}\min\ & \textstyle\sum_e c_e x_e \\ \text{s.t. } & \textstyle\sum_{e \in \delta(v)} x_e = 2 \quad \forall v \\ & \textstyle\sum_{e \in \delta(S)} x_e \ge 2 \quad \forall\, \emptyset \ne S \subsetneq V \\ & 0 \le x_e \le 1\end{aligned}$$
+      <p>The degree rows alone allow <b>subtours</b>: several disjoint cycles. The subtour rows say every vertex set must be entered and left. There are $2^{n-1}-1$ of them.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>With integrality, the degree rows plus all subtour rows describe exactly the tours.
+    The LP relaxation is the <b>subtour polytope</b>, which contains the TSP polytope
+    and is strictly bigger, so its bound is a lower bound on the optimal tour.</p>
+    <p>DFJ solved a 49-city instance (48 US state capitals plus Washington) by hand in
+    1954, adding subtour rows and a few other cuts as needed. It is the first
+    cutting-plane computation and the origin of the whole approach.</p>
+    <p>Counting: a set and its complement give the same row, so there are
+    $(2^n - 2)/2 = 2^{n-1} - 1$ distinct rows. The lab's tests count 127 for $n = 8$.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">09 · subtours</p>
+  <h2>Separation is a minimum cut</h2>
+  <div class="cols">
+    <div>
+      <div class="box thm"><span class="label">claim</span>
+        <p>$x^*$ violates some subtour row iff the <b>global minimum cut</b> of the graph with edge weights $x^*$ has value below 2.</p>
+      </div>
+      <p class="small">The row for $S$ is exactly "the cut $\delta(S)$ has weight $\ge 2$", so the most violated row is the lightest cut. It is a restatement, not a trick.</p>
+      <p class="small"><b>Integer points</b> are easier: a 0/1 solution of the degree rows is a union of cycles, and each cycle's vertex set has cut weight 0. Connected components suffice (lab step 5).</p>
+    </div>
+    <div class="box def"><span class="label">Stoer–Wagner (1997)</span>
+      <ol class="small">
+        <li>Build a <b>maximum-adjacency order</b>: repeatedly add the vertex most strongly attached to those already added.</li>
+        <li>The last vertex's attachment is a minimum cut separating the last two vertices, $s$ and $t$.</li>
+        <li>Record it, merge $s$ and $t$, and repeat until one vertex is left.</li>
+      </ol>
+      <p class="small">$n - 1$ phases, $O(nm + n^2 \log n)$ in total. No flows needed.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>Why merging is safe: the global minimum cut either separates $s$ and $t$, and then
+    the phase's cut, a minimum $s$–$t$ cut, is at least as good; or it doesn't, and then
+    it survives the merge. So the best phase cut is a global minimum. The lab's hint
+    rung 3 sketches it. The key lemma, that the cut of the phase is a minimum $s$–$t$
+    cut, is a two-paragraph induction in the paper.</p>
+    <p>Before Stoer–Wagner, global minimum cut was done with $n - 1$ maximum-flow
+    computations (Gomory–Hu), which is unit 14's tool. Concorde uses flow-based
+    separation with heuristics that find most violated sets without any flow at all:
+    connected components, and shrinking edges with $x_e = 1$.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">09 · subtours</p>
+  <h2>A few dozen rows out of 10⁵⁹</h2>
+  <table>
+    <thead><tr><th class="num">$n$</th><th class="num">rows that exist</th><th class="num">LP rows used</th><th class="num">LP bound</th><th class="num">optimum</th><th class="num">MIP cuts</th><th class="num">gap</th></tr></thead>
+    <tbody>
+      <tr><td class="num">30</td><td class="num">5.4 × 10⁸</td><td class="num">6</td><td class="num">480.5</td><td class="num">482</td><td class="num">5</td><td class="num">0.31%</td></tr>
+      <tr><td class="num">80</td><td class="num">6.0 × 10²³</td><td class="num">16</td><td class="num">725.0</td><td class="num">726</td><td class="num">24</td><td class="num">0.14%</td></tr>
+      <tr><td class="num">120</td><td class="num">6.7 × 10³⁵</td><td class="num">39</td><td class="num">813.0</td><td class="num">819</td><td class="num">52</td><td class="num">0.73%</td></tr>
+      <tr><td class="num">200</td><td class="num">8.0 × 10⁵⁹</td><td class="num">56</td><td class="num">1083.5</td><td class="num">1091</td><td class="num">70</td><td class="num">0.69%</td></tr>
+    </tbody>
+  </table>
+  <p>Lab <code>then</code>, random Euclidean instances. The exact tour at $n = 200$ took 10 MIP solves and 46 s with HiGHS as the integer solver.</p>
+  <aside class="notes">
+    <p>Why so few rows: most subtour rows are satisfied by a wide margin at any reasonable
+    LP point. Only cuts around clusters of nearby cities come close to binding, and
+    there are few such clusters. The LP only needs rows that bind at its optimum, which
+    number at most the dimension, and in practice far fewer are ever violated along the
+    way.</p>
+    <p>The naive "re-solve the whole MIP after adding cuts" loop in step 5 is wasteful.
+    Each MIP solve starts from scratch. A branch-and-cut implementation adds the cuts
+    inside one tree as they are found, which is the next slide.</p>
+  </aside>
+</section>
+
+<section class="divider">
+  <p class="eyebrow">section 3</p>
+  <h2>In practice</h2>
+  <p>Lazy constraints, and how far the idea goes.</p>
+</section>
+
+<section>
+  <p class="eyebrow">09 · practice</p>
+  <h2>Lazy constraints and callbacks</h2>
+  <div class="cols">
+    <div>
+      <p>Every MIP solver can take constraints it doesn't see up front:</p>
+      <ul class="small">
+        <li><b>Lazy constraints</b>: checked on every candidate integer solution; if one is violated, the solution is rejected and the row is added. Required for correctness.</li>
+        <li><b>User cuts</b>: separated at fractional LP points to tighten the bound. Optional; only for speed.</li>
+      </ul>
+      <p class="small">Gurobi: a callback with <code>cbLazy</code> and <code>cbCut</code>. SCIP: a <b>constraint handler</b> with <code>check</code>, <code>enforce</code> and <code>separate</code> methods. That is the same distinction.</p>
+    </div>
+    <div class="box warn"><span class="label">the classic bug</span>
+      <p class="small">Adding subtour rows only as <b>user cuts</b> means the solver can accept an integer solution made of subtours, if no fractional node happened to trigger separation. Lazy constraints must be enforced on integer solutions, which is what lab step 5 does, clumsily.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>The GLS theorem is why this is sound: as long as the separation routine is exact on
+    integer solutions (enforcement) and good on fractional ones (bound), the solver
+    solves the problem over the implicit exponential family. The lab's step 4 shows the
+    LP version: "no violated row found" is a proof that the full LP is solved, because
+    minimum cut is an exact oracle.</p>
+    <p>SCIP's Python interface (PySCIPOpt, installed) supports writing constraint
+    handlers. A TSP handler in that style is the natural extension of this lab if you
+    want to see branch-and-cut with lazy subtour rows instead of repeated MIP solves.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">09 · practice</p>
+  <h2>How good is the bound, and how far has this gone?</h2>
+  <div class="cols">
+    <div>
+      <div class="box thm"><span class="label">integrality gap of the subtour LP</span>
+        <p>For metric TSP the optimal tour is at most $\tfrac32$ times the subtour LP bound (Wolsey 1980; Shmoys & Williamson 1990), and instances with gap close to $\tfrac43$ exist. The <b>4/3 conjecture</b> says that is the truth; it is open.</p>
+      </div>
+      <p class="small">On random Euclidean instances the gap is tiny, under 1% in the lab.</p>
+      <p class="small">Unit 11 computes the same bound a completely different way (Held–Karp 1-trees), and gets the same number.</p>
+    </div>
+    <div class="box good"><span class="label">Concorde</span>
+      <p class="small">Applegate, Bixby, Chvátal & Cook. Branch-and-cut with subtour rows, <b>comb inequalities</b>, and "local cuts" found by solving small projected subproblems.</p>
+      <p class="small">It solved an 85 900-city instance from a chip-layout application (pla85900) to proven optimality in 2006, with about 136 CPU-years of computation.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>The equality of the subtour LP bound and the Held–Karp bound is a theorem (Held &
+    Karp 1970): the Lagrangian dual of the degree constraints over 1-trees has the same
+    optimum as the subtour LP. Unit 11 uses it as its checkpoint, "they should be close,
+    and knowing why they are close is the unit".</p>
+    <p>Comb inequalities (Chvátal 1973; Grötschel & Padberg 1979) are a family of TSP
+    facets with no known polynomial exact separation in general. Concorde separates them
+    heuristically, plus exactly for special cases. This is the second GLS direction in
+    action: the full TSP polytope is NP-hard to separate over, so practice uses
+    families.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">09 · lab</p>
+  <h2>Lab 09 — what you build</h2>
+  <div class="lab">
+    <span class="label">about 2½ hours · uv run co lab 09</span>
+    <ol>
+      <li><b>A subtour row</b>, and the connected components of a support graph.</li>
+      <li><b>Stoer–Wagner</b> global minimum cut.</li>
+      <li><b>The separation oracle</b>: components, else min cut.</li>
+      <li><b>The subtour LP</b> by lazy rows, which equals the LP with every row written out.</li>
+      <li><b>An exact TSP</b> by lazy cuts on the integer program.</li>
+    </ol>
+  </div>
+<pre><code class="language-bash">uv run co test 09
+uv run co then 09     # rows used vs rows that exist, LP bound vs optimum, up to 200 cities</code></pre>
+  <aside class="notes">
+    <p>Step 4's test is the theorem in miniature. The lazily generated bound must equal
+    the bound with all 127 rows written out, and your final point must satisfy all 254
+    cut constraints, even though you never wrote most of them down.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">09 · checkpoint</p>
+  <h2>Done when</h2>
+  <div class="box good"><span class="label">checkpoint</span>
+    <ul>
+      <li>All five lab steps are ✓.</li>
+      <li>You can state the separation–optimization theorem precisely, and you have solved a TSP over an exponential constraint family while only ever writing down a few hundred of its constraints.</li>
+      <li>You can explain how matching's odd-set inequalities are separated, and what that implies about maximum-weight matching.</li>
+    </ul>
+  </div>
+  <div class="cols">
+    <div>
+      <h3>Reading</h3>
+      <p class="small">Grötschel, Lovász & Schrijver, ch. 6 (consulted).<br>
+      Schrijver, <em>Combinatorial Optimization</em>, §5.10–5.11 and ch. 58.<br>
+      Applegate, Bixby, Chvátal & Cook (2006), ch. 5–6.<br>
+      Stoer & Wagner, <em>JACM</em> 44 (1997).</p>
+    </div>
+    <div>
+      <h3>Next</h3>
+      <p class="small"><b>10</b> column generation, where the same idea applies to columns · <b>11</b> Lagrangian relaxation and the Held–Karp bound · <b>12</b> Benders, where rows are generated from a subproblem's duals.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>The third checkpoint's answer: Padberg and Rao (1982) showed a violated odd-set
+    inequality can be found with a minimum odd cut computation, polynomial through
+    Gomory–Hu trees. By GLS, maximum-weight matching is then solvable in polynomial
+    time as an LP over the matching polytope, which gives a second proof of Edmonds'
+    theorem's algorithmic content.</p>
+  </aside>
+</section>
+
+</div></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/plugin/highlight/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<script src="../../slides/deck.js"></script>
+</body>
+</html>
