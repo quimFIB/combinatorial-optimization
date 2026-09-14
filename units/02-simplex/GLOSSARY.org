@@ -66,10 +66,11 @@ Convention throughout: \(\max\{c^\top x : Ax \le b,\ x \ge 0\}\) with
 
 - cycling :: A sequence of degenerate pivots that returns to an earlier basis and
   repeats forever. /Slide: Degeneracy and cycling./
-- Beale's example :: A 4-variable LP (1955) on which Dantzig's rule with lowest-row
-  tie-breaking cycles after 6 degenerate pivots.
 - stalling :: A long run of degenerate pivots that does eventually end. The
-  practical form of the cycling problem.
+  practical form of the cycling problem. /Slide: Bland's rule./
+- Beale's example :: A 4-variable LP (1955) on which Dantzig's rule with lowest-row
+  tie-breaking cycles after 6 degenerate pivots. Bland's rule leaves the cycle at
+  pivot 5. /Slide: Beale's cycle, pivot by pivot./
 - Bland's rule :: Enter the lowest-index improving variable; break ratio-test ties
   by lowest index. Never cycles, and is usually slow. /Slide: Bland's rule./
 - anti-cycling rule :: Any rule that guarantees termination: Bland's, the

@@ -20,7 +20,7 @@
   <h1>Models, instances, and an oracle you trust</h1>
   <p class="lede">What a combinatorial problem is, the nine you will meet all course, and the
   one tool that lets you believe your own code.</p>
-  <p class="meta"><span>needs nothing</span><span>~1 h slides + 2 h lab</span><span>lab: <code>uv run co lab 00</code></span></p>
+  <p class="meta"><span>needs nothing</span><span>~1¼ h slides + 2 h lab</span><span>lab: <code>uv run co lab 00</code></span></p>
   <aside class="notes">
     <h4>How to use these slides</h4>
     <p>These are written for reading on your own, not for presenting. The slide carries
@@ -47,17 +47,20 @@
   <h2>Three things to leave with</h2>
   <div class="cols three">
     <div class="box def"><span class="label">vocabulary</span>
-      <p>Problem vs instance. A feasible set described implicitly. Decision, optimization,
+      <p>Problem vs <span class="term">instance</span>. A <span class="term">feasible set</span> described implicitly. Decision, optimization,
       counting.</p></div>
     <div class="box def"><span class="label">the nine problems</span>
       <p>Knapsack, set cover, assignment, bin packing, colouring, max-cut, TSP, job-shop,
       vertex cover.</p></div>
     <div class="box def"><span class="label">two habits</span>
-      <p>Test every algorithm against an oracle. Ask what would <em>prove</em> an answer
+      <p>Test every algorithm against an <span class="term">oracle</span>. Ask what would <em>prove</em> an answer
       optimal, not just what the answer is.</p></div>
   </div>
   <p class="muted" style="margin-top:1em">Roadmap: definitions → the nine → spaces and symmetry → certificates →
   the oracle and the harness → the wall.</p>
+  <div class="box good"><span class="label">getting around</span>
+    <p class="small">Words with a <span class="term" data-term="certificate">dotted underline</span> are glossary terms: click one for its definition. <kbd>G</kbd> lists every term in the unit, <kbd>N</kbd> shows the notes. One small graph, the running example, comes back on most slides.</p>
+  </div>
   <aside class="notes">
     <p>The course is built on one working method: build the naive thing, check it
     against brute force, then compare it with an industrial solver. This unit sets
@@ -80,17 +83,17 @@
   <p class="eyebrow">00 · definitions</p>
   <h2>Problems and instances</h2>
   <div class="box def"><span class="label">definition</span>
-    <p>An <b>optimization problem</b> is a set of <b>instances</b>. An instance is a pair
-    $(F, c)$: a <b>feasible set</b> $F$ and an <b>objective</b> $c : F \to \mathbb{R}$. We
+    <p>An <span class="term">optimization problem</span> is a set of <span class="term">instances</span>. An instance is a pair
+    $(F, c)$: a <span class="term">feasible set</span> $F$ and an <span class="term">objective</span> $c : F \to \mathbb{R}$. We
     want $x^* \in F$ with $c(x^*) \le c(x)$ for all $x \in F$ (or $\ge$, for maximization).</p>
   </div>
   <div class="box def"><span class="label">combinatorial</span>
-    <p>$F$ is <b>finite</b>, and given <b>implicitly</b>: a simple, enumerable space $S$ and
+    <p>$F$ is <b>finite</b>, and given <b>implicitly</b>: a simple, enumerable <span class="term">space</span> $S$ and
     constraints, $\;F = \{x \in S : x \text{ satisfies the constraints}\}$.</p>
   </div>
-  <p>Example. <b>Vertex cover</b>: an instance is a graph $G=(V,E)$. The space is
+  <p>Example. <span class="term">Vertex cover</span>: an instance is a graph $G=(V,E)$. The space is
   $S = \{0,1\}^V$, the constraints are $x_u + x_v \ge 1$ for every $uv \in E$, and
-  the objective is $c(x) = \sum_v x_v$, to be minimized.</p>
+  the objective is $c(x) = \sum_v x_v$, to be minimized. <span class="muted">In words: pick the fewest vertices so that every edge touches one of them. The next slide does it on one graph.</span></p>
   <aside class="notes">
     <p>The distinction between problem and instance matters from the first complexity
     statement onward. "Vertex cover is NP-hard" is a claim about the problem, meaning
@@ -109,6 +112,56 @@
 </section>
 
 <section>
+  <p class="eyebrow">00 · definitions · example</p>
+  <h2>The running example</h2>
+  <div class="cols wide-left">
+    <div>
+      <p>A triangle $0,1,2$ with one extra edge to vertex $3$. Four edges: $01,\ 02,\ 12,\ 23$. A candidate is $x \in \{0,1\}^4$, the vertices it picks.</p>
+      <table>
+        <thead><tr><th>candidate $x$</th><th>picks</th><th>uncovered edges</th><th class="num">$c(x)$</th></tr></thead>
+        <tbody>
+          <tr><td>$(0,1,1,0)$</td><td>$\{1, 2\}$</td><td>none ✓</td><td class="num">2</td></tr>
+          <tr><td>$(1,1,0,1)$</td><td>$\{0, 1, 3\}$</td><td>none ✓</td><td class="num">3</td></tr>
+          <tr><td>$(0,0,1,1)$</td><td>$\{2, 3\}$</td><td><b>$01$ ✗</b></td><td class="num">—</td></tr>
+          <tr><td>$(0,0,1,0)$</td><td>$\{2\}$</td><td><b>$01$ ✗</b></td><td class="num">—</td></tr>
+        </tbody>
+      </table>
+      <p class="small"><b>Feasibility is checking every edge.</b> $\{2,3\}$ misses edge $01$, so it is not in $F$ and its size doesn't matter. Of all $2^4 = 16$ candidates, <b>7</b> are covers, and the smallest have <b>2</b> vertices.</p>
+      <p class="small muted">The space $S$ is all 16 candidates. The feasible set $F$ is the 7 covers. Nobody wrote $F$ down: the four edge constraints describe it.</p>
+    </div>
+    <div class="fig">
+      <svg viewBox="0 0 380 210" width="360" role="img" aria-label="triangle 0 1 2 with a pendant edge from 2 to 3; vertices 1 and 2 filled">
+        <line x1="70" y1="45" x2="70" y2="185" class="rule" stroke-width="3"/>
+        <line x1="70" y1="45" x2="190" y2="115" class="rule" stroke-width="3"/>
+        <line x1="70" y1="185" x2="190" y2="115" class="rule" stroke-width="3"/>
+        <line x1="190" y1="115" x2="310" y2="115" class="rule" stroke-width="3"/>
+        <circle cx="70" cy="45" r="17" class="fill-ground ink" stroke-width="2"/>
+        <circle cx="70" cy="185" r="17" class="fill-unit ink" stroke-width="2"/>
+        <circle cx="190" cy="115" r="17" class="fill-unit ink" stroke-width="2"/>
+        <circle cx="310" cy="115" r="17" class="fill-ground ink" stroke-width="2"/>
+        <text x="40" y="51" text-anchor="middle" class="mono" font-size="17">0</text>
+        <text x="40" y="191" text-anchor="middle" class="mono" font-size="17">1</text>
+        <text x="190" y="157" text-anchor="middle" class="mono" font-size="17">2</text>
+        <text x="344" y="121" text-anchor="middle" class="mono" font-size="17">3</text>
+      </svg>
+      <p class="cap">Filled: the cover $\{1,2\}$. Every edge has a filled end.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>The seven covers, by size. Size 2: $\{1,2\}$ and $\{0,2\}$. Size 3:
+    $\{0,1,2\}$, $\{0,1,3\}$, $\{0,2,3\}$, $\{1,2,3\}$. Size 4: all four vertices. No
+    single vertex is a cover: vertex 2 touches three edges but misses $01$.</p>
+    <p>Why this graph. It is small enough to check by hand, and it contains a triangle,
+    which is where the certificates section gets interesting: the triangle on its own
+    has no short proof of optimality of the kind used below, but this graph does. The
+    same four edges come back in the four questions, the certificates, and the oracle.</p>
+    <p>In code it is <code>VertexCover(4, ((0,1), (0,2), (1,2), (2,3)))</code>, and
+    <code>brute_force</code> on it returns value 2 at <code>(0, 1, 1, 0)</code>, with
+    <code>feasible=7</code> and <code>examined=16</code>.</p>
+  </aside>
+</section>
+
+<section>
   <p class="eyebrow">00 · definitions</p>
   <h2>Finite, and astronomically so</h2>
   <div class="cols wide-left">
@@ -117,11 +170,12 @@
         <thead><tr><th>space</th><th>size</th><th class="num">at $n = 50$</th></tr></thead>
         <tbody>
           <tr><td>subsets, $\{0,1\}^n$</td><td>$2^n$</td><td class="num">$1.1 \times 10^{15}$</td></tr>
-          <tr><td>set partitions</td><td>Bell $B_n$</td><td class="num">$1.9 \times 10^{47}$</td></tr>
+          <tr><td><span class="term">set partitions</span></td><td><span class="term" data-term="Bell number B_n">Bell $B_n$</span></td><td class="num">$1.9 \times 10^{47}$</td></tr>
           <tr><td>tours from a fixed city</td><td>$(n-1)!$</td><td class="num">$6.1 \times 10^{62}$</td></tr>
         </tbody>
       </table>
       <p>Enumerating is always <b>correct</b> and almost always <b>useless</b>.</p>
+      <p class="small">The running example has $2^4 = 16$ candidates. Each vertex added doubles that: a graph with 50 vertices has the number in the first row.</p>
       <p class="muted">Almost always useless, but it is not worthless: for $n \lesssim 20$
       it is the only solver whose correctness you can see by reading it.</p>
     </div>
@@ -153,17 +207,22 @@
   <p class="eyebrow">00 · definitions</p>
   <h2>Four questions about one instance</h2>
   <table style="font-size:.78em">
-    <thead><tr><th>version</th><th>asks</th><th>vertex cover example</th></tr></thead>
+    <thead><tr><th>version</th><th>asks</th><th>on the running example, $k = 2$</th></tr></thead>
     <tbody>
-      <tr><td><b>decision</b></td><td>is there $x \in F$ with $c(x) \le k$?</td><td>is there a cover with at most 12 vertices?</td></tr>
-      <tr><td><b>evaluation</b></td><td>what is $\min_{x\in F} c(x)$?</td><td>the smallest cover has 11 vertices</td></tr>
-      <tr><td><b>search / optimization</b></td><td>find an $x^*$ achieving it</td><td>here are the 11 vertices</td></tr>
-      <tr><td><b>counting</b></td><td>how many $x \in F$ have $c(x) \le k$?</td><td>how many covers of size 11 exist?</td></tr>
+      <tr><td><b><span class="term" data-term="decision version">decision</span></b></td><td>is there $x \in F$ with $c(x) \le k$?</td><td>is there a cover with at most 2 vertices? <b>yes</b> <span class="muted">(with $k = 1$: no)</span></td></tr>
+      <tr><td><b><span class="term" data-term="evaluation version">evaluation</span></b></td><td>what is $\min_{x\in F} c(x)$?</td><td>the smallest cover has <b>2</b> vertices</td></tr>
+      <tr><td><b><span class="term" data-term="search (optimization) version">search / optimization</span></b></td><td>find an $x^*$ achieving it</td><td>here is one: <b>$\{1, 2\}$</b></td></tr>
+      <tr><td><b><span class="term" data-term="counting version">counting</span></b></td><td>how many $x \in F$ have $c(x) \le k$?</td><td><b>2</b> covers: $\{1,2\}$ and $\{0,2\}$</td></tr>
     </tbody>
   </table>
-  <div class="box"><span class="label">fact</span>
-    <p>For integer objectives of polynomial bit size, the first three are
-    polynomially equivalent. Counting can be much harder.</p>
+  <div class="cols">
+    <div class="box"><span class="label">fact</span>
+      <p class="small">For integer objectives of polynomial bit size, the first three are
+      equally hard, up to polynomial factors. Counting can be much harder.</p>
+    </div>
+    <div class="box ex"><span class="label">how, on the example</span>
+      <p class="small">Decision to evaluation: ask $k = 0, 1, 2, \dots$ and stop at the first yes. Evaluation to search: delete vertex 0 and its edges. The rest ($12$, $23$) needs 1, one less than 2, so some best cover uses 0. Keep it and repeat on the rest.</p>
+    </div>
   </div>
   <aside class="notes">
     <p><b>Decision to evaluation:</b> the optimum lies in a range of integers whose
@@ -173,6 +232,12 @@
     deleting vertex $v$ and its edges and ask whether the optimum of the rest is one
     less. If it is, $v$ belongs to some optimal cover: commit to it and recurse.
     That is $|V|$ more evaluation calls.</p>
+    <p><b>The example box, finished.</b> The optimum is 2. Deleting vertex 0 leaves edges
+    $12, 23$, whose optimum is 1 (vertex 2), one less than 2, so some optimal cover
+    contains 0: keep it and recurse on $\{12, 23\}$, optimum 1. Deleting vertex 1
+    there leaves $23$, optimum still 1, not one less, so 1 is not needed. Deleting vertex 2 leaves
+    nothing, optimum 0: keep 2. Result $\{0, 2\}$. Trying the vertices in a different
+    order can give the other optimal cover, $\{1, 2\}$.</p>
     <p><b>Counting</b> is a different world. Deciding whether a bipartite graph has
     a perfect matching takes polynomial time (unit 15). <em>Counting</em> perfect
     matchings is #P-complete (Valiant 1979), and so is computing the permanent of a
@@ -194,23 +259,23 @@
   <p class="eyebrow">00 · the nine</p>
   <h2>The cast</h2>
   <div class="cards">
-    <div class="card k-bin"><b>Knapsack</b><span class="space">{0,1}ⁿ · max</span>
+    <div class="card k-bin"><b><span class="term">Knapsack</span></b><span class="space">{0,1}ⁿ · max</span>
       <span class="use">DP (16), cover cuts (08), weakly NP-hard, FPTAS (22)</span></div>
-    <div class="card k-bin"><b>Set cover</b><span class="space">{0,1}ᵐ · min</span>
+    <div class="card k-bin"><b><span class="term">Set cover</span></b><span class="space">{0,1}ᵐ · min</span>
       <span class="use">greedy $H_n$ (23), LP rounding & primal–dual (24)</span></div>
-    <div class="card k-perm"><b>Assignment</b><span class="space">permutations · min</span>
+    <div class="card k-perm"><b><span class="term">Assignment</span></b><span class="space">permutations · min</span>
       <span class="use">integral LP (06), Hungarian (15), Sinkhorn (31)</span></div>
-    <div class="card k-part"><b>Bin packing</b><span class="space">set partitions · min</span>
+    <div class="card k-part"><b><span class="term">Bin packing</span></b><span class="space">set partitions · min</span>
       <span class="use">strongly NP-hard, column generation (10)</span></div>
-    <div class="card k-part"><b>Graph colouring</b><span class="space">set partitions · min</span>
+    <div class="card k-part"><b><span class="term">Graph colouring</span></b><span class="space">set partitions · min</span>
       <span class="use">SAT encodings (20), symmetry (27), Lovász θ (25)</span></div>
-    <div class="card k-bin"><b>Max-cut</b><span class="space">{0,1}ⁿ · max</span>
+    <div class="card k-bin"><b><span class="term">Max-cut</span></b><span class="space">{0,1}ⁿ · max</span>
       <span class="use">no constraints at all, Goemans–Williamson 0.878 (25)</span></div>
-    <div class="card k-perm"><b>TSP</b><span class="space">tours · min</span>
+    <div class="card k-perm"><b><span class="term">TSP</span></b><span class="space">tours · min</span>
       <span class="use">subtour separation (09), Held–Karp (11, 16), Christofides (23), 2-opt (26)</span></div>
-    <div class="card k-sched"><b>Job-shop</b><span class="space">machine orders · min</span>
+    <div class="card k-sched"><b><span class="term">Job-shop</span></b><span class="space">machine orders · min</span>
       <span class="use">disjunctive & cumulative (18), LNS (19), CP-SAT (21)</span></div>
-    <div class="card k-bin"><b>Vertex cover</b><span class="space">{0,1}ⁿ · min</span>
+    <div class="card k-bin"><b><span class="term">Vertex cover</span></b><span class="space">{0,1}ⁿ · min</span>
       <span class="use">2-approx (23), half-integral LP (24), FPT (16), UGC (22)</span></div>
   </div>
   <p class="legend"><i style="background:var(--c-lp)"></i>subsets <i style="background:var(--c-ip)"></i>orderings
@@ -243,7 +308,7 @@
   <h2>One problem, three descriptions</h2>
   <div class="cols three" style="gap:1em">
     <div>
-      <h3>As a predicate</h3>
+      <h3>As a <span class="term" data-term="predicate model">predicate</span></h3>
       <p class="small">what an oracle needs</p>
 <pre><code class="language-python">def feasible(G, x):
     return all(x[u] or x[v]
@@ -253,12 +318,12 @@ def objective(G, x):
     return sum(x)</code></pre>
     </div>
     <div>
-      <h3>As an integer program</h3>
+      <h3>As an <span class="term">integer program</span></h3>
       <p class="small">Parts I–II</p>
       $$\begin{aligned}\min\ & \textstyle\sum_{v} x_v \\ \text{s.t. } & x_u + x_v \ge 1 \quad \forall uv \in E \\ & x \in \{0,1\}^V\end{aligned}$$
     </div>
     <div>
-      <h3>As a constraint model</h3>
+      <h3>As a <span class="term">constraint model</span></h3>
       <p class="small">Part IV</p>
 <pre><code class="language-python">x = [model.NewBoolVar(f"x{v}")
      for v in V]
@@ -296,20 +361,19 @@ model.Minimize(sum(x))</code></pre>
         <thead><tr><th>space</th><th class="num">size</th><th class="num">$n = 10$</th></tr></thead>
         <tbody>
           <tr><td>every map item → bin</td><td class="num">$n^n$</td><td class="num">10 000 000 000</td></tr>
-          <tr><td>set partitions</td><td class="num">$B_n$</td><td class="num">115 975</td></tr>
+          <tr><td><span class="term">set partitions</span></td><td class="num"><span class="term" data-term="Bell number B_n">$B_n$</span></td><td class="num">115 975</td></tr>
         </tbody>
       </table>
       <p>The first space counts every relabelling of the bins as a new packing.
       The second counts each packing once: <b>86 000× fewer</b>.</p>
     </div>
-    <div class="box def"><span class="label">restricted growth strings</span>
+    <div class="box def"><span class="label"><span class="term">restricted growth strings</span></span>
       <p>$a_0 = 0,\quad a_i \le 1 + \max(a_0,\dots,a_{i-1})$</p>
       <p>$a_i$ is item $i$'s bin. Bins are opened in order, so each partition of
-      $\{0,\dots,n-1\}$ has exactly one string. For $n=3$:</p>
-      <p class="center"><code>000 001 010 011 012</code></p>
+      $\{0,\dots,n-1\}$ has exactly one string. The next slide lists them for $n = 3$.</p>
     </div>
   </div>
-  <p class="muted">This is <b>symmetry breaking</b>. Later it is the biggest single lever on real MIP and CP models (units 05, 27).</p>
+  <p class="muted">This is <span class="term">symmetry breaking</span>. Later it is the biggest single lever on real MIP and CP models (units 05, 27).</p>
   <aside class="notes">
     <p>Why the strings work: read left to right, and give each new block the next
     unused label. Every partition has exactly one such canonical labelling, and
@@ -328,6 +392,58 @@ model.Minimize(sum(x))</code></pre>
   </aside>
 </section>
 
+<section>
+  <p class="eyebrow">00 · spaces · example</p>
+  <h2>Set partitions, on three items</h2>
+  <div class="cols">
+    <div>
+      <p class="small">Every <span class="term">restricted growth string</span> for $n = 3$, and the <span class="term">set partition</span> it names. Read $a_i$ as "item $i$ goes in bin $a_i$".</p>
+      <table>
+        <thead><tr><th>string</th><th>bins</th><th>why it is allowed</th></tr></thead>
+        <tbody>
+          <tr><td><code>000</code></td><td>$\{0,1,2\}$</td><td>never opens a new bin</td></tr>
+          <tr><td><code>001</code></td><td>$\{0,1\}\ \{2\}$</td><td>item 2 opens bin 1</td></tr>
+          <tr><td><code>010</code></td><td>$\{0,2\}\ \{1\}$</td><td>item 1 opens bin 1</td></tr>
+          <tr><td><code>011</code></td><td>$\{0\}\ \{1,2\}$</td><td>item 1 opens bin 1</td></tr>
+          <tr><td><code>012</code></td><td>$\{0\}\ \{1\}\ \{2\}$</td><td>each item opens the next bin</td></tr>
+        </tbody>
+      </table>
+      <p class="small"><b>Not allowed:</b> <code>002</code> skips bin 1, and <code>100</code> starts at bin 1. Both are relabellings of strings already in the table (<code>001</code>, and <code>011</code>). That is the <span class="term">symmetry</span> being removed.</p>
+    </div>
+    <div>
+      <div class="box ex"><span class="label">bin packing on these five</span>
+        <p class="small">Items of size $3, 2, 1$; bins of capacity $4$.</p>
+        <table style="margin:0">
+          <thead><tr><th>string</th><th>bin loads</th><th class="num">bins</th></tr></thead>
+          <tbody>
+            <tr><td><code>000</code></td><td>$6$ ✗</td><td class="num">—</td></tr>
+            <tr><td><code>001</code></td><td>$5,\ 1$ ✗</td><td class="num">—</td></tr>
+            <tr><td><code>010</code></td><td>$4,\ 2$ ✓</td><td class="num"><b>2</b></td></tr>
+            <tr><td><code>011</code></td><td>$3,\ 3$ ✓</td><td class="num"><b>2</b></td></tr>
+            <tr><td><code>012</code></td><td>$3,\ 2,\ 1$ ✓</td><td class="num">3</td></tr>
+          </tbody>
+        </table>
+        <p class="small">Five candidates, three feasible, optimum <b>2 bins</b>. The "every map item → bin" space would have checked $3^3 = 27$.</p>
+      </div>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>The rule $a_i \le 1 + \max(a_0, \dots, a_{i-1})$ says: an item may go into any bin
+    already opened, or open exactly the next one. So the first item always opens bin 0,
+    and bins are numbered in the order they are first used. Given any packing, you
+    recover its string by walking the items in order and naming each bin the first
+    time you meet it.</p>
+    <p>The 27 maps from three items to three bins fall into the same five partitions:
+    <code>000</code>-type (all together) arises 3 ways, each of the three
+    two-bin splits 6 ways, and all-apart 6 ways. $3 + 3\cdot 6 + 6 = 27$.</p>
+    <p>The packing arithmetic: <code>010</code> puts items 0 and 2 (sizes 3 and 1) in bin
+    0, load 4, exactly full, and item 1 (size 2) alone. <code>011</code> puts item 0 alone
+    (3) and items 1, 2 together (2 + 1 = 3). A lower bound confirms 2 is optimal: total
+    size 6 over capacity 4 needs at least $\lceil 6/4 \rceil = 2$ bins. That is a
+    certificate, the subject of the next section.</p>
+  </aside>
+</section>
+
 <!-- ================================================================== -->
 <section class="divider">
   <p class="eyebrow">section 3</p>
@@ -339,22 +455,26 @@ model.Minimize(sum(x))</code></pre>
   <p class="eyebrow">00 · certificates</p>
   <h2>Two kinds of evidence</h2>
   <div class="cols">
-    <div class="box good"><span class="label">upper bound · "at most k"</span>
+    <div class="box good"><span class="label"><span class="term" data-term="upper-bound certificate">upper bound</span> · "at most k"</span>
       <p>Exhibit $x \in F$ with $c(x) = k$.</p>
       <p>Anyone checks it by evaluating the constraints and the objective. For all
       nine problems that takes polynomial time. <b>This is exactly what puts the
-      decision versions in NP.</b></p>
+      decision versions in <span class="term" data-term="NP">NP</span>.</b></p>
     </div>
-    <div class="box warn"><span class="label">lower bound · "at least k"</span>
+    <div class="box warn"><span class="label"><span class="term" data-term="lower-bound certificate">lower bound</span> · "at least k"</span>
       <p>Show that <b>no</b> $x \in F$ has $c(x) &lt; k$.</p>
       <p>Enumeration proves it, but the proof is exponentially long. Is there a
       <em>short</em> proof? For NP-hard problems, in general, it is believed there
-      is not: that is NP ≠ coNP.</p>
+      is not: that is NP ≠ <span class="term" data-term="coNP">coNP</span>.</p>
     </div>
   </div>
-  <p>Yet for particular instances, and for whole problem classes, short lower-bound
+  <div class="box ex"><span class="label">on the running example</span>
+    <p class="small"><b>At most 2:</b> hand over $\{1,2\}$; checking it is four edge lookups. <b>At least 2:</b> enumeration checks all 16 candidates and finds no cover of size 0 or 1. That works at 4 vertices, not at 50. The next two slides replace it with <b>two edges</b>.</p>
+  </div>
+  <p>For particular instances, and for whole problem classes, short lower-bound
   proofs do exist. <b>Finding them is most of the course.</b></p>
   <aside class="notes">
+    <p>A <span class="term">certificate</span> in this course is any short object that lets someone else check a claim without redoing the search.</p>
     <p>For a minimization problem, a feasible solution gives an <em>upper</em> bound on
     the optimum, and it is its own certificate. A <em>lower</em> bound needs an
     argument about every solution at once.</p>
@@ -384,13 +504,14 @@ model.Minimize(sum(x))</code></pre>
   <div class="cols wide-left">
     <div>
       <div class="box thm"><span class="label">lemma</span>
-        <p>If $M$ is a matching and $C$ a vertex cover in the same graph, then $|C| \ge |M|$.</p>
+        <p>If $M$ is a <span class="term">matching</span> (edges sharing no endpoint) and $C$ a vertex cover in the same graph, then $|C| \ge |M|$.</p>
       </div>
-      <div class="box proof"><span class="label">proof</span>
-        <p>Each edge of $M$ needs an endpoint in $C$. The edges of $M$ share no
-        endpoints, so those are $|M|$ distinct vertices. $\square$</p>
+      <div class="box"><span class="label">why</span>
+        <p>Each matched edge needs one of its own endpoints in the cover. Matched edges
+        share no endpoints, so no cover vertex can serve two of them: the cover needs
+        $|M|$ different vertices.</p>
       </div>
-      <p>So a cover and a matching <b>of the same size</b> prove each other optimal.</p>
+      <p>So a cover and a matching <b>of the same size</b> prove each other optimal. This is the <span class="term">matching lower bound</span>, the course's first instance of <span class="term">weak duality</span>.</p>
     </div>
     <div class="fig">
       <svg viewBox="0 0 300 150" width="400" role="img" aria-label="path on four vertices with a cover of size two and a matching of size two">
@@ -429,14 +550,66 @@ model.Minimize(sum(x))</code></pre>
 </section>
 
 <section>
+  <p class="eyebrow">00 · certificates · example</p>
+  <h2>A certificate, checked step by step</h2>
+  <div class="cols wide-left">
+    <div>
+      <p class="small">Claim: <b>the smallest cover of the running example has 2 vertices.</b> The certificate is a cover $C = \{1,2\}$ and a matching $M = \{01, 23\}$.</p>
+      <table>
+        <thead><tr><th>check</th><th>on the example</th><th></th></tr></thead>
+        <tbody>
+          <tr><td>1. every edge of $M$ is an edge of $G$</td><td>$01$ ✓, $23$ ✓</td><td>✓</td></tr>
+          <tr><td>2. edges of $M$ share no endpoint</td><td>endpoints $0,1,2,3$: all different</td><td>✓</td></tr>
+          <tr><td>3. $C$ covers every edge</td><td>$01{:}\,1$ · $02{:}\,2$ · $12{:}\,1,2$ · $23{:}\,2$</td><td>✓</td></tr>
+          <tr><td>4. sizes agree</td><td>$|C| = 2 = |M|$</td><td>✓</td></tr>
+        </tbody>
+      </table>
+      <p class="small"><b>What follows:</b> check 3 says the optimum is at most 2. Checks 1–2 and the lemma say every cover has at least 2. So 2 is optimal, and nobody enumerated anything.</p>
+      <p class="small muted">A wrong certificate fails a check. $M = \{01, 12\}$ fails check 2 (vertex 1 twice), and rightly: one vertex, 1, touches both edges.</p>
+    </div>
+    <div class="fig">
+      <svg viewBox="0 0 380 210" width="360" role="img" aria-label="running example with cover {1,2} filled and matching {01, 23} thick">
+        <line x1="70" y1="45" x2="70" y2="185" class="accent" stroke-width="7"/>
+        <line x1="70" y1="45" x2="190" y2="115" class="rule" stroke-width="3"/>
+        <line x1="70" y1="185" x2="190" y2="115" class="rule" stroke-width="3"/>
+        <line x1="190" y1="115" x2="310" y2="115" class="accent" stroke-width="7"/>
+        <circle cx="70" cy="45" r="17" class="fill-ground ink" stroke-width="2"/>
+        <circle cx="70" cy="185" r="17" class="fill-unit ink" stroke-width="2"/>
+        <circle cx="190" cy="115" r="17" class="fill-unit ink" stroke-width="2"/>
+        <circle cx="310" cy="115" r="17" class="fill-ground ink" stroke-width="2"/>
+        <text x="40" y="51" text-anchor="middle" class="mono" font-size="17">0</text>
+        <text x="40" y="191" text-anchor="middle" class="mono" font-size="17">1</text>
+        <text x="190" y="157" text-anchor="middle" class="mono" font-size="17">2</text>
+        <text x="344" y="121" text-anchor="middle" class="mono" font-size="17">3</text>
+      </svg>
+      <p class="cap">Filled: the cover. Thick: the matching. Each thick edge has its own filled end.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>How long is this check on a big graph? Check 1 is a lookup per matched edge, check 2
+    is a pass over at most $|V|$ endpoints, check 3 is a pass over the edges. Linear
+    time, against $2^{|V|}$ candidates for enumeration. That contrast is what
+    "short certificate" means. Lab step 4 asks you to write exactly these checks.</p>
+    <p>Notice what check 4 does not need: it doesn't need $M$ to be a <em>maximum</em>
+    matching, or $C$ to be a <em>minimum</em> cover. Equal sizes are enough, because each
+    one bounds the other. If the sizes differed, say $|C| = 3$ and $|M| = 2$, the
+    certificate would only prove $2 \le \text{optimum} \le 3$.</p>
+    <p>The running example contains a triangle, and the next slide shows that a triangle
+    on its own has no such certificate. Here the pendant edge $23$ rescues it: it
+    gives the matching a second edge, disjoint from $01$, that the triangle alone cannot supply.</p>
+  </aside>
+</section>
+
+<section>
   <p class="eyebrow">00 · certificates</p>
   <h2>When the bound is not enough</h2>
   <div class="cols wide-left">
     <div>
       <p>On a triangle, the largest matching has <b>1</b> edge, and the smallest cover
-      needs <b>2</b> vertices. No matching certifies the optimum. The gap is real.</p>
-      <div class="box thm"><span class="label">könig, 1931</span>
-        <p>In a <b>bipartite</b> graph, $\max |M| = \min |C|$. The certificate always exists.</p>
+      needs <b>2</b> vertices. No matching certifies the optimum. This <span class="term">duality gap</span> is real.</p>
+      <p class="small">Delete the running example's edge $23$ and you are here: the matching loses its second edge, the cover still needs 2.</p>
+      <div class="box thm"><span class="label"><span class="term" data-term="König's theorem">könig, 1931</span></span>
+        <p>In a <span class="term" data-term="bipartite graph">bipartite</span> graph, $\max |M| = \min |C|$. The certificate always exists.</p>
       </div>
       <p class="muted">The triangle is the smallest odd cycle, and odd cycles are exactly
       what bipartite graphs lack. That coincidence is where polyhedral combinatorics
@@ -484,6 +657,7 @@ model.Minimize(sum(x))</code></pre>
   <p class="eyebrow">00 · oracle</p>
   <h2>Brute force, done once and done right</h2>
   <div class="cols wide-left">
+    <div>
 <pre><code class="language-python">def brute_force(problem):
     best = best_x = None
     feasible = examined = 0
@@ -496,17 +670,21 @@ model.Minimize(sum(x))</code></pre>
         if best is None or better(v, best, problem.sense):
             best, best_x = v, x
     return Result(best, best_x, feasible, examined)</code></pre>
+      <p class="small muted">Where people slip: initializing <code>best</code> to 0 or ∞
+      (wrong for one sense), and reporting a value on infeasible instances.</p>
+    </div>
     <div>
       <p><b>Obviously correct</b>: it is the definition of the optimum, executed.</p>
-      <p><b>Self-certifying</b>: <code>examined == space.size()</code> is the lower-bound proof.</p>
+      <p><b><span class="term">Self-certifying</span></b>: <code>examined == space.size()</code> is the lower-bound proof.</p>
       <p><b>Generic</b>: one function for all nine problems, because every problem has
-      the same interface.</p>
-      <p class="muted">Where people slip: initializing <code>best</code> to 0 or ∞
-      (wrong for one sense), and reporting a value on infeasible instances.</p>
+      the same <span class="term">problem interface</span>.</p>
+      <div class="box ex"><span class="label">on the running example</span>
+        <p class="small"><code>examined=16</code>, <code>feasible=7</code>, value <b>2</b> at <code>(0, 1, 1, 0)</code>: the cover $\{1,2\}$. It keeps the first best it meets, so the tie $\{0,2\}$, found later, is not reported.</p>
+      </div>
     </div>
   </div>
   <aside class="notes">
-    <p>The value of an oracle comes entirely from being easy to believe. That rules
+    <p>The value of an <span class="term">oracle</span> comes entirely from being easy to believe. That rules
     out anything clever. No pruning, no early exit, no incremental evaluation: each
     of those is a new place for a bug to hide, and a buggy oracle is worse than
     none, because it teaches you to trust wrong answers.</p>
@@ -514,6 +692,11 @@ model.Minimize(sum(x))</code></pre>
     <code>objective</code>, <code>sense</code>, is what makes the oracle generic.
     Every problem in <code>colib</code> has it. When a later unit adds a problem, it
     gets an oracle for free.</p>
+    <p><b>The example, step by step.</b> The space lists the 16 vectors in order
+    $(0,0,0,0), (0,0,0,1), \dots, (1,1,1,1)$. The first feasible one is
+    $(0,1,1,0)$, the 7th examined, value 2: it becomes <code>best</code>. The next feasible
+    one of value 2 is $(1,0,1,0)$, examined 11th; <code>better(2, 2, "min")</code> is false, so
+    <code>best_x</code> stays. Five more covers, all of size 3 or 4, change nothing.</p>
     <p>Keeping both counts, <code>feasible</code> and <code>examined</code>, costs
     nothing and gives two sanity checks. <code>examined</code> must equal the size of
     the space. And <code>feasible</code> tells you how constrained an instance is:
@@ -548,12 +731,12 @@ model.Minimize(sum(x))</code></pre>
     </svg>
   </div>
   <div class="cols three">
-    <p class="small"><b>Smallest first.</b> The first failure is the smallest counterexample the sweep contains, and so the easiest one to draw.</p>
+    <p class="small"><b><span class="term">Smallest first</span>.</b> The first failure is the smallest counterexample the sweep contains, and so the easiest one to draw.</p>
     <p class="small"><b>Feasibility checked separately.</b> A "better than optimal" answer is always an infeasible one.</p>
-    <p class="small"><b>Ratio mode.</b> For approximation algorithms, pass <code>ratio=2</code> and check a guarantee, not equality.</p>
+    <p class="small"><b><span class="term">Ratio mode</span>.</b> For approximation algorithms, pass <code>ratio=2</code> and check a guarantee, not equality.</p>
   </div>
   <aside class="notes">
-    <p>This is property-based testing with a problem-specific property. The
+    <p><span class="term">Differential testing</span> is property-based testing with a problem-specific property. The
     property is "agrees with the definition". If you have used Hypothesis or
     QuickCheck, the harness is a hand-rolled version, with instance generators in
     place of strategies and size ordering in place of shrinking.</p>
@@ -596,7 +779,7 @@ model.Minimize(sum(x))</code></pre>
       </svg>
     </div>
     <div>
-      <p><b>"Take the vertex covering the most uncovered edges."</b></p>
+      <p><b>"Take the vertex covering the most uncovered edges."</b> <span class="small muted">(<span class="term">max-degree greedy</span>)</span></p>
       <p>On this spider it takes the centre (degree 3). The three leg-ends are then
       disjoint edges, and each costs one more vertex: <b>4</b>.</p>
       <p>The middle row covers everything with <b>3</b>, and the three thick edges are a
@@ -638,7 +821,7 @@ model.Minimize(sum(x))</code></pre>
           <tr><td>$B_n$ — bin packing</td><td class="num">13</td><td class="num">15</td><td class="num">19</td></tr>
         </tbody>
       </table>
-      <p>A year of computing buys <b>five more TSP cities</b> than a minute does.</p>
+      <p>A year of computing buys <b>five more TSP cities</b> than a minute does. That limit is <span class="term">the wall</span>.</p>
     </div>
     <div class="box"><span class="label">rule for the rest of the course</span>
       <p>Tests against brute force use $n \le 12$ for subset spaces, $n \le 8$ for

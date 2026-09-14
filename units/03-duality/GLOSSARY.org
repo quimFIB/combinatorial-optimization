@@ -33,7 +33,7 @@ x, y \ge 0\), optimal at \(x = y = 2\) with dual \((1, 1)\) and value 10.
 - outcome table :: Primal and dual are both optimal with equal values, or one is
   unbounded and the other infeasible, or both are infeasible. No other pairing
   happens. /Slide: Four possible outcomes, not nine./
-- "infeasible or unbounded" :: What presolve reports when it sees the dual is
+- infeasible or unbounded :: What presolve reports when it sees the dual is
   infeasible, which leaves both possibilities open for the primal.
 
 * The dual as a certificate

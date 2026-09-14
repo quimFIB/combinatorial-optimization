@@ -20,7 +20,7 @@
   <h1>Duality — the load-bearing unit</h1>
   <p class="lede">Every LP has a shadow LP that bounds it, prices its constraints, certifies its
   optimum, and re-solves it cheaply after a change.</p>
-  <p class="meta"><span>needs 02</span><span>~2 h slides + 2½ h lab</span><span>lab: <code>uv run co lab 03</code></span></p>
+  <p class="meta"><span>needs 02</span><span>~2½ h slides + 2½ h lab</span><span>lab: <code>uv run co lab 03</code></span></p>
   <aside class="notes">
     <p>The curriculum calls this unit load-bearing, and asks you to spend longer on it
     than feels justified. The reason is on the second-to-last slide: cutting planes,
@@ -35,6 +35,11 @@
       <li>a set of <b>prices</b> (sensitivity);</li>
       <li>an <b>algorithm</b> (the dual simplex).</li>
     </ul>
+    <h4>How to read this deck</h4>
+    <p>One LP runs through the whole unit: $\max 3x + 2y$ subject to $x + y \le 4$,
+    $2x + y \le 6$, $x, y \ge 0$, optimal at $(2, 2)$ with value 10 and dual $(1, 1)$.
+    Each face of the dual is shown on it with numbers. Proofs are on the slides only
+    where they are one line; the longer ones are in the notes under <b>Full proof</b>.</p>
   </aside>
 </section>
 
@@ -45,11 +50,14 @@
     <div class="box def"><span class="label">1 · a bound</span>
       <p>Nonnegative combinations of constraints bound the objective. The best such bound is an LP, and it is <b>exact</b>.</p></div>
     <div class="box def"><span class="label">2 · a certificate</span>
-      <p>A pair $(x, y)$ with equal objectives proves both optimal. Complementary slackness is the pointwise version.</p></div>
+      <p>A pair $(x, y)$ with equal objectives proves both optimal. <span class="term">Complementary slackness</span> is the pointwise version.</p></div>
     <div class="box def"><span class="label">3 · a set of prices</span>
-      <p>$y_i$ is what one more unit of $b_i$ is worth, exactly, within a computable range.</p></div>
+      <p>$y_i$ is what one more unit of $b_i$ is worth, exactly, within a computable range: a <span class="term">shadow price</span>.</p></div>
     <div class="box def"><span class="label">4 · an algorithm</span>
-      <p>The dual simplex keeps optimality and restores feasibility. It is the method used after adding a cut or a bound.</p></div>
+      <p>The <span class="term">dual simplex method</span> keeps optimality and restores feasibility. It is the method used after adding a cut or a bound.</p></div>
+  </div>
+  <div class="box good"><span class="label">getting around</span>
+    <p class="small">Words with a <span class="term" data-term="dual">dotted underline</span> are glossary terms: click one for its definition. <kbd>G</kbd> lists every term in the unit, <kbd>N</kbd> shows the notes, where the longer proofs live. One LP, $\max 3x + 2y$, runs through every section.</p>
   </div>
   <aside class="notes">
     <p>The lab follows the same order. Step 1 writes the dual, step 2 reads it from
@@ -71,19 +79,30 @@
   <div class="cols">
     <div>
       <p>$\max\ 3x + 2y\;$ s.t. $\;x + y \le 4,\ \ 2x + y \le 6,\ \ x, y \ge 0$.</p>
-      <p>Multiply the rows by $u, v \ge 0$ and add:</p>
+      <p class="small">Call this the <span class="term">primal</span>. Multiply the rows by <span class="term" data-term="dual variable">multipliers</span> $u, v \ge 0$ and add:</p>
       $$(u + 2v)\,x + (u + v)\,y \;\le\; 4u + 6v$$
-      <p>If $u + 2v \ge 3$ and $u + v \ge 2$, the left side is at least $3x + 2y$ for every $x, y \ge 0$. So $4u + 6v$ is an <b>upper bound</b> on the optimum.</p>
+      <p class="small">If $u + 2v \ge 3$ and $u + v \ge 2$, the left side is at least $3x + 2y$ for every $x, y \ge 0$. So $4u + 6v$ is an <b>upper bound</b> on the optimum.</p>
+      <div class="box ex"><span class="label">try some multipliers</span>
+        <p class="small">$u = 3, v = 0$: $\ 3x + 3y \le 12$, bound <b>12</b>.<br>
+        $u = 2, v = 1$: $\ 4x + 3y \le 14$, bound <b>14</b>.<br>
+        $u = 1, v = 1$: $\ 3x + 2y \le 10$, bound <b>10</b>. Can any do better?</p>
+      </div>
     </div>
     <div>
       <p>The best such bound is itself an LP:</p>
-      <div class="box def"><span class="label">the dual</span>
+      <div class="box def"><span class="label">the <span class="term">dual</span></span>
         $$\begin{aligned}\min\ & 4u + 6v\\ \text{s.t. } & u + 2v \ge 3\\ & u + v \ge 2\\ & u, v \ge 0\end{aligned}$$
       </div>
       <p>$u = v = 1$ gives the bound $10$, and $x = y = 2$ attains $10$. Both are optimal, and neither needed a solver to check.</p>
     </div>
   </div>
   <aside class="notes">
+    <p><b>The example box.</b> Each choice must pass both checks. $u = 3, v = 0$:
+    $u + 2v = 3 \ge 3$ and $u + v = 3 \ge 2$. $u = 2, v = 1$: $4 \ge 3$ and $3 \ge 2$.
+    $u = 1, v = 1$: $3 \ge 3$ and $2 \ge 2$, both tight, and the bound 10 is attained at
+    $(2, 2)$, so no choice can do better. A choice like $u = 0, v = 1$ fails the second
+    check ($u + v = 1 &lt; 2$): the row $2x + y \le 6$ alone does not bound $3x + 2y$,
+    because $y$ gets coefficient 1 where the objective needs 2.</p>
     <p>This is unit 00's certificate idea in its original setting. There, a matching
     was a lower bound on vertex cover because we combined constraints (one per
     matched edge). Here the combination has real-valued weights, and the best weights
@@ -102,6 +121,7 @@
   <h2>The rules, once</h2>
   <div class="cols wide-left">
     <div>
+      <p class="small">The <span class="term">dualization rules</span>, for a max primal:</p>
       <table style="font-size:.76em">
         <thead><tr><th>primal (max $c^\top x$)</th><th>dual (min $b^\top y$)</th></tr></thead>
         <tbody>
@@ -118,7 +138,7 @@
       <div class="box"><span class="label">how to rebuild it</span>
         <p class="small">Multipliers must keep inequalities pointing the right way: $\le$ rows get $y \ge 0$. The combination must dominate the objective on the variable's allowed sign: $x_j \ge 0$ needs coefficient $\ge c_j$.</p>
       </div>
-      <div class="box good"><span class="label">involution</span>
+      <div class="box good"><span class="label"><span class="term">involution</span></span>
         <p class="small">For a min primal, flip every sign. Then $\text{dual}(\text{dual}(P)) = P$ exactly, and lab step 1 tests this on 40 random LPs.</p>
       </div>
     </div>
@@ -138,28 +158,96 @@
 </section>
 
 <section>
-  <p class="eyebrow">03 · bound</p>
-  <h2>Weak and strong duality</h2>
+  <p class="eyebrow">03 · bound · example</p>
+  <h2>Dualizing, line by line</h2>
   <div class="cols">
     <div>
-      <div class="box thm"><span class="label">weak duality</span>
-        <p>For $\max\{c^\top x : Ax \le b,\, x \ge 0\}$ and its dual: if $x$ and $y$ are feasible, $c^\top x \le b^\top y$.</p>
+      <div class="box def"><span class="label">primal</span>
+        $$\begin{aligned}\max\ & x_1 + 2x_2\\ \text{s.t. } & x_1 + x_2 \le 3 \\ & x_1 - x_2 \ge -1 \\ & x_1 \ge 0,\ \ x_2 \text{ free}\end{aligned}$$
       </div>
-      <div class="box proof"><span class="label">proof</span>
-        <p>$c^\top x \le (A^\top y)^\top x = y^\top (Ax) \le y^\top b$, using $x \ge 0$ and then $y \ge 0$. $\square$</p>
+      <div class="box def"><span class="label">dual</span>
+        $$\begin{aligned}\min\ & 3y_1 - y_2\\ \text{s.t. } & y_1 + y_2 \ge 1 \\ & y_1 - y_2 = 2 \\ & y_1 \ge 0,\ \ y_2 \le 0\end{aligned}$$
       </div>
     </div>
     <div>
-      <div class="box thm"><span class="label">strong duality</span>
-        <p>If the primal has an optimal solution, so does the dual, and the optimal values are <b>equal</b>.</p>
-      </div>
-      <div class="box proof"><span class="label">proof, from farkas (unit 01)</span>
-        <p class="small">For $\varepsilon &gt; 0$, the system $Ax \le b,\ -c^\top x \le -(z^* + \varepsilon),\ x \ge 0$ has no solution. Its Farkas vector $(y, t) \ge 0$ must have $t &gt; 0$, because $Ax \le b$ is feasible. Scaled to $t = 1$, $y$ is dual feasible with $b^\top y &lt; z^* + \varepsilon$.</p>
+      <table style="font-size:.7em">
+        <thead><tr><th>primal piece</th><th>rule</th><th>dual piece</th></tr></thead>
+        <tbody>
+          <tr><td>row 1 is $\le$</td><td>$\le$ row</td><td>$y_1 \ge 0$</td></tr>
+          <tr><td>row 2 is $\ge$</td><td>$\ge$ row</td><td>$y_2 \le 0$</td></tr>
+          <tr><td>$x_1 \ge 0$, column $(1, 1)$, cost 1</td><td>$x_j \ge 0$</td><td>$y_1 + y_2 \ge 1$</td></tr>
+          <tr><td>$x_2$ free, column $(1, -1)$, cost 2</td><td>$x_j$ free</td><td>$y_1 - y_2 = 2$</td></tr>
+          <tr><td>right-hand sides $(3, -1)$</td><td>→ costs</td><td>$3y_1 - y_2$</td></tr>
+        </tbody>
+      </table>
+      <div class="box ex"><span class="label">both solved</span>
+        <p class="small">Primal: $x = (1, 2)$, value $1 + 4 = \mathbf 5$.<br>
+        Dual: $y = (\tfrac32, -\tfrac12)$, value $\tfrac92 + \tfrac12 = \mathbf 5$.</p>
+        <p class="small">Check the dual: $\tfrac32 - \tfrac12 = 1 \ge 1$ ✓, $\ \tfrac32 + \tfrac12 = 2$ ✓, signs ✓. Equal values, so both are optimal.</p>
       </div>
     </div>
   </div>
   <aside class="notes">
-    <p>Filling in the strong duality proof. Farkas for
+    <p><b>Why $y_2 \le 0$ makes sense here.</b> Row 2 is $x_1 - x_2 \ge -1$. Multiplied by
+    $y_2 = -\tfrac12$ it flips to $-\tfrac12 x_1 + \tfrac12 x_2 \le \tfrac12$, a $\le$ row
+    that can be added to $\tfrac32 \times$ row 1, $\tfrac32 x_1 + \tfrac32 x_2 \le \tfrac92$.
+    The sum is $x_1 + 2x_2 \le 5$: exactly the objective, bounded by 5.</p>
+    <p><b>Why the free variable gives an equation.</b> The sum's coefficient on $x_2$ must
+    equal 2, not just be at least 2. If it were 3, the sum $x_1 + 3x_2 \le$ bound would
+    not bound $x_1 + 2x_2$ when $x_2$ is negative.</p>
+    <p><b>Solving the dual by hand.</b> From the equation, $y_1 = 2 + y_2$. The objective is
+    $3(2 + y_2) - y_2 = 6 + 2y_2$, so make $y_2$ as small as allowed. The first dual row
+    gives $2 + 2y_2 \ge 1$, so $y_2 \ge -\tfrac12$. Hence $y_2 = -\tfrac12$, $y_1 = \tfrac32$,
+    value 5.</p>
+    <p><b>Solving the primal by hand.</b> $x_2$ is capped by $3 - x_1$ and by $x_1 + 1$.
+    The two caps meet at $x_1 = 1$, $x_2 = 2$. Left of that the objective is
+    $x_1 + 2(x_1 + 1)$, rising; right of it, $x_1 + 2(3 - x_1)$, falling. So the optimum is
+    $(1, 2)$ with value 5.</p>
+    <p>In the lab this is
+    <code>GeneralLP("max", (1, 2), ((1, 1), (1, -1)), ("&lt;=", "&gt;="), (3, -1), ("&gt;=0", "free"))</code>.
+    The reference <code>dual</code> returns exactly the LP on the slide, and HiGHS confirms
+    both values.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">03 · bound</p>
+  <h2>Weak and strong duality</h2>
+  <div class="cols">
+    <div>
+      <div class="box thm"><span class="label"><span class="term">weak duality</span></span>
+        <p class="small">For $\max\{c^\top x : Ax \le b,\, x \ge 0\}$ and its dual: if $x$ and $y$ are feasible, $c^\top x \le b^\top y$.</p>
+        <p class="small muted"><b>Why:</b> $c^\top x \le (A^\top y)^\top x = y^\top (Ax) \le y^\top b$: the first step uses $x \ge 0$, the second $y \ge 0$. It is "add up the rows", written with matrices.</p>
+      </div>
+      <div class="box thm"><span class="label"><span class="term">strong duality</span></span>
+        <p class="small">If the primal has an optimal solution, so does the dual, and the optimal values are <b>equal</b>.</p>
+        <p class="small muted"><b>Why:</b> if every dual bound stayed above $z^* + \varepsilon$, the constraints plus "objective $\ge z^* + \varepsilon$" would have no solution. Farkas (unit 01) hands over weights proving that, and those weights are a dual solution with a bound below $z^* + \varepsilon$. Contradiction.</p>
+        <p class="proof-pointer">full proof in the notes (N)</p>
+      </div>
+    </div>
+    <div>
+      <div class="box ex"><span class="label">on the running example</span>
+        <table style="margin:0">
+          <thead><tr><th>primal $(x, y)$</th><th class="num">$3x + 2y$</th><th>dual $(u, v)$</th><th class="num">$4u + 6v$</th></tr></thead>
+          <tbody>
+            <tr><td>$(1, 1)$</td><td class="num">5</td><td>$(2, 1)$</td><td class="num">14</td></tr>
+            <tr><td>$(3, 0)$</td><td class="num">9</td><td>$(3, 0)$</td><td class="num">12</td></tr>
+            <tr><td>$(2, 2)$</td><td class="num"><b>10</b></td><td>$(1, 1)$</td><td class="num"><b>10</b></td></tr>
+          </tbody>
+        </table>
+        <p class="small">Every primal value is below every dual value: weak duality, nine comparisons at once. The last row has <b>no gap</b>: strong duality, and both are optimal.</p>
+      </div>
+      <p class="small">The difference $b^\top y - c^\top x$ is the <span class="term">duality gap</span> of a pair. For $(1,1)$ against $(2,1)$ it is 9; it closes to 0 only at the optimum.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p><b>The example table.</b> Feasibility of each entry: $(1,1)$ has $2 \le 4$ and
+    $3 \le 6$; $(3, 0)$ has $3 \le 4$ and $6 \le 6$; the three duals were checked on "Where
+    the dual comes from". Each of the primal values 5, 9, 10 is at most each of the dual
+    values 14, 12, 10, as weak duality promises, without solving anything.</p>
+    <h4>Full proof of strong duality</h4>
+    <p>For $\varepsilon &gt; 0$, the system $Ax \le b,\ -c^\top x \le -(z^* + \varepsilon),\ x \ge 0$
+    has no solution. Farkas for
     $\{x \ge 0 : Ax \le b,\ -c^\top x \le -(z^*+\varepsilon)\}$ gives
     $(y, t) \ge 0$ with $y^\top A - t c^\top \ge 0$ and
     $y^\top b - t (z^* + \varepsilon) &lt; 0$ (the form with $x \ge 0$; see the notes of
@@ -179,6 +267,7 @@
 <section>
   <p class="eyebrow">03 · bound</p>
   <h2>Four possible outcomes, not nine</h2>
+  <p class="small">The <span class="term">outcome table</span>: which primal status can pair with which dual status.</p>
   <div class="cols wide-left">
     <table style="font-size:.74em">
       <thead><tr><th>primal \ dual</th><th>optimal</th><th>unbounded</th><th>infeasible</th></tr></thead>
@@ -191,7 +280,7 @@
     <div>
       <p class="small">Unbounded primal ⇒ infeasible dual: any dual solution would bound it.</p>
       <p class="small">Both infeasible happens, for example with $\max\ x_1$ subject to $x_1 - x_2 \le -1,\ -x_1 + x_2 \le -1$.</p>
-      <p class="small muted">In the lab's random general LPs, HiGHS found 246 optimal pairs and 154 unbounded/infeasible pairs out of 400.</p>
+      <p class="small muted">It is why presolve sometimes can only say <span class="term" data-term="infeasible or unbounded">"infeasible or unbounded"</span>. In the lab's random general LPs, HiGHS found 246 optimal pairs and 154 unbounded/infeasible pairs out of 400.</p>
     </div>
   </div>
   <aside class="notes">
@@ -224,12 +313,13 @@
     $$y_i\,(b_i - a_i x) = 0 \ \text{ for every row } i, \qquad x_j\,\big((A^\top y)_j - c_j\big) = 0 \ \text{ for every variable } j.$$
   </div>
   <div class="cols">
-    <div class="box proof"><span class="label">proof</span>
-      <p>$b^\top y - c^\top x = \underbrace{y^\top (b - Ax)}_{\ge 0} + \underbrace{x^\top (A^\top y - c)}_{\ge 0}$. The gap is 0 exactly when every product is 0, and a zero gap means both are optimal by weak duality. $\square$</p>
+    <div class="box"><span class="label">why: the gap splits into pieces</span>
+      <p>$b^\top y - c^\top x = \underbrace{y^\top (b - Ax)}_{\ge 0} + \underbrace{x^\top (A^\top y - c)}_{\ge 0}$</p>
+      <p class="small">Every piece is (nonnegative) × (nonnegative). The gap is 0 exactly when every piece is 0, and a zero gap means both are optimal.</p>
     </div>
     <div>
-      <p><b>In words:</b> a constraint with slack has price 0. A variable that is used has zero reduced cost.</p>
-      <p class="small muted">Checking takes two matrix–vector products. That is lab step 3.</p>
+      <p><b>In words:</b> a constraint with slack has price 0. A variable that is used has zero reduced cost. Only a <span class="term" data-term="binding constraint">binding</span> row can carry a price.</p>
+      <p class="small muted">Checking takes two matrix–vector products: an <span class="term">optimality certificate</span>, lab step 3. The next slide runs the checks on the example.</p>
     </div>
   </div>
   <aside class="notes">
@@ -249,6 +339,57 @@
 </section>
 
 <section>
+  <p class="eyebrow">03 · certificate · example</p>
+  <h2>Complementary slackness, on the example</h2>
+  <div class="cols wide-left">
+    <div>
+      <div class="box ex"><span class="label">the optimal pair</span>
+        <p class="small">$x = (2, 2)$ and $y = (1, 1)$:</p>
+        <table style="margin:0">
+          <thead><tr><th>piece</th><th>slack</th><th>paired with</th><th class="num">product</th></tr></thead>
+          <tbody>
+            <tr><td>row $x + y \le 4$</td><td>$4 - 4 = 0$</td><td>$y_1 = 1$</td><td class="num">0</td></tr>
+            <tr><td>row $2x + y \le 6$</td><td>$6 - 6 = 0$</td><td>$y_2 = 1$</td><td class="num">0</td></tr>
+            <tr><td>variable $x$</td><td>$3 - 3 = 0$</td><td>$x = 2$</td><td class="num">0</td></tr>
+            <tr><td>variable $y$</td><td>$2 - 2 = 0$</td><td>$y = 2$</td><td class="num">0</td></tr>
+          </tbody>
+        </table>
+        <p class="small">All four products are 0, so the gap $10 - 10$ is 0.</p>
+      </div>
+      <div class="box warn"><span class="label">feasible, but not optimal</span>
+        <p class="small">$x = (0, 0)$ with $y = (1, 1)$. Row 1 has slack 4 but price 1: product 4. Row 2: slack 6, price 1: product 6. The gap is $10 - 0 = 4 + 6$, exactly the sum. The certificate check rejects it on row 1.</p>
+      </div>
+    </div>
+    <div>
+      <div class="box ex"><span class="label">using it to find the dual</span>
+        <p class="small">Given only $x = (2, 2)$: both variables are positive, so both dual rows must be tight:</p>
+        <p class="small">$u + 2v = 3,\quad u + v = 2 \;\Rightarrow\; v = 1,\ u = 1.$</p>
+        <p class="small">Two equations, no optimization. Then check $u, v \ge 0$: yes, so $(2, 2)$ is proved optimal.</p>
+      </div>
+      <div class="box ex"><span class="label">a row with slack gets price 0</span>
+        <p class="small">Add the row $x \le 3$. At $(2, 2)$ it has slack 1, so its price must be <b>0</b>. Solving confirms duals $(1, 1, 0)$, optimum still 10. Loosening a row that isn't pressing changes nothing.</p>
+      </div>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>The slack column for variables is the dual row's surplus, $(A^\top y)_j - c_j$.
+    For $x$ the column of $A$ is $(1, 2)$, so $A^\top y$ gives $1 + 2 = 3$ against cost 3:
+    the table's $3 - 3$. For $y$ it is $(1, 1)$: $1 + 1 = 2$ against cost 2. Both are tight, so it does no
+    harm that $x$ and $y$ are positive.</p>
+    <p>The failing pair $x = (0,0)$, $y = (1,1)$: the variable pieces are $0 \times 0$
+    each, and the row pieces are $1 \times 4$ and $1 \times 6$. The identity on the previous
+    slide says the gap $b^\top y - c^\top x = 10 - 0$ equals $4 + 6 + 0 + 0$, and it does.
+    The reference <code>certify_optimal</code> returns
+    <code>(False, "complementary slackness fails on primal row 0")</code>.</p>
+    <p>Why "find the dual" works in general: at a nondegenerate optimum, the positive
+    variables give exactly as many equations as there are prices left unknown on the
+    tight rows. Degeneracy can leave it underdetermined, and then several duals are
+    optimal. The extra-row box was solved with unit 02's reference
+    <code>two_phase</code>, which returned duals $(1, 1, 0)$.</p>
+  </aside>
+</section>
+
+<section>
   <p class="eyebrow">03 · certificate</p>
   <h2>Reading the dual off the final tableau</h2>
   <div class="cols wide-left">
@@ -256,7 +397,7 @@
       <p>At an optimal basis, $y^\top = c_B^\top A_B^{-1}$, and the reduced cost of every column is $\bar c_j = c_j - y^\top a_j$.</p>
       <p>A slack $s_i$ has cost 0 and column $e_i$, so $\bar c_{s_i} = -y_i$. The objective row, which stores $-\bar c$, holds $y_i$ in slack column $i$.</p>
       <div class="box good"><span class="label">so</span>
-        <p>The optimal dual solution is <b>the slack columns of the objective row</b>. Every simplex solve returns a primal solution and a dual certificate at once.</p>
+        <p>The optimal dual solution is <b>the slack columns of the objective row</b> (<span class="term" data-term="reading duals off the tableau">reading duals off the tableau</span>). Every simplex solve returns a primal solution and a dual certificate at once.</p>
       </div>
     </div>
     <div>
@@ -270,7 +411,7 @@
     </div>
   </div>
   <aside class="notes">
-    <p>Dual feasibility is visible in the same row. Structural columns hold
+    <p><span class="term">Dual feasibility</span> is visible in the same row. Structural columns hold
     $-\bar c_j = (A^\top y)_j - c_j \ge 0$, which is exactly $A^\top y \ge c$, and slack
     columns hold $y_i \ge 0$. "No negative entries in the objective row" is the
     optimality test of unit 02 and it is also the dual feasibility test. The primal
@@ -318,7 +459,7 @@
     <div>
       <div class="box thm"><span class="label">theorem</span>
         <p>If the optimal basis is nondegenerate, $\;\dfrac{\partial z^*}{\partial b_i} = y_i$.</p>
-        <p>More generally $z^*(b)$ is <b>concave and piecewise linear</b>, and $y$ is a supergradient.</p>
+        <p>More generally the <span class="term" data-term="value function z^*(b)">value function</span> $z^*(b)$ is <b>concave and piecewise linear</b>, and $y$ is a <span class="term">supergradient</span>.</p>
       </div>
       <p>Here $y_1 = 1$ on $b_1 \in [3, 6]$. Below 3, the constraint $2x+y \le 6$ stops binding and the price jumps to 3. Above 6, $x+y \le b_1$ stops binding and the price drops to 0.</p>
     </div>
@@ -342,7 +483,7 @@
   <h2>Ranging: how long the price holds</h2>
   <div class="cols">
     <div>
-      <p>Change $b_i$ to $b_i + \delta$. Reduced costs don't involve $b$, so the basis stays <b>optimal</b> for as long as it stays <b>feasible</b>:</p>
+      <p><span class="term" data-term="ranging">Ranging</span>: change $b_i$ to $b_i + \delta$. Reduced costs don't involve $b$, so the basis stays <b>optimal</b> for as long as it stays <b>feasible</b>:</p>
       $$x_B(\delta) = A_B^{-1}(b + \delta e_i) = \bar b + \delta\, d$$
       <p class="small">where $d$ is slack column $i$ of the final tableau.</p>
       <p>Feasible while $\bar b_r + \delta d_r \ge 0$ for all rows:</p>
@@ -361,7 +502,7 @@
     each has its own range, and the left and right derivatives of $z^*$ differ.
     Solvers report the range for the basis they stopped at. Treat ranging output as
     "this basis's range", not "the" range.</p>
-    <p>The same analysis works for the objective coefficients: changing $c_j$ keeps
+    <p><b>Cost ranging</b>, the same analysis for the objective coefficients: changing $c_j$ keeps
     the basis feasible and changes reduced costs, so the basis stays optimal while
     the objective row stays nonnegative. Solvers report both kinds (HiGHS's
     <code>getRanging</code> has <code>col_cost_up</code>/<code>col_cost_dn</code>
@@ -390,7 +531,7 @@
         </tbody>
       </table>
     </div>
-    <div class="box"><span class="label">one rule covers all four</span>
+    <div class="box"><span class="label">one <span class="term">sign convention</span> covers all four</span>
       <p>A reported dual is $\partial(\text{objective})/\partial(\text{rhs})$ in the <b>solver's own objective sense</b>.</p>
       <p class="small">Maximizing, loosening a $\le$ row helps, so the dual is $\ge 0$. Minimizing $-c^\top x$, the same loosening lowers the objective, so it is $\le 0$.</p>
     </div>
@@ -424,10 +565,10 @@
   <h2>The dual simplex method</h2>
   <div class="cols">
     <div>
-      <p><b>State:</b> a basis whose objective row is nonnegative (dual feasible) but with some negative right-hand sides (primal infeasible).</p>
+      <p><b>State:</b> a basis whose objective row is nonnegative (dual feasible) but with some negative right-hand sides (no <span class="term">primal feasibility</span>).</p>
       <ol>
         <li><b>Leaving row:</b> any row $r$ with $\bar b_r &lt; 0$. The most negative is the usual choice.</li>
-        <li><b>Entering column:</b> among $j$ with $T_{rj} &lt; 0$, minimize $\;\dfrac{T_{mj}}{-T_{rj}}$, the dual ratio test.</li>
+        <li><b>Entering column:</b> among $j$ with $T_{rj} &lt; 0$, minimize $\;\dfrac{T_{mj}}{-T_{rj}}$, the <span class="term">dual ratio test</span>.</li>
         <li><b>Pivot.</b> If no $T_{rj} &lt; 0$, row $r$ reads "nonnegative combination = negative": the LP is <b>infeasible</b>.</li>
       </ol>
     </div>
@@ -436,7 +577,8 @@
         <p>It is exactly the primal simplex method applied to the dual LP, run on the same tableau.</p>
       </div>
       <p class="small">The dual ratio test keeps every objective-row entry nonnegative after the pivot, and the objective value decreases monotonically toward the optimum from above.</p>
-      <p class="small muted">Row $r$ in the infeasible case is a Farkas certificate: unit 01 again.</p>
+      <p class="small muted">Row $r$ in the infeasible case, an <span class="term">infeasible row</span>, is a Farkas certificate: unit 01 again.</p>
+      <p class="small">The next slide runs one pivot of it on the example.</p>
     </div>
   </div>
   <aside class="notes">
@@ -458,6 +600,67 @@
 </section>
 
 <section>
+  <p class="eyebrow">03 · dual simplex · example</p>
+  <h2>One dual simplex pivot, on the example</h2>
+  <div class="cols wide-left">
+    <div>
+      <p class="small">From the optimum $(2, 2)$, add the cut $x \le 1.5$ with slack $s_3$. Written in the current basis, its row is $s_1 - s_2 + s_3 = -\tfrac12$:</p>
+      <table class="small" style="font-family:var(--f-mono)">
+        <thead><tr><th></th><th>x</th><th>y</th><th>s₁</th><th>s₂</th><th>s₃</th><th>rhs</th></tr></thead>
+        <tbody>
+          <tr><td>y</td><td>0</td><td>1</td><td>2</td><td>−1</td><td>0</td><td>2</td></tr>
+          <tr><td>x</td><td>1</td><td>0</td><td>−1</td><td>1</td><td>0</td><td>2</td></tr>
+          <tr><td>s₃</td><td>0</td><td>0</td><td>1</td><td style="outline:2px solid var(--accent)"><b>−1</b></td><td>1</td><td><b>−½</b></td></tr>
+          <tr><td>z</td><td>0</td><td>0</td><td>1</td><td>1</td><td>0</td><td>10</td></tr>
+        </tbody>
+      </table>
+      <p class="small"><b>1.</b> Objective row still $\ge 0$: dual feasible. Only $s_3 = -\tfrac12$ is wrong, so row $s_3$ leaves.<br>
+      <b>2.</b> Negative entries in that row: only $s_2$, ratio $1 / 1$. $s_2$ enters.<br>
+      <b>3.</b> Pivot. New point $(1.5, 2.5)$, $z = 9.5$, every rhs $\ge 0$: <b>optimal after one pivot</b>.</p>
+      <p class="small muted">A cold re-solve from the origin takes 2 pivots. New duals $(2, 0, 1)$: row $2x + y \le 6$ now has slack $\tfrac12$, and price 0.</p>
+    </div>
+    <div class="fig">
+      <svg viewBox="0 0 380 350" width="370" role="img" aria-label="the textbook polygon, the cut x = 1.5 removing the old optimum (2,2), and the new optimum (1.5, 2.5)">
+        <line x1="60" y1="18" x2="60" y2="332" class="rule" stroke-width="1.5"/>
+        <line x1="20" y1="300" x2="368" y2="300" class="rule" stroke-width="1.5"/>
+        <polygon points="60,300 150,300 150,150 60,60" class="fill-soft unit" stroke-width="2.5" style="fill-opacity:.9"/>
+        <polygon points="150,300 240,300 180,180 150,150" class="fill-warn" style="fill-opacity:.18"/>
+        <polyline points="150,300 240,300 180,180 150,150" fill="none" class="rule" stroke-width="1.5" stroke-dasharray="5 4"/>
+        <line x1="150" y1="30" x2="150" y2="330" class="warn" stroke-width="2" stroke-dasharray="6 4"/>
+        <circle cx="180" cy="180" r="7" fill="none" class="warn" stroke-width="2.5"/>
+        <circle cx="150" cy="150" r="8" class="fill-accent"/>
+        <text x="192" y="184" font-size="14" class="mono">(2,2) z=10</text>
+        <text x="160" y="138" font-size="14" class="mono">(1.5,2.5) z=9.5</text>
+        <text x="158" y="46" font-size="14" style="fill:var(--warn)">x = 1.5</text>
+        <text x="84" y="230" font-size="20" font-weight="600">P</text>
+      </svg>
+      <p class="cap">Shaded: what the cut removes. Ring: the old optimum, now infeasible. The pivot slides along $x + y = 4$ to the new corner.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p><b>Writing the cut in the basis.</b> The cut is $x + s_3 = 1.5$. The tableau's $x$ row
+    says $x - s_1 + s_2 = 2$. Subtract it: $s_1 - s_2 + s_3 = 1.5 - 2 = -\tfrac12$. That is
+    the new row. The objective row is untouched, which is why the basis stays dual
+    feasible.</p>
+    <p><b>The dual ratio test.</b> Candidates are columns with a negative entry in the
+    leaving row: only $s_2$, entry $-1$. Its objective-row entry is 1, so the ratio is
+    $1 / 1$. With one candidate there is nothing to compare, but the test is what keeps
+    the objective row nonnegative: after the pivot it reads
+    $(0, 0, 2, 0, 1 \mid \tfrac{19}{2})$.</p>
+    <p><b>After the pivot.</b> Row $s_2$ becomes $-s_1 + s_2 - s_3 = \tfrac12$. Adding it to
+    the $y$ row gives $y = 2 + \tfrac12 = \tfrac52$; subtracting it from the $x$ row gives
+    $x = 2 - \tfrac12 = \tfrac32$. The objective is $3 \cdot 1.5 + 2 \cdot 2.5 = 9.5$, down
+    by $\tfrac12$ from 10.</p>
+    <p><b>Complementary slackness again.</b> The new duals are the slack columns,
+    $(2, 0, 1)$. Row $2x + y \le 6$ has $3 + 2.5 = 5.5$, slack $\tfrac12$, so its price
+    dropped to 0; row $x + y \le 4$ is tight and now worth 2; the cut is worth 1.</p>
+    <p>Every number is from the reference <code>add_constraint</code> and
+    <code>dual_simplex</code>, and from a cold <code>two_phase</code> on the LP with the cut
+    added, which took 2 pivots.</p>
+  </aside>
+</section>
+
+<section>
   <p class="eyebrow">03 · dual simplex</p>
   <h2>Why branch-and-cut lives on it</h2>
   <div class="cols">
@@ -467,7 +670,7 @@
         <li>the new row, written in the current basis, leaves the objective row <b>unchanged</b>, so the basis is still dual feasible;</li>
         <li>only the new row's rhs can be negative, so the tableau is still <b>almost primal feasible</b>.</li>
       </ul>
-      <p>That is the dual simplex's starting state, and it is typically a few pivots away from optimal.</p>
+      <p>That is the dual simplex's starting state, and it is typically a few pivots away from optimal: a <span class="term">warm start</span>, not a <span class="term">cold start</span>.</p>
     </div>
     <div>
       <p class="small">Lab <code>then</code>, 163 random LPs with one added cut:</p>
@@ -508,7 +711,7 @@
       <tr><td><b>29</b> KKT</td><td>the conditions of this unit for curved objectives and constraints: feasibility, dual feasibility, complementary slackness.</td></tr>
     </tbody>
   </table>
-  <p class="muted">When one of those units feels hard, come back to the slide here that it generalizes.</p>
+  <p class="muted">When one of those units feels hard, come back to the slide here that it generalizes: <span class="term">the seven hats</span> are one idea.</p>
   <aside class="notes">
     <p>The pattern to look for, in every one of them: there is a relaxed problem whose
     solution gives a bound, the bound is a function of some multipliers, and the

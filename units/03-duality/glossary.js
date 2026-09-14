@@ -84,12 +84,12 @@ window.GLOSSARY = [
 ]
 },
 {
-"term_html": "\"infeasible or unbounded\"",
+"term_html": "infeasible or unbounded",
 "html": "What presolve reports when it sees the dual is infeasible, which leaves both possibilities open for the primal.",
 "section": "The dual as a bound",
 "slide": "Four possible outcomes, not nine",
 "keys": [
-"\"infeasible or unbounded\""
+"infeasible or unbounded"
 ]
 },
 {

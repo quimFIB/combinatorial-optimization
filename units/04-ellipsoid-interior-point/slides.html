@@ -19,7 +19,7 @@
   <div class="unit-no">04</div>
   <h1>Polynomial-time LP: ellipsoid and interior point</h1>
   <p class="lede">Two ways through the middle of the polyhedron: one that settled a theoretical question and is never used, and one that runs in every modern solver.</p>
-  <p class="meta"><span>needs 02</span><span>feeds 09</span><span>~1½ h slides + 2½ h lab</span></p>
+  <p class="meta"><span>needs 02</span><span>feeds 09</span><span>~2 h slides + 2½ h lab</span></p>
   <aside class="notes">
     <p>This is a branch unit, so the express route skips it. It is worth doing for
     two reasons. First, unit 09's separation–optimization equivalence runs on the
@@ -29,6 +29,12 @@
     you configure a solver, and this unit gives you the reasons.</p>
     <p>Convention: $\max\{c^\top x : Ax \le b\}$ with $A \in \mathbb{R}^{m\times n}$ and no
     separate sign constraints. The barrier needs every inequality as a row.</p>
+    <h4>How to read this deck</h4>
+    <p>Both methods are shown on small examples with numbers: one ellipsoid run on a
+    corner of unit 01's polygon, the barrier on a single variable where everything has
+    a closed form, and the central path on the polygon itself. The inequality chains
+    and the bit-size bookkeeping behind the theorems are in the notes under <b>Full
+    proof</b>; nothing in the lab needs them.</p>
   </aside>
 </section>
 
@@ -42,6 +48,9 @@
       <p>Cut an ellipsoid in half, wrap the half in a smaller one, repeat. Polynomial, and impractical.</p></div>
     <div class="box def"><span class="label">3 · interior point</span>
       <p>A barrier keeps you inside, and following the central path reaches the optimum in a few dozen Newton steps.</p></div>
+  </div>
+  <div class="box good"><span class="label">getting around</span>
+    <p class="small">Words with a <span class="term" data-term="central path">dotted underline</span> are glossary terms: click one for its definition. <kbd>G</kbd> lists every term in the unit, <kbd>N</kbd> shows the notes, where the proofs live.</p>
   </div>
   <p class="muted">Then: the pure barrier method breaks down in floating point past $t \approx 10^6$. HiGHS's IPM beats its simplex 7× cold at $n = 3000$, and loses 4× on the warm re-solve.</p>
   <aside class="notes">
@@ -66,15 +75,16 @@
       <ul>
         <li><b>1947</b> Dantzig's simplex method. Fast in practice.</li>
         <li><b>1972</b> Klee–Minty: exponential on a built family (unit 02).</li>
-        <li><b>1970s</b> LP is in <b>NP ∩ coNP</b>: short certificates both ways (units 01, 03). No NP-hardness was expected, but no polynomial algorithm was known.</li>
-        <li><b>1979</b> Khachiyan: the <b>ellipsoid method</b> solves LP in polynomial time.</li>
-        <li><b>1984</b> Karmarkar: a polynomial <b>interior-point method</b> that also looked practical.</li>
+        <li><b>1970s</b> LP is in <b><span class="term">NP ∩ coNP</span></b>: short certificates both ways (units 01, 03). No NP-hardness was expected, but no polynomial algorithm was known.</li>
+        <li><b>1979</b> Khachiyan: the <b><span class="term">ellipsoid method</span></b> solves LP in polynomial time.</li>
+        <li><b>1984</b> <span class="term" data-term="Karmarkar's algorithm">Karmarkar</span>: a polynomial <b>interior-point method</b> that also looked practical.</li>
         <li><b>1990s–</b> primal–dual IPMs (Mehrotra 1992) in every commercial solver.</li>
       </ul>
     </div>
     <div class="box def"><span class="label">"polynomial" for LP</span>
-      <p>Polynomial in the <b>bit size</b> $L$ of the input: the number of bits needed to write $A, b, c$ as integers.</p>
-      <p class="small">Whether there is a <b>strongly</b> polynomial LP algorithm, polynomial in $m$ and $n$ alone, independent of the numbers, is still open. It is one of Smale's problems for the 21st century.</p>
+      <p>Polynomial in the <span class="term" data-term="bit size L">bit size</span> $L$ of the input: the number of bits needed to write $A, b, c$ as integers.</p>
+      <p class="small muted">Example: the row $x + y \le 4$ needs about 2 bits per coefficient; $1000x + y \le 4096$ needs up to 13. Same shape of problem, more bits, and a polynomial method may take more steps.</p>
+      <p class="small">Whether there is a <span class="term" data-term="strongly polynomial">strongly</span> polynomial LP algorithm, polynomial in $m$ and $n$ alone, independent of the numbers, is still open. It is one of Smale's problems for the 21st century.</p>
     </div>
   </div>
   <aside class="notes">
@@ -126,6 +136,7 @@
         <li>Replace $E_k$ by the <b>smallest ellipsoid containing that half</b>, and repeat.</li>
       </ol>
       <p>Each step shrinks the volume by a fixed factor, so the ellipsoid soon becomes too small to contain the feasible set. The set was therefore empty, or the centre found it.</p>
+      <p class="small muted">Step 3 is a <span class="term">central cut</span>: it passes through the centre, so exactly half is kept. The next slide does two steps with numbers.</p>
     </div>
   </div>
   <aside class="notes">
@@ -143,27 +154,104 @@
 </section>
 
 <section>
+  <p class="eyebrow">04 · ellipsoid · example</p>
+  <h2>Two ellipsoid steps, with numbers</h2>
+  <div class="cols wide-left">
+    <div>
+      <p class="small">Find a point of unit 01's polygon with $x + y \ge 3$, written $-x - y \le -3$. Start: ball of radius $R = 5$ at the origin, $P = 25I$.</p>
+      <table>
+        <thead><tr><th class="num">$k$</th><th>centre</th><th>check the rows</th><th>$P$</th></tr></thead>
+        <tbody>
+          <tr><td class="num">0</td><td>$(0, 0)$</td><td>$x + y = 0 &lt; 3$ ✗</td><td>$\begin{pmatrix}25 & 0\\0 & 25\end{pmatrix}$</td></tr>
+          <tr><td class="num">1</td><td>$(1.18, 1.18)$</td><td>$x + y = 2.36 &lt; 3$ ✗</td><td>$\begin{pmatrix}22.2 & -11.1\\-11.1 & 22.2\end{pmatrix}$</td></tr>
+          <tr><td class="num">2</td><td>$(1.96, 1.96)$</td><td>every row ✓</td><td>$\begin{pmatrix}24.7 & -19.8\\-19.8 & 24.7\end{pmatrix}$</td></tr>
+        </tbody>
+      </table>
+      <div class="box ex"><span class="label">step 1, by the formulas</span>
+        <p class="small">Cut normal $a = (-1, -1)$. $\ Pa = (-25, -25)$, $\ a^\top P a = 50$, so $g = Pa / \sqrt{50} = (-3.54, -3.54)$.</p>
+        <p class="small">New centre $x' = 0 - g/3 = (1.18, 1.18)$: a third of the radius toward the feasible side. Area kept: $\sqrt{\det P' / \det P} = 0.770$.</p>
+      </div>
+    </div>
+    <div class="fig">
+      <svg viewBox="20 -20 390 380" width="380" role="img" aria-label="the starting circle, two shrinking ellipses tilted at 45 degrees, and the thin target region">
+        <line x1="190" y1="-10" x2="190" y2="350" class="rule" stroke-width="1"/>
+        <line x1="30" y1="190" x2="400" y2="190" class="rule" stroke-width="1"/>
+        <polygon points="190,190 220,190 265,145 190,70" class="fill-soft unit" stroke-width="1.5" style="fill-opacity:.6"/>
+        <polygon points="190,100 250,160 265,145 190,70" class="fill-accent" style="fill-opacity:.55"/>
+        <circle cx="190" cy="190" r="150" fill="none" class="rule" stroke-width="2"/>
+        <ellipse cx="225.36" cy="154.64" rx="173.2" ry="100" transform="rotate(45 225.36 154.64)" fill="none" class="ink" stroke-width="2" stroke-dasharray="6 4"/>
+        <ellipse cx="248.93" cy="131.07" rx="200" ry="66.67" transform="rotate(45 248.93 131.07)" fill="none" class="accent" stroke-width="2.5"/>
+        <line x1="60" y1="60" x2="330" y2="330" class="warn" stroke-width="1.2" stroke-dasharray="3 4"/>
+        <circle cx="190" cy="190" r="5" class="fill-ink"/>
+        <circle cx="225.36" cy="154.64" r="5" class="fill-ink"/>
+        <circle cx="248.93" cy="131.07" r="6" class="fill-accent"/>
+        <text x="150" y="208" font-size="13" class="mono">k=0</text>
+        <text x="232" y="172" font-size="13" class="mono">k=1</text>
+        <text x="258" y="126" font-size="13" class="mono">k=2</text>
+        <text x="40" y="44" font-size="13" class="soft">E₀</text>
+        <text x="306" y="300" font-size="13" class="soft">E₁ (dashed)</text>
+        <text x="318" y="18" font-size="13" style="fill:var(--accent)">E₂</text>
+      </svg>
+      <p class="cap">Dark strip: the target, the polygon above $x + y = 3$. Dotted: the first cut, $x + y = 0$ through the start centre. Each ellipse holds the half the cut kept.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p><b>Step 1 in full.</b> $P' = \frac{4}{3}\left(25I - \frac{2}{3} g g^\top\right)$. Here
+    $g g^\top = 12.5 \begin{pmatrix}1 & 1\\1 & 1\end{pmatrix}$, and $\frac23 \cdot 12.5 = 8.33$,
+    so $P' = \frac43 \begin{pmatrix}16.67 & -8.33\\-8.33 & 16.67\end{pmatrix}
+    = \begin{pmatrix}22.2 & -11.1\\-11.1 & 22.2\end{pmatrix}$. Its eigenvalues are 33.3
+    along $(1, -1)$ and 11.1 along $(1, 1)$, so the semi-axes are 5.77 (along the cut) and
+    3.33 (across it): the unit-ball picture of "The idea", scaled by $R = 5$
+    ($5 \cdot \tfrac{2}{\sqrt3} = 5.77$, $5 \cdot \tfrac23 = 3.33$).</p>
+    <p><b>Step 2.</b> The centre still violates the same row, so $a$ is again $(-1, -1)$.
+    Now $Pa = (-11.1, -11.1)$, $a^\top P a = 22.2$, $g = (-2.36, -2.36)$, and the centre
+    moves by $-g/3$ to $(1.96, 1.96)$. There $x + y = 3.93$: above 3 and below 4, and
+    $x - y = 0 \le 1$, so every row holds and the method stops. The area ratio is again
+    0.770: in 2-D it is the same at every step, whatever the cut.</p>
+    <p>The run is the reference <code>ellipsoid_feasible</code> with $R = 5$; it returns
+    after 2 iterations. The figure maps $(x, y)$ to $(190 + 30x,\ 190 - 30y)$, and the
+    ellipses' axes come from the eigenvectors above. Note how thin $E_2$ is across the
+    cut direction: the ellipsoid method learns the <em>direction</em> of the target, not
+    just its location.</p>
+  </aside>
+</section>
+
+<section>
   <p class="eyebrow">04 · ellipsoid</p>
   <h2>The update, and why the volume shrinks</h2>
   <div class="cols">
     <div>
-      <p>For $E = \{z : (z-x)^\top P^{-1}(z-x) \le 1\}$ and cut normal $a$:</p>
+      <p>The <span class="term">ellipsoid update</span>, for the <span class="term">ellipsoid</span> $E = \{z : (z-x)^\top P^{-1}(z-x) \le 1\}$ and cut normal $a$:</p>
       $$g = \frac{P a}{\sqrt{a^\top P a}}, \qquad x' = x - \frac{g}{n+1}$$
       $$P' = \frac{n^2}{n^2-1}\left(P - \frac{2}{n+1}\, g g^\top\right)$$
-      <p class="small">An affine map takes $E$ to the unit ball and $a$ to $e_1$, so it suffices to check the unit ball, where the new ellipsoid has the axes on the previous slide.</p>
+      <p class="small">An affine map takes $E$ to the unit ball and $a$ to $e_1$, so it suffices to check the unit ball, where the new ellipsoid has the axes on the slide before last.</p>
+      <div class="box ex"><span class="label">how slowly, in numbers</span>
+        <table style="margin:0">
+          <thead><tr><th class="num">$n$</th><th class="num">kept per step</th><th class="num">steps to halve</th></tr></thead>
+          <tbody>
+            <tr><td class="num">2</td><td class="num">0.770</td><td class="num">2.6</td></tr>
+            <tr><td class="num">10</td><td class="num">0.951</td><td class="num">13.8</td></tr>
+            <tr><td class="num">100</td><td class="num">0.995</td><td class="num">139</td></tr>
+          </tbody>
+        </table>
+      </div>
     </div>
     <div>
-      <div class="box thm"><span class="label">volume ratio</span>
+      <div class="box thm"><span class="label"><span class="term">volume ratio</span></span>
         $$\begin{aligned} \frac{\mathrm{vol}\,E'}{\mathrm{vol}\,E} &= \frac{n}{n+1}\left(\frac{n}{\sqrt{n^2-1}}\right)^{n-1} \\ &< e^{-1/(2(n+1))} \end{aligned}$$
+        <p class="small muted">Why: one axis shrinks by $\tfrac{n}{n+1}$, the other $n - 1$ grow by a little less than that shrinks. The net is a loss, but a small one when $n$ is large.</p>
+        <p class="proof-pointer">full proof in the notes (N)</p>
       </div>
-      <div class="box good"><span class="label">so, with lab step 5</span>
-        <p>If the feasible set, when nonempty, contains a ball of radius $r$ inside the ball of radius $R$, then after</p>
-        $$k \ge 2(n+1)\, n \ln(R/r)$$
-        <p>steps the ellipsoid is smaller than that ball, and the method may stop.</p>
-      </div>
+      <p class="small">So, with lab step 5: if the feasible set holds a ball of radius $r$ inside the start ball of radius $R$, it can stop after $k \ge 2(n+1)\, n \ln(R/r)$ steps: the <span class="term">iteration bound</span>.</p>
     </div>
   </div>
   <aside class="notes">
+    <p><b>The example table.</b> "Kept per step" is the exact ratio
+    $\frac{n}{n+1}(n/\sqrt{n^2-1})^{n-1}$; "steps to halve" is $\ln 0.5$ divided by its
+    log. At $n = 100$ it takes 139 steps just to halve the volume, and the start ball must
+    shrink to a ball of radius $r$, a factor $(r/R)^{100}$ in volume. That, and not the
+    per-step cost, is what makes the method slow.</p>
+    <h4>Full proof of the volume bound</h4>
     <p>The inequality: using $1 + u \le e^u$,
     $\frac{n}{n+1} = 1 - \frac{1}{n+1} \le e^{-1/(n+1)}$ and
     $\left(\frac{n^2}{n^2-1}\right)^{(n-1)/2} = \left(1 + \frac{1}{n^2-1}\right)^{(n-1)/2} \le e^{(n-1)/(2(n^2-1))} = e^{1/(2(n+1))}$.
@@ -184,15 +272,16 @@
   <h2>From feasibility to polynomial-time LP</h2>
   <div class="cols">
     <div>
-      <p>Three gaps between the lab's version and Khachiyan's theorem:</p>
-      <ul>
-        <li><b>$R$ from the data.</b> If a solution exists, one exists with $\|x\|_\infty \le 2^{O(L)}$ (Cramer's rule on a basis).</li>
-        <li><b>$r$ from the data.</b> A feasible polytope may be flat. Relax each $b_i$ by $2^{-O(L)}$: the system stays feasible exactly when the original is, and now contains a ball of radius $2^{-O(L)}$.</li>
-        <li><b>Optimization.</b> Add $c^\top x \ge \gamma$ and search over $\gamma$, or use "sliding objective" cuts.</li>
+      <p>Three gaps between the lab's version and Khachiyan's theorem, each closed by a fact about bit size (<span class="term" data-term="R and r from the data">$R$ and $r$ from the data</span>):</p>
+      <ul class="small">
+        <li><b>How big to start.</b> If any solution exists, one has coordinates at most $2^{O(L)}$, so that is $R$.</li>
+        <li><b>How small to stop.</b> A feasible set can be flat, holding no ball at all. Loosening every row by a tiny $2^{-O(L)}$ gives it one, without changing whether it is empty.</li>
+        <li><b>Optimizing, not just finding.</b> Ask for $c^\top x \ge \gamma$ and search over $\gamma$: the <span class="term">sliding objective</span>.</li>
       </ul>
+      <p class="proof-pointer">details in the notes (N)</p>
     </div>
     <div>
-      <div class="box thm"><span class="label">Khachiyan, 1979</span>
+      <div class="box thm"><span class="label"><span class="term" data-term="Khachiyan's theorem">Khachiyan, 1979</span></span>
         <p>LP feasibility is decided in $O(n^2 L)$ ellipsoid iterations, each with polynomially many bits of precision. So LP ∈ P.</p>
       </div>
       <p class="small">Lab <code>then</code>, part 5 (shifted random polytopes, $R = 100$):</p>
@@ -207,6 +296,15 @@
     </div>
   </div>
   <aside class="notes">
+    <h4>Full details</h4>
+    <p><b>$R$ from the data.</b> If a solution exists, a vertex solution exists (after
+    adding bounds if needed), and Cramer's rule on its basis gives
+    $\|x\|_\infty \le 2^{O(L)}$. <b>$r$ from the data.</b> Relax each $b_i$ by
+    $2^{-O(L)}$: the system stays feasible exactly when the original is, and now contains a
+    ball of radius $2^{-O(L)}$ (see the relaxation argument below). <b>Optimization.</b>
+    Add $c^\top x \ge \gamma$ and binary-search over $\gamma$, whose range and required
+    precision are again $2^{\pm O(L)}$, or keep a single run and add objective cuts
+    through each feasible centre.</p>
     <p>The exact constant in the iteration count depends on how $L$ is defined and on
     the variant; $O(n^2 L)$ is the order usually quoted. Each iteration must also be
     carried out with rounding, keeping $O(nL)$ bits per number, and the analysis has
@@ -232,8 +330,8 @@
       </ul>
     </div>
     <div class="box good"><span class="label">what it really needs</span>
-      <p>Look at step 3 again. The method never reads the constraint matrix. It only asks, of one point: <b>"is this feasible, and if not, give me a violated inequality."</b></p>
-      <p>That is a <b>separation oracle</b>. It works even when there are <b>exponentially many</b> constraints, provided violated ones can be found efficiently. This is unit 09.</p>
+      <p>Look at step 3 again, or at the example: the method only ever asked "which row fails at $(1.18, 1.18)$?". It never reads the constraint matrix. It only asks, of one point: <b>"is this feasible, and if not, give me a violated inequality."</b></p>
+      <p>That is a <span class="term">separation oracle</span>. It works even when there are <b>exponentially many</b> constraints, provided violated ones can be found efficiently. This is unit 09.</p>
     </div>
   </div>
   <aside class="notes">
@@ -280,13 +378,14 @@
       <p class="cap">Central path of $\max 2x + y$ on unit 01's polygon, computed by the lab's reference solution ($t = 0.01 \cdot 3^k$).</p>
     </div>
     <div>
-      <p>Replace the constraints by a penalty that is infinite on the boundary:</p>
+      <p>Replace the constraints by a penalty that is infinite on the boundary, the <span class="term">log barrier</span>:</p>
       $$\min_x\; f_t(x) = -t\, c^\top x - \sum_{i=1}^m \log(b_i - a_i^\top x)$$
       <ul>
-        <li>$t \to 0$: the objective hardly matters, and the minimizer is the <b>analytic centre</b>.</li>
+        <li>$t \to 0$: the objective hardly matters, and the minimizer is the <span class="term">analytic centre</span>.</li>
         <li>$t \to \infty$: the objective dominates, and the minimizer tends to an optimal point.</li>
       </ul>
-      <p>The minimizers $x^*(t)$ form a smooth curve, the <b>central path</b>.</p>
+      <p>The minimizers $x^*(t)$ form a smooth curve, the <span class="term">central path</span>. Finding one of them is <span class="term">centering</span>, done by <span class="term">Newton's method</span>.</p>
+      <p class="small muted">The next slide shows all of this on one variable, where it can be solved by hand.</p>
     </div>
   </div>
   <aside class="notes">
@@ -305,24 +404,105 @@
 </section>
 
 <section>
+  <p class="eyebrow">04 · interior point · example</p>
+  <h2>The barrier on one variable</h2>
+  <div class="cols">
+    <div>
+      <p class="small">$\max x$ subject to $0 \le x \le 1$: two rows, slacks $x$ and $1 - x$, optimum 1.</p>
+      $$f_t(x) = -t\,x - \log x - \log(1 - x)$$
+      <p class="small">Set the derivative to zero, $-t - \tfrac1x + \tfrac{1}{1-x} = 0$, and solve the quadratic:</p>
+      $$x^*(t) = \frac{t - 2 + \sqrt{t^2 + 4}}{2t}$$
+      <div class="fig">
+        <svg viewBox="0 0 430 110" width="430" role="img" aria-label="the interval from 0 to 1 with the central path points at t = 0, 1, 10 and 100 moving toward 1">
+          <line x1="30" y1="50" x2="390" y2="50" class="ink" stroke-width="2"/>
+          <line x1="30" y1="40" x2="30" y2="60" class="warn" stroke-width="3"/>
+          <line x1="390" y1="40" x2="390" y2="60" class="warn" stroke-width="3"/>
+          <circle cx="210" cy="50" r="6" class="fill-ink"/>
+          <circle cx="252.5" cy="50" r="6" class="fill-accent"/>
+          <circle cx="357.6" cy="50" r="6" class="fill-accent"/>
+          <circle cx="386.4" cy="50" r="6" class="fill-accent"/>
+          <text x="14" y="56" text-anchor="middle" font-size="15" class="mono">0</text>
+          <text x="410" y="56" text-anchor="middle" font-size="15" class="mono">1</text>
+          <text x="210" y="30" text-anchor="middle" font-size="13" class="mono">t→0</text>
+          <text x="252" y="84" text-anchor="middle" font-size="13" class="mono">t=1</text>
+          <text x="350" y="30" text-anchor="middle" font-size="13" class="mono">t=10</text>
+          <text x="384" y="84" text-anchor="middle" font-size="13" class="mono">t=100</text>
+        </svg>
+        <p class="cap">The central path of this LP: from the analytic centre $\tfrac12$ toward the optimum 1, never touching the wall.</p>
+      </div>
+    </div>
+    <div>
+      <table>
+        <thead><tr><th class="num">$t$</th><th class="num">$x^*(t)$</th><th class="num">$y = \frac{1}{ts}$</th><th class="num">gap $= y_2 - x$</th><th class="num">$1 - x^*$</th></tr></thead>
+        <tbody>
+          <tr><td class="num">→0</td><td class="num">0.5</td><td class="num">huge</td><td class="num">$2/t$</td><td class="num">0.5</td></tr>
+          <tr><td class="num">1</td><td class="num">0.618</td><td class="num">(1.618, 2.618)</td><td class="num">2</td><td class="num">0.382</td></tr>
+          <tr><td class="num">10</td><td class="num">0.910</td><td class="num">(0.110, 1.110)</td><td class="num">0.2</td><td class="num">0.090</td></tr>
+          <tr><td class="num">100</td><td class="num">0.990</td><td class="num">(0.010, 1.010)</td><td class="num">0.02</td><td class="num">0.0099</td></tr>
+        </tbody>
+      </table>
+      <div class="box ex"><span class="label">what to read off</span>
+        <p class="small"><b>The centre.</b> At $t \to 0$ the barrier alone is minimized at $\tfrac12$, as far from both walls as possible.</p>
+        <p class="small"><b>A free dual.</b> Always $-y_1 + y_2 = 1 = c$: dual feasible. The gap $b^\top y - c^\top x = y_2 - x$ is <b>exactly $2/t$</b>, with $m = 2$.</p>
+        <p class="small"><b>The true error</b> $1 - x^*$ is below the gap, so the gap is a safe stopping test.</p>
+      </div>
+    </div>
+  </div>
+  <aside class="notes">
+    <p><b>Solving for $x^*(t)$.</b> Multiply $-t - \frac1x + \frac{1}{1-x} = 0$ by
+    $x(1-x)$: $-t x (1 - x) - (1 - x) + x = 0$, that is $t x^2 + (2 - t) x - 1 = 0$. The
+    root in $(0, 1)$ is the formula on the slide. At $t = 1$ it is $(\sqrt5 - 1)/2 = 0.618$,
+    the golden ratio's reciprocal. As $t \to 0$, $\sqrt{t^2 + 4} \approx 2 + t^2/4$, so the
+    numerator is about $t$ and $x^* \to \tfrac12$.</p>
+    <p><b>The dual point.</b> The rows are $-x \le 0$ and $x \le 1$, with slacks
+    $s_1 = x$, $s_2 = 1 - x$. So $y_1 = 1/(tx)$, $y_2 = 1/(t(1-x))$, and
+    $A^\top y = -y_1 + y_2$. At $t = 1$: $1/0.618 = 1.618$ and $1/0.382 = 2.618$, and
+    indeed $2.618 - 1.618 = 1$. The dual objective is $b^\top y = 0 \cdot y_1 + 1 \cdot y_2$.</p>
+    <p><b>Why the gap is exactly $2/t$</b>: that is the next slide's computation, which here
+    reads $y_1 s_1 + y_2 s_2 = \frac1t + \frac1t$. For large $t$ the true error
+    $1 - x^*$ is about $1/t$, half the gap: the dual point is as far above the optimum
+    as the primal point is below it.</p>
+    <p>The table's values come from the closed form and match the reference
+    <code>newton_center</code> started at $x = 0.5$ to four decimals.</p>
+  </aside>
+</section>
+
+<section>
   <p class="eyebrow">04 · interior point</p>
   <h2>Duality comes for free on the path</h2>
   <div class="cols">
     <div>
-      <p>At the minimizer the gradient vanishes. With $s = b - Ax$:</p>
-      $$\begin{aligned} &-t\,c + A^\top (1/s) = 0 \\ \Longrightarrow\;\; &A^\top y = c \quad\text{for}\quad y = \frac{1}{t\, s} > 0 \end{aligned}$$
-      <p>So $y$ is <b>dual feasible</b>, and the duality gap is exactly</p>
-      $$b^\top y - c^\top x = y^\top (b - Ax) = \sum_i \frac{s_i}{t\, s_i} = \frac{m}{t}.$$
+      <p>At the minimizer the gradient vanishes, and that equation says $A^\top y = c$ for the <span class="term" data-term="dual point on the path">dual point</span> $\;y = \dfrac{1}{t\, s} > 0$. So $y$ is dual feasible, and the <span class="term" data-term="duality gap on the path">duality gap</span> is exactly</p>
+      $$b^\top y - c^\top x = \sum_i y_i s_i = \sum_i \frac{1}{t} = \frac{m}{t}.$$
+      <p class="proof-pointer">derivation in the notes (N)</p>
+      <p><b><span class="term">Path following</span>:</b> centre at $t$, then set $t \leftarrow \mu t$ and re-centre from there. With $\mu = 10$ the number of centerings is $\lceil \log_{10}(m/(t_0\varepsilon)) \rceil$.</p>
+      <p class="small muted">Theory: with $\mu = 1 + 1/\sqrt{m}$, each centering needs $O(1)$ Newton steps, for $O(\sqrt m \log(m/\varepsilon))$ in total.</p>
     </div>
     <div>
       <div class="box thm"><span class="label">consequence</span>
         <p>$x^*(t)$ is within $m/t$ of optimal, with a certificate. To reach accuracy $\varepsilon$, run until $t \ge m/\varepsilon$.</p>
       </div>
-      <p><b>Path following:</b> centre at $t$, then set $t \leftarrow \mu t$ and re-centre from there. With $\mu = 10$ the number of centerings is $\lceil \log_{10}(m/(t_0\varepsilon)) \rceil$.</p>
-      <p class="small muted">Theory: with $\mu = 1 + 1/\sqrt{m}$, each centering needs $O(1)$ Newton steps, for $O(\sqrt m \log(m/\varepsilon))$ in total.</p>
+      <div class="box ex"><span class="label">on the polygon, one point of the path</span>
+        <p class="small">At $t = 7.29$: $x = (2.316, 1.597)$, slacks $s = (2.316, 1.597, 0.087, 0.282)$</p>
+        <p class="small">$y = 1/(ts) = (0.059, 0.086, 1.573, 0.487)$</p>
+        <p class="small">$A^\top y$: $\ -0.059 + 1.573 + 0.487 = 2$, $\ -0.086 + 1.573 - 0.487 = 1$ ✓</p>
+        <p class="small">Gap $4 \cdot 1.573 + 0.487 - 6.228 = 0.549 = 4/7.29$ ✓. True error: $6.5 - 6.228 = 0.272$.</p>
+      </div>
     </div>
   </div>
   <aside class="notes">
+    <h4>Derivation</h4>
+    <p>With $s = b - Ax$, the gradient of $f_t$ is $-t\,c + A^\top (1/s)$, where $1/s$ is
+    taken entrywise. Setting it to zero and dividing by $t$ gives
+    $A^\top \frac{1}{ts} = c$. The gap is $b^\top y - c^\top x = b^\top y - (A^\top y)^\top x
+    = y^\top (b - Ax) = y^\top s$, and each $y_i s_i = \frac{1}{t s_i} s_i = \frac1t$.</p>
+    <p><b>The example box.</b> The rows of the polygon are $-x \le 0$, $-y \le 0$,
+    $x + y \le 4$, $x - y \le 1$, so the columns of $A$ are $(-1, 0, 1, 1)$ for $x$ and
+    $(0, -1, 1, -1)$ for $y$, and $b^\top y = 4y_3 + y_4$. Watch $y$ along the path: at
+    $t = 5314$ it is $(0.0001, 0.0001, 1.5001, 0.5)$, heading for $(0, 0, \tfrac32, \tfrac12)$,
+    unit 02's shadow prices of rows 3 and 4. The path computes the dual optimum as it
+    goes. All numbers are from the reference <code>central_path</code> with $t_0 = 0.01$,
+    $\mu = 3$, started at $(0.5, 0.5)$.</p>
     <p>Compare with complementary slackness (unit 03), which asks for $y_i s_i = 0$.
     On the central path $y_i s_i = 1/t$ for every $i$: approximate complementary
     slackness, with the same value in every row. Primal–dual interior-point methods
@@ -352,10 +532,11 @@
         </tbody>
       </table>
       <p class="small muted">Lab <code>then</code>, part 2: 3 variables, 14 rows.</p>
+      <p class="small">On the polygon at $t = 5314$ the slacks are already $(2.5, 1.5, 0.0001, 0.0004)$: entries of $1/s^2$ range from $0.16$ to about $6 \times 10^7$. Each factor of 10 in $t$ adds a factor of 100 to that spread.</p>
     </div>
     <div class="box warn"><span class="label">why</span>
-      <p>The Hessian $A^\top \mathrm{diag}(1/s^2) A$ has entries of size $1/s_i^2$. Near the optimum some slacks are $\approx 10^{-7}$ and others $\approx 1$, so its condition number reaches $10^{14}$ and beyond, and the Newton direction becomes numerical noise.</p>
-      <p class="small">Production IPMs solve the primal–dual system with careful factorizations, and hand over to simplex (<b>crossover</b>) for an exact vertex.</p>
+      <p class="small">The Hessian $A^\top \mathrm{diag}(1/s^2) A$ has entries of size $1/s_i^2$. Near the optimum some slacks are $\approx 10^{-7}$ and others $\approx 1$, so its condition number reaches $10^{14}$ and beyond, and the Newton direction becomes numerical noise.</p>
+      <p class="small">This is <span class="term">floating-point breakdown</span>. Production IPMs (<span class="term" data-term="primal–dual interior-point method">primal–dual</span>) solve a better-behaved system with careful factorizations, and hand over to simplex (<span class="term">crossover</span>) for an exact vertex.</p>
     </div>
   </div>
   <aside class="notes">
@@ -396,9 +577,9 @@
       </table>
     </div>
     <div>
-      <p>Simplex iterations grew faster than $n$ here. Each IPM iteration is more expensive (a sparse Cholesky factorization), but there are few of them.</p>
+      <p>A <span class="term">cold solve</span>: simplex iterations grew faster than $n$ here. Each IPM iteration is more expensive (a sparse Cholesky factorization), but there are few of them.</p>
       <p class="small">Crossover on this family is at $n \approx 300$.</p>
-      <p class="small muted">The $n = 20\,000$ row comes from <code>then --big</code>. Structured real LPs vary widely: some favour simplex even at large sizes, which is why solvers can run several methods concurrently.</p>
+      <p class="small muted">The $n = 20\,000$ row comes from <code>then --big</code>. Structured real LPs vary widely: some favour simplex even at large sizes, which is why solvers offer <span class="term">concurrent solving</span>.</p>
     </div>
   </div>
   <aside class="notes">
@@ -418,7 +599,7 @@
   <h2>Warm solves: why branch-and-bound wants simplex</h2>
   <div class="cols">
     <div>
-      <p class="small">Same LP family, $n = 3000$. Solve, add one constraint that cuts off the optimum, re-solve:</p>
+      <p class="small">Same LP family, $n = 3000$. Solve, add one constraint that cuts off the optimum, re-solve (a <span class="term">warm solve</span>):</p>
       <table>
         <thead><tr><th></th><th class="num">cold</th><th class="num">re-solve</th></tr></thead>
         <tbody>

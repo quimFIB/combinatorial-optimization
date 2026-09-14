@@ -212,21 +212,21 @@ window.GLOSSARY = [
 ]
 },
 {
-"term_html": "Beale's example",
-"html": "A 4-variable LP (1955) on which Dantzig's rule with lowest-row tie-breaking cycles after 6 degenerate pivots.",
-"section": "How the naive method fails",
-"slide": "Degeneracy and cycling",
-"keys": [
-"beale's example"
-]
-},
-{
 "term_html": "stalling",
 "html": "A long run of degenerate pivots that does eventually end. The practical form of the cycling problem.",
 "section": "How the naive method fails",
-"slide": "Degeneracy and cycling",
+"slide": "Bland's rule",
 "keys": [
 "stalling"
+]
+},
+{
+"term_html": "Beale's example",
+"html": "A 4-variable LP (1955) on which Dantzig's rule with lowest-row tie-breaking cycles after 6 degenerate pivots. Bland's rule leaves the cycle at pivot 5.",
+"section": "How the naive method fails",
+"slide": "Beale's cycle, pivot by pivot",
+"keys": [
+"beale's example"
 ]
 },
 {
