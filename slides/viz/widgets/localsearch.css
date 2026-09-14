@@ -1,0 +1,8 @@
+/* Figures of slides/viz/widgets/localsearch.js (unit 26). */
+.viz-ls-edge { stroke: var(--unit); stroke-width: 3; }
+.viz-ls-removed { stroke: var(--warn); stroke-width: 2.5; stroke-dasharray: 6 4; }
+.viz-ls-added { stroke: var(--accent); stroke-width: 6; stroke-linecap: round; }
+.viz-ls-city { font: 600 12px var(--f-mono); fill: var(--ink); pointer-events: none; }
+.viz-ls-length { font: 600 15px var(--f-mono); fill: var(--ink); }
+.viz-ls-order { font: 15px var(--f-mono); margin-bottom: 8px; word-break: break-word; }
+.viz-anneal { grid-template-columns: 460px 520px; }

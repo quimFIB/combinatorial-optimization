@@ -50,7 +50,7 @@
       <p class="small">The optimality conditions, and why for an LP they are unit 03.</p></div>
   </div>
   <div class="box good"><span class="label">getting around</span>
-    <p class="small">Words with a <span class="term" data-term="KKT conditions">dotted underline</span> are glossary terms: click one for its definition. <kbd>G</kbd> lists every term in the unit, <kbd>N</kbd> shows the notes.</p>
+    <p class="small">Words with a <span class="term" data-term="KKT conditions">dotted underline</span> are glossary terms: click one for its definition. <kbd>G</kbd> lists every term in the unit, <kbd>N</kbd> shows the notes. Optional extra: <a href="explore.html" target="_blank" rel="noopener">interactive figures</a>, linked from the slides they support by a small ▸ chip; skip them freely.</p>
   </div>
   <aside class="notes">
     <p>The checkpoint: derive the KKT conditions for an LP and show they reduce exactly to complementary
@@ -131,6 +131,7 @@
       </div>
     </div>
   </div>
+  <p class="viz-link-row"><a class="viz-link" href="explore.html#/1" target="_blank" rel="noopener">explore interactively</a></p>
   <aside class="notes">
     <p>The √κ in accelerated rates is the whole story of momentum. With κ = 10 000 and a target of 1e−8
     in f, the rates predict about 92 000 iterations for plain GD and about 460 for tuned heavy ball (both
@@ -171,6 +172,7 @@
       <p class="small">A bigger step helps $x$ (factor 0.81) but makes $y$ bounce across the valley (factor $-0.9$). Past $2/L$ it would diverge. This zig-zag is what momentum damps.</p>
     </div>
   </div>
+  <p class="viz-link-row"><a class="viz-link" href="explore.html#/1" target="_blank" rel="noopener">explore interactively</a></p>
   <aside class="notes">
     <p><b>Why the factors.</b> For a diagonal quadratic, one gradient step with step size $t$ multiplies
     each coordinate by $1 - t\lambda_i$. With $t = 0.1$: $1 - 0.1 = 0.9$ for $x$ and $1 - 1 = 0$ for $y$.
@@ -254,6 +256,7 @@
       </div>
     </div>
   </div>
+  <p class="viz-link-row"><a class="viz-link" href="explore.html#/2" target="_blank" rel="noopener">explore interactively</a></p>
   <aside class="notes">
     <p>The measurement is a fair warning. When projection is cheap (a simplex, a box, a ball), projected
     gradient is simply faster. Frank–Wolfe earns its place where projection is expensive and linear
@@ -287,6 +290,7 @@
       <p class="small">The oracle just picks the most negative gradient entry: a corner. Steps $\tfrac22$, then $\tfrac23$. The gap always bounds $f - f^* $: at $k = 2$, $0.13 - 0.06 = 0.07 \le 0.36$.</p>
     </div>
   </div>
+  <p class="viz-link-row"><a class="viz-link" href="explore.html#/2" target="_blank" rel="noopener">explore interactively</a></p>
   <aside class="notes">
     <p><b>The projection.</b> The reference <code>project_simplex</code> returns $(0.6, 0.4, 0)$. Here the
     constraint is $\sum x \le 1$ rather than $= 1$, but $p$'s positive part sums to 1.4, so the

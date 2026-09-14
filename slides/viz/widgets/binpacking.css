@@ -1,0 +1,22 @@
+/* Figures of slides/viz/widgets/binpacking.js (unit 27). */
+.viz-af-arc { stroke: var(--rule); stroke-width: 1.5; fill: none; }
+.viz-af-flow { stroke: var(--ink-faint); stroke-width: 3; fill: none; }
+.viz-af-done { stroke: var(--accent); stroke-width: 3; fill: none; opacity: .55; }
+.viz-af-current { stroke: var(--accent); stroke-width: 6; fill: none; }
+.viz-af-flowlabel { font: 600 12px var(--f-mono); fill: var(--accent); paint-order: stroke; stroke: var(--surface); stroke-width: 4px; }
+
+.viz-symmetry { grid-template-columns: 520px minmax(0, 1fr); }
+.viz-sym-toggle { grid-template-columns: 22px 1fr; margin-bottom: 8px; font-size: 15px; }
+.viz-sym-cell { fill: var(--surface); stroke: var(--rule); stroke-width: 1; cursor: pointer; }
+.viz-sym-cell.kept { fill: var(--good-soft); stroke: var(--good); }
+.viz-sym-cell.dim { fill: var(--surface-sunk); stroke: var(--surface-sunk); }
+.viz-sym-cell.chosen { stroke: var(--accent); stroke-width: 2.5; }
+.viz-sym-text { font: 13px var(--f-mono); fill: var(--ink); cursor: pointer; }
+.viz-sym-text.dim { fill: var(--ink-faint); }
+.viz-sym-code { font: 16px var(--f-mono); margin-bottom: 4px; }
+.viz-sym-bin { fill: none; stroke: var(--ink); stroke-width: 1.5; }
+.viz-sym-item { stroke: var(--surface); stroke-width: 1; }
+.viz-sym-item.s3 { fill: var(--accent); }
+.viz-sym-item.s2 { fill: var(--accent-soft); stroke: var(--accent); }
+.viz-sym-itemtext { font: 600 12px var(--f-mono); fill: var(--ink); paint-order: stroke; stroke: var(--surface); stroke-width: 3px; }
+.viz-symmetry .viz-right .viz-svg { max-width: 330px; }

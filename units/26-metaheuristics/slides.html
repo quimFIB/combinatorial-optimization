@@ -49,7 +49,7 @@
       <p class="small">Your heuristics against each other and against OR-Tools, TSP and CVRP.</p></div>
   </div>
   <div class="box good"><span class="label">getting around</span>
-    <p class="small">Words with a <span class="term" data-term="local search">dotted underline</span> are glossary terms: click one for its definition. <kbd>G</kbd> lists every term in the unit, <kbd>N</kbd> shows the notes.</p>
+    <p class="small">Words with a <span class="term" data-term="local search">dotted underline</span> are glossary terms: click one for its definition. <kbd>G</kbd> lists every term in the unit, <kbd>N</kbd> shows the notes. Optional extra: <a href="explore.html" target="_blank" rel="noopener">interactive figures</a>, linked from the slides they support by a small ▸ chip; skip them freely.</p>
   </div>
   <aside class="notes">
     <p>The checkpoint is a time-to-target plot of three of your heuristics over 30 seeds, together with
@@ -90,6 +90,7 @@
       <p class="small">The stopping rule does most of the work: even full lists are cheap once scanning stops early. <b>Building</b> the lists (0.4 s) cost more than searching with them. A good start matters: from a random tour 2-opt ends 5% worse.</p>
     </div>
   </div>
+  <p class="viz-link-row"><a class="viz-link" href="explore.html#/1" target="_blank" rel="noopener">explore interactively</a></p>
   <aside class="notes">
     <p>The result "k = 10 sweep is slightly worse than full lists" (246 410 vs 244 044) is one instance and
     one run. Short lists can miss moves whose good endpoint is the eleventh neighbour. On uniform
@@ -136,6 +137,7 @@
       </div>
     </div>
   </div>
+  <p class="viz-link-row"><a class="viz-link" href="explore.html#/1" target="_blank" rel="noopener">explore interactively</a></p>
   <aside class="notes">
     <p><b>Checking the lengths.</b> $A\,B\,D\,C\,E\,F$: $AB = 3$, $BD = \sqrt{3^2 + 4^2} = 5$, $DC = 4$,
     $CE = 5$, $EF = 3$, $FA = 4$: total 24. The rectangle is $3 + 3 + 4 + 3 + 3 + 4 = 20$, and it is
@@ -207,6 +209,7 @@
       <p class="small">A 4-opt move $A\,B\,C\,D \to A\,C\,B\,D$ that sequential 2-opt and 3-opt can't undo in one step. That's why it's a good kick: the descent doesn't just fall back.</p>
     </div>
   </div>
+  <p class="viz-link-row"><a class="viz-link" href="explore.html#/2" target="_blank" rel="noopener">explore interactively</a></p>
   <aside class="notes">
     <p>Nearly every metaheuristic is local search plus a rule for escaping. Sörensen's point (reading
     list) is that most "novel" metaheuristics since 2000 are one of these five with a new metaphor, and the
@@ -246,6 +249,7 @@
       </div>
     </div>
   </div>
+  <p class="viz-link-row"><a class="viz-link" href="explore.html#/2" target="_blank" rel="noopener">explore interactively</a></p>
   <aside class="notes">
     <p>The probabilities are <code>math.exp(-4 / T)</code>; the last column is the reference
     <code>accept(4, T, 0.5)</code>, which accepts exactly when $u$ is below the probability. With

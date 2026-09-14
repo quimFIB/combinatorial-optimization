@@ -50,7 +50,7 @@
       <p class="small">Reading a statistics report; seeds; MIPLIB 2017 as shared reality.</p></div>
   </div>
   <div class="box good"><span class="label">getting around</span>
-    <p class="small">Words with a <span class="term" data-term="presolve">dotted underline</span> are glossary terms: click one for its definition. <kbd>G</kbd> lists every term in the unit, <kbd>N</kbd> shows the notes.</p>
+    <p class="small">Words with a <span class="term" data-term="presolve">dotted underline</span> are glossary terms: click one for its definition. <kbd>G</kbd> lists every term in the unit, <kbd>N</kbd> shows the notes. Optional extra: <a href="explore.html" target="_blank" rel="noopener">interactive figures</a>, linked from the slides they support by a small ▸ chip; skip them freely.</p>
   </div>
   <aside class="notes">
     <p>The checkpoint: a before/after table of your own model, one row per intervention, with the time
@@ -220,6 +220,7 @@
       <p class="small">Within noise: four seeds on one instance gave B 20, 15.3, 20, 1.7 s and B′ 1.6, 11.3, 2.8, 11.4 s.</p>
     </div>
   </div>
+  <p class="viz-link-row"><a class="viz-link" href="explore.html#/2" target="_blank" rel="noopener">explore interactively</a></p>
   <aside class="notes">
     <p>A better model removes the symmetry at the source. The arc-flow and pattern formulations don't
     have bin identities at all: a solution is a multiset of patterns. That's why section 3's
@@ -255,6 +256,7 @@
       </div>
     </div>
   </div>
+  <p class="viz-link-row"><a class="viz-link" href="explore.html#/2" target="_blank" rel="noopener">explore interactively</a></p>
   <aside class="notes">
     <p><b>The 12 packings.</b> Either both 3s get a 2 and one 2 is alone (3 choices of the lone 2, times
     2 ways to pair the others: 6), or one 3 gets a 2, the other 3 is alone, and the two remaining 2s
@@ -300,6 +302,7 @@
       <p class="small">Arc flow's LP proves optimality at the root on these instances. On the triplet instances (C = 1000) its graph is ten times bigger and it's <em>slower</em> than C–E.</p>
     </div>
   </div>
+  <p class="viz-link-row"><a class="viz-link" href="explore.html#/1" target="_blank" rel="noopener">explore interactively</a></p>
   <aside class="notes">
     <p>Pseudo-polynomial is the catch. The arc-flow model has O(C × distinct sizes) arcs, so C = 100 is tiny
     and C = 10⁹ is impossible. Column generation (unit 10) keeps the same LP with an implicit column set,
@@ -351,6 +354,7 @@
       <p class="small muted">No bin labels appear anywhere, so there is no symmetry to break.</p>
     </div>
   </div>
+  <p class="viz-link-row"><a class="viz-link" href="explore.html#/1" target="_blank" rel="noopener">explore interactively</a></p>
   <aside class="notes">
     <p>The flow is the one SCIP returns for the reference <code>arcflow_model(sizes, 5)</code>:
     <code>f_0_3 = 2</code>, <code>f_3_2 = 3</code>, <code>f_1_2 = 1</code>, <code>loss_0 = 1</code>, $z = 3$.

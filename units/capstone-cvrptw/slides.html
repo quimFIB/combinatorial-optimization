@@ -61,7 +61,7 @@
       </table>
       <p class="small">56 instances of 100 customers, and the literature's 25- and 50-customer versions: the first $n$ customers of each file. <code>uv run co data</code> downloads them from SINTEF's mirror.</p>
       <div class="box good"><span class="label">getting around</span>
-        <p class="small">Words with a <span class="term" data-term="VRPTW">dotted underline</span> are glossary terms: click one. <kbd>G</kbd> lists them all, <kbd>N</kbd> shows the notes.</p>
+        <p class="small">Words with a <span class="term" data-term="VRPTW">dotted underline</span> are glossary terms: click one. <kbd>G</kbd> lists them all, <kbd>N</kbd> shows the notes. Optional extra: <a href="explore.html" target="_blank" rel="noopener">interactive figures</a>, linked from the slides they support by a small ▸ chip; skip them freely.</p>
       </div>
     </div>
   </div>
@@ -108,6 +108,7 @@
       <p class="small">The optimum serves all four on <b>one</b> route, $0 \to 1 \to 2 \to 4 \to 3 \to 0$, distance <b>200</b>: starts 30, 80, 140, 190, back at 240.</p>
     </div>
   </div>
+  <p class="viz-link-row"><a class="viz-link" href="explore.html#/1" target="_blank" rel="noopener">explore interactively</a></p>
   <aside class="notes">
     <p><b>Checking the optimum.</b> After 2 (start 80) go to 4: $80 + 10 + 50 = 140 \le 300$. Then 3:
     $\max(100, 140 + 10 + 40) = 190 \le 200$, with only 10 to spare. Back at $190 + 10 + 40 = 240$. Distance
@@ -355,6 +356,7 @@ m.minimize(sum(d[i][j] * b for (i, j), b in x.items()))</code></pre>
       </div>
     </div>
   </div>
+  <p class="viz-link-row"><a class="viz-link" href="explore.html#/1" target="_blank" rel="noopener">explore interactively</a></p>
   <aside class="notes">
     <p><b>Each row.</b> Between 0 and 1: 4 is reached at $0 + 80 = 80$, then 1 at $80 + 10 + 85 = 175$, past 1's
     latest start 50. Between 1 and 2: 4 at $30 + 10 + 85 = 125$, then 2 at $125 + 10 + 50 = 185 &gt; 100$.

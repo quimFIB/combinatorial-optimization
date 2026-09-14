@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>26 · Explore: local search and annealing</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+<link rel="stylesheet" href="../../slides/deck.css">
+<link rel="stylesheet" href="../../slides/viz/viz.css">
+<link rel="stylesheet" href="../../slides/viz/widgets/localsearch.css">
+</head>
+<body data-trunk="prac">
+<div class="reveal"><div class="slides">
+
+<section class="title-slide">
+  <p class="eyebrow">optional · interactive figures</p>
+  <div class="unit-no">26</div>
+  <h1>Explore: local search and annealing</h1>
+  <p class="lede">2-opt moves replayed from the reference solution, and an annealing run you can scrub through with its temperature.</p>
+  <p class="meta"><span>optional: nothing in the lab depends on it</span><span><a href="slides.html">back to the slides</a></span></p>
+  <aside class="notes">
+    <p>These figures support the slides; they don't replace them, and the unit is complete
+    without them. Each one is computed from the unit's own data or reference solution, so
+    what you see agrees with the numbers on the slides.</p>
+    <p>Inside a figure, the arrow keys and drags belong to the figure; click outside it (or
+    press Esc) to use them for the slides again.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">26 · explore</p>
+  <h2>2-opt, one move at a time</h2>
+  <div class="viz" data-viz="twoopt" data-runs="six,twelve-random,twelve-nn"></div>
+  <p class="small muted">Try: step through the six cities, then the twelve from a random tour and from nearest neighbour; compare how many moves each needs. Static version: <a href="slides.html#/4">2-opt on six cities</a>.</p>
+  <aside class="notes">
+    <p><b>What it shows.</b> Every improving 2-opt move, in the order the reference
+    <code>two_opt(dist, tour, neighbours, dont_look=False)</code> applies them: dashed red, the two
+    edges removed; thick, the two added; then the stretch between is reversed. The replay calls the
+    reference <code>two_opt_move</code> and <code>_reverse</code>, and
+    <code>slides/viz/traces/u26.py</code> checks that it ends at the same length as
+    <code>two_opt</code> itself. Distances are rounded Euclidean, neighbour lists of 5.</p>
+    <ul>
+      <li><b>Six cities</b>: the slide's crossing tour, one move, 24 → 20.</li>
+      <li><b>Twelve cities, random start</b>: eleven moves, 473 → 235. Early moves remove long crossings and gain a lot; late ones gain a few units.</li>
+      <li><b>Twelve cities, nearest-neighbour start</b>: two moves, 288 → 235, the same local optimum here. A good construction leaves local search little to do, which is why real codes start from one.</li>
+    </ul>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">26 · explore</p>
+  <h2>An annealing run, and its temperature</h2>
+  <div class="viz" data-viz="anneal" data-runs="hot,mean,cold"></div>
+  <p class="small muted">Try: drag the iteration slider through the hot run, then the cold one; set Δ to the mean edge (46) and watch its acceptance fall as T cools. Static version: <a href="slides.html#/8">one worsening move</a>.</p>
+  <aside class="notes">
+    <p><b>What it shows.</b> One simulated-annealing run on twenty cities, 4 000 iterations, geometric
+    cooling. The curve is the current tour length (sampled every 25 iterations), the grey curve the
+    temperature on a log scale, and the tour on the left is the tour at the chosen iteration. The
+    run replays the reference <code>simulated_annealing</code>'s random draws with the reference
+    <code>accept</code> and <code>temperature</code>, and the best length is checked against the
+    reference function with the same seed.</p>
+    <ul>
+      <li><b>Hot start</b> ($T_0 = 100$, about twice the mean edge of 46): for the first quarter the
+      length barely falls, because most worsening moves are accepted. It wanders, then settles.</li>
+      <li><b>Cold start</b> ($T_0 = 1$): nearly plain descent, a handful of worsening moves accepted
+      in the whole run. It gets to 350, the hot run to 347; on an instance this small plain 2-opt
+      reaches 347 too, so the lesson here is the shape of the curves, not a winner.</li>
+      <li>The acceptance line is $e^{-\Delta/T}$ at the chosen iteration's recorded $T$, the
+      Metropolis rule of the slides: at $T = 2$ a move costing 4 has probability 0.135.</li>
+    </ul>
+  </aside>
+</section>
+
+</div></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/plugin/highlight/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<script src="../../slides/deck.js"></script>
+<script src="../../slides/viz/viz.js"></script>
+<script src="../../slides/viz/widgets/localsearch.js"></script>
+<script src="viz-data.js"></script>
+</body>
+</html>

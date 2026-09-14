@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>31 · Explore: discrete meets differentiable</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+<link rel="stylesheet" href="../../slides/deck.css">
+<link rel="stylesheet" href="../../slides/viz/viz.css">
+</head>
+<body data-trunk="coda">
+<div class="reveal"><div class="slides">
+
+<section class="title-slide">
+  <p class="eyebrow">optional · interactive figures</p>
+  <div class="unit-no">31</div>
+  <h1>Explore: discrete meets differentiable</h1>
+  <p class="lede">Sinkhorn's soft assignment as the temperature changes, and Gumbel noise turning an argmax into samples from the softmax.</p>
+  <p class="meta"><span>optional: nothing in the lab depends on it</span><span><a href="slides.html">back to the slides</a></span></p>
+  <aside class="notes">
+    <p>These figures support the slides; they don't replace them, and the unit is complete
+    without them. Each one is computed from the unit's own data or reference solution, so
+    what you see agrees with the numbers on the slides.</p>
+    <p>Inside a figure, the arrow keys and drags belong to the figure; click outside it (or
+    press Esc) to use them for the slides again.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">31 · explore</p>
+  <h2>Sinkhorn's plan, by temperature</h2>
+  <div class="viz" data-viz="sinkhorn"></div>
+  <p class="small muted">Try: slide ε down to 0.1 and up to 5; drop the iterations to 1 and 2. Static version: <a href="slides.html#/4">Sinkhorn on a 2×2 assignment</a>.</p>
+  <aside class="notes">
+    <p><b>What it shows.</b> The plan $P$ for costs $\begin{pmatrix}1 &amp; 3\\ 2 &amp; 5\end{pmatrix}$ from the reference
+    <code>sinkhorn</code>, for ten temperatures and 1 to 30 iterations each, recorded by
+    <code>slides/viz/traces/u31.py</code> together with <code>round_to_permutation</code>. The dashed line is the
+    exact 2×2 limit, $a/(1 - a) = e^{-1/(2\varepsilon)}$.</p>
+    <ul>
+      <li>At $\varepsilon = 1$ and 30 iterations: $0.378 / 0.622$, the slide's converged plan.</li>
+      <li>$\varepsilon = 0.5$: 0.269 / 0.731, "leans harder".</li>
+      <li>Small $\varepsilon$: close to the permutation, but the iterations converge more slowly. Large $\varepsilon$: close to ½ everywhere, fast.</li>
+    </ul>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">31 · explore</p>
+  <h2>Gumbel-max samples, piling up</h2>
+  <div class="viz" data-viz="gumbel"></div>
+  <p class="small muted">Try: drag the slider from 1 sample to 20 000 and watch the bars settle onto the dashed softmax. Static version: <a href="slides.html#/8">Gumbel-max on three logits</a>.</p>
+  <aside class="notes">
+    <p><b>What it shows.</b> Logits $(1, 0, -1)$; each sample is the reference <code>gumbel_max_sample</code> with
+    numpy's <code>default_rng(0)</code>, as on the slide, recorded as running counts at log-spaced sample sizes.
+    At 20 000 draws the frequencies are 0.671, 0.242, 0.087, the slide's table. The hand-worked sample beside the
+    slider uses <code>default_rng(3)</code>, where the least likely option wins.</p>
+  </aside>
+</section>
+
+</div></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/plugin/highlight/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<script src="../../slides/deck.js"></script>
+<script src="../../slides/viz/viz.js"></script>
+<script src="../../slides/viz/widgets/relax.js"></script>
+<script src="viz-data.js"></script>
+</body>
+</html>

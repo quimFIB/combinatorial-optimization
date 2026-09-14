@@ -46,7 +46,7 @@
       <p class="small">An MLP on terrain elevations; non-smooth points, branches, argmax.</p></div>
   </div>
   <div class="box good"><span class="label">getting around</span>
-    <p class="small">Words with a <span class="term" data-term="reverse mode">dotted underline</span> are glossary terms: click one for its definition. <kbd>G</kbd> lists every term in the unit, <kbd>N</kbd> shows the notes.</p>
+    <p class="small">Words with a <span class="term" data-term="reverse mode">dotted underline</span> are glossary terms: click one for its definition. <kbd>G</kbd> lists every term in the unit, <kbd>N</kbd> shows the notes. Optional extra: <a href="explore.html" target="_blank" rel="noopener">interactive figures</a>, linked from the slides they support by a small ▸ chip; skip them freely.</p>
   </div>
   <aside class="notes">
     <p>The checkpoint: your reverse-mode engine trains an MLP on a real dataset, and you compute the tape's
@@ -127,6 +127,7 @@
       <p class="small">Two inputs, two passes. The value column is the ordinary evaluation, carried along for free.</p>
     </div>
   </div>
+  <p class="viz-link-row"><a class="viz-link" href="explore.html#/1" target="_blank" rel="noopener">explore interactively</a></p>
   <aside class="notes">
     <p>The product rule for dual numbers, $(a + b\varepsilon)(c + d\varepsilon) = ac + (ad + bc)\varepsilon$,
     is the product rule of calculus: in pass 1, $a = 1, b = 1, c = 2, d = 0$ gives $\varepsilon$ part 2. The
@@ -211,6 +212,7 @@
       <p class="small">Both partial derivatives from <b>one</b> backward sweep, where forward mode needed two passes. $x$ feeds two nodes, so its adjoint collects two contributions: that "+=" is the multivariable chain rule.</p>
     </div>
   </div>
+  <p class="viz-link-row"><a class="viz-link" href="explore.html#/1" target="_blank" rel="noopener">explore interactively</a></p>
   <aside class="notes">
     <p><b>Order matters.</b> $v_0$'s adjoint is only complete after every node that uses $v_0$ has been
     visited, which is what reverse topological order guarantees: $v_4$, then $v_3$ and $v_2$, then the

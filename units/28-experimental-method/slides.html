@@ -49,7 +49,7 @@
       <p class="small">Unit 07's branching claim survives, quantified. Unit 19's median claim doesn't.</p></div>
   </div>
   <div class="box good"><span class="label">getting around</span>
-    <p class="small">Words with a <span class="term" data-term="shifted geometric mean (SGM)">dotted underline</span> are glossary terms: click one for its definition. <kbd>G</kbd> lists every term in the unit, <kbd>N</kbd> shows the notes.</p>
+    <p class="small">Words with a <span class="term" data-term="shifted geometric mean (SGM)">dotted underline</span> are glossary terms: click one for its definition. <kbd>G</kbd> lists every term in the unit, <kbd>N</kbd> shows the notes. Optional extra: <a href="explore.html" target="_blank" rel="noopener">interactive figures</a>, linked from the slides they support by a small ▸ chip; skip them freely.</p>
   </div>
   <aside class="notes">
     <p>The checkpoint: every performance claim in your notes regenerates from one command, and survives,
@@ -140,6 +140,7 @@
       </div>
     </div>
   </div>
+  <p class="viz-link-row"><a class="viz-link" href="explore.html#/1" target="_blank" rel="noopener">explore interactively</a></p>
   <aside class="notes">
     <p><b>Time-to-target plots</b> (unit 26) are the per-instance analogue for randomised algorithms: a
     distribution over seeds on one instance, where a profile is a distribution over instances. Use TTT
@@ -183,6 +184,7 @@
       <p class="small">Drop Y and recompute: X's ratio on p2 becomes 1 and Z's on p4 stays 1, so X's curve starts at 0.75. Removing a solver changed the others' curves: the trap on the previous slide.</p>
     </div>
   </div>
+  <p class="viz-link-row"><a class="viz-link" href="explore.html#/1" target="_blank" rel="noopener">explore interactively</a></p>
   <aside class="notes">
     <p>Each column of the profile counts ratios. At τ = 1.5, X has $\{1, 1\}$ (2 of 4), Y has $\{1, 1\}$,
     Z has $\{1, 1.5\}$. At τ = 2, X adds p2's ratio 2, Y adds p1 and p4, Z adds p3. Failures (∞) never
@@ -222,6 +224,7 @@
       <p class="small muted">Holm (1979), <em>Scand. J. Statistics</em> 6.</p>
     </div>
   </div>
+  <p class="viz-link-row"><a class="viz-link" href="explore.html#/2" target="_blank" rel="noopener">explore interactively</a></p>
   <aside class="notes">
     <p>What the bootstrap interval is and isn't: an estimate of how much the summary would move if the
     instances were drawn again from the same distribution. It says nothing about instances from a
@@ -267,6 +270,7 @@
       <p class="small muted">Bonferroni would multiply all three by 3: 0.03, 0.09, 0.12. Same verdict here, but Holm is never stricter.</p>
     </div>
   </div>
+  <p class="viz-link-row"><a class="viz-link" href="explore.html#/2" target="_blank" rel="noopener">explore interactively</a></p>
   <aside class="notes">
     <p>The resamples are <code>random.Random(1).choices(values, k=5)</code> five times; the reference
     <code>bootstrap_ci</code> with those five resamples returns (0.76, 0.84), the smallest and fourth of the
