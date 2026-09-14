@@ -20,7 +20,7 @@
   <h1>Polyhedra, cones, and Farkas' lemma</h1>
   <p class="lede">The shape of a feasible region, three names for its corners, and a short
   proof that a linear system has no solution.</p>
-  <p class="meta"><span>needs 00</span><span>~1½ h slides + 2½ h lab</span><span>lab: <code>uv run co lab 01</code></span></p>
+  <p class="meta"><span>needs 00</span><span>~2 h slides + 2½ h lab</span><span>lab: <code>uv run co lab 01</code></span></p>
   <aside class="notes">
     <h4>Why the course starts here</h4>
     <p>Integer programming, Part II, is the study of what happens when you take the
@@ -35,6 +35,11 @@
     <p>$A \in \mathbb{Q}^{m\times n}$ with rows $a_1,\dots,a_m$, $b \in \mathbb{Q}^m$.
     Vectors are columns. $a_i x$ means the inner product of row $a_i$ with $x$.
     Inequalities between vectors hold componentwise.</p>
+    <h4>How to read this deck</h4>
+    <p>The slides aim at the ideas and how to use them. Where a statement has a proof
+    worth knowing, the slide gives the idea in a sentence or two and the notes carry
+    the full argument under <b>Full proof</b>. Skip those on a first pass; nothing in
+    the lab depends on them.</p>
   </aside>
 </section>
 
@@ -66,17 +71,21 @@
     </svg>
   </div>
   <div class="cols">
-    <p><b>The destination is Farkas' lemma.</b> Unit 03 builds LP duality on it, and
+    <p><b>The destination is <span class="term">Farkas' lemma</span>.</b> Unit 03 builds LP duality on it, and
     through duality it reaches most of the course.</p>
     <p class="muted"><b>The surprise:</b> the constructive proof of Farkas is a
     bookkeeping exercise on Fourier–Motzkin elimination. You will do it in lab step 5.</p>
   </div>
+  <div class="box good"><span class="label">getting around</span>
+    <p class="small">Words with a <span class="term" data-term="polyhedron">dotted underline</span> are glossary terms: click one for its definition. <kbd>G</kbd> lists every term in the unit, <kbd>N</kbd> shows the notes, where the full proofs live.</p>
+  </div>
   <aside class="notes">
     <p>A plan for reading: the section on corners is where the definitions pay off.
-    Read the three-way equivalence proof once properly, because unit 02's simplex
-    method is the BFS characterization turned into an algorithm. Minkowski–Weyl can
-    be taken on trust the first time through. Fourier–Motzkin and Farkas should be
-    read with a pencil, and the lab will make them concrete.</p>
+    Work through the running example (the same four-sided polygon appears on almost
+    every slide), because unit 02's simplex method is the corner characterization turned
+    into an algorithm. Minkowski–Weyl can be taken on trust the first time through.
+    Fourier–Motzkin and Farkas are best read with a pencil, and the lab will make them
+    concrete.</p>
     <p>FTLP is the fundamental theorem of linear programming: an LP that is feasible
     and bounded attains its optimum at a vertex, provided a vertex exists.</p>
   </aside>
@@ -95,20 +104,20 @@
   <div class="cols wide-left">
     <div>
       <div class="box def"><span class="label">definitions</span>
-        <p>A <b>halfspace</b> is $\{x \in \mathbb{R}^n : a x \le \beta\}$ with $a \ne 0$; its boundary $\{a x = \beta\}$ is a <b>hyperplane</b>.</p>
-        <p>A <b>polyhedron</b> is an intersection of finitely many halfspaces:
+        <p>A <span class="term">halfspace</span> is $\{x \in \mathbb{R}^n : a x \le \beta\}$ with $a \ne 0$: one side of a line (in 2-D) or a plane. Its boundary $\{a x = \beta\}$ is a <span class="term">hyperplane</span>.</p>
+        <p>A <span class="term">polyhedron</span> is what finitely many halfspaces have in common:
         $$P = \{x : Ax \le b\}.$$</p>
-        <p>A <b>polytope</b> is a bounded polyhedron.</p>
+        <p>A <span class="term">polytope</span> is a polyhedron that doesn't run off to infinity.</p>
       </div>
-      <p>Every polyhedron is <b>convex</b> and <b>closed</b>. Equalities, $\ge$, and
-      sign constraints all fit this form.</p>
+      <p>Every polyhedron is <b>convex</b> (the segment between two of its points stays inside)
+      and <b>closed</b>. Equalities, $\ge$, and sign constraints all fit this form.</p>
     </div>
     <div class="box"><span class="label">one form to another</span>
       <p class="small">$a x = \beta \;\to\; a x \le \beta,\ -a x \le -\beta$</p>
       <p class="small">$a x \ge \beta \;\to\; -a x \le -\beta$</p>
       <p class="small">free $x_j \;\to\; x_j^+ - x_j^-,\ x_j^\pm \ge 0$</p>
-      <p class="small">$a x \le \beta \;\to\; a x + s = \beta,\ s \ge 0$</p>
-      <p class="small muted">Standard form $\{x : Ax = b,\ x \ge 0\}$ is what simplex works in (unit 02). This unit uses $Ax \le b$.</p>
+      <p class="small">$a x \le \beta \;\to\; a x + s = \beta,\ s \ge 0$ (a <span class="term">slack variable</span>)</p>
+      <p class="small muted"><span class="term">Standard form</span> $\{x : Ax = b,\ x \ge 0\}$ is what simplex works in (unit 02). This unit uses $Ax \le b$.</p>
     </div>
   </div>
   <aside class="notes">
@@ -129,44 +138,105 @@
 </section>
 
 <section>
+  <p class="eyebrow">01 · polyhedra · example</p>
+  <h2>The running example</h2>
+  <div class="cols wide-left">
+    <div>
+      <p>Four rows in $\mathbb{R}^2$. Every later slide comes back to this $P$.</p>
+      <table>
+        <thead><tr><th>row</th><th>$a_i x \le b_i$</th><th class="num">at $(1,1)$</th><th class="num">at $(3,2)$</th><th class="num">at $(2.5,1.5)$</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td>$-x \le 0$</td><td class="num">$-1$ ✓</td><td class="num">$-3$ ✓</td><td class="num">$-2.5$ ✓</td></tr>
+          <tr><td>2</td><td>$-y \le 0$</td><td class="num">$-1$ ✓</td><td class="num">$-2$ ✓</td><td class="num">$-1.5$ ✓</td></tr>
+          <tr><td>3</td><td>$x + y \le 4$</td><td class="num">$2$ ✓</td><td class="num"><b>$5$ ✗</b></td><td class="num"><b>$4$ =</b></td></tr>
+          <tr><td>4</td><td>$x - y \le 1$</td><td class="num">$0$ ✓</td><td class="num">$1$ =</td><td class="num"><b>$1$ =</b></td></tr>
+        </tbody>
+      </table>
+      <p class="small"><b>Membership is plugging in.</b> $(1,1)$ satisfies every row with room to spare: it is inside.
+      $(3,2)$ breaks row 3: it is outside. $(2.5,1.5)$ satisfies everything, two rows with no room at all: it sits on two walls at once.</p>
+      <p class="small muted">Hold on to that last observation. "No room at all" is the idea the whole corners section is built on.</p>
+    </div>
+    <div class="fig">
+      <svg viewBox="0 0 380 350" width="380" role="img" aria-label="the polygon with the points (1,1) inside, (3,2) outside and (2.5,1.5) on a corner">
+        <line x1="60" y1="18" x2="60" y2="332" class="rule" stroke-width="1.5"/>
+        <line x1="20" y1="300" x2="368" y2="300" class="rule" stroke-width="1.5"/>
+        <line x1="30" y1="30" x2="330" y2="330" class="rule" stroke-width="1.5" stroke-dasharray="5 4"/>
+        <line x1="90" y1="330" x2="360" y2="60" class="rule" stroke-width="1.5" stroke-dasharray="5 4"/>
+        <polygon points="60,300 120,300 210,210 60,60" class="fill-soft unit" stroke-width="2.5" style="fill-opacity:.9"/>
+        <circle cx="120" cy="240" r="7" class="fill-good"/>
+        <text x="130" y="246" font-size="15">(1, 1)</text>
+        <circle cx="240" cy="180" r="7" class="fill-warn"/>
+        <text x="250" y="176" font-size="15">(3, 2)</text>
+        <circle cx="210" cy="210" r="7" class="fill-accent"/>
+        <text x="220" y="228" font-size="15">(2.5, 1.5)</text>
+        <text x="296" y="54" font-size="14" class="soft">row 4</text>
+        <text x="274" y="324" font-size="14" class="soft">row 3</text>
+        <text x="90" y="160" font-size="20" font-weight="600">P</text>
+      </svg>
+      <p class="cap">$P$ has corners $(0,0)$, $(1,0)$, $(2.5,1.5)$, $(0,4)$. Dashed: the lines where rows 3 and 4 hold with equality.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>Row 4 at $(3,2)$ gives exactly 1, so that point is on row 4's line; it's
+    outside only because of row 3. A point can be on a wall's line and still be
+    outside the polyhedron, if some other row fails.</p>
+    <p>Why fix one example for the whole unit: the definitions ahead (faces, tight
+    rows, bases, projections, certificates) are all short, but they are easy to
+    misread in the abstract. Checking each one on four rows in the plane takes a
+    minute and catches most misreadings.</p>
+    <p>The row numbering 1–4 is used on every later slide, including the
+    Fourier–Motzkin example, where the rows are classified by the sign of their
+    $x$-coefficient.</p>
+  </aside>
+</section>
+
+<section>
   <p class="eyebrow">01 · polyhedra</p>
   <h2>Faces</h2>
   <div class="cols wide-left">
     <div>
       <div class="box def"><span class="label">definition</span>
-        <p>An inequality $c x \le \delta$ is <b>valid</b> for $P$ if every $x \in P$ satisfies it.
-        A <b>face</b> of $P$ is $F = P \cap \{x : c x = \delta\}$ for a valid inequality.</p>
+        <p>An inequality $c x \le \delta$ is a <span class="term">valid inequality</span> for $P$ if every point of $P$ satisfies it.
+        The <span class="term">face</span> it defines is the part of $P$ where it holds with equality: $F = P \cap \{x : c x = \delta\}$.</p>
       </div>
-      <ul>
-        <li>Faces of dimension $0$: <b>vertices</b>. Dimension $1$: <b>edges</b>.</li>
-        <li>Dimension $\dim P - 1$: <b>facets</b>.</li>
-        <li>Every face is itself a polyhedron: set some of the inequalities of $Ax \le b$ to equality.</li>
-      </ul>
-      <p>A full-dimensional polyhedron has a unique minimal description: <b>one inequality per facet</b>. Every other inequality is redundant.</p>
+      <p class="small">Picture pressing a ruler against $P$ from outside: the face is what the ruler touches.</p>
+      <table>
+        <thead><tr><th>valid inequality</th><th>face of the example</th><th>kind</th></tr></thead>
+        <tbody>
+          <tr><td>$x - y \le 1$</td><td>segment $(1,0)$–$(2.5,1.5)$</td><td><span class="term">edge</span>, a <span class="term">facet</span></td></tr>
+          <tr><td>$-x + y \le 4$</td><td>the single point $(0,4)$</td><td><span class="term">vertex</span></td></tr>
+          <tr><td>$x + y \le 5$</td><td>nothing: never tight</td><td>empty face</td></tr>
+          <tr><td>$0x + 0y \le 0$</td><td>all of $P$</td><td>$P$ itself</td></tr>
+        </tbody>
+      </table>
+      <p class="small">A 2-D polytope's facets are its edges. In general facets have dimension $\dim P - 1$, and a full-dimensional polyhedron needs <b>one inequality per facet</b>; any other row is a <span class="term">redundant inequality</span>.</p>
     </div>
     <div class="fig">
       <svg viewBox="0 0 380 350" width="400" role="img" aria-label="quadrilateral with vertices at (0,0), (1,0), (2.5,1.5), (0,4)">
         <line x1="60" y1="18" x2="60" y2="332" class="rule" stroke-width="1.5"/>
         <line x1="20" y1="300" x2="368" y2="300" class="rule" stroke-width="1.5"/>
         <line x1="30" y1="30" x2="330" y2="330" class="rule" stroke-width="1.5" stroke-dasharray="5 4"/>
-        <line x1="90" y1="330" x2="360" y2="60" class="rule" stroke-width="1.5" stroke-dasharray="5 4"/>
+        <line x1="20" y1="100" x2="110" y2="10" class="rule" stroke-width="1.5" stroke-dasharray="2 4"/>
         <polygon points="60,300 120,300 210,210 60,60" class="fill-soft unit" stroke-width="2.5" style="fill-opacity:.9"/>
         <line x1="120" y1="300" x2="210" y2="210" class="accent" stroke-width="6"/>
         <circle cx="60" cy="300" r="6" class="fill-ink"/>
         <circle cx="120" cy="300" r="6" class="fill-ink"/>
-        <circle cx="210" cy="210" r="8" class="fill-accent"/>
-        <circle cx="60" cy="60" r="6" class="fill-ink"/>
+        <circle cx="210" cy="210" r="6" class="fill-ink"/>
+        <circle cx="60" cy="60" r="9" class="fill-accent"/>
         <text x="220" y="203" font-size="15">(2.5, 1.5)</text>
-        <text x="68" y="55" font-size="15">(0, 4)</text>
-        <text x="175" y="275" font-size="14" class="soft">facet</text>
-        <text x="300" y="55" font-size="14" class="soft">x − y = 1</text>
-        <text x="265" y="325" font-size="14" class="soft">x + y = 4</text>
+        <text x="72" y="55" font-size="15">(0, 4)</text>
+        <text x="175" y="275" font-size="14" class="soft">edge</text>
+        <text x="300" y="325" font-size="14" class="soft">x − y = 1</text>
         <text x="100" y="230" font-size="20" font-weight="600">P</text>
       </svg>
-      <p class="cap">$x \ge 0,\ y \ge 0,\ x+y \le 4,\ x-y \le 1$. Four facets (edges), four vertices.</p>
+      <p class="cap">Thick: the edge from $x - y \le 1$. Large dot: the vertex $(0,4)$, the only point where $-x + y \le 4$ is tight (dotted line).</p>
     </div>
   </div>
   <aside class="notes">
+    <p>Check the vertex row: $-x + y$ is $0$ at $(0,0)$, $-1$ at $(1,0)$, $-1$ at
+    $(2.5, 1.5)$ and $4$ at $(0,4)$. So $-x + y \le 4$ is valid and touches $P$ at one
+    point. Note that it is <em>not</em> one of the four rows defining $P$: faces come from
+    any valid inequality, not just the ones you wrote down.</p>
     <p>The empty set and $P$ itself are faces, called improper: take $0x \le 1$
     (face $\emptyset$) or $0x \le 0$ (face $P$). Some texts exclude them.</p>
     <p>The face lattice of a polyhedron (all faces ordered by inclusion) is finite,
@@ -180,7 +250,6 @@
     is Schrijver §8.4, and it is why "how many facets does this polytope have" is the
     honest measure of how hard it is to describe. Unit 05 comes back to it: the TSP
     polytope has exponentially many facets, and no small extended formulation.</p>
-    <p>The figure is used again for Fourier–Motzkin later in the unit.</p>
   </aside>
 </section>
 
@@ -193,21 +262,84 @@
 
 <section>
   <p class="eyebrow">01 · corners</p>
+  <h2>Tight rows, and counting them</h2>
+  <div class="cols wide-left">
+    <div>
+      <div class="box def"><span class="label">definition</span>
+        <p class="small">Row $i$ is <span class="term" data-term="tight row">tight</span> at $x$ if it holds with equality, $a_i x = b_i$: $x$ is pressed against that wall. Write <span class="term">$I(x)$</span> for the set of tight rows.</p>
+        <p class="small">The <span class="term" data-term="rank of the tight rows">rank of the tight rows</span> counts how many genuinely different directions those walls face. $(1,1)$ and $(2,2)$ have rank 1; $(1,1)$ and $(1,-1)$ have rank 2.</p>
+      </div>
+      <table>
+        <thead><tr><th>point</th><th>tight rows</th><th class="num">rank</th><th>where it is</th></tr></thead>
+        <tbody>
+          <tr><td>$(1, 1)$</td><td>none</td><td class="num">0</td><td>inside</td></tr>
+          <tr><td>$(0, 2)$</td><td>row 1</td><td class="num">1</td><td>on an edge</td></tr>
+          <tr><td>$(1.75, 0.75)$</td><td>row 4</td><td class="num">1</td><td>on an edge</td></tr>
+          <tr><td>$(2.5, 1.5)$</td><td>rows 3, 4</td><td class="num"><b>2</b></td><td><b>a corner</b></td></tr>
+        </tbody>
+      </table>
+      <p class="small"><b>The pattern:</b> with rank below $n$ you can still slide along the tight walls. With rank $n$ (here $n = 2$), the walls pin the point down completely. That is what a corner is.</p>
+    </div>
+    <div class="fig">
+      <svg viewBox="0 0 380 350" width="380" role="img" aria-label="four points in the polygon with their tight rows">
+        <line x1="60" y1="18" x2="60" y2="332" class="rule" stroke-width="1.5"/>
+        <line x1="20" y1="300" x2="368" y2="300" class="rule" stroke-width="1.5"/>
+        <polygon points="60,300 120,300 210,210 60,60" class="fill-soft unit" stroke-width="2.5" style="fill-opacity:.9"/>
+        <line x1="60" y1="130" x2="60" y2="230" class="accent" stroke-width="5"/>
+        <line x1="135" y1="285" x2="195" y2="225" class="accent" stroke-width="5"/>
+        <circle cx="120" cy="240" r="7" class="fill-ink"/>
+        <text x="132" y="236" font-size="14">(1, 1): free to move</text>
+        <circle cx="60" cy="180" r="7" class="fill-ink"/>
+        <text x="72" y="176" font-size="14">(0, 2)</text>
+        <circle cx="165" cy="255" r="7" class="fill-ink"/>
+        <text x="178" y="272" font-size="14">(1.75, 0.75)</text>
+        <circle cx="210" cy="210" r="8" class="fill-accent"/>
+        <text x="222" y="204" font-size="14">(2.5, 1.5): pinned</text>
+      </svg>
+      <p class="cap">Thick: the directions a point on one wall can still slide in. At the corner there is none left.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>Why rank and not simply "how many rows are tight": a corner can have more tight
+    rows than $n$ (two slides on, a degenerate corner has three in the plane). And
+    two tight rows that are multiples of each other, like $x + y \le 4$ written twice,
+    are really one wall. Rank counts independent walls, which is the thing that
+    matters.</p>
+    <p>The sliding picture is exact. If the tight rows have rank below $n$, some
+    direction $d \ne 0$ has $a_i d = 0$ for every tight row: moving along $d$ keeps
+    them tight. The other rows have slack, so a small enough move in either direction
+    $\pm d$ stays inside $P$. At $(0,2)$, $d = (0, 1)$ slides up and down the left
+    edge.</p>
+    <p>You will compute exactly this in the lab: the step 3 tests check that every
+    vertex you return has tight rows of rank $n$.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">01 · corners</p>
   <h2>Vertex, extreme point, basic feasible solution</h2>
-  <p>Let $P = \{x : Ax \le b\} \subseteq \mathbb{R}^n$ and $x \in P$. Write $I(x) = \{i : a_i x = b_i\}$ for the rows <b>tight</b> at $x$.</p>
+  <p>Three ways to say what a corner of $P = \{x : Ax \le b\}$ is:</p>
   <div class="cols three">
     <div class="box def"><span class="label">vertex · geometry</span>
-      <p>Some $c$ makes $x$ the <b>unique</b> maximizer of $c y$ over $P$.</p></div>
+      <p>Some objective $c$ is maximized over $P$ at $x$ and <b>nowhere else</b>.</p>
+      <p class="small muted">A ruler touches $P$ only at $x$.</p></div>
     <div class="box def"><span class="label">extreme point · convexity</span>
-      <p>$x$ is not $\lambda y + (1-\lambda) z$ for $y \ne z$ in $P$ and $0 &lt; \lambda &lt; 1$.</p></div>
+      <p>$x$ is not the midpoint (or any in-between point) of two other points of $P$.</p>
+      <p class="small muted">No segment in $P$ passes through $x$.</p></div>
     <div class="box def"><span class="label">BFS · algebra</span>
-      <p>The tight rows $\{a_i : i \in I(x)\}$ have <b>rank $n$</b>.</p></div>
+      <p>The tight rows at $x$ have <b>rank $n$</b>.</p>
+      <p class="small muted">Enough walls meet to pin $x$ down.</p></div>
   </div>
   <div class="box thm"><span class="label">theorem</span>
-    <p>For $x \in P$ the three are equivalent.</p>
+    <p>For $x \in P$ the three are the same thing: a <span class="term">vertex</span> is an <span class="term">extreme point</span> is a <span class="term" data-term="basic feasible solution">basic feasible solution</span>.</p>
   </div>
-  <p class="muted">The geometric definition is what optimization needs. The algebraic one is what a computer can check, and simplex walks on it.</p>
+  <p class="muted">The geometric name is what optimization needs. The algebraic one is what a computer can check, and simplex walks on it.</p>
   <aside class="notes">
+    <p><b>On the example.</b> $(2.5, 1.5)$ is all three. Vertex: $c = (2, 0)$ is
+    maximized there and nowhere else (next slide). Extreme: any segment through it
+    would have to leave $P$ on one side. BFS: rows 3 and 4 are tight, rank 2.
+    $(1.75, 0.75)$ is none of the three: it is the midpoint of $(1,0)$ and $(2.5,1.5)$,
+    and only one row is tight.</p>
     <p><b>Terminology.</b> "Basic feasible solution" is usually defined in standard
     form: $x \ge 0$, $Ax = b$, and the columns of $A$ for the positive entries of
     $x$ are linearly independent. The rank condition here is the same idea in
@@ -215,30 +347,24 @@
     <em>basic solution</em> (not necessarily feasible) is a point where $n$ linearly
     independent rows are tight, feasible or not. Lab step 3 enumerates basic
     solutions and throws away the infeasible ones.</p>
-    <p><b>Degeneracy.</b> $|I(x)|$ can be larger than $n$: more constraints than
-    necessary pass through the corner, like the apex of a square pyramid, where
-    four facets meet in $\mathbb{R}^3$. The vertex is still one point, but it
-    corresponds to several different choices of $n$ tight rows (several
-    <em>bases</em>). Degeneracy is harmless geometrically and is the reason simplex
-    can cycle (unit 02). The lab's pyramid test exists to catch the double counting
-    it causes.</p>
   </aside>
 </section>
 
 <section>
   <p class="eyebrow">01 · corners</p>
-  <h2>Proof, round the cycle</h2>
+  <h2>Why the three agree</h2>
   <div class="cols wide-left">
     <div>
-      <div class="box proof"><span class="label">vertex ⇒ extreme</span>
-        <p class="small">If $x = \lambda y + (1-\lambda) z$ with $y \ne z$, one of them differs from $x$, so $c y &lt; c x$ or $c z &lt; c x$, and neither can exceed $c x$. Then $c x = \lambda c y + (1-\lambda) c z &lt; c x$. Contradiction.</p>
+      <div class="box"><span class="label">vertex ⇒ extreme</span>
+        <p class="small">If $x$ were between two other points of $P$, the objective at $x$ would be the average of its values there. One of them would be at least as good as $x$, so $x$ couldn't be the <em>only</em> best point.</p>
       </div>
-      <div class="box proof"><span class="label">extreme ⇒ BFS</span>
-        <p class="small">If the tight rows have rank $&lt; n$, pick $d \ne 0$ with $a_i d = 0$ for all $i \in I(x)$. Rows not tight have slack, so $x \pm \varepsilon d \in P$ for small $\varepsilon &gt; 0$, and $x$ is their midpoint. Contradiction.</p>
+      <div class="box"><span class="label">extreme ⇒ BFS</span>
+        <p class="small">If the tight walls had rank below $n$, $x$ could slide a little both ways along them (the tight-rows slide). Then $x$ is the midpoint of the two ends of that slide: not extreme.</p>
       </div>
-      <div class="box proof"><span class="label">BFS ⇒ vertex</span>
-        <p class="small">Take $c = \sum_{i \in I(x)} a_i$. For $y \in P$: $c y = \sum_{I} a_i y \le \sum_I b_i = c x$, with equality only if every $i \in I(x)$ is tight at $y$. Rank $n$ forces $y = x$. $\square$</p>
+      <div class="box"><span class="label">BFS ⇒ vertex: add up the tight rows</span>
+        <p class="small">Take $c$ = the sum of the tight rows. Every point of $P$ scores at most the sum of their right-hand sides, and only a point where all of them are tight scores exactly that. Rank $n$ means that point is $x$ alone.</p>
       </div>
+      <p class="proof-pointer">full proof in the notes (N)</p>
     </div>
     <div class="fig">
       <svg viewBox="0 0 380 350" width="380" role="img" aria-label="the vertex (2.5,1.5) with its two tight row normals and their sum">
@@ -252,27 +378,39 @@
         <path d="M210,210 L255,255" class="ink" stroke-width="2" fill="none" marker-end="url(#ar2)"/>
         <path d="M210,210 L300,210" class="accent" stroke-width="3" fill="none" marker-end="url(#ar3)"/>
         <circle cx="210" cy="210" r="7" class="fill-accent"/>
-        <text x="258" y="160" font-size="15">a₁ = (1, 1)</text>
-        <text x="258" y="272" font-size="15">a₂ = (1, −1)</text>
-        <text x="304" y="205" font-size="15" style="fill:var(--accent)">c = a₁ + a₂</text>
+        <text x="258" y="160" font-size="15">a₃ = (1, 1)</text>
+        <text x="258" y="272" font-size="15">a₄ = (1, −1)</text>
+        <text x="304" y="205" font-size="15" style="fill:var(--accent)">c = a₃ + a₄</text>
         <text x="216" y="330" font-size="13" class="soft">level set of c</text>
       </svg>
-      <p class="cap">At $(2.5, 1.5)$ the tight rows are $x+y\le 4$ and $x-y\le 1$. Their sum $c=(2,0)$ is maximized over $P$ at this point and nowhere else.</p>
+      <p class="cap">At $(2.5, 1.5)$ rows 3 and 4 are tight. Their sum $c = (2,0)$, i.e. maximize $2x$, is best at this corner and nowhere else: check the other corners, they score $0$, $2$ and $0$ against $5$.</p>
     </div>
   </div>
   <aside class="notes">
-    <p>The step to reread is BFS ⇒ vertex, because it is constructive. Adding up the
+    <p>The step to remember is the third, because it is constructive. Adding up the
     tight constraints gives an objective that certifies the point is a vertex.
     Adding constraints with nonnegative weights to bound an objective is the move
     behind LP duality, and it appears here first.</p>
-    <p>In extreme ⇒ BFS, the $\varepsilon$ is concrete: for each row $j \notin I(x)$
-    with $a_j d \ne 0$, you need $\varepsilon |a_j d| \le b_j - a_j x$, and the
-    minimum of those finitely many positive bounds works.</p>
-    <h4>Corollary</h4>
+    <h4>Full proof</h4>
+    <p><b>Vertex ⇒ extreme.</b> Let $c$ make $x$ the unique maximizer. If
+    $x = \lambda y + (1-\lambda) z$ with $y \ne z$ in $P$ and $0 &lt; \lambda &lt; 1$, then
+    one of $y, z$ differs from $x$, so $c y &lt; c x$ or $c z &lt; c x$, and neither
+    exceeds $c x$. Then $c x = \lambda c y + (1-\lambda) c z &lt; c x$, a contradiction.</p>
+    <p><b>Extreme ⇒ BFS.</b> If the tight rows have rank $&lt; n$, pick $d \ne 0$ with
+    $a_i d = 0$ for all $i \in I(x)$. Rows not tight have slack, so
+    $x \pm \varepsilon d \in P$ for small $\varepsilon &gt; 0$: for each row
+    $j \notin I(x)$ with $a_j d \ne 0$ you need $\varepsilon |a_j d| \le b_j - a_j x$,
+    and the minimum of those finitely many positive bounds works. Then $x$ is the
+    midpoint of $x + \varepsilon d$ and $x - \varepsilon d$, a contradiction.</p>
+    <p><b>BFS ⇒ vertex.</b> Take $c = \sum_{i \in I(x)} a_i$. For $y \in P$:
+    $c y = \sum_{I} a_i y \le \sum_I b_i = c x$, with equality only if every
+    $i \in I(x)$ is tight at $y$. The tight rows have rank $n$, so the system
+    $a_i y = b_i,\ i \in I(x)$ has the unique solution $y = x$. $\square$</p>
+    <h4>Corollary, and a count</h4>
     <p>A BFS is determined by its tight set: it is the unique solution of
     $a_i y = b_i,\ i \in I(x)$. So there are at most $\binom{m}{n}$ vertices, and
-    they can be found by trying every $n$-subset of rows. That is lab step 3, and it
-    is lab 00's brute force again, over bases instead of 0/1 vectors.</p>
+    they can be found by trying every $n$-subset of rows. That is the next slide and
+    lab step 3, and it is lab 00's brute force again, over bases instead of 0/1 vectors.</p>
     <p>The real maximum is much smaller than $\binom{m}{n}$ but still exponential. By
     McMullen's upper bound theorem, a polytope in $\mathbb{R}^n$ with $m$ facets has
     $O(m^{\lfloor n/2 \rfloor})$ vertices, attained by duals of cyclic polytopes. The
@@ -281,31 +419,76 @@
 </section>
 
 <section>
+  <p class="eyebrow">01 · corners · example</p>
+  <h2>Finding corners by trying pairs of rows</h2>
+  <div class="cols">
+    <div>
+      <p class="small">In $\mathbb{R}^2$ a corner needs 2 independent tight rows. So try every pair: set both to equality, solve, and keep the solution if it satisfies the other rows.</p>
+      <table>
+        <thead><tr><th>rows</th><th>solve as equalities</th><th>other rows</th></tr></thead>
+        <tbody>
+          <tr><td>1, 2</td><td>$(0, 0)$</td><td>✓ corner</td></tr>
+          <tr><td>1, 3</td><td>$(0, 4)$</td><td>✓ corner</td></tr>
+          <tr><td>1, 4</td><td>$(0, -1)$</td><td>✗ row 2</td></tr>
+          <tr><td>2, 3</td><td>$(4, 0)$</td><td>✗ row 4</td></tr>
+          <tr><td>2, 4</td><td>$(1, 0)$</td><td>✓ corner</td></tr>
+          <tr><td>3, 4</td><td>$(2.5, 1.5)$</td><td>✓ corner</td></tr>
+        </tbody>
+      </table>
+      <p class="small">$\binom{4}{2} = 6$ <span class="term">basic solutions</span>, 4 of them feasible: the 4 corners. Each pair of rows is a <span class="term">basis</span>. <b>This is lab step 3.</b></p>
+    </div>
+    <div>
+      <div class="box ex"><span class="label">one more row: a degenerate corner</span>
+        <p class="small">Add row 5: $3x - y \le 6$. It cuts nothing off (check the four corners), but it also passes through $(2.5, 1.5)$.</p>
+        <p class="small">Now three rows are tight there, still rank 2. The pairs $\{3,4\}$, $\{3,5\}$ and $\{4,5\}$ all solve to the same point: three bases, one corner.</p>
+        <p class="small">That corner is a <span class="term">degenerate vertex</span>. Enumerating pairs finds it three times, so the lab must <b>deduplicate</b>, and in unit 02 it is what can make simplex go round in circles.</p>
+      </div>
+      <p class="small muted">In $\mathbb{R}^3$ the same thing happens at the apex of a square pyramid: four facets meet where three would do. The lab's pyramid test is this slide in one more dimension.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>The pairs with row 5: $\{1, 5\}$ gives $(0, -6)$ and $\{2, 5\}$ gives $(2, 0)$,
+    both infeasible (rows 2 and 4 fail). $\{3,5\}$: $x + y = 4$ and $3x - y = 6$ add to
+    $4x = 10$, so $(2.5, 1.5)$. $\{4,5\}$: subtracting gives $2x = 5$, the same point.
+    So 10 pairs, 6 feasible basic solutions, but only 4 distinct corners.</p>
+    <p><b>Degeneracy</b> is harmless geometrically: the vertex is one point. It matters
+    for algorithms that move from basis to basis. Simplex (unit 02) can pivot from
+    $\{3,4\}$ to $\{3,5\}$ without moving at all, and with a bad rule it can cycle through
+    such bases forever.</p>
+    <p>Why the enumeration is exponential in general: $\binom{m}{n}$ grows quickly, and
+    most bases are infeasible. Lab <code>then</code> measures this against qhull.</p>
+  </aside>
+</section>
+
+<section>
   <p class="eyebrow">01 · corners</p>
   <h2>Not every polyhedron has a corner</h2>
   <div class="cols">
     <div>
-      <p>$\{(x, y) : y \ge 0,\ y \le 1\}$ is a strip. It contains whole lines, so
-      no point is extreme.</p>
+      <p>$\{(x, y) : y \ge 0,\ y \le 1\}$ is a horizontal strip. Every point can slide left and right forever, so no point is extreme.</p>
       <div class="box thm"><span class="label">theorem</span>
         <p>For nonempty $P = \{x : Ax \le b\}$, the following are equivalent:</p>
         <ul>
-          <li>$P$ has a vertex (it is <b>pointed</b>);</li>
-          <li>$P$ contains no line;</li>
+          <li>$P$ has a vertex (it is <span class="term">pointed</span>);</li>
+          <li>$P$ contains no whole line;</li>
           <li>$\operatorname{rank} A = n$.</li>
         </ul>
       </div>
+      <p class="small"><b>The strip:</b> its rows are $(0, -1)$ and $(0, 1)$, rank 1 &lt; 2. The direction $(1, 0)$ is invisible to every row, and that is the line.</p>
     </div>
     <div>
       <div class="box good"><span class="label">why you rarely notice</span>
         <p>Any polyhedron inside $x \ge 0$ is pointed: the rows $x_j \ge 0$ already have rank $n$.
-        Standard form is pointed by construction.</p>
+        Standard form is pointed by construction. So is the running example, thanks to rows 1 and 2.</p>
       </div>
       <p class="muted">So "the optimum is at a vertex" needs a hypothesis. The fundamental theorem at the end of the unit states it.</p>
     </div>
   </div>
   <aside class="notes">
-    <p>Sketch. The <em>lineality space</em> is $\{d : Ad = 0\}$. If it contains
+    <p>The idea in one line: a line inside $P$ is a direction no row can see, and the
+    rows see every direction exactly when they have rank $n$.</p>
+    <h4>Full proof sketch</h4>
+    <p>The <em>lineality space</em> is $\{d : Ad = 0\}$. If it contains
     $d \ne 0$, then $x + t d \in P$ for all real $t$: a line. Conversely, a line
     $x + t d$ in $P$ needs $A d \le 0$ and $-A d \le 0$, so $A d = 0$. And
     $\{d : Ad = 0\} = \{0\}$ exactly when $\operatorname{rank} A = n$.</p>
@@ -315,6 +498,9 @@
     tight. Each move increases the rank of the tight set, so after at most $n$ moves
     you are at a BFS. The same walk is how <em>crossover</em> turns an
     interior-point solution into a basic one (unit 04).</p>
+    <p>On the example: start at $(1,1)$ with nothing tight, move in direction $(1,0)$
+    until row 4 becomes tight at $(2,1)$, then slide along row 4, direction $(1,1)$,
+    until row 3 becomes tight at $(2.5, 1.5)$. Two moves, one corner.</p>
   </aside>
 </section>
 
@@ -322,13 +508,13 @@
   <p class="eyebrow">01 · corners</p>
   <h2>Two descriptions: Minkowski–Weyl</h2>
   <div class="box thm"><span class="label">theorem (Minkowski 1896, Weyl 1935)</span>
-    <p>$P$ is a polyhedron if and only if $\;P = \operatorname{conv}(V) + \operatorname{cone}(R)\;$ for finite sets $V, R$.</p>
-    <p>In particular, <b>a polytope is the convex hull of its vertices</b>, and the convex hull of finitely many points is a polytope.</p>
+    <p>$P$ is a polyhedron if and only if $\;P = \operatorname{conv}(V) + \operatorname{cone}(R)\;$ for finite sets $V, R$: every point is a blend of corners plus a push along some rays.</p>
+    <p>In particular, <b>a polytope is the <span class="term">convex hull</span> of its vertices</b>, and the convex hull of finitely many points is a polytope.</p>
   </div>
   <div class="cols">
     <div>
       <table>
-        <thead><tr><th></th><th>H-description</th><th>V-description</th></tr></thead>
+        <thead><tr><th></th><th><span class="term">H-description</span></th><th><span class="term">V-description</span></th></tr></thead>
         <tbody>
           <tr><td>$n$-cube</td><td class="num">$2n$ facets</td><td class="num">$2^n$ vertices</td></tr>
           <tr><td>$n$-cross-polytope</td><td class="num">$2^n$ facets</td><td class="num">$2n$ vertices</td></tr>
@@ -337,9 +523,9 @@
       <p class="small">Either description can be exponentially larger than the other.</p>
     </div>
     <div class="box"><span class="label">definitions</span>
-      <p class="small">$\operatorname{conv}(V) = \{\sum \lambda_v v : \lambda \ge 0,\ \sum \lambda_v = 1\}$</p>
-      <p class="small">$\operatorname{cone}(R) = \{\sum \mu_r r : \mu \ge 0\}$</p>
-      <p class="small">For pointed $P$: $V$ = vertices, $R$ = extreme rays of the <b>recession cone</b> $\{d : Ad \le 0\}$.</p>
+      <p class="small">$\operatorname{conv}(V) = \{\sum \lambda_v v : \lambda \ge 0,\ \sum \lambda_v = 1\}$: weighted averages.</p>
+      <p class="small">$\operatorname{cone}(R) = \{\sum \mu_r r : \mu \ge 0\}$: nonnegative combinations, the <span class="term">conic hull</span>.</p>
+      <p class="small">For pointed $P$: $V$ = vertices, $R$ = <span class="term">extreme rays</span> of the <span class="term">recession cone</span> $\{d : Ad \le 0\}$.</p>
     </div>
   </div>
   <aside class="notes">
@@ -364,6 +550,65 @@
   </aside>
 </section>
 
+<section>
+  <p class="eyebrow">01 · corners · example</p>
+  <h2>Minkowski–Weyl, on two examples</h2>
+  <div class="cols">
+    <div>
+      <div class="box ex"><span class="label">a polytope: blend the corners</span>
+        <p class="small">$(1, 1)$ in the running example is a weighted average of its corners:</p>
+        <p class="small">$$(1,1) = 0.5\,(0,0) + 0.4\,(2.5,1.5) + 0.1\,(0,4)$$</p>
+        <p class="small">Weights are $\ge 0$ and sum to 1. Check: $x = 0.4 \cdot 2.5 = 1$, $y = 0.4 \cdot 1.5 + 0.1 \cdot 4 = 1$.</p>
+      </div>
+      <div class="fig">
+        <svg viewBox="0 0 380 330" width="300" role="img" aria-label="the point (1,1) as a blend of three corners">
+          <line x1="60" y1="18" x2="60" y2="320" class="rule" stroke-width="1.5"/>
+          <line x1="20" y1="300" x2="368" y2="300" class="rule" stroke-width="1.5"/>
+          <polygon points="60,300 120,300 210,210 60,60" class="fill-soft unit" stroke-width="2.5" style="fill-opacity:.9"/>
+          <g class="accent" stroke-width="1.5" stroke-dasharray="4 4">
+            <line x1="120" y1="240" x2="60" y2="300"/><line x1="120" y1="240" x2="210" y2="210"/><line x1="120" y1="240" x2="60" y2="60"/>
+          </g>
+          <circle cx="120" cy="240" r="7" class="fill-accent"/>
+          <text x="20" y="320" font-size="14">0.5</text>
+          <text x="218" y="206" font-size="14">0.4</text>
+          <text x="70" y="56" font-size="14">0.1</text>
+          <text x="128" y="262" font-size="14">(1, 1)</text>
+        </svg>
+      </div>
+    </div>
+    <div>
+      <div class="box ex"><span class="label">unbounded: corners plus rays</span>
+        <p class="small">$Q = \{x \ge 0,\ y \ge 0,\ x + y \ge 1\}$ has corners $(1,0)$, $(0,1)$ and runs off along the rays $(1,0)$ and $(0,1)$.</p>
+        <p class="small">$$(2, 3) = \underbrace{(1, 0)}_{\text{a corner}} + \underbrace{1\,(1,0) + 3\,(0,1)}_{\text{a push along the rays}}$$</p>
+      </div>
+      <div class="fig">
+        <svg viewBox="0 0 300 300" width="250" role="img" aria-label="the unbounded region Q with the point (2,3) reached from a corner along two rays">
+          <defs><marker id="ar7" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" class="fill-accent"/></marker></defs>
+          <polygon points="90,260 270,260 270,30 40,30 40,210" class="fill-soft" style="fill-opacity:.9"/>
+          <polyline points="270,260 90,260 40,210 40,30" fill="none" class="unit" stroke-width="2.5"/>
+          <path d="M90,260 L136,260" class="accent" stroke-width="3" fill="none" marker-end="url(#ar7)"/>
+          <path d="M140,260 L140,116" class="accent" stroke-width="3" fill="none" marker-end="url(#ar7)"/>
+          <circle cx="90" cy="260" r="6" class="fill-ink"/>
+          <circle cx="40" cy="210" r="6" class="fill-ink"/>
+          <circle cx="140" cy="110" r="7" class="fill-accent"/>
+          <text x="80" y="285" font-size="14">(1, 0)</text>
+          <text x="150" y="106" font-size="14">(2, 3)</text>
+          <text x="210" y="60" font-size="18" font-weight="600">Q</text>
+        </svg>
+      </div>
+    </div>
+  </div>
+  <aside class="notes">
+    <p>How the weights for $(1,1)$ were found: the blend isn't unique (there are four
+    corners and only three equations: $x$, $y$ and the weights summing to 1). Fix one
+    weight to 0 and solve. Carathéodory's theorem says $n + 1$ corners always suffice
+    in $\mathbb{R}^n$, so three here.</p>
+    <p>For $Q$: the recession cone is $\{d : d \ge 0\}$, all the directions you can
+    walk forever without leaving $Q$. Its extreme rays are $(1,0)$ and $(0,1)$. The
+    decomposition of $(2,3)$ isn't unique either: $(0,1) + 2(1,0) + 2(0,1)$ also works.</p>
+  </aside>
+</section>
+
 <!-- ================================================================== -->
 <section class="divider">
   <p class="eyebrow">section 3</p>
@@ -374,29 +619,39 @@
 <section>
   <p class="eyebrow">01 · fourier–motzkin</p>
   <h2>Eliminating one variable</h2>
-  <p>Goal: describe the projection $\;\{x' : \exists x_k,\ (x', x_k) \in P\}\;$ by inequalities in $x'$ only.</p>
+  <p>Goal: the <span class="term">projection</span> $\{x' : \exists x_k,\ (x', x_k) \in P\}$, the shadow of $P$ with $x_k$ dropped, described without $x_k$.</p>
   <div class="cols">
     <div>
-      <p>Sort the rows by the sign of $a_{ik}$:</p>
-      <p>$Z$: $a_{ik} = 0$ — don't mention $x_k$; keep them.</p>
-      <p>$U$: $a_{pk} &gt; 0$ — upper bounds: $\;x_k \le \dfrac{b_p - a_p' x'}{a_{pk}}$</p>
-      <p>$L$: $a_{qk} &lt; 0$ — lower bounds: $\;x_k \ge \dfrac{b_q - a_q' x'}{a_{qk}}$</p>
+      <div class="box"><span class="label">the idea</span>
+        <p class="small">Fix the other variables. Every row that mentions $x_k$ is either a <b>lower bound</b> or an <b>upper bound</b> on it. A value of $x_k$ exists exactly when <b>every lower bound is at most every upper bound</b>.</p>
+        <p class="small">So write down "lower ≤ upper" for each pair, and $x_k$ is gone.</p>
+      </div>
+      <div class="box ex"><span class="label">tiny example</span>
+        <p class="small">$x \ge 0,\quad x \le 3,\quad x \le 5 - y$</p>
+        <p class="small">Lower: $0$. Upper: $3$ and $5 - y$. Pairs: $0 \le 3$ (always true) and $0 \le 5 - y$. So some $x$ exists iff $y \le 5$.</p>
+      </div>
     </div>
-    <div class="box thm"><span class="label">theorem (Fourier 1826, Motzkin 1936)</span>
-      <p>$x'$ extends to a point of $P$ if and only if it satisfies the rows in $Z$ and, for every $p \in U,\ q \in L$,
-      $$(-a_{qk})\,(a_p x) + a_{pk}\,(a_q x) \le (-a_{qk})\, b_p + a_{pk}\, b_q,$$
-      a row in which $x_k$ cancels.</p>
+    <div class="box thm"><span class="label">the rule (Fourier 1826, Motzkin 1936)</span>
+      <p class="small">Sort the rows by the sign of their $x_k$ coefficient: <span class="term">$Z$</span> (zero: keep as is), <span class="term">$U$</span> (positive: upper bounds), <span class="term">$L$</span> (negative: lower bounds).</p>
+      <p class="small">For each $p \in U$, $q \in L$, add the two rows with <b>positive</b> multipliers chosen so $x_k$ cancels:
+      $$(-a_{qk})\,(a_p x \le b_p) \;+\; a_{pk}\,(a_q x \le b_q)$$</p>
+      <p class="small">The projection is: the $Z$ rows, plus one combined row per pair.</p>
     </div>
   </div>
-  <p class="muted">Both multipliers are <b>positive</b>. Inequalities survive nonnegative combinations and nothing else, and that is the whole difference from Gaussian elimination.</p>
+  <p class="muted small">Both multipliers are positive. Inequalities survive <span class="term">nonnegative combinations</span> and nothing else, and that is the whole difference from Gaussian elimination.</p>
   <aside class="notes">
-    <p><b>Proof.</b> Fix $x'$. The feasible values of $x_k$ form the interval
+    <p>The name for the whole procedure is <em>Fourier–Motzkin elimination</em>, FM for
+    short. Repeating it variable by variable is the next-but-one slide.</p>
+    <h4>Full proof</h4>
+    <p>Fix $x'$. The feasible values of $x_k$ form the interval
     $\max_{q\in L} \ell_q(x') \le x_k \le \min_{p \in U} u_p(x')$, intersected with
     the requirement that the $Z$ rows hold. That interval is nonempty exactly when
     every lower bound is at most every upper bound: $\ell_q(x') \le u_p(x')$ for
     all pairs. Clear the denominators. Multiplying by $a_{pk} &gt; 0$ and by
-    $-a_{qk} &gt; 0$ preserves the direction, and you get the displayed combined row.
-    If $U$ or $L$ is empty there are no pairs, the interval is unbounded on one side
+    $-a_{qk} &gt; 0$ preserves the direction, and you get the combined row
+    $(-a_{qk})\,(a_p x) + a_{pk}\,(a_q x) \le (-a_{qk})\, b_p + a_{pk}\, b_q$, in which
+    $x_k$ cancels.</p>
+    <p>If $U$ or $L$ is empty there are no pairs, the interval is unbounded on one side
     and nonempty, and only $Z$ survives. The lab's hint ladder calls this out
     because it is the case people special-case wrongly.</p>
     <p><b>Integer data stays integer.</b> The multipliers are the coefficients
@@ -415,16 +670,16 @@
   <div class="cols wide-left">
     <div>
       <table style="font-size:.78em">
-        <thead><tr><th>row</th><th>class</th></tr></thead>
+        <thead><tr><th>row</th><th>as a bound on $x$</th><th>class</th></tr></thead>
         <tbody>
-          <tr><td>$-x \le 0$</td><td>$L$</td></tr>
-          <tr><td>$-y \le 0$</td><td>$Z$</td></tr>
-          <tr><td>$x + y \le 4$</td><td>$U$</td></tr>
-          <tr><td>$x - y \le 1$</td><td>$U$</td></tr>
+          <tr><td>1: $-x \le 0$</td><td>$x \ge 0$</td><td><span class="term">$L$</span></td></tr>
+          <tr><td>2: $-y \le 0$</td><td>no $x$</td><td><span class="term">$Z$</span></td></tr>
+          <tr><td>3: $x + y \le 4$</td><td>$x \le 4 - y$</td><td><span class="term">$U$</span></td></tr>
+          <tr><td>4: $x - y \le 1$</td><td>$x \le 1 + y$</td><td><span class="term">$U$</span></td></tr>
         </tbody>
       </table>
       <p>Pairs, with multipliers $1$ and $1$:</p>
-      <p>$(x+y \le 4) + (-x \le 0) \;\Rightarrow\; y \le 4$</p>
+      <p>$(x+y \le 4) + (-x \le 0) \;\Rightarrow\; y \le 4$ <span class="muted">— "$0 \le 4 - y$"</span></p>
       <p>$(x-y \le 1) + (-x \le 0) \;\Rightarrow\; -y \le 1$ <span class="muted">— redundant</span></p>
       <p>Keep $Z$: $-y \le 0$. &nbsp; Projection: $\;0 \le y \le 4$. ✓</p>
     </div>
@@ -469,8 +724,9 @@
         <p>Eliminate $x_1, \dots, x_n$ in turn. Every remaining row reads $0 \le c$.</p>
         <p>$Ax \le b$ is feasible $\iff$ every remaining $c \ge 0$.</p>
       </div>
+      <p class="small"><b>On the example:</b> eliminating $y$ from $0 \le y \le 4$ pairs $y \le 4$ with $-y \le 0$ and leaves $0 \le 4$. True, so $P$ is nonempty.</p>
       <p>A complete decision procedure for linear feasibility, in ten lines of Python, needing no LP theory.</p>
-      <p class="muted">Nobody uses it for LP. The table shows why.</p>
+      <p class="muted">Nobody uses it for LP. The table shows why: the <span class="term">FM blow-up</span>.</p>
     </div>
     <div>
       <p class="small">$n=6$, 14 random cuts + box. Pairwise worst case: $m \to m^2/4$ per step.</p>
@@ -516,22 +772,31 @@
   <div class="cols">
     <div>
       <div class="box def"><span class="label">definition</span>
-        <p>$y \in \mathbb{R}^m$ is a <b>Farkas certificate</b> for $Ax \le b$ if
+        <p>$y \in \mathbb{R}^m$ is a <span class="term">Farkas certificate</span> for $Ax \le b$ if
         $$y \ge 0, \qquad y^\top A = 0, \qquad y^\top b &lt; 0.$$</p>
+        <p class="small muted">In words: weights for the rows that make every variable cancel and leave a negative right-hand side.</p>
       </div>
-      <div class="box proof"><span class="label">it proves infeasibility</span>
-        <p>If $Ax \le b$ and $y \ge 0$, then $\;0 = (y^\top A)\,x = y^\top (Ax) \le y^\top b &lt; 0$. $\square$</p>
+      <div class="box"><span class="label">why it proves there is no solution</span>
+        <p class="small">Adding true inequalities with weights $\ge 0$ gives a true inequality. These weights produce $0 \le (\text{something negative})$, which is false. So the rows can't all be true at once.</p>
       </div>
     </div>
     <div>
-      <p><b>In words:</b> a nonnegative combination of the rows whose left side vanishes and whose right side is negative, which gives $0 \le -1$.</p>
-      <p class="small">Example: $x \le 1$ and $-x \le -2$. Take $y = (1, 1)$ and add: $0 \le -1$.</p>
-      <p><b>Checking</b> it needs one matrix–vector product. No solver and no trust: lab step 4.</p>
-      <p class="muted">All three conditions are necessary. $y=0$ gives $0 \le 0$, and a negative $y_i$ flips an inequality.</p>
+      <div class="box ex"><span class="label">example</span>
+        <p class="small">$x \le 1$ and $-x \le -2$ (that is, $x \ge 2$).</p>
+        <p class="small">Take $y = (1, 1)$ and add: $\;0 \le -1$. No $x$ can exist.</p>
+      </div>
+      <div class="box ex"><span class="label">a two-variable one</span>
+        <p class="small">$x + y \le 2,\quad -x \le -1,\quad -y \le -2$</p>
+        <p class="small">$y = (1, 1, 1)$: $\;(x + y) - x - y \le 2 - 1 - 2$, i.e. $0 \le -1$.</p>
+      </div>
+      <p><b>Checking</b> a certificate needs one matrix–vector product. No solver and no trust: lab step 4.</p>
+      <p class="muted small">All three conditions matter. $y=0$ gives $0 \le 0$, and a negative $y_i$ flips an inequality.</p>
     </div>
   </div>
   <aside class="notes">
-    <p>This is the easy direction, and it is only one line. The content of Farkas'
+    <p>The one-line algebra, for the record: if $Ax \le b$ and $y \ge 0$, then
+    $0 = (y^\top A)\,x = y^\top (Ax) \le y^\top b &lt; 0$. $\square$</p>
+    <p>This is the easy direction. The content of Farkas'
     lemma is the converse: <em>whenever</em> the system is infeasible, such a $y$
     exists. There is never an infeasible linear system whose infeasibility cannot be
     shown by adding up its rows.</p>
@@ -541,7 +806,7 @@
     the difference between NP-hard and polynomial.</p>
     <p>In the language of unit 00: linear feasibility has short "yes" certificates
     (a solution $x$) and short "no" certificates (a Farkas $y$). So it is in
-    NP ∩ coNP. The size argument is on the next slides.</p>
+    NP ∩ coNP. The size argument is in the notes of "Farkas, constructively".</p>
   </aside>
 </section>
 
@@ -552,13 +817,15 @@
     <p>Exactly one of these holds:</p>
     <p>$\quad$(I) $\;\exists\, x:\ Ax \le b$
     $\qquad\qquad$ (II) $\;\exists\, y \ge 0:\ y^\top A = 0,\ y^\top b &lt; 0$</p>
+    <p class="small muted">Either the system has a solution, or a certificate shows it has none. Never both, never neither.</p>
   </div>
   <div class="box thm"><span class="label">equivalent · standard form</span>
     <p>Exactly one of these holds:</p>
     <p>$\quad$(I′) $\;\exists\, x \ge 0:\ Ax = b$
     $\qquad\qquad$ (II′) $\;\exists\, y:\ A^\top y \ge 0,\ b^\top y &lt; 0$</p>
+    <p class="small muted">Either $b$ is a nonnegative combination of $A$'s columns, or some direction $y$ sees every column as nonnegative and $b$ as negative.</p>
   </div>
-  <p>"Not both" is the one-line proof on the previous slide. <b>"At least one"</b> is the theorem, and there are two proofs worth knowing: <b>constructive</b>, by FM, and <b>geometric</b>, by separation.</p>
+  <p>"Not both" is the previous slide. <b>"At least one"</b> is the real theorem. Two ways to see it: <b>by computation</b> (run FM and watch), and <b>by geometry</b> (separate a point from a cone). Both are next.</p>
   <aside class="notes">
     <p>"Not both" for the standard form: if $x \ge 0$, $Ax = b$ and $A^\top y \ge 0$,
     then $b^\top y = x^\top A^\top y \ge 0$, contradicting $b^\top y &lt; 0$.</p>
@@ -578,27 +845,35 @@
   <h2>Farkas, constructively</h2>
   <div class="cols wide-left">
     <div>
-      <div class="box proof"><span class="label">proof of "at least one"</span>
-        <p><b>Invariant.</b> Every row FM produces is a nonnegative combination $y^\top(A, b)$ of the original rows. This holds by induction, since each new row is a positive combination of two rows that already satisfy it.</p>
-        <p><b>Run FM to the end.</b> Each final row reads $0 \le c$ and carries its $y \ge 0$ with $y^\top A = 0$ and $y^\top b = c$.</p>
-        <p>If some $c &lt; 0$: that $y$ is a certificate, so (II) holds.<br>
-        If every $c \ge 0$: FM's correctness says the system is feasible, so (I) holds. $\square$</p>
+      <div class="box"><span class="label">why a certificate always exists, by running FM</span>
+        <p class="small"><b>1.</b> Every row FM produces is a nonnegative combination of the original rows: it only ever adds rows with positive multipliers.</p>
+        <p class="small"><b>2.</b> Run FM until no variable is left. Every final row reads $0 \le c$, and each carries the weights $y \ge 0$ that built it.</p>
+        <p class="small"><b>3.</b> If some $c &lt; 0$, its weights are a certificate. If every $c \ge 0$, FM says the system is feasible. One of the two always happens.</p>
+      </div>
+      <div class="box ex"><span class="label">example</span>
+        <p class="small">$x \le 1$, $-x \le -2$. Eliminating $x$ pairs the two rows with multipliers $1, 1$: $\;0 \le -1$, built from $y = (1, 1)$. That is the certificate.</p>
       </div>
     </div>
     <div class="box good"><span class="label">in code · lab step 5</span>
-      <p class="small">Append the unit vector $e_i$ to row $i$ as $m$ extra columns that are never eliminated. FM combines rows linearly, so the extra columns accumulate exactly $y$.</p>
-      <p class="small">When a row with zero $x$-part and $b &lt; 0$ appears, its tail <em>is</em> the certificate.</p>
+      <p class="small">To remember the weights, append the unit vector $e_i$ to row $i$ as $m$ extra columns that are never eliminated. FM combines rows linearly, so the extra columns accumulate exactly $y$.</p>
+      <p class="small">When a row with zero $x$-part and $b &lt; 0$ appears, its tail <em>is</em> the certificate: the <span class="term">tail trick</span>.</p>
+      <p class="small">With tails, the example's rows are $(1 \mid 1, 0) \le 1$ and $(-1 \mid 0, 1) \le -2$, and their sum is $(0 \mid 1, 1) \le -1$.</p>
     </div>
   </div>
   <aside class="notes">
-    <p>Read the proof again with the example from two slides back: $x \le 1$,
-    $-x \le -2$. Eliminating $x$ pairs row 1 (upper bound) with row 2 (lower bound)
-    with multipliers $1, 1$, giving $0 \le -1$. With the tails attached the row is
-    $(0 \mid 1, 1) \le -1$, and $y = (1, 1)$ can be read off.</p>
     <p>The lab asks you to see the proof and the algorithm as the same thing. That
     habit is useful throughout the course. Many existence theorems in optimization
     come with an algorithm that finds the object, and many algorithms, run to
     completion, prove a theorem.</p>
+    <h4>Full proof</h4>
+    <p><b>Invariant.</b> Every row FM produces is $y^\top(A, b)$ for some $y \ge 0$. By
+    induction: the original row $i$ is $e_i^\top(A, b)$, and each new row is a
+    positive combination of two rows that already have this form, so its $y$ is the
+    same positive combination of theirs. <b>Termination.</b> After eliminating all
+    $n$ variables each row is $0 \le c$ with $y^\top A = 0$ and $y^\top b = c$. If some
+    $c &lt; 0$, that $y$ satisfies (II). If every $c \ge 0$, FM's correctness (each
+    projection is exact) lifts a solution back up one variable at a time, so (I)
+    holds. $\square$</p>
     <h4>How large is the certificate?</h4>
     <p>FM's multipliers can have many bits. But if a certificate exists, then
     $\{y \ge 0 : y^\top A = 0,\ y^\top b = -1\}$ is a nonempty polyhedron. It is
@@ -642,17 +917,18 @@
       <p class="cap">$b \notin \operatorname{cone}(a_1, a_2)$, so a line through the origin separates them. Its normal $y$ has $y \cdot a_j \ge 0$ and $y \cdot b &lt; 0$.</p>
     </div>
     <div>
-      <p>Read the standard form geometrically. With $a_j$ the <b>columns</b> of $A$:</p>
-      <p>(I′) says $b \in \operatorname{cone}(a_1, \dots, a_n)$.</p>
-      <p>(II′) says some hyperplane $\{z : y^\top z = 0\}$ has every $a_j$ on one side and $b$ strictly on the other.</p>
+      <p>Read the standard form as a picture. With $a_j$ the <b>columns</b> of $A$:</p>
+      <p>(I′) says you can reach $b$ by stretching and adding the $a_j$: $b \in \operatorname{cone}(a_1, \dots, a_n)$.</p>
+      <p>(II′) says some line (a hyperplane $\{z : y^\top z = 0\}$) has every $a_j$ on one side and $b$ strictly on the other.</p>
       <div class="box thm"><span class="label">so farkas is</span>
-        <p>a point outside a finitely generated cone can be separated from it by a hyperplane.</p>
+        <p>a point outside a cone built from finitely many arrows can be cut off from it by a <span class="term">separating hyperplane</span>.</p>
       </div>
       <p class="small muted">Here $a_1=(2,1)$, $a_2=(1,3)$, $b=(-1,2)$, $y=(3,-1)$: $y\cdot a_1 = 5$, $y \cdot a_2 = 0$, $y\cdot b = -5$.</p>
     </div>
   </div>
   <aside class="notes">
-    <p>The geometric proof: a finitely generated cone $K$ is closed and convex. If
+    <h4>Full proof, geometric</h4>
+    <p>A finitely generated cone $K$ is closed and convex. If
     $b \notin K$, let $p$ be the point of $K$ nearest to $b$. The vector
     $y = p - b$ then satisfies $y^\top z \ge y^\top p$ for all $z \in K$, with
     $y^\top p = 0$ because $K$ is a cone, and $y^\top b &lt; y^\top p$. That is (II′).</p>
@@ -679,7 +955,7 @@
       <p><b>Solvers return certificates.</b> Gurobi: set <code>InfUnbdInfo=1</code> and read <code>FarkasDual</code>. HiGHS: <code>getDualRay</code>. An infeasible model comes with the $y$ you are building.</p>
     </div>
     <div>
-      <p><b>Cutting planes (unit 08).</b> A Chvátal–Gomory cut is a nonnegative combination of rows whose coefficients happen to be integers, with the right side rounded down. It is Farkas plus rounding.</p>
+      <p><b>Cutting planes (unit 08).</b> A <span class="term">Chvátal–Gomory cut</span> is a nonnegative combination of rows whose coefficients happen to be integers, with the right side rounded down. It is Farkas plus rounding.</p>
       <p><b>The KKT conditions (unit 29)</b> are the separation picture for curved sets.</p>
       <p class="muted">Solvers compute in floating point, so their $y$ satisfies $y^\top A \approx 0$. Your integer $y$ satisfies it exactly. Exact verification of solver claims is a live research area.</p>
     </div>
@@ -707,18 +983,40 @@
   <div class="box thm"><span class="label">theorem</span>
     <p>Let $P = \{x : Ax \le b\}$ be nonempty and pointed, and $c \in \mathbb{R}^n$. Then either $\max\{c^\top x : x \in P\}$ is unbounded, or it is <b>attained at a vertex</b> of $P$.</p>
   </div>
-  <div class="box proof"><span class="label">proof, via minkowski–weyl</span>
-    <p>Write $P = \operatorname{conv}(V) + \operatorname{cone}(R)$ with $V$ the vertices. If $c^\top r &gt; 0$ for some $r \in R$, then $x + t r$ is feasible for every $t \ge 0$ and the objective is unbounded. Otherwise, for $x = \sum \lambda_v v + \sum \mu_r r$,
-    $$c^\top x = \textstyle\sum \lambda_v\, c^\top v + \sum \mu_r\, c^\top r \;\le\; \max_{v \in V} c^\top v. \qquad \square$$</p>
+  <div class="cols">
+    <div class="box"><span class="label">why</span>
+      <p class="small">Every point of $P$ is a blend of corners plus a push along rays (Minkowski–Weyl). A linear objective of a blend is the same blend of the corners' values, so it can't beat the best corner. A push along a ray either helps forever (unbounded) or doesn't help at all.</p>
+      <p class="proof-pointer">full proof in the notes (N)</p>
+    </div>
+    <div class="box ex"><span class="label">example: maximize $2x + y$ over the running example</span>
+      <table style="margin:0">
+        <thead><tr><th>corner</th><th class="num">$2x + y$</th></tr></thead>
+        <tbody>
+          <tr><td>$(0, 0)$</td><td class="num">0</td></tr>
+          <tr><td>$(1, 0)$</td><td class="num">2</td></tr>
+          <tr><td>$(2.5, 1.5)$</td><td class="num"><b>6.5</b></td></tr>
+          <tr><td>$(0, 4)$</td><td class="num">4</td></tr>
+        </tbody>
+      </table>
+      <p class="small">The optimum is 6.5, at $(2.5, 1.5)$. Four evaluations, no calculus.</p>
+    </div>
   </div>
-  <p>So an LP is <b>infeasible</b>, <b>unbounded</b>, or <b>solved at a corner</b>. There is no fourth case, and in particular no finite supremum that fails to be attained.</p>
+  <p class="small">So an LP is <b>infeasible</b>, <b>unbounded</b>, or <b>solved at a corner</b>. There is no fourth case, and in particular no finite best value that is never reached.</p>
   <aside class="notes">
+    <h4>Full proof, via Minkowski–Weyl</h4>
+    <p>Write $P = \operatorname{conv}(V) + \operatorname{cone}(R)$ with $V$ the
+    vertices. If $c^\top r &gt; 0$ for some $r \in R$, then $x + t r$ is feasible for
+    every $t \ge 0$ and the objective is unbounded. Otherwise, for
+    $x = \sum \lambda_v v + \sum \mu_r r$,
+    $c^\top x = \sum \lambda_v\, c^\top v + \sum \mu_r\, c^\top r \le \max_{v \in V} c^\top v$,
+    using $\sum \lambda_v = 1$, $\lambda, \mu \ge 0$ and $c^\top r \le 0$. $\square$</p>
     <p>This is the theorem that makes LP a <em>combinatorial</em> problem in disguise.
     The optimum lies in a finite set, the vertices, which lab step 3 can enumerate in
     $\binom{m}{n}$ tries. Simplex (unit 02) is the idea of not enumerating: move from
     a vertex to an adjacent, better one until none is better. That works because the
     objective is linear and $P$ is convex, so a local optimum over the vertex graph
-    is global.</p>
+    is global. On the example, simplex from $(0,0)$ goes to $(1,0)$ and then to
+    $(2.5, 1.5)$, never visiting $(0,4)$.</p>
     <p>"No fourth case" is not true for nonlinear problems.
     $\inf\{e^{-x} : x \ge 0\} = 0$ is finite and never attained. Finitely many
     linear constraints rule this out.</p>
@@ -736,7 +1034,7 @@
     <ol>
       <li><b>Eliminate</b> one variable by Fourier–Motzkin. Tested by sampling points against the exact projection.</li>
       <li><b>Decide feasibility</b> by eliminating everything. Agrees with HiGHS.</li>
-      <li><b>Enumerate vertices</b> over all $\binom{m}{n}$ bases. Agrees with qhull, and survives a degenerate pyramid.</li>
+      <li><b>Enumerate vertices</b> over all $\binom{m}{n}$ bases, as on the pairs-of-rows slide. Agrees with qhull, and survives a degenerate pyramid.</li>
       <li><b>Check</b> a Farkas certificate.</li>
       <li><b>Find</b> one, using your own <code>eliminate</code> and the tail trick.</li>
     </ol>
@@ -762,7 +1060,7 @@ uv run co then 01      # FM blow-up vs true facets · your vertices vs qhull · 
     <ul>
       <li>All five lab steps are ✓.</li>
       <li>Given the infeasible system that <code>then</code> prints, with the certificate hidden, you can produce a Farkas vector by hand and explain <b>without reference to any solver</b> why it proves infeasibility.</li>
-      <li>You can say why vertex, extreme point and BFS coincide, and which of the three your <code>vertices</code> function computes.</li>
+      <li>You can say, on a small example, why vertex, extreme point and BFS pick out the same points, and which of the three your <code>vertices</code> function computes.</li>
     </ul>
   </div>
   <div class="cols">

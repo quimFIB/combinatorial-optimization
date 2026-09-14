@@ -87,7 +87,7 @@ tests, and a `then.py` whose numbers the slides and lab sheet quote.
 | Unit | Slides | Reference tests |
 |---|---:|---:|
 | 00 Models, instances, and an oracle you trust | 21 | 40 |
-| 01 Polyhedra, cones, and Farkas' lemma | 23 | 61 |
+| 01 Polyhedra, cones, and Farkas' lemma | 27 | 61 |
 | 02 Simplex, honestly | 20 | 127 |
 | 03 Duality — the load-bearing unit | 20 | 195 |
 | 04 Polynomial-time LP: ellipsoid and interior point | 18 | 80 |
