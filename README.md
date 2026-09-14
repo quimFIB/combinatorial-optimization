@@ -86,39 +86,39 @@ tests, and a `then.py` whose numbers the slides and lab sheet quote.
 
 | Unit | Slides | Reference tests |
 |---|---:|---:|
-| 00 Models, instances, and an oracle you trust | 21 | 40 |
+| 00 Models, instances, and an oracle you trust | 24 | 40 |
 | 01 Polyhedra, cones, and Farkas' lemma | 27 | 61 |
-| 02 Simplex, honestly | 20 | 127 |
-| 03 Duality — the load-bearing unit | 20 | 195 |
-| 04 Polynomial-time LP: ellipsoid and interior point | 18 | 80 |
-| 05 Formulations, relaxations, and the integrality gap | 16 | 34 |
-| 06 Total unimodularity | 14 | 220 |
-| 07 Branch and bound | 15 | 46 |
-| 08 Cutting planes and branch-and-cut | 16 | 84 |
-| 09 Separation ⇔ optimization | 15 | 66 |
-| 10 Column generation, Dantzig–Wolfe, branch-and-price | 17 | 237 |
-| 11 Lagrangian relaxation and subgradient methods | 14 | 137 |
-| 12 Benders decomposition | 15 | 106 |
-| 13 Matroids and the exact reach of greedy | 15 | 125 |
-| 14 Network flows | 15 | 163 |
-| 15 Matching | 18 | 416 |
-| 16 Dynamic programming over combinatorial structure | 17 | 275 |
-| 17 Constraint satisfaction and propagation | 15 | 291 |
-| 18 Global constraints and their filtering algorithms | 14 | 234 |
-| 19 Search, restarts, and large neighbourhood search | 14 | 28 |
-| 20 SAT and the CDCL engine | 14 | 271 |
-| 21 Lazy clause generation, or what CP-SAT actually is | 14 | 106 |
-| 22 Hardness, and the shape of what is possible | 17 | 233 |
-| 23 Combinatorial approximation algorithms | 15 | 237 |
-| 24 LP rounding and the primal–dual method | 14 | 176 |
-| 25 Semidefinite relaxations | 15 | 99 |
-| 26 Metaheuristics, benchmarked honestly | 14 | 167 |
-| 27 Modelling for a real solver | 13 | 101 |
-| 28 Experimental method | 14 | 40 |
-| 29 Convexity, gradients, and what continuity changes | 13 | 80 |
-| 30 Automatic differentiation | 13 | 46 |
-| 31 Where discrete meets differentiable | 14 | 52 |
-| Capstone: one problem, four traditions (`co test capstone`) | 16 | 114 |
+| 02 Simplex, honestly | 24 | 127 |
+| 03 Duality — the load-bearing unit | 23 | 195 |
+| 04 Polynomial-time LP: ellipsoid and interior point | 20 | 80 |
+| 05 Formulations, relaxations, and the integrality gap | 18 | 34 |
+| 06 Total unimodularity | 17 | 220 |
+| 07 Branch and bound | 18 | 46 |
+| 08 Cutting planes and branch-and-cut | 18 | 84 |
+| 09 Separation ⇔ optimization | 17 | 66 |
+| 10 Column generation, Dantzig–Wolfe, branch-and-price | 19 | 237 |
+| 11 Lagrangian relaxation and subgradient methods | 17 | 137 |
+| 12 Benders decomposition | 17 | 106 |
+| 13 Matroids and the exact reach of greedy | 17 | 125 |
+| 14 Network flows | 18 | 163 |
+| 15 Matching | 22 | 416 |
+| 16 Dynamic programming over combinatorial structure | 22 | 275 |
+| 17 Constraint satisfaction and propagation | 18 | 291 |
+| 18 Global constraints and their filtering algorithms | 17 | 234 |
+| 19 Search, restarts, and large neighbourhood search | 17 | 28 |
+| 20 SAT and the CDCL engine | 17 | 271 |
+| 21 Lazy clause generation, or what CP-SAT actually is | 16 | 106 |
+| 22 Hardness, and the shape of what is possible | 20 | 233 |
+| 23 Combinatorial approximation algorithms | 18 | 237 |
+| 24 LP rounding and the primal–dual method | 18 | 176 |
+| 25 Semidefinite relaxations | 18 | 99 |
+| 26 Metaheuristics, benchmarked honestly | 17 | 167 |
+| 27 Modelling for a real solver | 17 | 101 |
+| 28 Experimental method | 16 | 40 |
+| 29 Convexity, gradients, and what continuity changes | 16 | 80 |
+| 30 Automatic differentiation | 17 | 46 |
+| 31 Where discrete meets differentiable | 17 | 52 |
+| Capstone: one problem, four traditions (`co test capstone`) | 18 | 114 |
 
 ## Conventions for writing the next unit
 
