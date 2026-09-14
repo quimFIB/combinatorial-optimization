@@ -1,0 +1,86 @@
+#+title: Hints — lab 30
+#+startup: content
+#+options: ^:{}
+
+One rung at a time; then ~solution/lab.py~ or ~solution/functional.py~.
+
+* Step 1 — Dual numbers
+
+** Rung 1 — the rules
+Write a + bε with ε² = 0 and multiply out: (a + bε)(c + dε) = ac + (ad + bc)ε. Division follows from
+1/(c + dε) = 1/c − (d/c²)ε. For any smooth g, g(a + bε) = g(a) + g′(a)·bε, which gives exp, log,
+sin, cos and tanh. Lift plain numbers with deriv 0 so ~2 * x~ and ~x * 2~ both work, which means
+~__radd__~, ~__rmul__~, ~__rsub__~ and ~__rtruediv__~.
+
+** Rung 2 — functions that take both
+~exp(x)~ should check ~isinstance(x, Dual)~. If it is, call ~exp(x.value)~ recursively, not ~math.exp~,
+so that a Dual whose value is itself a Dual (step 2's forward-over-reverse) still works.
+
+** Functional route
+A dual number is already a value: a frozen dataclass whose operators return new instances. The elementary
+functions come from one lifter, ~_lift_unary(f, df)~, which gives a function that works on floats and on Duals,
+with the derivative written using the lifted functions themselves. That's what lets step 2's Hessian-vector
+product nest Duals inside the tape. The forward gradient is one seeded evaluation per input, as a
+comprehension.
+
+* Step 2 — The scalar tape
+
+** Rung 1 — local derivatives
+Each operation creates a Var holding its value and ~[(input, ∂output/∂input)]~. For ~a * b~ that's
+~[(a, b.value), (b, a.value)]~. Compute the locals with ordinary arithmetic and the step 1 functions on
+~.value~​s: if the values are Duals, the locals become Duals too, and that's all forward-over-reverse
+needs.
+
+** Rung 2 — the sweep
+Recursion hits Python's limit on the 20 000-deep test, so use an explicit stack of ~(node, done)~:
+push ~(node, True)~ then the unseen parents, and append to the order when a ~done~ entry pops. That
+gives a post-order, whose reverse is a valid order for accumulation. Keep ~seen~ by ~id(node)~.
+Processing each node once is what makes the 2³⁰-path test finish.
+
+** Rung 3 — Hessian-vector products
+∇f is a function of x. Its directional derivative along v is H·v. So seed x with ~Dual(x_i, v_i)~ and
+run the whole reverse pass. Every gradient comes out as a Dual whose ~deriv~ is (H v)_i. One forward
+pass and one backward pass, whatever n is.
+
+** Functional route
+Graph nodes are immutable apart from ~grad~, which the API reads. The backward sweep is a fold in spirit, over
+the reversed topological order with a gradient dict as the accumulator. The reference writes it as a loop over
+one local dict, because a persistent map copied at every node makes a 20 000-node graph quadratic, and the
+tests time that. The topological sort keeps its stack and seen set local too. ~hvp~ is pure composition:
+reverse mode over inputs that are Duals seeded with v.
+
+* Step 3 — The array tape
+
+** Rung 1 — vjps for the four ops
+For Y = A @ B, ∂L/∂A = G @ Bᵀ and ∂L/∂B = Aᵀ @ G. For broadcasting b over rows, sum G over the batch
+axis. tanh: G·(1 − t²). relu: G·mask. mse: G·2(pred − target)/size. Every vjp is a closure over the
+arrays it needs, and those arrays are what the tape keeps alive.
+
+** Rung 2 — accumulation
+A tensor used twice gets two contributions: add them. Start each input's grad at None, and add
+instead of assigning. Process entries in reverse recording order: an output's grad is complete before
+any entry recorded earlier needs it.
+
+** Functional route
+Each op is one expression: compute the output and hand ~_record~ a list of (input, vjp closure) pairs
+plus the arrays it saves. The closures capture what they need, such as ~tanh~'s output or ~relu~'s mask.
+~tensor_backward~ is a real fold over the reversed tape: the accumulator is a gradient dict extended with
+~tz.assoc~, summing into an existing entry. Only at the end are gradients written onto the tensors.
+
+* Step 4 — The MLP and its memory
+
+** Rung 1 — counting bytes
+List the distinct arrays: the input batch, each W (m×n), each matmul output and bias-add output
+(batch×n), each hidden tanh output (batch×n, the same object its vjp saves), and the loss's difference
+array (batch×out) plus the scalar loss. Biases aren't saved: add_bias's vjp doesn't need them. Multiply by 8.
+
+** Rung 2 — why memory is the constraint
+The tape grows with batch × width × depth and must live until backward. Doubling the batch doubles
+activation memory, not parameter memory. Checkpointing trades memory back for compute: keep every k-th
+activation and recompute the rest during backward.
+
+** Functional route
+The forward pass is a fold over the layers, with the hidden tensor as the accumulator; the last layer skips
+tanh. ~predicted_tape_bytes~ is arithmetic: one sum over the layers. Training is a fold over epochs, each a
+fold over mini-batches, and a step returns new parameter arrays (~W − lr·dW~) instead of updating them in
+place. The per-epoch mean loss is read from ~tz.accumulate~ over the same steps.

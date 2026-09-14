@@ -2,7 +2,7 @@
 
 Fill in the functions marked TODO, one step at a time, and run
     uv run co test 11
-after each. Read README.md first; HINTS.md has a ladder of hints per step.
+after each. Read README.md first; HINTS.org has a ladder of hints per step.
 
 TSP: a symmetric distance matrix `dist` (n >= 3). Multipliers pi[v], one per vertex;
 the modified cost of edge {i, j} is dist[i][j] + pi[i] + pi[j].

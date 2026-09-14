@@ -2,7 +2,7 @@
 
 Fill in the parts marked TODO, one step at a time, and run
     uv run co test 21
-after each. Read README.md first; HINTS.md has a ladder of hints per step.
+after each. Read README.md first; HINTS.org has a ladder of hints per step.
 
 Integers become Booleans through the order encoding: for x in [lb, ub], literal [x <= v] for
 lb <= v < ub, with clauses [x <= v] -> [x <= v + 1]. CP propagators read bounds off the Boolean

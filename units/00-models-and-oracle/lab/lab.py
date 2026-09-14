@@ -5,7 +5,7 @@ Fill in the functions marked TODO, one step at a time. Run
     uv run co test 00
 
 after each; a step's tests go from "not started" to ✓. Everything you need
-from the library is imported below. Stuck? HINTS.md, one rung at a time.
+from the library is imported below. Stuck? HINTS.org, one rung at a time.
 
 Any style passes: the tests call your functions and check what they return,
 never how. Loops, comprehensions, recursion, `functools.reduce` (a foldl) —
@@ -31,22 +31,28 @@ from colib import BinPacking, Result, VertexCover
 
 def vertex_cover_feasible(inst: VertexCover, x) -> bool:
     """True iff every edge has at least one endpoint in the cover."""
-    raise NotImplementedError("step 1: vertex_cover_feasible")
+    cover_feasible = True
+    for u, v in inst.edges:
+        cover_feasible = cover_feasible and (x[u] == 1 or x[v] == 1)
+    return cover_feasible
 
 
 def vertex_cover_objective(inst: VertexCover, x) -> int:
     """The number of vertices in the cover."""
-    raise NotImplementedError("step 1: vertex_cover_objective")
+    return sum(x)
 
 
 def bin_packing_feasible(inst: BinPacking, x) -> bool:
     """True iff no bin's total size exceeds the capacity."""
-    raise NotImplementedError("step 1: bin_packing_feasible")
+    load = {}
+    for item, b in enumerate(x):
+        load[b] = load.get(b, 0) + inst.sizes[item]
+    return all(total <= inst.capacity for total in load.values())
 
 
 def bin_packing_objective(inst: BinPacking, x) -> int:
     """The number of bins used."""
-    raise NotImplementedError("step 1: bin_packing_objective")
+    return len(set(x))
 
 
 # ---------------------------------------------------------------- step 2 ---
@@ -60,7 +66,15 @@ def set_partitions(n: int):
     For n = 3 that is (0,0,0) (0,0,1) (0,1,0) (0,1,1) (0,1,2) — five, the
     Bell number B(3). For n = 0: a single empty tuple.
     """
-    raise NotImplementedError("step 2: set_partitions")
+    if n == 0:
+        yield ()
+        return
+    # Element n-1 either joins one of the existing blocks 0..max(a) of a
+    # partition of the first n-1 elements, or opens block max(a)+1 by itself.
+    for a in set_partitions(n - 1):
+        new_block = max(a) + 1 if a else 0
+        for label in range(new_block + 1):
+            yield a + (label,)
 
 
 # ---------------------------------------------------------------- step 3 ---
@@ -75,7 +89,23 @@ def brute_force(problem) -> Result:
       feasible  how many candidates were feasible
       examined  how many candidates you looked at
     """
-    raise NotImplementedError("step 3: brute_force")
+    if problem.sense == "min":
+        better = lambda a, b: a < b
+    else:
+        better = lambda a, b: a > b
+
+    value, solution = None, None
+    feasible = examined = 0
+    for x in problem.space():
+        examined += 1
+        if not problem.is_feasible(x):
+            continue
+        feasible += 1
+        v = problem.objective(x)
+        # Strict comparison keeps the first optimum found.
+        if value is None or better(v, value):
+            value, solution = v, x
+    return Result(value, solution, feasible, examined)
 
 
 # ---------------------------------------------------------------- step 4 ---
@@ -89,14 +119,26 @@ def matching_lower_bound(inst: VertexCover, matching) -> int:
     Raise ValueError if some pair is not an edge of the graph (in either
     orientation) or two pairs share an endpoint.
     """
-    raise NotImplementedError("step 4: matching_lower_bound")
+    edges = {frozenset(e) for e in inst.edges}
+    used = set()
+    for u, v in matching:
+        if frozenset((u, v)) not in edges:
+            raise ValueError(f"({u}, {v}) is not an edge")
+        if u in used or v in used:
+            raise ValueError(f"({u}, {v}) shares an endpoint with an earlier pair")
+        used.update((u, v))
+    return len(matching)
 
 
 def certify_vertex_cover(inst: VertexCover, cover, matching) -> bool:
     """True iff `cover` is a feasible cover AND `matching` is a valid matching
     of the same size — which together prove the cover optimal. False otherwise
     (including when the matching is invalid)."""
-    raise NotImplementedError("step 4: certify_vertex_cover")
+    try:
+        size = matching_lower_bound(inst, matching)
+    except ValueError:
+        return False
+    return vertex_cover_feasible(inst, cover) and vertex_cover_objective(inst, cover) == size
 
 
 # ---------------------------------------------------------------- step 5 ---
@@ -109,4 +151,16 @@ def plausible_vertex_cover(inst: VertexCover):
     the instance where it is wrong. The classic trap: keep taking the vertex
     that covers the most uncovered edges.
     """
-    raise NotImplementedError("step 5: plausible_vertex_cover")
+    # Greedy by degree: take the vertex touching the most uncovered edges,
+    # drop those edges, repeat until none are left.
+    x = [0] * inst.n
+    remaining = list(inst.edges)
+    while remaining:
+        degree = [0] * inst.n
+        for u, v in remaining:
+            degree[u] += 1
+            degree[v] += 1
+        best = max(range(inst.n), key=lambda w: degree[w])
+        x[best] = 1
+        remaining = [(u, v) for u, v in remaining if best not in (u, v)]
+    return tuple(x)

@@ -2,7 +2,7 @@
 
 Fill in the functions marked TODO, one step at a time, and run
     uv run co test 28
-after each. Read README.md first; HINTS.md has a ladder of hints per step.
+after each. Read README.md first; HINTS.org has a ladder of hints per step.
 
 A benchmark is a set of runs: (experiment, solver, instance, seed) -> status, seconds, value, nodes. Runs live in
 SQLite so they can be queried, resumed and re-analysed without re-running anything. A run counts as solved iff

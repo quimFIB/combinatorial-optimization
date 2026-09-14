@@ -2,7 +2,7 @@
 
 Fill in the parts marked TODO, one step at a time, and run
     uv run co test 18
-after each. Read README.md first; HINTS.md has a ladder of hints per step.
+after each. Read README.md first; HINTS.org has a ladder of hints per step.
 
 Propagators follow unit 17's interface (.vars, .prune(dom) -> dict or None) and run in unit
 17's engine: `cp` below is colib.ref.unit("17"), the reference engine, or yours with

@@ -2,7 +2,7 @@
 
 Fill in the functions marked TODO, one step at a time, and run
     uv run co test 23
-after each. Read README.md first; HINTS.md has a ladder of hints per step.
+after each. Read README.md first; HINTS.org has a ladder of hints per step.
 
 Every algorithm returns, next to its solution, the quantity its proof compares against: prices for greedy set
 cover, a matching or a far-apart point set for the packing bounds, the tree and matching weights for the TSP

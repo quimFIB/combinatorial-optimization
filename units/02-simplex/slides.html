@@ -584,7 +584,7 @@ uv run co then 02     # 1000 LPs vs HiGHS · Klee–Minty table · floats on the
   <aside class="notes">
     <p>Step 4 takes the most time (budget an hour). The phase-1 objective must be
     priced out, and the switch to phase 2 needs the real objective priced out
-    against the basis phase 1 ended with. HINTS.md walks through both.</p>
+    against the basis phase 1 ended with. HINTS.org walks through both.</p>
     <p>Functional style: pivoting loops run thousands of iterations on Klee–Minty,
     so write the loop as an iterator (<code>toolz.iterate</code> plus
     <code>dropwhile</code>), not as recursion. The functional reference solution

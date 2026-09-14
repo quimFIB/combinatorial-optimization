@@ -69,7 +69,7 @@ units/NN-slug/
     README.md       the lab sheet: steps, time per step, "done when", checkpoint
     lab.py          stubs raising NotImplementedError: this is the file you edit
     test_lab.py     test_stepN_* tests; run against lab.py or solution/
-    HINTS.md        a hint ladder per step, in <details> folds
+    HINTS.org       a hint ladder per step, one folded Org heading per rung
     then.py         the "Then" comparison against real tools
     solution/
       lab.py        reference solution, imperative (tests run against it too)
@@ -150,7 +150,7 @@ tests, and a `then.py` whose numbers the slides and lab sheet quote.
 - **Two reference solutions, both tested.** `solution/lab.py` uses loops and
   mutable state, and `solution/functional.py` uses no mutation. Stubs must not
   dictate a style: say "return an iterable", not "yield". Each step in the lab
-  sheet names its natural *shape*, and HINTS.md gives each step a "Functional
+  sheet names its natural *shape*, and HINTS.org gives each step a "Functional
   route" fold. Where an algorithm genuinely needs mutable state (a simplex
   tableau, a CDCL trail), the functional solution may keep it local to one
   function, and the lab sheet should say so rather than pretend.

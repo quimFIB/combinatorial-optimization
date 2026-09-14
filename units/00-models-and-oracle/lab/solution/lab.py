@@ -1,6 +1,6 @@
 """Unit 00 lab — models, instances, and an oracle you trust.  REFERENCE SOLUTION.
 
-Look here only after the hint ladder in HINTS.md has run out.
+Look here only after the hint ladder in HINTS.org has run out.
 """
 
 from __future__ import annotations

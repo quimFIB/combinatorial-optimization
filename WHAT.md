@@ -41,6 +41,9 @@ conventions for writing further units.
   invalid solution or refuted claim. Branch-and-price wins tight-window instances at 25 customers, the
   compact MIP makes most proofs on clustered ones, and ALNS wins on solution quality past 25 customers.
   Every step of every unit's HINTS.md now has a "Functional route" fold.
+- 2026-09-14: every unit's HINTS.md is now HINTS.org. The `<details>` folds only collapsed in a
+  browser, and Emacs showed every rung open; `#+startup: content` opens the Org file with the step
+  and rung headings visible and every rung body folded.
 
 One consequence for the curriculum text: unit 00 no longer has the learner
 build the harness and instance library. `colib` ships them, and lab 00 has the

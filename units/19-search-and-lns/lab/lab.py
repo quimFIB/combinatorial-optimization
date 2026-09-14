@@ -2,7 +2,7 @@
 
 Fill in the parts marked TODO, one step at a time, and run
     uv run co test 19
-after each. Read README.md first; HINTS.md has a ladder of hints per step.
+after each. Read README.md first; HINTS.org has a ladder of hints per step.
 
 Everything plugs into unit 17's engine (`cp`) through its hooks:
     cp.solve(domains, props, choose=..., node_limit=..., on_failure=...)

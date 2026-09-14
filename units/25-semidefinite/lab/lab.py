@@ -2,7 +2,7 @@
 
 Fill in the functions marked TODO, one step at a time, and run
     uv run co test 25
-after each. Read README.md first; HINTS.md has a ladder of hints per step.
+after each. Read README.md first; HINTS.org has a ladder of hints per step.
 
 Max-Cut instances are unit 00's MaxCut(n, edges, weights); a cut is a 0/1 list. Solve SDPs with cvxpy
 (solver="CLARABEL") and LPs with colib.solvers.highs_lp.

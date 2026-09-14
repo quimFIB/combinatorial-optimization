@@ -1,0 +1,112 @@
+#+title: Hints — lab 02
+#+startup: content
+#+options: ^:{}
+
+One rung at a time. When the rungs run out, read ~solution/lab.py~ or
+~solution/functional.py~, close it, and write your own. Each step also has a
+*Functional route*. ~FUNCTIONAL.md~ at the project root maps Haskell names to
+Python and toolz.
+
+* Step 1 — Tableau and pivot
+
+** Rung 1 — nudge
+Row /i/ is ~A[i] + [1 if k == i else 0 for k in range(m)] + [b[i]]~, and the
+objective row is ~[-c_j] + [0]*m + [0]~. The starting basis is the slack columns
+~n, n+1, …, n+m-1~.
+
+** Rung 2 — pivot
+Divide row ~row~ by ~p = T[row][col]~. Then, for every other row /i/ (including
+the objective row), subtract ~T[i][col]~ times the new pivot row. Read
+~T[i][col]~ *before* you overwrite row /i/.
+
+** Functional route
+#+begin_src python
+pivot_row = tuple(v / T[row][col] for v in T[row])
+new_T = tuple(pivot_row if i == row else tuple(v - r[col] * p for v, p in zip(r, pivot_row))
+              for i, r in enumerate(T))
+new_basis = tuple(col if i == row else j for i, j in enumerate(basis))
+#+end_src
+
+* Step 2 — Pricing and the ratio test
+
+** Rung 1 — nudge
+Pricing looks only at the objective row, excluding the right-hand side column.
+The ratio test looks only at the constraint rows, excluding the objective row.
+
+** Rung 2 — ties
+Dantzig's rule is ~min(candidates, key=lambda j: (z[j], j))~: most negative
+first, and the index breaks ties. For leaving ties, compute the best ratio,
+collect every row within ~eps~ of it, then take the first row (Dantzig) or the
+row minimizing ~basis[i]~ (Bland).
+
+** Functional route
+A dict comprehension ~{i: T[i][-1] / T[i][col] for i in … if T[i][col] > eps}~
+holds the ratios, and ~min(ratios.values())~ is the best one. Everything is
+already an expression.
+
+* Step 3 — The simplex loop
+
+** Rung 1 — nudge
+~while True:~ price, and if there is no entering column, stop with "optimal".
+Run the ratio test, and if there is no row, stop with "unbounded". Then pivot and
+count it. Keep ~seen = {tuple(basis)}~ and raise ~Cycling~ when a new basis is
+already in it.
+
+** Rung 2 — reading the answer
+~x[j]~ is the right-hand side of the row where /j/ is basic, and 0 when /j/ is
+nonbasic. The objective value is ~T[-1][-1]~, because the objective row holds
+~z − c·x = 0~ with /z/ on the right.
+
+** Functional route
+Put the whole search state in one frozen dataclass: tableau, basis, pivots, the
+seen bases, and a status that stays ~None~ while running. Write
+~step(state) -> state~. Then the loop is
+~toolz.first(itertools.dropwhile(lambda s: s.status is None, toolz.iterate(step, start)))~.
+It is lazy and uses no recursion, so thousands of pivots are fine.
+
+* Step 4 — Two phases
+
+** Rung 1 — phase 1 setup
+For a row with ~b[i] < 0~, multiply the entire row by −1, so its slack
+coefficient becomes −1, and add an artificial column with +1 in that row only.
+That row's starting basic variable is its artificial; every other row starts
+with its slack.
+
+** Rung 2 — the phase 1 objective row
+Maximizing ~−Σ artificials~ gives the objective row +1 on each artificial column
+(remember, the row stores −c). That row is not yet in canonical form, because
+the artificials are basic. Subtract every artificial's row from it, which is
+called "pricing out". After that its right-hand side is ~−Σ |b_i|~ over the
+negative rows, the current phase-1 value.
+
+** Rung 3 — between the phases
+If the phase-1 optimum is below ~-eps~, the LP is infeasible. Otherwise, any
+artificial still basic has value 0. Pivot it out on any real column with a
+nonzero entry in its row. The entry can be negative, which is fine because the
+right-hand side is 0. If the row has no such entry, it is a combination of the
+other rows: delete it and its basis entry. Iterate rows from last to first so
+deletions don't shift the rows you haven't seen yet.
+
+** Rung 4 — phase 2 setup
+Delete the artificial columns from every row. Build the real objective row
+~[-c] + [0]*m + [0]~, then price it out against the current basis: for each
+basic column ~j~ in row ~i~, subtract ~obj[j]~ times row ~i~. Continue pivoting,
+carrying the pivot count over.
+
+** Functional route
+Pricing out is a fold over ~enumerate(basis)~:
+~reduce(lambda o, ib: tuple(v - o[ib[1]] * t for v, t in zip(o, T[ib[0]])), enumerate(basis), obj)~.
+Driving artificials out is another fold over the row indices, from last to first,
+whose accumulator is the search state.
+
+* Step 5 — Klee–Minty
+
+** Rung 1
+With 0-based ~i, j~: ~A[i][j] = 2 * 10**(i-j)~ if ~j < i~, ~1~ if ~j == i~, else
+~0~; ~b[i] = 100**i~; ~c[j] = 10**(n-1-j)~. Python integers are exact at any
+size, so ~10**22~ is no problem.
+
+** Functional route
+The whole instance is data, three nested comprehensions over the Klee–Minty formula: the entry ~2·10^(i−j)~
+below the diagonal and 1 on it, the right-hand sides ~100^i~, and the costs ~10^(n−1−j)~. Return tuples so
+the instance is immutable, like the tableau it feeds.

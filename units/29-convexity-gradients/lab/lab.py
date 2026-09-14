@@ -2,7 +2,7 @@
 
 Fill in the functions marked TODO, one step at a time, and run
     uv run co test 29
-after each. Read README.md first; HINTS.md has a ladder of hints per step.
+after each. Read README.md first; HINTS.org has a ladder of hints per step.
 
 Vectors are numpy arrays. A method takes a gradient function and returns its whole trajectory (a list of
 iterates, starting with x0), so convergence can be plotted and tested after the fact.

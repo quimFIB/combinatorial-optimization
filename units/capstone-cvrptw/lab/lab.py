@@ -2,7 +2,7 @@
 
 Fill in the functions marked TODO, one step at a time, and run
     uv run co test capstone
-after each. Read README.md first; HINTS.md has a ladder of hints per step.
+after each. Read README.md first; HINTS.org has a ladder of hints per step.
 
 The problem is the VRPTW of colib.vrptw: integer data in tenths, unlimited fleet, minimise total distance.
 A route is a tuple of customers; the depot is implicit at both ends. A solution is a list of routes. Every

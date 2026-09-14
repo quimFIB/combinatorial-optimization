@@ -5,7 +5,7 @@ comprehensions, recursion, and `reduce` where the imperative version keeps a
 running state, and toolz for grouping and counting (see FUNCTIONAL.md at the
 project root). Checked by the same tests:  uv run co test 00 --solution functional
 
-Look here only after the hint ladder in HINTS.md has run out.
+Look here only after the hint ladder in HINTS.org has run out.
 """
 
 from __future__ import annotations

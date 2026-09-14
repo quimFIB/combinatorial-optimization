@@ -2,7 +2,7 @@
 
 Fill in the functions marked TODO, one step at a time, and run
     uv run co test 12
-after each. Read README.md first; HINTS.md has a ladder of hints per step.
+after each. Read README.md first; HINTS.org has a ladder of hints per step.
 
 The instance is colib.colgen.StochasticFacility, with fields F, C, S, open_cost[i],
 capacity[i], cost[i][j] (per unit), demand[s][j], prob[s], and penalty (per unit of unmet

@@ -2,7 +2,7 @@
 
 Fill in the functions marked TODO, one step at a time, and run
     uv run co test 22
-after each. Read README.md first; HINTS.md has a ladder of hints per step.
+after each. Read README.md first; HINTS.org has a ladder of hints per step.
 
 Formulas are DIMACS-style: variables 1..n, clauses as lists of nonzero ints. Assignments are lists of
 booleans, index 0 for variable 1. Vertex cover and set cover instances are unit 00's classes in

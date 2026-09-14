@@ -112,7 +112,7 @@ combination that produced it *is* a Farkas certificate. You only have to record
 which combination it was.
 
 You can do it by adding bookkeeping to `eliminate`. There is also a trick that
-needs no change to `eliminate` at all (HINTS.md, rung 2). Try for ten minutes
+needs no change to `eliminate` at all (HINTS.org, rung 2). Try for ten minutes
 before looking.
 
 **Done when** `step 5 ✓`. You get a valid certificate for 15 infeasible systems,
