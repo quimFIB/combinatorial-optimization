@@ -53,7 +53,7 @@
       <p class="small">Why naive branching breaks pricing; Ryan–Foster; routes and ESPPRC.</p></div>
   </div>
   <div class="box good"><span class="label">getting around</span>
-    <p class="small">Words with a <span class="term" data-term="column generation">dotted underline</span> are glossary terms: click one for its definition. <kbd>G</kbd> lists every term in the unit, <kbd>N</kbd> shows the notes.</p>
+    <p class="small">Words with a <span class="term" data-term="column generation">dotted underline</span> are glossary terms: click one for its definition. <kbd>G</kbd> lists every term in the unit, <kbd>N</kbd> shows the notes. Optional extra: <a href="explore.html" target="_blank" rel="noopener">interactive figures</a>, linked from the slides they support by a small ▸ chip; skip them freely.</p>
   </div>
   <aside class="notes">
     <p>Keep one sentence in mind all unit: <b>the reduced cost of a column is its cost minus
@@ -207,6 +207,7 @@
       <p class="small">At row 2 no pattern is worth more than 1, so the LP over <b>all</b> patterns is solved, at value 4. It happens to be integral: one roll of three 3s, two rolls of 4+6, one roll of 3+3+4. Four rolls, and the LP proves no cutting uses fewer.</p>
     </div>
   </div>
+  <p class="viz-link-row"><a class="viz-link" href="explore.html#/1" target="_blank" rel="noopener">explore interactively</a></p>
   <aside class="notes">
     <p><b>Pricing, row 1.</b> Maximise $\tfrac13 a_1 + \tfrac12 a_2 + \tfrac12 a_3$ subject to
     $3a_1 + 4a_2 + 6a_3 \le 10$, $a$ nonnegative integers. Candidates: $(3,0,0)$ is worth 1;
@@ -325,6 +326,7 @@
       <p class="small">A 5–15% saving here. In branch-and-price, the same bound lets a node be <b>pruned</b> long before its LP converges, and that's where it pays.</p>
     </div>
   </div>
+  <p class="viz-link-row"><a class="viz-link" href="explore.html#/1" target="_blank" rel="noopener">explore interactively</a></p>
   <aside class="notes">
     <p>The Farley argument in full. The dual of the full master is $\max d^\top y$ subject to
     $y^\top a \le 1$ for all patterns and $y \ge 0$. For any $y \ge 0$, the scaled point
@@ -364,6 +366,7 @@
       <p class="small">Fewer iterations (−16% at 50 items), but no gain in seconds, since mis-prices cost a second pricing call. Smoothing pays when pricing is cheap relative to the master, or when oscillation is severe. Neither holds strongly here.</p>
     </div>
   </div>
+  <p class="viz-link-row"><a class="viz-link" href="explore.html#/2" target="_blank" rel="noopener">explore interactively</a></p>
   <aside class="notes">
     <p>Why the mis-price fallback is necessary: a column that prices negatively at the
     smoothed point may have nonnegative reduced cost at the master duals. It wouldn't

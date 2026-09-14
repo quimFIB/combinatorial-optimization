@@ -1,0 +1,43 @@
+/* Figures of units 06–09 (widgets/ip.js). */
+.viz-ip-cols { display: grid; grid-template-columns: minmax(0, auto) minmax(0, 1fr); gap: 22px; align-items: start; }
+.viz-ip .viz-matrix { font-size: 18px; }
+.viz-ip .viz-matrix th, .viz-ip .viz-matrix td { text-align: center; padding: 6px 12px; }
+.viz-ip .viz-pickable { cursor: pointer; user-select: none; }
+.viz-ip .viz-pickable:hover { color: var(--accent); }
+.viz-tab .viz-pivotcell { background: var(--accent-soft); outline: 1px solid var(--accent); font-weight: 700; }
+.viz-tab .viz-sign { font-weight: 700; color: var(--accent); width: 2em; border: 1px dashed var(--rule); }
+.viz-tab .viz-offrow td:not(.viz-sign), .viz-tab .viz-offrow th { color: var(--ink-faint); }
+.viz-tab .viz-sumrow td, .viz-tab .viz-sumrow th { border-top: 2px solid var(--ink); font-weight: 600; }
+.viz-tab .viz-left { text-align: left; }
+.viz-tab .viz-future { opacity: .45; }
+.viz-okline { color: var(--good); }
+.viz-badline { color: var(--warn); }
+.viz-badtext { color: var(--warn); }
+.viz-nodebox { fill: var(--accent); fill-opacity: .08; stroke: var(--accent); stroke-width: 2; stroke-dasharray: 6 4; }
+.viz-lpdot { fill: var(--ink-faint); }
+.viz-incumbent { fill: var(--good); stroke: var(--surface); stroke-width: 2; }
+.viz-ring-warn { fill: none; stroke: var(--warn); stroke-width: 3; }
+.viz-oldcut { stroke: var(--warn); stroke-width: 1.2; opacity: .5; }
+.viz-outline { fill: none; stroke: var(--unit); stroke-width: 2.5; }
+.viz-handle-warn { fill: var(--warn); }
+.viz-blob { stroke-width: 46; stroke-linecap: round; opacity: .12; }
+.viz-treesvg { background: transparent; border: 0; margin-bottom: 6px; }
+.viz-treeedge { stroke: var(--ink-faint); stroke-width: 1.5; }
+.viz-tnode rect { fill: var(--surface); stroke: var(--ink-soft); stroke-width: 1.5; }
+.viz-tnode.viz-t-open rect { stroke: var(--accent); stroke-dasharray: 5 3; }
+.viz-tnode.viz-t-branched rect { stroke: var(--ink); }
+.viz-tnode.viz-t-incumbent rect { fill: var(--good-soft); stroke: var(--good); stroke-width: 2.5; }
+.viz-tnode.viz-t-infeasible rect, .viz-tnode.viz-t-pruned-by-bound rect { fill: var(--warn-soft); stroke: var(--warn); }
+.viz-tnode.viz-t-current rect { stroke-width: 4; stroke: var(--accent); stroke-dasharray: none; }
+.viz-tlabel { font: 600 14px var(--f-mono); fill: var(--ink); }
+.viz-tsub { font: 12px var(--f-mono); fill: var(--ink-soft); }
+.viz-polar-fig { width: 640px; }
+.viz-ip .viz-polar-fig + .viz-right { min-width: 360px; }
+.viz-mono { font-family: var(--f-mono); }
+.viz-treesvg { max-height: 420px; }
+.viz-tlegend { display: flex; gap: 10px; flex-wrap: wrap; font: 12px var(--f-mono); color: var(--ink-soft); margin-top: 4px; }
+.viz-tkey { border: 1.5px solid var(--ink-soft); border-radius: 4px; padding: 0 6px; background: var(--surface); }
+.viz-tkey.viz-t-open { border-color: var(--accent); border-style: dashed; }
+.viz-tkey.viz-t-branched { border-color: var(--ink); }
+.viz-tkey.viz-t-incumbent { border-color: var(--good); background: var(--good-soft); }
+.viz-tkey.viz-t-pruned-by-bound { border-color: var(--warn); background: var(--warn-soft); }

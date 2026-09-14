@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>06 · Explore: total unimodularity</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+<link rel="stylesheet" href="../../slides/deck.css">
+<link rel="stylesheet" href="../../slides/viz/viz.css">
+<link rel="stylesheet" href="../../slides/viz/widgets/ip.css">
+</head>
+<body data-trunk="ip">
+<div class="reveal"><div class="slides">
+
+<section class="title-slide">
+  <p class="eyebrow">optional · interactive figures</p>
+  <div class="unit-no">06</div>
+  <h1>Explore: total unimodularity</h1>
+  <p class="lede">Pick submatrices and see their determinants, sign rows until the columns behave, and watch the odd cycle break both.</p>
+  <p class="meta"><span>optional: nothing in the lab depends on it</span><span><a href="slides.html">back to the slides</a></span></p>
+  <aside class="notes">
+    <p>These figures support the slides; they don't replace them, and the unit is complete
+    without them. Each one is computed from the unit's own data or reference solution, so
+    what you see agrees with the numbers on the slides.</p>
+    <p>Inside a figure, the arrow keys and drags belong to the figure; click outside it (or
+    press Esc) to use them for the slides again.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">06 · explore</p>
+  <h2>Determinants, one submatrix at a time</h2>
+  <div class="viz" data-viz="tu-det" data-matrices='[{"title": "four time slots, three shifts (interval matrix)", "rows": ["slot 1", "slot 2", "slot 3", "slot 4"], "cols": ["A", "B", "C"], "M": [[1, 0, 0], [1, 1, 0], [1, 1, 1], [0, 0, 1]]}, {"title": "triangle: vertices × edges", "rows": ["0", "1", "2"], "cols": ["01", "12", "02"], "M": [[1, 0, 1], [1, 1, 0], [0, 1, 1]]}, {"title": "2×2 assignment: vertices × edges (bipartite)", "rows": ["w0", "w1", "j0", "j1"], "cols": ["w0j0", "w0j1", "w1j0", "w1j1"], "M": [[1, 1, 0, 0], [0, 0, 1, 1], [1, 0, 1, 0], [0, 1, 0, 1]]}, {"title": "4-cycle: vertices × edges (even, bipartite)", "rows": ["0", "1", "2", "3"], "cols": ["01", "12", "23", "30"], "M": [[1, 0, 0, 1], [1, 1, 0, 0], [0, 1, 1, 0], [0, 0, 1, 1]]}, {"title": "5-cycle: vertices × edges (odd)", "rows": ["0", "1", "2", "3", "4"], "cols": ["01", "12", "23", "34", "40"], "M": [[1, 0, 0, 0, 1], [1, 1, 0, 0, 0], [0, 1, 1, 0, 0], [0, 0, 1, 1, 0], [0, 0, 0, 1, 1]]}]'></div>
+  <p class="small muted">Try: on the triangle, pick all three rows and columns; then press "check every square submatrix" on each matrix. Static version: <a href="slides.html#/4">TU, checked by hand</a>.</p>
+  <aside class="notes">
+    <p><b>What it shows.</b> A matrix is totally unimodular when every square submatrix has
+    determinant $-1$, $0$ or $1$. Click row and column headers to pick one submatrix and see
+    its determinant; the button enumerates all of them and reports the counts, selecting the
+    first bad one if there is any. Everything is computed in the page from the matrices
+    written in this file.</p>
+    <ul>
+      <li>The shift matrix gives the deck's counts: 12, 18 and 4 submatrices, all determinants 0 or 1.</li>
+      <li>The triangle is fine until the full $3\times3$, determinant 2.</li>
+      <li>The even 4-cycle is TU, the odd 5-cycle is not: its full matrix has determinant 2, the odd-cycle obstruction of "The odd cycle".</li>
+    </ul>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">06 · explore</p>
+  <h2>Ghouila-Houri signings, by hand</h2>
+  <div class="viz" data-viz="gh-sign" data-matrices='[{"title": "four time slots, three shifts (interval matrix)", "rows": ["slot 1", "slot 2", "slot 3", "slot 4"], "cols": ["A", "B", "C"], "M": [[1, 0, 0], [1, 1, 0], [1, 1, 1], [0, 0, 1]]}, {"title": "triangle: vertices × edges", "rows": ["0", "1", "2"], "cols": ["01", "12", "02"], "M": [[1, 0, 1], [1, 1, 0], [0, 1, 1]]}, {"title": "2×2 assignment: vertices × edges (bipartite)", "rows": ["w0", "w1", "j0", "j1"], "cols": ["w0j0", "w0j1", "w1j0", "w1j1"], "M": [[1, 1, 0, 0], [0, 0, 1, 1], [1, 0, 1, 0], [0, 1, 0, 1]]}, {"title": "4-cycle: vertices × edges (even, bipartite)", "rows": ["0", "1", "2", "3"], "cols": ["01", "12", "23", "30"], "M": [[1, 0, 0, 1], [1, 1, 0, 0], [0, 1, 1, 0], [0, 0, 1, 1]]}, {"title": "5-cycle: vertices × edges (odd)", "rows": ["0", "1", "2", "3", "4"], "cols": ["01", "12", "23", "34", "40"], "M": [[1, 0, 0, 0, 1], [1, 1, 0, 0, 0], [0, 1, 1, 0, 0], [0, 0, 1, 1, 0], [0, 0, 0, 1, 1]]}]'></div>
+  <p class="small muted">Try: on the triangle, sign all three rows and search for a good signing; then "test every row subset". Static version: <a href="slides.html#/8">a signing, worked</a>.</p>
+  <aside class="notes">
+    <p><b>What it shows.</b> Ghouila-Houri: a matrix is TU exactly when every subset of its rows
+    can be signed $\pm$ so that every column of the signed sum is in $\{-1, 0, 1\}$. Click a
+    row's sign cell to include it with $+$ or $-$; the bottom row is the signed sum. The search
+    button tries every signing of the chosen rows (the first sign can be fixed).</p>
+    <ul>
+      <li>Shift matrix, all four rows: alternate $+, -, +, -$ and every column sum is 0 or 1.</li>
+      <li>Triangle, all three rows: every signing leaves some column at $\pm 2$. A good signing of
+      a graph's vertex rows would be a 2-colouring, and a triangle has none.</li>
+      <li>4-cycle: sign vertices $+, -, +, -$ around the cycle, the bipartite colouring.</li>
+    </ul>
+  </aside>
+</section>
+
+</div></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/plugin/highlight/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<script src="../../slides/deck.js"></script>
+<script src="../../slides/viz/viz.js"></script>
+<script src="../../slides/viz/widgets/ip.js"></script>
+</body>
+</html>

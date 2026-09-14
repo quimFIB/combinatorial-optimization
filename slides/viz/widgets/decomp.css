@@ -1,0 +1,21 @@
+/* Decomposition figures (units 10–12). Tokens from deck.css. */
+.viz-chart-bg { fill: none; stroke: var(--rule); stroke-width: 1; }
+.viz-curve-bound { fill: none; stroke: var(--good); stroke-width: 2.5; stroke-dasharray: 7 4; }
+.viz-accent-text { fill: var(--accent); font-weight: 600; }
+.viz-pathline-thin { stroke: var(--accent); stroke-width: 1.5; stroke-dasharray: 4 3; }
+.viz button.viz-btn.viz-btn-on { background: var(--accent-soft); border-color: var(--accent); font-weight: 600; }
+
+/* cutting-stock rolls */
+.viz-roll { fill: none; stroke: var(--ink-soft); stroke-width: 1.5; }
+.viz-roll-new { stroke: var(--accent); stroke-width: 2.5; stroke-dasharray: 6 3; }
+.viz-piece-a { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1; }
+.viz-piece-b { fill: var(--good-soft); stroke: var(--good); stroke-width: 1; }
+.viz-piece-c { fill: var(--warn-soft); stroke: var(--warn); stroke-width: 1; }
+.viz-piece-d { fill: var(--surface-sunk); stroke: var(--ink-soft); stroke-width: 1; }
+.viz-piece-new { stroke-width: 2; }
+.viz-piece-label { font: 12px var(--f-mono); fill: var(--ink); dominant-baseline: middle; }
+
+/* Benders bars */
+.viz-bar-true { fill: none; stroke: var(--ink-soft); stroke-width: 1.5; }
+.viz-bar-est { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1; }
+.viz-bar-pick { fill: var(--accent); }

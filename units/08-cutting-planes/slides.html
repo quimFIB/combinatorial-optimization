@@ -49,7 +49,7 @@
       <p>Cut loops, efficacy, pool management, local cuts, and what the architecture buys.</p></div>
   </div>
   <div class="box good"><span class="label">getting around</span>
-    <p class="small">Words with a <span class="term" data-term="cut (cutting plane)">dotted underline</span> are glossary terms: click one for its definition. <kbd>G</kbd> lists every term in the unit, <kbd>N</kbd> shows the notes.</p>
+    <p class="small">Words with a <span class="term" data-term="cut (cutting plane)">dotted underline</span> are glossary terms: click one for its definition. <kbd>G</kbd> lists every term in the unit, <kbd>N</kbd> shows the notes. Optional extra: <a href="explore.html" target="_blank" rel="noopener">interactive figures</a>, linked from the slides they support by a small ▸ chip; skip them freely.</p>
   </div>
   <aside class="notes">
     <p>Lab steps 1–2 are section 1, and steps 3–5 are section 2 plus the pool from
@@ -205,6 +205,7 @@
       <p class="small">The first cut moved the bound from 1.5 to 1; the second did not move it at all, and only changed <em>which</em> optimal point the LP returns. Rounds that change little are the start of stalling.</p>
     </div>
   </div>
+  <p class="viz-link-row"><a class="viz-link" href="explore.html#/1" target="_blank" rel="noopener">explore interactively</a></p>
   <aside class="notes">
     <p><b>The regions.</b> The original LP region has corners $(0,0)$, $(2,0)$, $(1, \tfrac32)$.
     After $x_2 \le 1$ the top is cut flat between $(\tfrac23, 1)$ (on $-3x_1 + 2x_2 = 0$) and
@@ -332,6 +333,7 @@
       <p class="small">The reference <code>separate_cover</code> (a DP over weights, lab step 3) returns $(0, 1, 2)$. The next slide strengthens the resulting cut by lifting.</p>
     </div>
   </div>
+  <p class="viz-link-row"><a class="viz-link" href="explore.html#/2" target="_blank" rel="noopener">explore interactively</a></p>
   <aside class="notes">
     <p>The table lists the minimal covers that matter; there are others, like $\{0,2,3\}$ or
     $\{2, 4\}$, all with cost at least 1. Every cover of this row needs total weight at least
@@ -368,6 +370,7 @@
       </div>
     </div>
   </div>
+  <p class="viz-link-row"><a class="viz-link" href="explore.html#/2" target="_blank" rel="noopener">explore interactively</a></p>
   <aside class="notes">
     <p>Lifting is a general technique, not specific to covers: start from a valid
     inequality for a restriction of the problem (here, the variables outside $C$ fixed

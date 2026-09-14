@@ -51,7 +51,7 @@
       <p class="small">Inside branch-and-cut, Pareto-optimal cuts, LP-first, logic-based Benders.</p></div>
   </div>
   <div class="box good"><span class="label">getting around</span>
-    <p class="small">Words with a <span class="term" data-term="Benders decomposition">dotted underline</span> are glossary terms: click one for its definition. <kbd>G</kbd> lists every term in the unit, <kbd>N</kbd> shows the notes.</p>
+    <p class="small">Words with a <span class="term" data-term="Benders decomposition">dotted underline</span> are glossary terms: click one for its definition. <kbd>G</kbd> lists every term in the unit, <kbd>N</kbd> shows the notes. Optional extra: <a href="explore.html" target="_blank" rel="noopener">interactive figures</a>, linked from the slides they support by a small ▸ chip; skip them freely.</p>
   </div>
   <aside class="notes">
     <p>The lab builds everything in sections 1 and 3 and the two accelerations of section 4 that
@@ -129,6 +129,7 @@
       <p class="small">With 2 facilities this table is the whole problem. With 30 it has $2^{30}$ rows, and Benders builds only the part it needs.</p>
     </div>
   </div>
+  <p class="viz-link-row"><a class="viz-link" href="explore.html#/1" target="_blank" rel="noopener">explore interactively</a></p>
   <aside class="notes">
     <p><b>Reading the recourse.</b> With A open and demand 8: A serves its capacity 5 at cost 1
     each, and 3 units go unmet at 10 each: $5 + 30 = 35$. With both open and demand 8: A serves
@@ -250,6 +251,7 @@
       <p class="small">The master is a MIP that grows by a row per iteration and is re-solved each time. That re-solve is the method's cost centre, and section 4 is mostly about avoiding it.</p>
     </div>
   </div>
+  <p class="viz-link-row"><a class="viz-link" href="explore.html#/1" target="_blank" rel="noopener">explore interactively</a></p>
   <aside class="notes">
     <p><b>The example, iteration by iteration.</b> Iteration 0: the master has no cuts and
     $\theta \ge 0$, so it opens nothing: LB 0, and the true cost of "none" is 60. Iteration 1:

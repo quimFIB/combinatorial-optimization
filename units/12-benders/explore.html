@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>12 · Explore: Benders decomposition</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+<link rel="stylesheet" href="../../slides/deck.css">
+<link rel="stylesheet" href="../../slides/viz/viz.css">
+<link rel="stylesheet" href="../../slides/viz/widgets/decomp.css">
+</head>
+<body data-trunk="ip">
+<div class="reveal"><div class="slides">
+
+<section class="title-slide">
+  <p class="eyebrow">optional · interactive figures</p>
+  <div class="unit-no">12</div>
+  <h1>Explore: Benders decomposition</h1>
+  <p class="lede">Benders' master replayed: what it believes each first-stage choice costs, how each cut corrects it, and the two bounds meeting.</p>
+  <p class="meta"><span>optional: nothing in the lab depends on it</span><span><a href="slides.html">back to the slides</a></span></p>
+  <aside class="notes">
+    <p>These figures support the slides; they don't replace them, and the unit is complete
+    without them. Each one is computed from the unit's own data or reference solution, so
+    what you see agrees with the numbers on the slides.</p>
+    <p>Inside a figure, the arrow keys and drags belong to the figure; click outside it (or
+    press Esc) to use them for the slides again.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">12 · explore</p>
+  <h2>What the master believes</h2>
+  <div class="viz" data-viz="benders" data-key="runs"></div>
+  <p class="small muted">Try: step the deck's example (three iterations), then the no-penalty version and the three-facility instance. Static versions: <a href="slides.html#/4">the example</a>, <a href="slides.html#/7">the loop</a>.</p>
+  <aside class="notes">
+    <p><b>What it shows.</b> One bar pair per first-stage choice (which facilities to open). The
+    outline is its true cost: opening cost plus the probability-weighted recourse, solved
+    exactly. The filled bar is what the Benders master believes it costs, from the cuts it has
+    so far. The master picks the lowest filled bar, which is the lower bound; solving the
+    scenarios there gives an upper bound and new cuts, which raise the filled bars. The loop
+    ends when the lowest filled bar reaches the best outline.</p>
+    <ul>
+      <li><b>The deck's example</b>: none (LB 0, UB 60), then both (LB 16, UB 25), then LB = UB = 25.</li>
+      <li><b>All demand must be met</b>: at "none" both scenarios are infeasible, so two feasibility cuts remove every choice with too little capacity.</li>
+      <li><b>Three facilities, loose capacities</b> (<code>StochasticFacility.random(3, 4, 2, seed=0, capacity_ratio=3.0)</code>): six iterations, visiting five different choices before the bounds meet. The "none" bar is off the scale and marked with its value.</li>
+    </ul>
+    <p><b>Data.</b> Recorded by <code>slides/viz/traces/u12.py</code>, which runs the reference
+    multi-cut loop with unit 12's <code>solve_master</code>, <code>second_stage</code>,
+    <code>optimality_cut</code> and <code>feasibility_cut</code>, and evaluates the master's cuts
+    at every choice.</p>
+  </aside>
+</section>
+
+</div></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/plugin/highlight/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<script src="../../slides/deck.js"></script>
+<script src="../../slides/viz/viz.js"></script>
+<script src="../../slides/viz/widgets/decomp.js"></script>
+<script src="viz-data.js"></script>
+</body>
+</html>

@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>09 · Explore: separation and optimization</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+<link rel="stylesheet" href="../../slides/deck.css">
+<link rel="stylesheet" href="../../slides/viz/viz.css">
+<link rel="stylesheet" href="../../slides/viz/widgets/ip.css">
+</head>
+<body data-trunk="ip">
+<div class="reveal"><div class="slides">
+
+<section class="title-slide">
+  <p class="eyebrow">optional · interactive figures</p>
+  <div class="unit-no">09</div>
+  <h1>Explore: separation and optimization</h1>
+  <p class="lede">Merge vertices with Stoer–Wagner until the minimum cut appears, and drag a point to see separation become optimization over the polar.</p>
+  <p class="meta"><span>optional: nothing in the lab depends on it</span><span><a href="slides.html">back to the slides</a></span></p>
+  <aside class="notes">
+    <p>These figures support the slides; they don't replace them, and the unit is complete
+    without them. Each one is computed from the unit's own data or reference solution, so
+    what you see agrees with the numbers on the slides.</p>
+    <p>Inside a figure, the arrow keys and drags belong to the figure; click outside it (or
+    press Esc) to use them for the slides again.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">09 · explore</p>
+  <h2>Stoer–Wagner, phase by phase</h2>
+  <div class="viz" data-viz="stoer-wagner" data-runs="four,six"></div>
+  <p class="small muted">Try: step through the four-vertex graph, then the six cities. Static version: <a href="slides.html#/10">the oracle, on six cities</a>.</p>
+  <aside class="notes">
+    <p><b>What it shows.</b> The global minimum cut by Stoer–Wagner. Each phase builds a
+    maximum-adjacency order (filled: just added; ringed: added earlier; numbers: how strongly
+    each remaining group is attached), takes the last group's attachment as a candidate cut
+    (red edges), and merges the last two groups (shaded bands).</p>
+    <p>On the six cities the best cut is $\{3, 4, 5\}$ with weight 1: below 2, so the subtour
+    row for that set is violated even though every degree is 2 and the support graph is
+    connected. Recorded by <code>slides/viz/traces/u09.py</code>, which copies the reference
+    <code>min_cut</code> loop with a record of every step and checks its result against the
+    reference function.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">09 · explore</p>
+  <h2>Separating by optimizing over the polar</h2>
+  <div class="viz" data-viz="polar" data-shapes='[{"title": "a square: |x₁| ≤ 1, |x₂| ≤ 1", "rows": [[1, 0], [-1, 0], [0, 1], [0, -1]]}, {"title": "a triangle: x₁ ≥ −1, x₂ ≥ −1, x₁ + x₂ ≤ 1", "rows": [[-1, 0], [0, -1], [1, 1]]}, {"title": "a hexagon: |x₁|, |x₂|, |x₁ + x₂| ≤ 1", "rows": [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [-1, -1]]}]' data-y="1.5,0.5"></div>
+  <p class="small muted">Try: drag y inside and outside the square; switch to the triangle and the hexagon. Static version: <a href="slides.html#/5">a square and its polar</a>.</p>
+  <aside class="notes">
+    <p><b>What it shows.</b> For $P = \{x : a_i \cdot x \le 1\}$ the polar $P^\circ$ is the convex
+    hull of the rows $a_i$. Deciding whether $y$ is in $P$, and finding a violated row if not,
+    is maximizing $a \cdot y$ over $P^\circ$: the best vertex is the most violated row. On the
+    right, the dashed line $\{a : a \cdot y = 1\}$ keeps all of $P^\circ$ on one side exactly when
+    $y \in P$. Everything is computed in the page from the rows written in this file.</p>
+  </aside>
+</section>
+
+</div></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/plugin/highlight/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<script src="../../slides/deck.js"></script>
+<script src="../../slides/viz/viz.js"></script>
+<script src="../../slides/viz/widgets/ip.js"></script>
+<script src="viz-data.js"></script>
+</body>
+</html>

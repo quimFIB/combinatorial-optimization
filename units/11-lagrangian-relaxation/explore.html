@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>11 · Explore: Lagrangian relaxation</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+<link rel="stylesheet" href="../../slides/deck.css">
+<link rel="stylesheet" href="../../slides/viz/viz.css">
+<link rel="stylesheet" href="../../slides/viz/widgets/decomp.css">
+</head>
+<body data-trunk="ip">
+<div class="reveal"><div class="slides">
+
+<section class="title-slide">
+  <p class="eyebrow">optional · interactive figures</p>
+  <div class="unit-no">11</div>
+  <h1>Explore: Lagrangian relaxation</h1>
+  <p class="lede">Pick a price and read the bound it gives, watch subgradient steps zig-zag or settle, and see 1-trees become a tour.</p>
+  <p class="meta"><span>optional: nothing in the lab depends on it</span><span><a href="slides.html">back to the slides</a></span></p>
+  <aside class="notes">
+    <p>These figures support the slides; they don't replace them, and the unit is complete
+    without them. Each one is computed from the unit's own data or reference solution, so
+    what you see agrees with the numbers on the slides.</p>
+    <p>Inside a figure, the arrow keys and drags belong to the figure; click outside it (or
+    press Esc) to use them for the slides again.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">11 · explore</p>
+  <h2>Pick a price, read the bound</h2>
+  <div class="viz" data-viz="lagrangian" data-key="example"></div>
+  <p class="small muted">Try: drag the dot to u = 1, 4/3 and 2; watch which items are bought and the sign of g. Static version: <a href="slides.html#/4">L(u) on a three-variable example</a>.</p>
+  <aside class="notes">
+    <p><b>What it shows.</b> The deck's example, $\min 3x_1 + 5x_2 + 4x_3$ with the row
+    $2x_1 + 4x_2 + 3x_3 \ge 5$ dualised. For each price $u$ the relaxation buys every item whose
+    priced cost $c_j - u\,w_j$ is negative; $L(u)$ is $5u$ plus those costs. The curve, the table
+    and the subgradient are computed in the page from the costs and weights recorded by
+    <code>slides/viz/traces/u11.py</code>. The faint line is the affine piece of the current
+    purchase: $L$ is the lowest of these pieces, which is why it is concave.</p>
+    <ul>
+      <li>$u = 1$: nothing bought, $g = 5$: raise the price.</li>
+      <li>$u = 4/3$: the peak, $L = 19/3 \approx 6.33$, the LP bound; item 3 is exactly indifferent.</li>
+      <li>$u = 2$: everything bought, $g = -4$: lower it.</li>
+    </ul>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">11 · explore</p>
+  <h2>Subgradient steps</h2>
+  <div class="viz" data-viz="subgrad" data-key="subgradient" data-example="example"></div>
+  <p class="small muted">Try: step through λ fixed (it zig-zags forever), then switch to halving. Static version: <a href="slides.html#/8">subgradient steps, on the example</a>.</p>
+  <aside class="notes">
+    <p><b>What it shows.</b> Twelve iterations of unit 11's reference
+    <code>subgradient_ascent</code> on the example, with the Polyak step and target 7, the
+    integer optimum. With $\lambda = 1$ fixed it bounces between $u = 1.4$ and $u = 1$ forever.
+    With the reference's halving rule ($\lambda$ halved as soon as a step fails to set a new best,
+    <code>patience=1</code>) it closes in on $u = 4/3$.</p>
+    <p>The halving run differs slightly from the slide's table after step 4: the slide halves
+    $\lambda$ <em>after</em> taking the step, the reference halves it before computing the next
+    one. Both climb toward 6.33.</p>
+  </aside>
+</section>
+
+<section>
+  <p class="eyebrow">11 · explore</p>
+  <h2>1-trees, priced into a tour</h2>
+  <div class="viz" data-viz="heldkarp" data-key="heldkarp"></div>
+  <p class="small muted">Try: step the five cities (one step to a tour), then the seven, where the bound drops before it climbs. Static version: <a href="slides.html#/12">a 1-tree on five cities</a>.</p>
+  <aside class="notes">
+    <p><b>What it shows.</b> The minimum 1-tree under the current vertex penalties $\pi$, its
+    degrees, and the Lagrangian bound. Vertices with degree above 2 (red) get dearer, leaves
+    (outlined) cheaper, and the next 1-tree changes shape. When every degree is 2 the 1-tree is
+    a tour and the bound equals its length.</p>
+    <ul>
+      <li><b>Five cities</b> (the deck's matrix, drawn schematically): 13, then 14 = the optimal tour.</li>
+      <li><b>Seven random cities</b> (<code>TSP.random(7, seed=2)</code>, drawn at their coordinates): 218, then 197 (a step down), then up to 266, the optimal tour.</li>
+    </ul>
+    <p><b>Data.</b> Unit 11's reference <code>one_tree</code> and <code>held_karp_bound</code>; the
+    optimal tours by brute force.</p>
+  </aside>
+</section>
+
+</div></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/plugin/highlight/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<script src="../../slides/deck.js"></script>
+<script src="../../slides/viz/viz.js"></script>
+<script src="../../slides/viz/widgets/decomp.js"></script>
+<script src="viz-data.js"></script>
+</body>
+</html>
