@@ -134,7 +134,7 @@ def index_html(units: list[dict]) -> str:
 <main>
   <h1>Combinatorial optimization</h1>
   <p class="intro">The theory part of a self-study course: {len(units)} slide decks with speaker notes,
-  clickable glossary terms (press <b>G</b> in a deck) and a reading mode (<b>R</b>), plus optional interactive
+  clickable glossary terms (press <b>G</b> in a deck), a reading mode (<b>R</b>) and <b>M</b> to come back here, plus optional interactive
   figures. The labs, their tests and the reference solutions are not part of this site; commands such as
   <code>uv run co lab 07</code> in the decks refer to the course repository. See also the
   <a href="curriculum.html">curriculum</a>.</p>
