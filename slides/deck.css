@@ -39,6 +39,9 @@
   --r-link-color-hover: var(--ink);
   --r-selection-background-color: var(--accent-soft);
   --r-selection-color: var(--ink);
+  /* syntax colours; the highlight.js GitHub theme the decks load is light-only */
+  --hl-keyword: #d73a49; --hl-title: #6f42c1; --hl-number: #005cc5; --hl-string: #032f62;
+  --hl-builtin: #e36209; --hl-comment: #6a737d; --hl-name: #22863a; --hl-bullet: #735c0f;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -49,6 +52,8 @@
     --warn: #dd9090; --warn-soft: #2e1c1c; --good: #5cbb82; --good-soft: #17281e;
     --c-root: #e4e9eb; --c-lp: #7fbdc9; --c-ip: #d6a241; --c-comb: #5cbb82;
     --c-cp: #b98fd0; --c-apx: #dd9090; --c-prac: #97a2a8; --c-coda: #8fb0e8;
+    --hl-keyword: #ff7b72; --hl-title: #d2a8ff; --hl-number: #79c0ff; --hl-string: #a5d6ff;
+    --hl-builtin: #ffa657; --hl-comment: #8b949e; --hl-name: #7ee787; --hl-bullet: #f2cc60;
   }
 }
 :root[data-theme="dark"] {
@@ -58,6 +63,8 @@
   --warn: #dd9090; --warn-soft: #2e1c1c; --good: #5cbb82; --good-soft: #17281e;
   --c-root: #e4e9eb; --c-lp: #7fbdc9; --c-ip: #d6a241; --c-comb: #5cbb82;
   --c-cp: #b98fd0; --c-apx: #dd9090; --c-prac: #97a2a8; --c-coda: #8fb0e8;
+  --hl-keyword: #ff7b72; --hl-title: #d2a8ff; --hl-number: #79c0ff; --hl-string: #a5d6ff;
+  --hl-builtin: #ffa657; --hl-comment: #8b949e; --hl-name: #7ee787; --hl-bullet: #f2cc60;
 }
 
 body[data-trunk="lp"] { --unit: var(--c-lp); }
@@ -96,6 +103,20 @@ html, body, .reveal-viewport { background: var(--ground); }
   background: var(--surface); border: 1px solid var(--rule); border-radius: 6px;
 }
 .reveal pre code { background: transparent; padding: .8em 1em; max-height: 560px; line-height: 1.45; }
+.reveal pre, .reveal .hljs, .reveal .hljs-subst, .reveal .hljs-emphasis, .reveal .hljs-strong { color: var(--ink); }
+.reveal .hljs-doctag, .reveal .hljs-keyword, .reveal .hljs-template-tag, .reveal .hljs-template-variable,
+.reveal .hljs-type, .reveal .hljs-variable.language_ { color: var(--hl-keyword); }
+.reveal .hljs-title, .reveal .hljs-title.class_.inherited__ { color: var(--hl-title); }
+.reveal .hljs-attr, .reveal .hljs-attribute, .reveal .hljs-literal, .reveal .hljs-meta, .reveal .hljs-number,
+.reveal .hljs-operator, .reveal .hljs-selector-attr, .reveal .hljs-selector-class, .reveal .hljs-selector-id,
+.reveal .hljs-variable, .reveal .hljs-section { color: var(--hl-number); }
+.reveal .hljs-string, .reveal .hljs-regexp, .reveal .hljs-meta .hljs-string { color: var(--hl-string); }
+.reveal .hljs-built_in, .reveal .hljs-symbol { color: var(--hl-builtin); }
+.reveal .hljs-code, .reveal .hljs-comment, .reveal .hljs-formula { color: var(--hl-comment); }
+.reveal .hljs-name, .reveal .hljs-quote, .reveal .hljs-selector-pseudo, .reveal .hljs-selector-tag,
+.reveal .hljs-addition { color: var(--hl-name); background: transparent; }
+.reveal .hljs-bullet { color: var(--hl-bullet); }
+.reveal .hljs-deletion { color: var(--warn); background: transparent; }
 .reveal table { font-size: .72em; border-collapse: collapse; margin: .3em 0 .8em; }
 .reveal table th, .reveal table td { padding: .32em .8em; border-bottom: 1px solid var(--rule); text-align: left; }
 .reveal table th { font-weight: 600; border-bottom: 2px solid var(--ink); }
