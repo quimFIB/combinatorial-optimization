@@ -40,7 +40,7 @@ Keep ~near[v]~, the distance from v to its nearest chosen centre, and update it 
 ~max(range(n), key=lambda v: (near[v], -v))~. Stop at k centres or when that maximum is 0.
 
 ** Rung 3 — the witness
-After the loop, the farthest point w is at distance r from every centre, and each centre was at
+After the loop, the farthest point w is at distance at least r from every centre, and each centre was at
 least r from the earlier ones when it was chosen (distances only shrink). So k + 1 points lie
 pairwise ≥ r apart. Two of them share an optimal centre, so 2·OPT ≥ r.
 

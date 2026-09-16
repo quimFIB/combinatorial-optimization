@@ -41,7 +41,7 @@ graph, then DFS on the reversed graph in decreasing finish order. For the lab's 
 Search forwards from the removed value's node. If you reach x itself, or a free value, the
 edge was supported: return None. Otherwise every value you reached is matched to a variable
 you reached, and every variable you reached has all its values among them. That set of
-variables is a Hall set, and it contains a's value but not x.
+variables is a Hall set: x isn't in it, but a is among the values it uses up.
 
 ** Functional route
 Reachability is a fixpoint over frozensets: ~grow(seen)~ adds every successor, ~tz.iterate~ repeats it, and

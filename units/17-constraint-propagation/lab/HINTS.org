@@ -113,7 +113,7 @@ Givens are singleton domains.
 ** Rung 3 — magic series
 ~Count(range(n), i, i)~ for each i, plus ~LinearEq(range(n), [1]*n, n)~ and
 ~LinearEq(range(n), list(range(n)), n)~. Without the last one the answers are the same, but the
-search is twice as long.
+search takes two to three and a half times as many nodes (n = 4 … 20).
 
 ** Functional route
 Models are data: lists of domains and lists of propagators built by comprehensions. Sudoku's peer pairs

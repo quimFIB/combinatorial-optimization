@@ -70,8 +70,8 @@ with step 1 gives SAT → set cover, one line, and the solution maps compose the
 ** Rung 2 — the guarantee
 Rounding loses less than K per item, so less than nK = ε·vmax in total. Because every usable item
 fits alone, OPT ≥ vmax, so the loss is at most ε·OPT. The table has at most n²/ε columns, giving
-O(n³/ε) time. The tests include instances where dropping the "fits alone" filter, or dividing by
-vmax instead of vmax/n, breaks it.
+O(n³/ε) time. The tests include instances where dropping the "fits alone" filter, or scaling by
+ε·vmax instead of ε·vmax/n, breaks it.
 
 ** Functional route
 ~itertools.accumulate(items, add_item, initial=(0,) + (inf,) * total)~ keeps one table per item;
