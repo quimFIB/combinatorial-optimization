@@ -142,10 +142,10 @@ uv run co then 00
 ```
 
 This times your oracle on 2ⁿ, (*n*−1)! and B(*n*) spaces and extrapolates the
-largest *n* that fits in a minute, an hour and a year. The reference machine
-reached 22, 11 and 12 in about 3–9 seconds each. The style shows up in these
-numbers: the `reduce` oracle fits n = 24 vertex-cover candidates in a minute,
-the loop n = 26, because building a new accumulator per candidate costs time. Your numbers are the size limit
+largest *n* that fits in a minute, an hour and a year. In a minute, the
+reference machine fits n = 11 for TSP and n = 12 for bin packing. The style
+shows up in the vertex-cover number: the `reduce` oracle fits n = 24 there, the
+loop n = 25, because building a new accumulator per candidate costs time. Your numbers are the size limit
 for every "check against brute force" test in the rest of the course.
 
 ## Checkpoint

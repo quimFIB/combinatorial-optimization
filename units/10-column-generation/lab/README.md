@@ -117,7 +117,7 @@ items and demands of 100–1000, the compact model would need **2.2 million vari
 Column generation reaches its LP with 577 patterns (61 s, 378 iterations).
 
 **Farley stopping:** at 20 / 40 / 80 items, ⌈bound⌉ = ⌈master⌉ after 47 / 132 / 192 of
-56 / 139 / 203 iterations. It saves 5–15%. The long tail comes after the answer is
+56 / 139 / 203 iterations. It saves 5–16%. The long tail comes after the answer is
 already known.
 
 **Smoothing** (small items, iterations): 64 → 58 at 25 items and 121 → 102 at 50 items
@@ -134,7 +134,7 @@ it's a modest win.
 | 16 | 478.15 | 187 | 2.95 | 483 | 1.0% |
 | 20 | 662.00 | 260 | 27.8 | 738 | 10.3% |
 
-Pricing time grows ×10 per four customers: elementary labelling is exponential, and
+Pricing time grows roughly ×10–30 per four customers: elementary labelling is exponential, and
 this is the step where column generation stops being a toy. The restricted IP gap is
 not the LP gap. The routes generated at the LP optimum rarely contain a good integer
 solution, and closing that needs branch-and-price with branching compatible with

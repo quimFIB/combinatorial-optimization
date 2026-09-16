@@ -101,7 +101,7 @@ Seconds; all algorithms agree on every value.
 
 Push–relabel beats Dinic on the random sparse family and loses badly on deep layered
 networks. Without the gap and global-relabelling heuristics that production codes
-add, it wastes relabels climbing heights one layer at a time. OR-Tools is 10–20×
+add, it wastes relabels climbing heights one layer at a time. OR-Tools is 5–20×
 faster than your best on every family. Min-cost flow agrees with OR-Tools'
 `SimpleMinCostFlow` on all three sizes.
 

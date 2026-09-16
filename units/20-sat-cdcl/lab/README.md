@@ -116,7 +116,7 @@ random 3-SAT at the threshold is exponentially hard for resolution.
 | 10 into 9 | — | 510 308 / 3.6 | 267 023 / 4.7 | 0.50 |
 | 11 into 10 | — | **10.7 M / 124** | 2.2 M / 48.8 | **3.2** |
 
-Each extra hole multiplies MiniSat's conflicts by 5–20. Resolution refutations of pigeonhole need
+Each extra hole multiplies MiniSat's conflicts by roughly 4–20. Resolution refutations of pigeonhole need
 exponential size (Haken 1985), and CDCL is resolution. Kissat's 40× lead at 11 into 10 doesn't
 contradict that. The bound is exponential in n, not a fixed large number, and at n = 10 better
 heuristics and preprocessing still fit inside it. Its own conflict count isn't reported, so this lab

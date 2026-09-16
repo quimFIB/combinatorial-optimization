@@ -116,9 +116,9 @@ with Benders iterations in brackets:
 There is no single crossover. With tight capacities, Benders wins from the smallest instance,
 because a few cuts pin down which facilities must open. With loose capacities, many facility
 sets are nearly equivalent, Benders needs 20–60 iterations, and the extensive form wins until
-single-cut overtakes it between 50 and 100 scenarios. Multi-cut always needs fewer iterations,
-but its master carries S times as many cuts and gets slow to re-solve. LP-first halves the
-integer iterations but spends that saving on LP iterations in this implementation. Pareto
+single-cut overtakes it between 50 and 100 scenarios. Multi-cut never needs more iterations,
+but its master carries S times as many cuts and gets slow to re-solve. LP-first cuts the
+integer iterations by a third or more but spends that saving on LP iterations in this implementation. Pareto
 cuts (S = 25, loose) gave the same 21 iterations and took longer: the duals of this capacitated
 recourse are rarely degenerate. Magnanti–Wong pays off on uncapacitated problems.
 

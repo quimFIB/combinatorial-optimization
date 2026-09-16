@@ -136,7 +136,7 @@ Failure rates of randomized rounding against the union bound 150·e^{−t}:
 | 7 | 127 | 1.984 | 7 | 3.53 | 7 | **64** |
 
 The gap grows like k/2 ≈ ½ log₂ n. Greedy is optimal on every member. Primal–dual pays 2^{k−1}: every
-set here has frequency 2^{k−1}, and the analysis's factor f is attained.
+element here lies in 2^{k−1} sets, and the analysis's factor f is attained.
 
 **Facility location** (30 instances up to 30 facilities × 120 clients): the LP was **integral on all
 30**. JV's mean ratio to the optimum was 1.03–1.06 (worst 1.14), and Σα / OPT was 0.99. The integrality gap you

@@ -118,7 +118,7 @@ run-to-run noise. 1 worker reaches 2047–2049, and the bound is 1828 in all run
 instance the parallel portfolio matters far more than the LNS switch.
 
 **OR-Tools routing** (guided local search, 5 s) on unit 10's CVRPs: 442 / 483 / 680 against LP
-bounds of 422 / 478.2 / 662, which is 4.5% / 1.0% / 2.6% above a bound. That certifies the
+bounds of 422 / 478.2 / 662: gaps of 4.5% / 1.0% / 2.6% of the routing cost. That certifies the
 heuristic's quality without knowing the optimum.
 
 ## Checkpoint
