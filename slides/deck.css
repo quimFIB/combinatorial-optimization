@@ -271,6 +271,9 @@ body.reading { overflow: auto !important; height: auto !important; }
 .reading .reveal .fragment { opacity: 1 !important; visibility: visible !important; }
 .reading .reveal aside.notes { display: block !important; }
 .reading .read-notes { font-size: 16px; line-height: 1.6; color: var(--ink); padding-top: 4px; }
+/* KaTeX's hidden MathML copy does not wrap with the visible math, and on a narrow screen it
+   widened the page past the device, which zoomed the page out and pushed the button bar off. */
+.reading .read-notes { overflow-x: clip; }
 .reading .read-notes p, .reading .read-notes li { font-size: 1em; margin: 0 0 .7em; }
 .reading .read-notes ul { margin: 0 0 .7em 1.2em; }
 .reading .read-notes h4 { font-family: var(--f-display); font-size: 1.1em; margin: 1em 0 .3em; }
@@ -288,20 +291,39 @@ body.reading { overflow: auto !important; height: auto !important; }
 
 /* ------------------------------------------------------------ chrome ------- */
 
-.deck-help {
-  position: fixed; left: 14px; bottom: 10px; z-index: 30;
-  font-family: var(--f-mono); font-size: 11px; color: var(--ink-faint); letter-spacing: .02em;
+/* The bar of buttons deck.js puts bottom left: one per key, so touch screens reach them all. */
+.deck-bar {
+  position: fixed; left: 10px; bottom: 6px; z-index: 30; display: flex; flex-wrap: wrap; gap: 2px;
+  max-width: calc(100vw - 150px);   /* clear of reveal's arrows and slide number, bottom right */
+  font-family: var(--f-mono); font-size: 11px; letter-spacing: .02em;
 }
-.deck-help kbd {
+.deck-bar button, .gl-hint {
+  font: inherit; letter-spacing: inherit; color: var(--ink-faint); background: none;
+  border: 0; border-radius: 4px; padding: 3px 5px; cursor: pointer;
+}
+.deck-bar button:hover, .deck-bar button:focus-visible, .gl-hint:hover { color: var(--ink); background: var(--surface-sunk); }
+.deck-bar button[aria-pressed="true"] { color: var(--unit); }
+.deck-bar kbd {
   font-family: inherit; border: 1px solid var(--rule); border-bottom-width: 2px; border-radius: 3px;
   padding: 0 .35em; background: var(--surface); color: var(--ink-soft);
+}
+/* A touch screen has no keys to hint at, and needs targets a finger can hit. */
+@media (hover: none), (pointer: coarse) {
+  .deck-bar { font-size: 13px; gap: 4px; bottom: 8px; }
+  .deck-bar kbd, .gl-hint kbd { display: none; }
+  .deck-bar button {
+    min-height: 34px; padding: 4px 11px; color: var(--ink-soft);
+    background: var(--surface); border: 1px solid var(--rule);
+  }
+  .gl-foot .gl-hint, .gl-index-head .gl-hint { min-height: 34px; padding: 4px 10px; font-size: 13px; border: 1px solid var(--rule); }
 }
 .reveal .slide-number { background: transparent; color: var(--ink-faint); font-family: var(--f-mono); font-size: 12px; }
 .reveal .progress { color: var(--unit); height: 3px; }
 .reveal .controls { color: var(--unit); }
+.reveal .speaker-notes { padding-bottom: 56px; }   /* last lines clear of the button bar */
 
 @media print {
-  .deck-help { display: none; }
+  .deck-bar { display: none; }
 }
 
 /* ------------------------------------------------------------ glossary ----- */
@@ -327,7 +349,7 @@ body.reading { overflow: auto !important; height: auto !important; }
   cursor: pointer; text-align: left;
 }
 .gl-go:hover { text-decoration: underline; }
-.gl-hint { font: 11px var(--f-mono); color: var(--ink-faint); white-space: nowrap; }
+.gl-hint { font: 11px var(--f-mono); color: var(--ink-faint); white-space: nowrap; }  /* buttons: see .deck-bar */
 .gl-hint kbd, .gl-index kbd {
   font-family: inherit; border: 1px solid var(--rule); border-bottom-width: 2px; border-radius: 3px;
   padding: 0 .35em; background: var(--surface); color: var(--ink-soft);

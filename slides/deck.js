@@ -7,6 +7,9 @@
 //   G   the unit's glossary, searchable; click a term to jump to its slide
 //   M   back to the menu, the site's index.html listing every unit
 //
+// Every key also has a button in the bar at the bottom left, so a tablet or phone,
+// with no keyboard, reaches the same things. On a touch screen the key hints are hidden.
+//
 // Terms: <span class="term">facets</span>, or <span class="term" data-term="tight row">tight</span>
 // when the words on the slide differ from the glossary entry. Clicking one opens its
 // definition. Definitions come from the unit's glossary.js, built from GLOSSARY.org by
@@ -67,11 +70,25 @@
     location.href = url.toString();
   }
 
-  function help(text) {
-    const el = document.createElement("div");
-    el.className = "deck-help";
-    el.innerHTML = text;
+  const touch = matchMedia("(hover: none), (pointer: coarse)").matches;
+
+  // items: [key, label, action]. A button stops its click here, so the document handler
+  // below does not read it as a click outside the glossary and close what it just opened;
+  // and it gives focus back, so Space still advances the deck instead of pressing it again.
+  function bar(items) {
+    const el = document.createElement("nav");
+    el.className = "deck-bar";
+    el.setAttribute("aria-label", "deck controls");
+    for (const [key, label, action] of items) {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.dataset.key = key;
+      b.innerHTML = `<kbd>${key}</kbd> ${label}`;
+      b.addEventListener("click", (e) => { e.stopPropagation(); b.blur(); action(b); });
+      el.appendChild(b);
+    }
     document.body.appendChild(el);
+    return el;
   }
 
   // ---------------------------------------------------------------- glossary
@@ -132,12 +149,13 @@
     pop.setAttribute("role", "dialog");
     pop.innerHTML = entry
       ? `<div class="gl-term">${entry.term_html}</div><div class="gl-def">${entry.html}</div>` +
-        `<div class="gl-foot">${slideLink(entry)}<span class="gl-hint"><kbd>G</kbd> all terms</span></div>`
+        `<div class="gl-foot">${slideLink(entry)}<button class="gl-hint gl-all" type="button"><kbd>G</kbd> all terms</button></div>`
       : `<div class="gl-def">No glossary entry for “${ref}”.</div>`;
     document.body.appendChild(pop);
     renderInline(pop);
     const go = pop.querySelector(".gl-go");
     if (go) go.addEventListener("click", () => goToSlide(entry.slide));
+    pop.querySelector(".gl-all")?.addEventListener("click", (e) => { e.stopPropagation(); openIndex(); });
     const r = termEl.getBoundingClientRect();
     const w = pop.offsetWidth, h = pop.offsetHeight;
     const left = Math.max(12, Math.min(r.left, innerWidth - w - 12));
@@ -157,7 +175,9 @@
     index.className = "gl-index";
     index.innerHTML =
       `<div class="gl-index-head"><input type="search" placeholder="filter ${entries.length} terms" ` +
-      `aria-label="filter terms"><span class="gl-hint"><kbd>Esc</kbd> close</span></div><div class="gl-list"></div>`;
+      `aria-label="filter terms"><button class="gl-hint gl-close" type="button"><kbd>Esc</kbd> close</button></div>` +
+      `<div class="gl-list"></div>`;
+    index.querySelector(".gl-close").addEventListener("click", (e) => { e.stopPropagation(); closeIndex(); });
     const list = index.querySelector(".gl-list");
     let section = null;
     for (const e of entries) {
@@ -189,7 +209,8 @@
       });
     });
     // Focus after this keypress has been delivered, or the G lands in the filter box.
-    setTimeout(() => input.focus(), 0);
+    // Not on a touch screen: the on-screen keyboard would cover the list it opened to show.
+    if (!touch) setTimeout(() => input.focus(), 0);
   }
 
   document.addEventListener("click", (e) => {
@@ -239,7 +260,7 @@
       const hl = RevealHighlight();
       if (hl.hljs) document.querySelectorAll("pre code").forEach((el) => hl.hljs.highlightElement(el));
     }
-    help("<kbd>R</kbd> back to slides &nbsp; <kbd>G</kbd> glossary &nbsp; <kbd>D</kbd> dark &nbsp; <kbd>M</kbd> menu");
+    bar([["R", "slides", toggleReading], ["G", "glossary", openIndex], ["D", "dark", toggleDark], ["M", "menu", toMenu]]);
     document.addEventListener("keydown", (e) => {
       if (e.target.closest("input, textarea")) return;
       if (e.key === "r" || e.key === "R") toggleReading();
@@ -251,8 +272,20 @@
   }
 
   // ---------------------------------------------------------------- slides
-  help("<kbd>N</kbd> notes &nbsp; <kbd>R</kbd> reading mode &nbsp; <kbd>G</kbd> glossary &nbsp; " +
-    "<kbd>D</kbd> dark &nbsp; <kbd>M</kbd> menu &nbsp; <kbd>Esc</kbd> overview");
+  function toggleNotes() {
+    const on = !Reveal.getConfig().showNotes;
+    Reveal.configure({ showNotes: on });
+    store.set("co-notes", on ? "1" : "0");
+    notesButton.setAttribute("aria-pressed", on);
+  }
+
+  const items = [["N", "notes", toggleNotes], ["R", "reading mode", toggleReading], ["G", "glossary", openIndex],
+    ["D", "dark", toggleDark], ["M", "menu", toMenu], ["Esc", "overview", () => Reveal.toggleOverview()]];
+  // iPhone Safari has no fullscreen for pages, so the button appears only where it works.
+  if (document.fullscreenEnabled)
+    items.push(["F", "fullscreen", () => document.fullscreenElement
+      ? document.exitFullscreen() : document.documentElement.requestFullscreen()]);
+  const notesButton = bar(items).querySelector('[data-key="N"]');
 
   Reveal.initialize({
     hash: true,
@@ -267,11 +300,7 @@
     pdfSeparateFragments: false,
     plugins: [RevealHighlight],
     keyboard: {
-      78: () => {                                   // N
-        const on = !Reveal.getConfig().showNotes;
-        Reveal.configure({ showNotes: on });
-        store.set("co-notes", on ? "1" : "0");
-      },
+      78: toggleNotes,                              // N
       82: toggleReading,                            // R
       68: toggleDark,                               // D
       71: openIndex,                                // G
@@ -279,6 +308,7 @@
     },
   });
   Reveal.on("slidechanged", () => { closePop(); closeIndex(); });
+  Reveal.on("ready", () => notesButton.setAttribute("aria-pressed", Reveal.getConfig().showNotes));
 
   // ?check=1 — an authoring aid: visit every slide, then cover the page with a list of
   // equations wider than their column and slides taller than the frame.
