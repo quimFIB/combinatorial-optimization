@@ -293,29 +293,28 @@ body.reading { overflow: auto !important; height: auto !important; }
 
 /* The bar of buttons deck.js puts bottom left: one per key, so touch screens reach them all. */
 .deck-bar {
-  position: fixed; left: 10px; bottom: 6px; z-index: 30; display: flex; flex-wrap: wrap; gap: 2px;
+  position: fixed; left: 10px; bottom: 6px; z-index: 30; display: flex; flex-wrap: wrap; gap: 4px;
   max-width: calc(100vw - 150px);   /* clear of reveal's arrows and slide number, bottom right */
   font-family: var(--f-mono); font-size: 11px; letter-spacing: .02em;
 }
+/* Bordered even with a mouse: as bare text with key hints they read as the old hint strip,
+   and nobody thought to click them. */
 .deck-bar button, .gl-hint {
-  font: inherit; letter-spacing: inherit; color: var(--ink-faint); background: none;
-  border: 0; border-radius: 4px; padding: 3px 5px; cursor: pointer;
+  font: inherit; letter-spacing: inherit; color: var(--ink-soft); background: var(--surface);
+  border: 1px solid var(--rule); border-radius: 4px; padding: 2px 7px 2px 4px; cursor: pointer;
 }
-.deck-bar button:hover, .deck-bar button:focus-visible, .gl-hint:hover { color: var(--ink); background: var(--surface-sunk); }
-.deck-bar button[aria-pressed="true"] { color: var(--unit); }
+.deck-bar button:hover, .deck-bar button:focus-visible, .gl-hint:hover { color: var(--ink); border-color: var(--ink-faint); }
+.deck-bar button[aria-pressed="true"] { color: var(--unit); border-color: var(--unit); }
 .deck-bar kbd {
-  font-family: inherit; border: 1px solid var(--rule); border-bottom-width: 2px; border-radius: 3px;
-  padding: 0 .35em; background: var(--surface); color: var(--ink-soft);
+  font-family: inherit; border: 1px solid var(--rule); border-radius: 3px;
+  padding: 0 .3em; background: var(--surface-sunk); color: var(--ink-faint);
 }
 /* A touch screen has no keys to hint at, and needs targets a finger can hit. */
 @media (hover: none), (pointer: coarse) {
   .deck-bar { font-size: 13px; gap: 4px; bottom: 8px; }
   .deck-bar kbd, .gl-hint kbd { display: none; }
-  .deck-bar button {
-    min-height: 34px; padding: 4px 11px; color: var(--ink-soft);
-    background: var(--surface); border: 1px solid var(--rule);
-  }
-  .gl-foot .gl-hint, .gl-index-head .gl-hint { min-height: 34px; padding: 4px 10px; font-size: 13px; border: 1px solid var(--rule); }
+  .deck-bar button { min-height: 34px; padding: 4px 11px; }
+  .gl-foot .gl-hint, .gl-index-head .gl-hint { min-height: 34px; padding: 4px 10px; font-size: 13px; }
 }
 .reveal .slide-number { background: transparent; color: var(--ink-faint); font-family: var(--f-mono); font-size: 12px; }
 .reveal .progress { color: var(--unit); height: 3px; }
