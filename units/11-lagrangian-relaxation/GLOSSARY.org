@@ -77,7 +77,8 @@ optimizing over \(X\) alone is easy.
   optimal tour.
 - Held–Karp bound :: \(\max_\pi L(\pi)\) over 1-trees. Equal to the subtour LP
   bound, by Geoffrion, since the 1-tree polytope has the integrality property.
-- α-nearness :: An edge's cost in the cheapest 1-tree forced to contain it. LKH
+- α-nearness :: How much the cheapest 1-tree grows when forced to contain an edge:
+  that forced 1-tree's cost minus the minimum 1-tree's. LKH
   builds its candidate edge lists from it.
 - LKH :: Helsgaun's Lin–Kernighan implementation, the best TSP heuristic
   (unit 26).

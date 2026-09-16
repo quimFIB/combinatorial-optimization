@@ -262,7 +262,7 @@ window.GLOSSARY = [
 },
 {
 "term_html": "α-nearness",
-"html": "An edge's cost in the cheapest 1-tree forced to contain it. LKH builds its candidate edge lists from it.",
+"html": "How much the cheapest 1-tree grows when forced to contain an edge: that forced 1-tree's cost minus the minimum 1-tree's. LKH builds its candidate edge lists from it.",
 "section": "Held–Karp",
 "slide": "1-trees and the Held–Karp bound (1970–71)",
 "keys": [
