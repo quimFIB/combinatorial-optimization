@@ -163,17 +163,18 @@
     const axes = layer("viz-axes");
     const ticks = el("g", { class: "viz-ticks" });
     const [stx, sty] = opts.step || [niceStep(x1 - x0), niceStep(y1 - y0)];
+    const [lx, ly] = opts.labelScale || [1, 1];   // tick labels = drawing units × labelScale
     if (opts.grid !== false) {
       const xAxisY = Y(Math.max(y0, Math.min(0, y1))), yAxisX = X(Math.max(x0, Math.min(0, x1)));
       for (let i = Math.ceil(x0 / stx - 1e-9); i * stx <= x1 + 1e-9; i++) {
         const x = i * stx;
         el("line", { x1: X(x), y1: Y(y0), x2: X(x), y2: Y(y1), class: i === 0 ? "viz-axis" : "viz-grid" }, axes);
-        if (i !== 0) text(ticks, X(x), xAxisY + 15, num(x), "viz-tick", "middle");
+        if (i !== 0) text(ticks, X(x), xAxisY + 15, num(x * lx), "viz-tick", "middle");
       }
       for (let i = Math.ceil(y0 / sty - 1e-9); i * sty <= y1 + 1e-9; i++) {
         const y = i * sty;
         el("line", { x1: X(x0), y1: Y(y), x2: X(x1), y2: Y(y), class: i === 0 ? "viz-axis" : "viz-grid" }, axes);
-        if (i !== 0) text(ticks, yAxisX - 8, Y(y) + 4, num(y), "viz-tick", "end");
+        if (i !== 0) text(ticks, yAxisX - 8, Y(y) + 4, num(y * ly), "viz-tick", "end");
       }
     }
     const toData = (evt) => { const q = svgPoint(svg, evt); return inv(q.x, q.y); };

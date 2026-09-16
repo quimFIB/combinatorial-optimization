@@ -116,7 +116,7 @@
     const svg = V.newSvg(left, W, H, "the central path of the polygon and the current point x*(t)");
     const right = html("div", { class: "viz-right" }, host);
     let k = Math.floor(pts.length * 0.45);
-    V.slider(right, { label: "t", min: 0, max: pts.length - 1, step: 1, value: k, format: (i) => num(pts[i].t, pts[i].t < 1 ? 3 : 1) },
+    V.slider(right, { label: "t", min: 0, max: pts.length - 1, step: 1, value: k, format: (i) => num(pts[i].t, pts[i].t < 1 ? 3 : pts[i].t < 10 ? 2 : 1) },
       (i) => { k = i; draw(); });
     const read = html("div", {}, right);
     const names = ["−x ≤ 0", "−y ≤ 0", "x + y ≤ 4", "x − y ≤ 1"];

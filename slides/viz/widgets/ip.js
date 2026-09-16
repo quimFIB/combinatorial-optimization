@@ -316,7 +316,7 @@
         V.table(panel, ["round", "LP optimum", "value", "cut added"], tbl, (i) => (i === k ? "viz-hl" : i > k ? "viz-soft viz-future" : ""));
         html("div", { class: "viz-readout" }, panel, run.lp);
         state.explain = state.cut
-          ? "The dashed red line is the cut from the most fractional row of the optimal tableau. It passes no integer point, and the ring (this round's LP optimum) is on its wrong side. Light red: the region the cuts have removed so far."
+          ? "The dashed red line is the cut from the most fractional row of the optimal tableau. It cuts off no integer point (it may touch some), and the ring (this round's LP optimum) is on its wrong side. Light red: the region the cuts have removed so far."
           : "The LP optimum is integral, so it is the integer optimum: the cuts carved the region down until a corner of it was an integer point.";
       },
     });

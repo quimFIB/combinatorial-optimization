@@ -68,7 +68,7 @@
       <li>Up to ε = 0.45 the rounding is fine enough to keep the optimum.</li>
       <li>At ε = 0.5 (the deck's slide) rounding ties $\{0,2,3\}$ with $\{1,3\}$ and the DP returns the lighter one, 53.</li>
       <li>At ε = 0.55 it is back to 57: rounding is not monotone, only the guarantee is.</li>
-      <li>From ε = 1 on the guarantee says nothing ($\mathrm{OPT} - nK \le 0$), yet the answer stays decent.</li>
+      <li>From ε = 1 on the promised ratio $1 - \varepsilon$ says nothing, and the proof's floor $\mathrm{OPT} - nK$ is down to 1 at ε = 2, yet the answer stays decent: 53, then 44.</li>
     </ul>
   </aside>
 </section>

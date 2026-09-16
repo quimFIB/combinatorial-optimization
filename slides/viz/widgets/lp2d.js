@@ -227,7 +227,7 @@
       render(ctx) {
         const { svg, panel, run, k } = ctx;
         const st = run.states[k], [s0, s1] = frame.scale;
-        const P = V.plot(svg, frame.box, 520, 400);
+        const P = V.plot(svg, frame.box, 520, 400, { labelScale: frame.scale });
         const reg = V.region(frame.rows, frame.box);
         el("polygon", { points: V.polyPoints(P, reg.poly), class: "viz-poly" }, svg);
         for (const v of reg.vertices) el("circle", { cx: P.X(v[0]), cy: P.Y(v[1]), r: 4, class: "viz-vertex" }, svg);
@@ -238,7 +238,7 @@
         run.states.slice(0, k + 1).forEach((s, i) =>
           el("circle", { cx: P.X(s.point[0] / s0), cy: P.Y(s.point[1] / s1), r: i === k ? 8 : 5, class: i === k ? "viz-vertex-opt" : "viz-vertex-seen" }, svg));
         V.text(svg, P.X(st.point[0] / s0) + 12, P.Y(st.point[1] / s1) - 10, `(${st.point_exact.join(", ")})  z = ${st.z}`, "viz-probe-text", "start");
-        if (s0 > 1 || s1 > 1) V.text(svg, 512, 16, `grid: x in steps of ${s0}, y in steps of ${s1}`, "viz-tick", "end");
+        if (s0 !== s1) V.text(svg, 512, 16, "x and y drawn at different scales", "viz-tick", "end");
         P.raise();
 
         const header = ["basis", ...run.columns, "rhs", "ratio"];
