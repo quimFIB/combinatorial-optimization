@@ -10,10 +10,17 @@
 // Every key also has a button in the bar at the bottom left, so a tablet or phone,
 // with no keyboard, reaches the same things. On a touch screen the key hints are hidden.
 //
-// Terms: <span class="term">facets</span>, or <span class="term" data-term="tight row">tight</span>
+// Terms: <span class="term">facets</span>, or <span class="term" data-term="tight constraint">tight</span>
 // when the words on the slide differ from the glossary entry. Clicking one opens its
 // definition. Definitions come from the unit's glossary.js, built from GLOSSARY.org by
 // `co slides` / `co glossary`; this file loads it, so decks need no extra script tag.
+//
+// References: <span class="ref" data-ref="c3">constraint 3</span> names a piece of the
+// running example. Hovering it (tapping, on a touch screen) shows what it is, so the
+// reader need not page back. What each name shows is written once per deck, before
+// <div class="reveal">, as
+//   <div class="refs" hidden><template data-ref="c3">$x + y \le 4$ …</template></div>
+// A term is a concept and opens its definition; a ref is an object and shows it.
 //
 // (No speaker-window plugin: reveal 5.1.0's notes plugin from cdnjs throws on
 // load and aborts initialisation. N and R cover the same need.)
@@ -213,7 +220,47 @@
     if (!touch) setTimeout(() => input.focus(), 0);
   }
 
+  // ---------------------------------------------------------------- refs
+  // Hover shows a ref and leaving hides it; a click (or a tap) pins it until the next
+  // click elsewhere. The card is placed like a glossary popover.
+  const refTemplates = new Map(Array.from(document.querySelectorAll(".refs template[data-ref]"))
+    .map((t) => [t.dataset.ref, t]));
+  let refCard = null, refPinned = false;
+  function closeRef() { if (refCard) { refCard.remove(); refCard = null; refPinned = false; } }
+
+  function openRef(el, pinned) {
+    closeRef();
+    const tpl = refTemplates.get(el.dataset.ref);
+    refCard = document.createElement("div");
+    refCard.className = "ref-card";
+    refCard.setAttribute("role", "tooltip");
+    refCard.dataset.for = el.dataset.ref;
+    if (tpl) refCard.appendChild(tpl.content.cloneNode(true));
+    else refCard.textContent = `No reference named “${el.dataset.ref}”.`;
+    refPinned = pinned;
+    document.body.appendChild(refCard);
+    renderInline(refCard);
+    const r = el.getBoundingClientRect();
+    const w = refCard.offsetWidth, h = refCard.offsetHeight;
+    refCard.style.left = Math.max(12, Math.min(r.left, innerWidth - w - 12)) + "px";
+    const below = r.bottom + 8 + h < innerHeight - 12;
+    refCard.style.top = (below ? r.bottom + 8 : Math.max(12, r.top - h - 8)) + "px";
+  }
+
+  // A mouse pointer, not the device's media query: a touchscreen laptop has both.
+  document.addEventListener("pointerover", (e) => {
+    const el = e.pointerType === "mouse" && e.target.closest(".ref");
+    if (el && !refPinned && refCard?.dataset.for !== el.dataset.ref) openRef(el, false);
+  });
+  document.addEventListener("pointerout", (e) => {
+    const el = e.pointerType === "mouse" && e.target.closest(".ref");
+    if (el && !refPinned && !el.contains(e.relatedTarget)) closeRef();
+  });
+
   document.addEventListener("click", (e) => {
+    const r = e.target.closest(".ref");
+    if (r) { e.preventDefault(); closePop(); openRef(r, true); return; }
+    if (refCard && !e.target.closest(".ref-card")) closeRef();
     const t = e.target.closest(".term");
     if (t) { e.preventDefault(); openPop(t); return; }
     if (pop && !e.target.closest(".gl-pop")) closePop();
@@ -221,8 +268,8 @@
   });
   // Capture phase, so Esc closes a popover before reveal opens its overview.
   window.addEventListener("keydown", (e) => {
-    if (e.key === "Escape" && (pop || index)) {
-      closePop(); closeIndex();
+    if (e.key === "Escape" && (pop || index || refCard)) {
+      closePop(); closeIndex(); closeRef();
       e.stopImmediatePropagation(); e.preventDefault();
     }
   }, true);
@@ -307,7 +354,7 @@
       77: toMenu,                                   // M
     },
   });
-  Reveal.on("slidechanged", () => { closePop(); closeIndex(); });
+  Reveal.on("slidechanged", () => { closePop(); closeIndex(); closeRef(); });
   Reveal.on("ready", () => notesButton.setAttribute("aria-pressed", Reveal.getConfig().showNotes));
 
   // ?check=1 — an authoring aid: visit every slide, then cover the page with a list of

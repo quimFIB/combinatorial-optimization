@@ -1,5 +1,5 @@
 // Drive a deck in a headless browser over the DevTools protocol (node >= 22 for WebSocket):
-// open every marked term's popover, follow one slide link, and check G and Esc.
+// open every marked term's popover, check every ref resolves, follow one slide link, check G and Esc.
 // Called by deck-check.sh; prints a JSON report and exits 1 if anything failed.
 import { spawn } from "node:child_process";
 
@@ -79,6 +79,27 @@ report.jump = await ev(`(async () => {
   return { ok: true, note: 'no cross-slide link to test' };
 })()`);
 
+// Every <span class="ref"> must name a template in the deck's registry, and clicking one
+// must show a card with that template's content.
+report.refs = await ev(`(async () => {
+  const names = new Set([...document.querySelectorAll('.refs template[data-ref]')].map((t) => t.dataset.ref));
+  const refs = [...document.querySelectorAll('.reveal .ref')];
+  const missing = [...new Set(refs.map((r) => r.dataset.ref).filter((n) => !names.has(n)))];
+  const unused = [...names].filter((n) => !refs.some((r) => r.dataset.ref === n));
+  let opens = null;
+  if (refs.length) {
+    const r = refs[0], i = Reveal.getSlides().indexOf(r.closest('.slides > section'));
+    Reveal.slide(i);
+    await new Promise((res) => setTimeout(res, 50));
+    r.click();
+    await new Promise((res) => setTimeout(res, 20));
+    const card = document.querySelector('.ref-card');
+    opens = !!card && card.dataset.for === r.dataset.ref && !/No reference/.test(card.textContent);
+    document.body.click();
+  }
+  return { count: refs.length, missing, unused, opens };
+})()`);
+
 await ev("Reveal.slide(1)");
 await sleep(200);
 await key("g", "KeyG", 71);
@@ -89,5 +110,6 @@ await sleep(200);
 report.escape = await ev("({closed: !document.querySelector('.gl-index'), noOverview: !Reveal.isOverview()})");
 
 const ok = report.glossaryEntries > 0 && report.unresolved.length === 0 && report.jump.ok &&
+  report.refs.missing.length === 0 && report.refs.opens !== false &&
   report.gIndex.open && report.gIndex.emptyFilter && report.escape.closed && report.escape.noOverview;
 done(ok ? 0 : 1, { ok, ...report });

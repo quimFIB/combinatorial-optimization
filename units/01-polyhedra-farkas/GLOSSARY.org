@@ -24,7 +24,7 @@ product of row \(a_i\) with \(x\).
 - valid inequality :: \(cx \le \delta\) is valid for \(P\) if every point of \(P\)
   satisfies it. /Slide: Faces./
 - face :: \(P \cap \{x : cx = \delta\}\) for a valid inequality \(cx \le \delta\).
-  Equivalently: turn some of the rows of \(Ax \le b\) into equalities. \(\emptyset\)
+  Equivalently: turn some of the constraints of \(Ax \le b\) into equalities. \(\emptyset\)
   and \(P\) itself are the /improper/ faces.
 - vertex, edge, facet :: Faces of dimension \(0\), \(1\), and \(\dim P - 1\).
 - redundant inequality :: One that can be deleted without changing \(P\). A
@@ -33,33 +33,37 @@ product of row \(a_i\) with \(x\).
 
 * Corners
 
-- tight row :: Row \(i\) is tight at \(x\) when it holds with equality, \(a_i x = b_i\):
-  \(x\) sits on that constraint's hyperplane. Other books say /active/ or
-  /binding/. /Slide: Tight rows, and counting them./
-- \(I(x)\) :: The set of rows tight at \(x\), \(\{i : a_i x = b_i\}\).
-- rank of the tight rows :: The rank of the matrix whose rows are
+- tight constraint :: Constraint \(i\) is tight at the point \(x\) when it holds
+  with equality there, \(a_i x = b_i\): \(x\) lies on that constraint's line (its
+  hyperplane), pressed against that wall. Tightness belongs to a constraint /at a
+  point/: \(x + y \le 4\) is tight at \((2.5, 1.5)\) and not at \((1, 1)\). Other
+  books say /active/ or /binding/, and matrix-minded ones say /tight row/, since
+  constraint \(i\) is row \(i\) of \(Ax \le b\). /Slide: Tight constraints, and
+  counting them./
+- \(I(x)\) :: The set of constraints tight at \(x\), \(\{i : a_i x = b_i\}\).
+- rank of the tight constraints :: The rank of the matrix whose rows are
   \(\{a_i : i \in I(x)\}\): how many independent directions the tight constraints
   pin down. Rank \(n\) means they fix \(x\) completely. Sometimes shortened to
   "tight rank"; not a separate term.
-  /Slide: Tight rows, and counting them./
+  /Slide: Tight constraints, and counting them./
 - vertex :: A point \(x \in P\) that some objective \(c\) makes the /unique/
   maximizer of \(cy\) over \(P\). The geometric name for a corner. /Slide:
   Vertex, extreme point, basic feasible solution./
 - extreme point :: A point of \(P\) that is not a strict convex combination
   \(\lambda y + (1-\lambda) z\) of two different points of \(P\). The convexity name.
-- basic feasible solution (BFS) :: A point of \(P\) whose tight rows have rank \(n\).
+- basic feasible solution (BFS) :: A point of \(P\) whose tight constraints have rank \(n\).
   The algebraic name, and the one a computer can check. In standard form it is
   usually stated with columns instead: the columns of \(A\) for the positive
   entries of \(x\) are independent.
-- basic solution :: A point where \(n\) linearly independent rows are tight,
+- basic solution :: A point where \(n\) linearly independent constraints are tight,
   whether or not it lies in \(P\). Lab step 3 generates these and discards the
-  infeasible ones. /Slide: Finding corners by trying pairs of rows./
-- basis :: A choice of \(n\) independent rows whose equalities determine a basic
+  infeasible ones. /Slide: Finding corners by trying pairs of constraints./
+- basis :: A choice of \(n\) independent constraints whose equalities determine a basic
   solution.
-- degenerate vertex :: A vertex with more than \(n\) tight rows, \(|I(x)| > n\), so
+- degenerate vertex :: A vertex with more than \(n\) tight constraints, \(|I(x)| > n\), so
   several bases name the same point. Example: adding \(3x - y \le 6\) to the
-  running example makes \((2.5, 1.5)\) tight on 3 rows with rank 2; in
-  \(\mathbb{R}^3\), the apex of a square pyramid has 4 tight rows and rank 3.
+  running example makes \((2.5, 1.5)\) tight on 3 constraints with rank 2; in
+  \(\mathbb{R}^3\), the apex of a square pyramid has 4 tight constraints and rank 3.
   Harmless geometrically; the reason simplex can cycle (unit 02), and the reason
   lab step 3 must deduplicate.
 - pointed :: \(P\) has at least one vertex. For nonempty \(P\) this is the same as
@@ -68,7 +72,7 @@ product of row \(a_i\) with \(x\).
 - lineality space :: \(\{d : Ad = 0\}\), the directions along which \(P\) contains
   whole lines. \(P\) is pointed exactly when this is \(\{0\}\).
 - crossover :: Walking from an arbitrary point of \(P\) to a BFS by moving along
-  the null space of the tight rows until the rank reaches \(n\). How solvers turn
+  the null space of the tight constraints until the rank reaches \(n\). How solvers turn
   an interior-point answer into a basic one (unit 04).
 
 * Two descriptions
@@ -94,24 +98,24 @@ product of row \(a_i\) with \(x\).
 - projection :: \(\{x' : \exists x_k,\ (x', x_k) \in P\}\), the shadow of \(P\) with
   one coordinate dropped. Always a polyhedron. /Slide: Eliminating one variable./
 - Fourier–Motzkin elimination (FM) :: Computing that projection by pairing every
-  row that bounds \(x_k\) from above with every row that bounds it from below,
+  constraint that bounds \(x_k\) from above with every constraint that bounds it from below,
   using positive multipliers so \(x_k\) cancels. Gaussian elimination for
   inequalities.
-- \(Z\), \(U\), \(L\) :: The rows with \(a_{ik} = 0\), \(a_{ik} > 0\) (upper bounds on
-  \(x_k\)) and \(a_{ik} < 0\) (lower bounds). FM outputs \(|Z| + |U|\cdot|L|\) rows.
+- \(Z\), \(U\), \(L\) :: The constraints with \(a_{ik} = 0\), \(a_{ik} > 0\) (upper bounds on
+  \(x_k\)) and \(a_{ik} < 0\) (lower bounds). FM outputs \(|Z| + |U|\cdot|L|\) constraints.
 - nonnegative combination :: \(\sum y_i (a_i, b_i)\) with every \(y_i \ge 0\). The
   only way to combine inequalities that keeps them true; the one fact FM and
   Farkas both rest on.
-- FM blow-up :: Row count going roughly \(m \to m^2/4\) per eliminated variable,
+- FM blow-up :: Constraint count going roughly \(m \to m^2/4\) per eliminated variable,
   almost all of it redundant. /Slide: Deciding feasibility, and the explosion./
 - Chernikov's rule, Imbert's acceleration :: Bookkeeping that discards redundant
-  FM rows by tracking which original rows each derived row came from. Not
+  FM constraints by tracking which original constraints each derived constraint came from. Not
   implemented in the lab; named in the slide notes.
 
 * Farkas' lemma
 
 - Farkas certificate :: \(y \in \mathbb{R}^m\) with \(y \ge 0\), \(y^\top A = 0\),
-  \(y^\top b < 0\): a nonnegative combination of the rows that reads \(0 \le\)
+  \(y^\top b < 0\): a nonnegative combination of the constraints that reads \(0 \le\)
   (negative). It proves \(Ax \le b\) has no solution. /Slide: A certificate of
   infeasibility./
 - Farkas' lemma :: Exactly one of: \(Ax \le b\) has a solution, or a Farkas
@@ -120,8 +124,8 @@ product of row \(a_i\) with \(x\).
 - theorem of the alternative :: Any statement of the shape "exactly one of these
   two systems is solvable". Gordan's, Stiemke's and Motzkin's are relatives of
   Farkas'.
-- tail trick :: Append the unit vector \(e_i\) to row \(i\) as extra columns that
-  are never eliminated. After FM, a row \(0 \le c\) with \(c < 0\) carries its own
+- tail trick :: Append the unit vector \(e_i\) to constraint \(i\) as extra columns that
+  are never eliminated. After FM, a constraint \(0 \le c\) with \(c < 0\) carries its own
   certificate in those columns. Lab step 5. /Slide: Farkas, constructively./
 - separating hyperplane :: A hyperplane with a set on one side and a point
   strictly on the other. Farkas, read geometrically: a point outside a finitely
@@ -140,13 +144,13 @@ product of row \(a_i\) with \(x\).
   theorem of LP./
 - LP relaxation :: The LP obtained from an integer program by dropping
   integrality. Why Part II needs this unit. /Title slide notes./
-- Chvátal–Gomory cut :: A nonnegative combination of rows with integer
+- Chvátal–Gomory cut :: A nonnegative combination of constraints with integer
   coefficients and the right side rounded down: Farkas plus rounding (unit 08).
   /Slide: Why this is the root of the trunk./
 
 * In the lab
 
-- row ~(a, b)~ :: A tuple of Python ints meaning \(a \cdot x \le b\). Exact
+- row ~(a, b)~ :: One constraint, as a tuple of Python ints meaning \(a \cdot x \le b\). Exact
   integers throughout, so a certificate is a proof and not an approximation.
 - ~normalize~ :: Divides a row by the gcd of its entries, so equal rows compare
   equal and FM can deduplicate.

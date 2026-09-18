@@ -23,7 +23,7 @@
   //   data-shadow="y"  also show the projection onto the y-axis and Fourier–Motzkin's rows for it
   V.register("polytope", (host) => {
     const allRows = JSON.parse(host.dataset.rows);
-    const labels = host.dataset.labels ? JSON.parse(host.dataset.labels) : allRows.map((_, i) => `row ${i + 1}`);
+    const labels = host.dataset.labels ? JSON.parse(host.dataset.labels) : allRows.map((_, i) => `constraint ${i + 1}`);
     const off = (host.dataset.off || "").split(",").filter(Boolean).map(Number);
     const active = allRows.map((_, i) => !off.includes(i + 1));
     const box = (host.dataset.box || "-1,6,-1,5").split(",").map(Number);
@@ -35,13 +35,13 @@
     host.classList.add("viz-polytope");
     V.isolate(host);
     const W = 560, H = 470;
-    const svg = V.newSvg(host, W, H, "interactive polygon: toggle rows, drag the objective arrow, hover for slacks");
+    const svg = V.newSvg(host, W, H, "interactive polygon: toggle constraints, drag the objective arrow, hover for slacks");
     const P = V.plot(svg, box, W, H);
     const gRegion = P.layer("viz-region"), gLines = P.layer("viz-lines"), gLevel = P.layer("viz-level"),
           gVerts = P.layer("viz-verts"), gProbe = P.layer("viz-probe"), gObj = P.layer("viz-obj");
 
     const panel = html("div", { class: "viz-panel" }, host);
-    html("div", { class: "viz-head" }, panel, "rows");
+    html("div", { class: "viz-head" }, panel, "constraints");
     const list = html("div", { class: "viz-rows" }, panel);
     const checks = allRows.map((r, i) => {
       const lab = html("label", { class: "viz-row" }, list);
@@ -94,7 +94,7 @@
       objLine.textContent = `maximize ${objText(c)}`;
       certLine.textContent = "";
       if (poly.length < 3) {
-        optLine.textContent = rows.length ? "infeasible: the rows leave nothing" : "";
+        optLine.textContent = rows.length ? "infeasible: the constraints leave nothing" : "";
       } else {
         const val = (p) => c[0] * p[0] + c[1] * p[1];
         const best = Math.max(...poly.map(val));
@@ -180,7 +180,7 @@
         html("span", { class: "viz-slack" }, line, ` from ${d.from}`);
       }
       const summary = html("div", { class: "viz-readout" }, fmBox);
-      if (empty || lo > hi + 1e-9) summary.textContent = "some derived row reads 0 ≤ negative: no point at all (Farkas)";
+      if (empty || lo > hi + 1e-9) summary.textContent = "some derived constraint reads 0 ≤ negative: no point at all (Farkas)";
       else summary.textContent = `so y ranges over [${num(lo)}, ${num(hi)}]`;
       if (poly.length >= 3 && !empty && lo <= hi + 1e-9) {
         const x = P.X(box[0]) + 10;

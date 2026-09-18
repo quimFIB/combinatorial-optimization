@@ -65,7 +65,7 @@ window.GLOSSARY = [
 },
 {
 "term_html": "face",
-"html": "\\(P \\cap \\{x : cx = \\delta\\}\\) for a valid inequality \\(cx \\le \\delta\\). Equivalently: turn some of the rows of \\(Ax \\le b\\) into equalities. \\(\\emptyset\\) and \\(P\\) itself are the <em>improper</em> faces.",
+"html": "\\(P \\cap \\{x : cx = \\delta\\}\\) for a valid inequality \\(cx \\le \\delta\\). Equivalently: turn some of the constraints of \\(Ax \\le b\\) into equalities. \\(\\emptyset\\) and \\(P\\) itself are the <em>improper</em> faces.",
 "section": "Polyhedra",
 "slide": "Faces",
 "keys": [
@@ -94,30 +94,30 @@ window.GLOSSARY = [
 ]
 },
 {
-"term_html": "tight row",
-"html": "Row \\(i\\) is tight at \\(x\\) when it holds with equality, \\(a_i x = b_i\\): \\(x\\) sits on that constraint's hyperplane. Other books say <em>active</em> or <em>binding</em>.",
+"term_html": "tight constraint",
+"html": "Constraint \\(i\\) is tight at the point \\(x\\) when it holds with equality there, \\(a_i x = b_i\\): \\(x\\) lies on that constraint's line (its hyperplane), pressed against that wall. Tightness belongs to a constraint <em>at a point</em>: \\(x + y \\le 4\\) is tight at \\((2.5, 1.5)\\) and not at \\((1, 1)\\). Other books say <em>active</em> or <em>binding</em>, and matrix-minded ones say <em>tight row</em>, since constraint \\(i\\) is row \\(i\\) of \\(Ax \\le b\\).",
 "section": "Corners",
-"slide": "Tight rows, and counting them",
+"slide": "Tight constraints, and counting them",
 "keys": [
-"tight row"
+"tight constraint"
 ]
 },
 {
 "term_html": "\\(I(x)\\)",
-"html": "The set of rows tight at \\(x\\), \\(\\{i : a_i x = b_i\\}\\).",
+"html": "The set of constraints tight at \\(x\\), \\(\\{i : a_i x = b_i\\}\\).",
 "section": "Corners",
-"slide": "Tight rows, and counting them",
+"slide": "Tight constraints, and counting them",
 "keys": [
 "i(x)"
 ]
 },
 {
-"term_html": "rank of the tight rows",
+"term_html": "rank of the tight constraints",
 "html": "The rank of the matrix whose rows are \\(\\{a_i : i \\in I(x)\\}\\): how many independent directions the tight constraints pin down. Rank \\(n\\) means they fix \\(x\\) completely. Sometimes shortened to \"tight rank\"; not a separate term.",
 "section": "Corners",
-"slide": "Tight rows, and counting them",
+"slide": "Tight constraints, and counting them",
 "keys": [
-"rank of the tight rows"
+"rank of the tight constraints"
 ]
 },
 {
@@ -140,7 +140,7 @@ window.GLOSSARY = [
 },
 {
 "term_html": "basic feasible solution (BFS)",
-"html": "A point of \\(P\\) whose tight rows have rank \\(n\\). The algebraic name, and the one a computer can check. In standard form it is usually stated with columns instead: the columns of \\(A\\) for the positive entries of \\(x\\) are independent.",
+"html": "A point of \\(P\\) whose tight constraints have rank \\(n\\). The algebraic name, and the one a computer can check. In standard form it is usually stated with columns instead: the columns of \\(A\\) for the positive entries of \\(x\\) are independent.",
 "section": "Corners",
 "slide": "Vertex, extreme point, basic feasible solution",
 "keys": [
@@ -151,27 +151,27 @@ window.GLOSSARY = [
 },
 {
 "term_html": "basic solution",
-"html": "A point where \\(n\\) linearly independent rows are tight, whether or not it lies in \\(P\\). Lab step 3 generates these and discards the infeasible ones.",
+"html": "A point where \\(n\\) linearly independent constraints are tight, whether or not it lies in \\(P\\). Lab step 3 generates these and discards the infeasible ones.",
 "section": "Corners",
-"slide": "Finding corners by trying pairs of rows",
+"slide": "Finding corners by trying pairs of constraints",
 "keys": [
 "basic solution"
 ]
 },
 {
 "term_html": "basis",
-"html": "A choice of \\(n\\) independent rows whose equalities determine a basic solution.",
+"html": "A choice of \\(n\\) independent constraints whose equalities determine a basic solution.",
 "section": "Corners",
-"slide": "Finding corners by trying pairs of rows",
+"slide": "Finding corners by trying pairs of constraints",
 "keys": [
 "basis"
 ]
 },
 {
 "term_html": "degenerate vertex",
-"html": "A vertex with more than \\(n\\) tight rows, \\(|I(x)| &gt; n\\), so several bases name the same point. Example: adding \\(3x - y \\le 6\\) to the running example makes \\((2.5, 1.5)\\) tight on 3 rows with rank 2; in \\(\\mathbb{R}^3\\), the apex of a square pyramid has 4 tight rows and rank 3. Harmless geometrically; the reason simplex can cycle (unit 02), and the reason lab step 3 must deduplicate.",
+"html": "A vertex with more than \\(n\\) tight constraints, \\(|I(x)| &gt; n\\), so several bases name the same point. Example: adding \\(3x - y \\le 6\\) to the running example makes \\((2.5, 1.5)\\) tight on 3 constraints with rank 2; in \\(\\mathbb{R}^3\\), the apex of a square pyramid has 4 tight constraints and rank 3. Harmless geometrically; the reason simplex can cycle (unit 02), and the reason lab step 3 must deduplicate.",
 "section": "Corners",
-"slide": "Finding corners by trying pairs of rows",
+"slide": "Finding corners by trying pairs of constraints",
 "keys": [
 "degenerate vertex"
 ]
@@ -196,7 +196,7 @@ window.GLOSSARY = [
 },
 {
 "term_html": "crossover",
-"html": "Walking from an arbitrary point of \\(P\\) to a BFS by moving along the null space of the tight rows until the rank reaches \\(n\\). How solvers turn an interior-point answer into a basic one (unit 04).",
+"html": "Walking from an arbitrary point of \\(P\\) to a BFS by moving along the null space of the tight constraints until the rank reaches \\(n\\). How solvers turn an interior-point answer into a basic one (unit 04).",
 "section": "Corners",
 "slide": "Not every polyhedron has a corner",
 "keys": [
@@ -281,7 +281,7 @@ window.GLOSSARY = [
 },
 {
 "term_html": "Fourier–Motzkin elimination (FM)",
-"html": "Computing that projection by pairing every row that bounds \\(x_k\\) from above with every row that bounds it from below, using positive multipliers so \\(x_k\\) cancels. Gaussian elimination for inequalities.",
+"html": "Computing that projection by pairing every constraint that bounds \\(x_k\\) from above with every constraint that bounds it from below, using positive multipliers so \\(x_k\\) cancels. Gaussian elimination for inequalities.",
 "section": "Fourier–Motzkin elimination",
 "slide": "Eliminating one variable",
 "keys": [
@@ -292,7 +292,7 @@ window.GLOSSARY = [
 },
 {
 "term_html": "\\(Z\\), \\(U\\), \\(L\\)",
-"html": "The rows with \\(a_{ik} = 0\\), \\(a_{ik} &gt; 0\\) (upper bounds on \\(x_k\\)) and \\(a_{ik} &lt; 0\\) (lower bounds). FM outputs \\(|Z| + |U|\\cdot|L|\\) rows.",
+"html": "The constraints with \\(a_{ik} = 0\\), \\(a_{ik} &gt; 0\\) (upper bounds on \\(x_k\\)) and \\(a_{ik} &lt; 0\\) (lower bounds). FM outputs \\(|Z| + |U|\\cdot|L|\\) constraints.",
 "section": "Fourier–Motzkin elimination",
 "slide": "Eliminating one variable",
 "keys": [
@@ -313,7 +313,7 @@ window.GLOSSARY = [
 },
 {
 "term_html": "FM blow-up",
-"html": "Row count going roughly \\(m \\to m^2/4\\) per eliminated variable, almost all of it redundant.",
+"html": "Constraint count going roughly \\(m \\to m^2/4\\) per eliminated variable, almost all of it redundant.",
 "section": "Fourier–Motzkin elimination",
 "slide": "Deciding feasibility, and the explosion",
 "keys": [
@@ -322,7 +322,7 @@ window.GLOSSARY = [
 },
 {
 "term_html": "Chernikov's rule, Imbert's acceleration",
-"html": "Bookkeeping that discards redundant FM rows by tracking which original rows each derived row came from. Not implemented in the lab; named in the slide notes.",
+"html": "Bookkeeping that discards redundant FM constraints by tracking which original constraints each derived constraint came from. Not implemented in the lab; named in the slide notes.",
 "section": "Fourier–Motzkin elimination",
 "slide": "Deciding feasibility, and the explosion",
 "keys": [
@@ -333,7 +333,7 @@ window.GLOSSARY = [
 },
 {
 "term_html": "Farkas certificate",
-"html": "\\(y \\in \\mathbb{R}^m\\) with \\(y \\ge 0\\), \\(y^\\top A = 0\\), \\(y^\\top b &lt; 0\\): a nonnegative combination of the rows that reads \\(0 \\le\\) (negative). It proves \\(Ax \\le b\\) has no solution.",
+"html": "\\(y \\in \\mathbb{R}^m\\) with \\(y \\ge 0\\), \\(y^\\top A = 0\\), \\(y^\\top b &lt; 0\\): a nonnegative combination of the constraints that reads \\(0 \\le\\) (negative). It proves \\(Ax \\le b\\) has no solution.",
 "section": "Farkas' lemma",
 "slide": "A certificate of infeasibility",
 "keys": [
@@ -360,7 +360,7 @@ window.GLOSSARY = [
 },
 {
 "term_html": "tail trick",
-"html": "Append the unit vector \\(e_i\\) to row \\(i\\) as extra columns that are never eliminated. After FM, a row \\(0 \\le c\\) with \\(c &lt; 0\\) carries its own certificate in those columns. Lab step 5.",
+"html": "Append the unit vector \\(e_i\\) to constraint \\(i\\) as extra columns that are never eliminated. After FM, a constraint \\(0 \\le c\\) with \\(c &lt; 0\\) carries its own certificate in those columns. Lab step 5.",
 "section": "Farkas' lemma",
 "slide": "Farkas, constructively",
 "keys": [
@@ -416,7 +416,7 @@ window.GLOSSARY = [
 },
 {
 "term_html": "Chvátal–Gomory cut",
-"html": "A nonnegative combination of rows with integer coefficients and the right side rounded down: Farkas plus rounding (unit 08).",
+"html": "A nonnegative combination of constraints with integer coefficients and the right side rounded down: Farkas plus rounding (unit 08).",
 "section": "Closing the loop",
 "slide": "Why this is the root of the trunk",
 "keys": [
@@ -425,7 +425,7 @@ window.GLOSSARY = [
 },
 {
 "term_html": "row <code>(a, b)</code>",
-"html": "A tuple of Python ints meaning \\(a \\cdot x \\le b\\). Exact integers throughout, so a certificate is a proof and not an approximation.",
+"html": "One constraint, as a tuple of Python ints meaning \\(a \\cdot x \\le b\\). Exact integers throughout, so a certificate is a proof and not an approximation.",
 "section": "In the lab",
 "slide": "",
 "keys": [

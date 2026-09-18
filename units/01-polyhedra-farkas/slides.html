@@ -11,6 +11,15 @@
 <link rel="stylesheet" href="../../slides/deck.css">
 </head>
 <body data-trunk="lp">
+<!-- The running example, once: what each <span class="ref"> on the slides shows on hover. -->
+<div class="refs" hidden>
+  <template data-ref="c1"><span class="ref-name">constraint 1</span>$-x \le 0$ <span class="ref-note">that is, $x \ge 0$: the left edge</span><svg viewBox="20 20 350 320" width="170" aria-hidden="true"><line x1="60" y1="24" x2="60" y2="336" class="rule" stroke-width="2"/><line x1="24" y1="300" x2="366" y2="300" class="rule" stroke-width="2"/><polygon points="60,300 120,300 210,210 60,60" class="fill-soft unit" stroke-width="3"/><line x1="60" y1="330" x2="60" y2="-18" class="accent" stroke-width="5"/></svg></template>
+  <template data-ref="c2"><span class="ref-name">constraint 2</span>$-y \le 0$ <span class="ref-note">that is, $y \ge 0$: the bottom edge</span><svg viewBox="20 20 350 320" width="170" aria-hidden="true"><line x1="60" y1="24" x2="60" y2="336" class="rule" stroke-width="2"/><line x1="24" y1="300" x2="366" y2="300" class="rule" stroke-width="2"/><polygon points="60,300 120,300 210,210 60,60" class="fill-soft unit" stroke-width="3"/><line x1="30" y1="300" x2="366" y2="300" class="accent" stroke-width="5"/></svg></template>
+  <template data-ref="c3"><span class="ref-name">constraint 3</span>$x + y \le 4$ <span class="ref-note">the top-right edge, from $(0,4)$ to $(2.5,1.5)$</span><svg viewBox="20 20 350 320" width="170" aria-hidden="true"><line x1="60" y1="24" x2="60" y2="336" class="rule" stroke-width="2"/><line x1="24" y1="300" x2="366" y2="300" class="rule" stroke-width="2"/><polygon points="60,300 120,300 210,210 60,60" class="fill-soft unit" stroke-width="3"/><line x1="30" y1="30" x2="330" y2="330" class="accent" stroke-width="5"/></svg></template>
+  <template data-ref="c4"><span class="ref-name">constraint 4</span>$x - y \le 1$ <span class="ref-note">the lower-right edge, from $(1,0)$ to $(2.5,1.5)$</span><svg viewBox="20 20 350 320" width="170" aria-hidden="true"><line x1="60" y1="24" x2="60" y2="336" class="rule" stroke-width="2"/><line x1="24" y1="300" x2="366" y2="300" class="rule" stroke-width="2"/><polygon points="60,300 120,300 210,210 60,60" class="fill-soft unit" stroke-width="3"/><line x1="90" y1="330" x2="360" y2="60" class="accent" stroke-width="5"/></svg></template>
+  <template data-ref="c5"><span class="ref-name">constraint 5</span>$3x - y \le 6$ <span class="ref-note">added for the degenerate corner: cuts nothing off, passes through $(2.5,1.5)$</span><svg viewBox="20 20 350 320" width="170" aria-hidden="true"><line x1="60" y1="24" x2="60" y2="336" class="rule" stroke-width="2"/><line x1="24" y1="300" x2="366" y2="300" class="rule" stroke-width="2"/><polygon points="60,300 120,300 210,210 60,60" class="fill-soft unit" stroke-width="3"/><line x1="168" y1="336" x2="246" y2="102" class="accent" stroke-width="5"/></svg></template>
+  <template data-ref="P"><span class="ref-name">the running example $P$</span>$-x \le 0,\ \ -y \le 0,\ \ x + y \le 4,\ \ x - y \le 1$ <span class="ref-note">constraints 1–4; corners $(0,0)$, $(1,0)$, $(2.5,1.5)$, $(0,4)$</span><svg viewBox="20 20 350 320" width="170" aria-hidden="true"><line x1="60" y1="24" x2="60" y2="336" class="rule" stroke-width="2"/><line x1="24" y1="300" x2="366" y2="300" class="rule" stroke-width="2"/><polygon points="60,300 120,300 210,210 60,60" class="fill-soft unit" stroke-width="3"/><circle cx="60" cy="300" r="8" class="fill-ink"/><text x="22" y="326" font-size="24">(0,0)</text><circle cx="120" cy="300" r="8" class="fill-ink"/><text x="120" y="326" font-size="24">(1,0)</text><circle cx="210" cy="210" r="8" class="fill-ink"/><text x="222" y="216" font-size="24">(2.5,1.5)</text><circle cx="60" cy="60" r="8" class="fill-ink"/><text x="72" y="66" font-size="24">(0,4)</text></svg></template>
+</div>
 <div class="reveal"><div class="slides">
 
 <!-- ================================================================== -->
@@ -142,9 +151,9 @@
   <h2>The running example</h2>
   <div class="cols wide-left">
     <div>
-      <p>Four rows in $\mathbb{R}^2$. Every later slide comes back to this $P$.</p>
+      <p>Four constraints in $\mathbb{R}^2$, numbered 1–4 for the rest of the unit (constraint $i$ is row $i$ of $Ax \le b$). Every later slide comes back to this $P$. <span class="small muted">Underlined like <span class="ref" data-ref="c3">constraint 3</span>: hover to see it.</span></p>
       <table>
-        <thead><tr><th>row</th><th>$a_i x \le b_i$</th><th class="num">at $(1,1)$</th><th class="num">at $(3,2)$</th><th class="num">at $(2.5,1.5)$</th></tr></thead>
+        <thead><tr><th>constraint</th><th>$a_i x \le b_i$</th><th class="num">at $(1,1)$</th><th class="num">at $(3,2)$</th><th class="num">at $(2.5,1.5)$</th></tr></thead>
         <tbody>
           <tr><td>1</td><td>$-x \le 0$</td><td class="num">$-1$ ✓</td><td class="num">$-3$ ✓</td><td class="num">$-2.5$ ✓</td></tr>
           <tr><td>2</td><td>$-y \le 0$</td><td class="num">$-1$ ✓</td><td class="num">$-2$ ✓</td><td class="num">$-1.5$ ✓</td></tr>
@@ -152,8 +161,8 @@
           <tr><td>4</td><td>$x - y \le 1$</td><td class="num">$0$ ✓</td><td class="num">$1$ =</td><td class="num"><b>$1$ =</b></td></tr>
         </tbody>
       </table>
-      <p class="small"><b>Membership is plugging in.</b> $(1,1)$ satisfies every row with room to spare: it is inside.
-      $(3,2)$ breaks row 3: it is outside. $(2.5,1.5)$ satisfies everything, two rows with no room at all: it sits on two walls at once.</p>
+      <p class="small"><b>Membership is plugging in.</b> $(1,1)$ satisfies every constraint with room to spare: it is inside.
+      $(3,2)$ breaks <span class="ref" data-ref="c3">constraint 3</span>: it is outside. $(2.5,1.5)$ satisfies everything, two constraints with no room at all: it sits on two walls at once.</p>
       <p class="small muted">Hold on to that last observation. "No room at all" is the idea the whole corners section is built on.</p>
     </div>
     <div class="fig">
@@ -169,24 +178,24 @@
         <text x="250" y="176" font-size="15">(3, 2)</text>
         <circle cx="210" cy="210" r="7" class="fill-accent"/>
         <text x="220" y="228" font-size="15">(2.5, 1.5)</text>
-        <text x="296" y="54" font-size="14" class="soft">row 4</text>
-        <text x="274" y="324" font-size="14" class="soft">row 3</text>
+        <text x="296" y="54" font-size="14" class="soft">constraint 4</text>
+        <text x="274" y="324" font-size="14" class="soft">constraint 3</text>
         <text x="90" y="160" font-size="20" font-weight="600">P</text>
       </svg>
-      <p class="cap">$P$ has corners $(0,0)$, $(1,0)$, $(2.5,1.5)$, $(0,4)$. Dashed: the lines where rows 3 and 4 hold with equality.</p>
+      <p class="cap">$P$ has corners $(0,0)$, $(1,0)$, $(2.5,1.5)$, $(0,4)$. Dashed: the lines where constraints <span class="ref" data-ref="c3">3</span> and <span class="ref" data-ref="c4">4</span> hold with equality.</p>
     </div>
   </div>
   <p class="viz-link-row"><a class="viz-link" href="explore.html#/1" target="_blank" rel="noopener">explore interactively</a></p>
   <aside class="notes">
-    <p>Row 4 at $(3,2)$ gives exactly 1, so that point is on row 4's line; it's
-    outside only because of row 3. A point can be on a wall's line and still be
-    outside the polyhedron, if some other row fails.</p>
+    <p><span class="ref" data-ref="c4">Constraint 4</span> at $(3,2)$ gives exactly 1, so that point is on its line; it's
+    outside only because of <span class="ref" data-ref="c3">constraint 3</span>. A point can be on a wall's line and still be
+    outside the polyhedron, if some other constraint fails.</p>
     <p>Why fix one example for the whole unit: the definitions ahead (faces, tight
-    rows, bases, projections, certificates) are all short, but they are easy to
-    misread in the abstract. Checking each one on four rows in the plane takes a
+    constraints, bases, projections, certificates) are all short, but they are easy to
+    misread in the abstract. Checking each one on four constraints in the plane takes a
     minute and catches most misreadings.</p>
-    <p>The row numbering 1–4 is used on every later slide, including the
-    Fourier–Motzkin example, where the rows are classified by the sign of their
+    <p>The constraint numbering 1–4 is used on every later slide, including the
+    Fourier–Motzkin example, where the constraints are classified by the sign of their
     $x$-coefficient.</p>
   </aside>
 </section>
@@ -210,7 +219,7 @@
           <tr><td>$0x + 0y \le 0$</td><td>all of $P$</td><td>$P$ itself</td></tr>
         </tbody>
       </table>
-      <p class="small">A 2-D polytope's facets are its edges. In general facets have dimension $\dim P - 1$, and a full-dimensional polyhedron needs <b>one inequality per facet</b>; any other row is a <span class="term">redundant inequality</span>.</p>
+      <p class="small">A 2-D polytope's facets are its edges. In general facets have dimension $\dim P - 1$, and a full-dimensional polyhedron needs <b>one inequality per facet</b>; any other constraint is a <span class="term">redundant inequality</span>.</p>
     </div>
     <div class="fig">
       <svg viewBox="0 0 380 350" width="400" role="img" aria-label="quadrilateral with vertices at (0,0), (1,0), (2.5,1.5), (0,4)">
@@ -234,9 +243,9 @@
     </div>
   </div>
   <aside class="notes">
-    <p>Check the vertex row: $-x + y$ is $0$ at $(0,0)$, $-1$ at $(1,0)$, $-1$ at
+    <p>Check the vertex constraint: $-x + y$ is $0$ at $(0,0)$, $-1$ at $(1,0)$, $-1$ at
     $(2.5, 1.5)$ and $4$ at $(0,4)$. So $-x + y \le 4$ is valid and touches $P$ at one
-    point. Note that it is <em>not</em> one of the four rows defining $P$: faces come from
+    point. Note that it is <em>not</em> one of the four constraints defining $P$: faces come from
     any valid inequality, not just the ones you wrote down.</p>
     <p>The empty set and $P$ itself are faces, called improper: take $0x \le 1$
     (face $\emptyset$) or $0x \le 0$ (face $P$). Some texts exclude them.</p>
@@ -263,26 +272,26 @@
 
 <section>
   <p class="eyebrow">01 · corners</p>
-  <h2>Tight rows, and counting them</h2>
+  <h2>Tight constraints, and counting them</h2>
   <div class="cols wide-left">
     <div>
       <div class="box def"><span class="label">definition</span>
-        <p class="small">Row $i$ is <span class="term" data-term="tight row">tight</span> at $x$ if it holds with equality, $a_i x = b_i$: $x$ is pressed against that wall. Write <span class="term">$I(x)$</span> for the set of tight rows.</p>
-        <p class="small">The <span class="term" data-term="rank of the tight rows">rank of the tight rows</span> counts how many genuinely different directions those walls face. Walls $x + y \le 4$ and $2x + 2y \le 8$ face the same way: rank 1. Rows 3 and 4 don't: rank 2.</p>
+        <p class="small">Constraint $i$ is <span class="term" data-term="tight constraint">tight</span> at a point $x$ if $x$ lies on its line: $a_i x = b_i$, no slack. It depends on the point: <span class="ref" data-ref="c3">constraint 3</span> is tight at $(2.5, 1.5)$ but not at $(1, 1)$. Write <span class="term">$I(x)$</span> for the set of constraints tight at $x$.</p>
+        <p class="small">The <span class="term" data-term="rank of the tight constraints">rank of the tight constraints</span> counts how many different directions those walls face: constraints <span class="ref" data-ref="c3">3</span> and <span class="ref" data-ref="c4">4</span> give rank 2, and a wall listed twice counts once.</p>
       </div>
       <table>
-        <thead><tr><th>point</th><th>tight rows</th><th class="num">rank</th><th>where it is</th></tr></thead>
+        <thead><tr><th>point</th><th>tight constraints</th><th class="num">rank</th><th>where it is</th></tr></thead>
         <tbody>
           <tr><td>$(1, 1)$</td><td>none</td><td class="num">0</td><td>inside</td></tr>
-          <tr><td>$(0, 2)$</td><td>row 1</td><td class="num">1</td><td>on an edge</td></tr>
-          <tr><td>$(1.75, 0.75)$</td><td>row 4</td><td class="num">1</td><td>on an edge</td></tr>
-          <tr><td>$(2.5, 1.5)$</td><td>rows 3, 4</td><td class="num"><b>2</b></td><td><b>a corner</b></td></tr>
+          <tr><td>$(0, 2)$</td><td><span class="ref" data-ref="c1">constraint 1</span></td><td class="num">1</td><td>on an edge</td></tr>
+          <tr><td>$(1.75, 0.75)$</td><td><span class="ref" data-ref="c4">constraint 4</span></td><td class="num">1</td><td>on an edge</td></tr>
+          <tr><td>$(2.5, 1.5)$</td><td>constraints <span class="ref" data-ref="c3">3</span>, <span class="ref" data-ref="c4">4</span></td><td class="num"><b>2</b></td><td><b>a corner</b></td></tr>
         </tbody>
       </table>
       <p class="small"><b>The pattern:</b> with rank below $n$ you can still slide along the tight walls. With rank $n$ (here $n = 2$), the walls pin the point down completely. That is what a corner is.</p>
     </div>
     <div class="fig">
-      <svg viewBox="0 0 380 350" width="380" role="img" aria-label="four points in the polygon with their tight rows">
+      <svg viewBox="0 0 380 350" width="380" role="img" aria-label="four points in the polygon with their tight constraints">
         <line x1="60" y1="18" x2="60" y2="332" class="rule" stroke-width="1.5"/>
         <line x1="20" y1="300" x2="368" y2="300" class="rule" stroke-width="1.5"/>
         <polygon points="60,300 120,300 210,210 60,60" class="fill-soft unit" stroke-width="2.5" style="fill-opacity:.9"/>
@@ -302,18 +311,18 @@
   </div>
   <p class="viz-link-row"><a class="viz-link" href="explore.html#/1" target="_blank" rel="noopener">explore interactively</a></p>
   <aside class="notes">
-    <p>Why rank and not simply "how many rows are tight": a corner can have more tight
-    rows than $n$ (two slides on, a degenerate corner has three in the plane). And
-    two tight rows that are multiples of each other, like $x + y \le 4$ written twice,
+    <p>Why rank and not simply "how many constraints are tight": a corner can have more tight
+    constraints than $n$ (two slides on, a degenerate corner has three in the plane). And
+    two tight constraints that are multiples of each other, like $x + y \le 4$ written twice,
     are really one wall. Rank counts independent walls, which is the thing that
     matters.</p>
-    <p>The sliding picture is exact. If the tight rows have rank below $n$, some
-    direction $d \ne 0$ has $a_i d = 0$ for every tight row: moving along $d$ keeps
-    them tight. The other rows have slack, so a small enough move in either direction
+    <p>The sliding picture is exact. If the tight constraints have rank below $n$, some
+    direction $d \ne 0$ has $a_i d = 0$ for every tight constraint: moving along $d$ keeps
+    them tight. The other constraints have slack, so a small enough move in either direction
     $\pm d$ stays inside $P$. At $(0,2)$, $d = (0, 1)$ slides up and down the left
     edge.</p>
     <p>You will compute exactly this in the lab: the step 3 tests check that every
-    vertex you return has tight rows of rank $n$.</p>
+    vertex you return has tight constraints of rank $n$.</p>
   </aside>
 </section>
 
@@ -329,7 +338,7 @@
       <p>$x$ is not the midpoint (or any in-between point) of two other points of $P$.</p>
       <p class="small muted">No segment in $P$ passes through $x$.</p></div>
     <div class="box def"><span class="label">BFS · algebra</span>
-      <p>The tight rows at $x$ have <b>rank $n$</b>.</p>
+      <p>The tight constraints at $x$ have <b>rank $n$</b>.</p>
       <p class="small muted">Enough walls meet to pin $x$ down.</p></div>
   </div>
   <div class="box thm"><span class="label">theorem</span>
@@ -339,15 +348,15 @@
   <aside class="notes">
     <p><b>On the example.</b> $(2.5, 1.5)$ is all three. Vertex: $c = (2, 0)$ is
     maximized there and nowhere else (next slide). Extreme: any segment through it
-    would have to leave $P$ on one side. BFS: rows 3 and 4 are tight, rank 2.
+    would have to leave $P$ on one side. BFS: constraints <span class="ref" data-ref="c3">3</span> and <span class="ref" data-ref="c4">4</span> are tight, rank 2.
     $(1.75, 0.75)$ is none of the three: it is the midpoint of $(1,0)$ and $(2.5,1.5)$,
-    and only one row is tight.</p>
+    and only one constraint is tight.</p>
     <p><b>Terminology.</b> "Basic feasible solution" is usually defined in standard
     form: $x \ge 0$, $Ax = b$, and the columns of $A$ for the positive entries of
     $x$ are linearly independent. The rank condition here is the same idea in
     inequality form. Converting one form into the other maps BFSs to BFSs. A
     <em>basic solution</em> (not necessarily feasible) is a point where $n$ linearly
-    independent rows are tight, feasible or not. Lab step 3 enumerates basic
+    independent constraints are tight, feasible or not. Lab step 3 enumerates basic
     solutions and throws away the infeasible ones.</p>
   </aside>
 </section>
@@ -363,13 +372,13 @@
       <div class="box"><span class="label">extreme ⇒ BFS</span>
         <p class="small">If the tight walls had rank below $n$, $x$ could slide a little both ways along them (the tight-rows slide). Then $x$ is the midpoint of the two ends of that slide: not extreme.</p>
       </div>
-      <div class="box"><span class="label">BFS ⇒ vertex: add up the tight rows</span>
-        <p class="small">Take $c$ = the sum of the tight rows. Every point of $P$ scores at most the sum of their right-hand sides, and only a point where all of them are tight scores exactly that. Rank $n$ means that point is $x$ alone.</p>
+      <div class="box"><span class="label">BFS ⇒ vertex: add up the tight constraints</span>
+        <p class="small">Take $c$ = the sum of the tight constraints. Every point of $P$ scores at most the sum of their right-hand sides, and only a point where all of them are tight scores exactly that. Rank $n$ means that point is $x$ alone.</p>
       </div>
       <p class="proof-pointer">full proof in the notes (N)</p>
     </div>
     <div class="fig">
-      <svg viewBox="0 0 380 350" width="380" role="img" aria-label="the vertex (2.5,1.5) with its two tight row normals and their sum">
+      <svg viewBox="0 0 380 350" width="380" role="img" aria-label="the vertex (2.5,1.5) with its two tight constraint normals and their sum">
         <defs><marker id="ar2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" class="fill-ink"/></marker>
         <marker id="ar3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" class="fill-accent"/></marker></defs>
         <line x1="60" y1="18" x2="60" y2="332" class="rule" stroke-width="1.5"/>
@@ -385,7 +394,7 @@
         <text x="304" y="205" font-size="15" style="fill:var(--accent)">c = a₃ + a₄</text>
         <text x="216" y="330" font-size="13" class="soft">level set of c</text>
       </svg>
-      <p class="cap">At $(2.5, 1.5)$ rows 3 and 4 are tight. Their sum $c = (2,0)$, i.e. maximize $2x$, is best at this corner and nowhere else: check the other corners, they score $0$, $2$ and $0$ against $5$.</p>
+      <p class="cap">At $(2.5, 1.5)$ constraints <span class="ref" data-ref="c3">3</span> and <span class="ref" data-ref="c4">4</span> are tight. Their sum $c = (2,0)$, i.e. maximize $2x$, is best at this corner and nowhere else: check the other corners, they score $0$, $2$ and $0$ against $5$.</p>
     </div>
   </div>
   <aside class="notes">
@@ -398,20 +407,20 @@
     $x = \lambda y + (1-\lambda) z$ with $y \ne z$ in $P$ and $0 &lt; \lambda &lt; 1$, then
     one of $y, z$ differs from $x$, so $c y &lt; c x$ or $c z &lt; c x$, and neither
     exceeds $c x$. Then $c x = \lambda c y + (1-\lambda) c z &lt; c x$, a contradiction.</p>
-    <p><b>Extreme ⇒ BFS.</b> If the tight rows have rank $&lt; n$, pick $d \ne 0$ with
-    $a_i d = 0$ for all $i \in I(x)$. Rows not tight have slack, so
-    $x \pm \varepsilon d \in P$ for small $\varepsilon &gt; 0$: for each row
+    <p><b>Extreme ⇒ BFS.</b> If the tight constraints have rank $&lt; n$, pick $d \ne 0$ with
+    $a_i d = 0$ for all $i \in I(x)$. Constraints not tight have slack, so
+    $x \pm \varepsilon d \in P$ for small $\varepsilon &gt; 0$: for each constraint
     $j \notin I(x)$ with $a_j d \ne 0$ you need $\varepsilon |a_j d| \le b_j - a_j x$,
     and the minimum of those finitely many positive bounds works. Then $x$ is the
     midpoint of $x + \varepsilon d$ and $x - \varepsilon d$, a contradiction.</p>
     <p><b>BFS ⇒ vertex.</b> Take $c = \sum_{i \in I(x)} a_i$. For $y \in P$:
     $c y = \sum_{I} a_i y \le \sum_I b_i = c x$, with equality only if every
-    $i \in I(x)$ is tight at $y$. The tight rows have rank $n$, so the system
+    $i \in I(x)$ is tight at $y$. The tight constraints have rank $n$, so the system
     $a_i y = b_i,\ i \in I(x)$ has the unique solution $y = x$. $\square$</p>
     <h4>Corollary, and a count</h4>
     <p>A BFS is determined by its tight set: it is the unique solution of
     $a_i y = b_i,\ i \in I(x)$. So there are at most $\binom{m}{n}$ vertices, and
-    they can be found by trying every $n$-subset of rows. That is the next slide and
+    they can be found by trying every $n$-subset of constraints. That is the next slide and
     lab step 3, and it is lab 00's brute force again, over bases instead of 0/1 vectors.</p>
     <p>The real maximum is much smaller than $\binom{m}{n}$ but still exponential. By
     McMullen's upper bound theorem, a polytope in $\mathbb{R}^n$ with $m$ facets has
@@ -422,35 +431,35 @@
 
 <section>
   <p class="eyebrow">01 · corners · example</p>
-  <h2>Finding corners by trying pairs of rows</h2>
+  <h2>Finding corners by trying pairs of constraints</h2>
   <div class="cols">
     <div>
-      <p class="small">In $\mathbb{R}^2$ a corner needs 2 independent tight rows. So try every pair: set both to equality, solve, and keep the solution if it satisfies the other rows.</p>
+      <p class="small">In $\mathbb{R}^2$ a corner needs 2 independent tight constraints. So try every pair: set both to equality, solve, and keep the solution if it satisfies the other constraints.</p>
       <table>
-        <thead><tr><th>rows</th><th>solve as equalities</th><th>other rows</th></tr></thead>
+        <thead><tr><th>constraints</th><th>solve as equalities</th><th>other constraints</th></tr></thead>
         <tbody>
-          <tr><td>1, 2</td><td>$(0, 0)$</td><td>✓ corner</td></tr>
-          <tr><td>1, 3</td><td>$(0, 4)$</td><td>✓ corner</td></tr>
-          <tr><td>1, 4</td><td>$(0, -1)$</td><td>✗ row 2</td></tr>
-          <tr><td>2, 3</td><td>$(4, 0)$</td><td>✗ row 4</td></tr>
-          <tr><td>2, 4</td><td>$(1, 0)$</td><td>✓ corner</td></tr>
-          <tr><td>3, 4</td><td>$(2.5, 1.5)$</td><td>✓ corner</td></tr>
+          <tr><td><span class="ref" data-ref="c1">1</span>, <span class="ref" data-ref="c2">2</span></td><td>$(0, 0)$</td><td>✓ corner</td></tr>
+          <tr><td><span class="ref" data-ref="c1">1</span>, <span class="ref" data-ref="c3">3</span></td><td>$(0, 4)$</td><td>✓ corner</td></tr>
+          <tr><td><span class="ref" data-ref="c1">1</span>, <span class="ref" data-ref="c4">4</span></td><td>$(0, -1)$</td><td>✗ <span class="ref" data-ref="c2">constraint 2</span></td></tr>
+          <tr><td><span class="ref" data-ref="c2">2</span>, <span class="ref" data-ref="c3">3</span></td><td>$(4, 0)$</td><td>✗ <span class="ref" data-ref="c4">constraint 4</span></td></tr>
+          <tr><td><span class="ref" data-ref="c2">2</span>, <span class="ref" data-ref="c4">4</span></td><td>$(1, 0)$</td><td>✓ corner</td></tr>
+          <tr><td><span class="ref" data-ref="c3">3</span>, <span class="ref" data-ref="c4">4</span></td><td>$(2.5, 1.5)$</td><td>✓ corner</td></tr>
         </tbody>
       </table>
-      <p class="small">$\binom{4}{2} = 6$ <span class="term">basic solutions</span>, 4 of them feasible: the 4 corners. Each pair of rows is a <span class="term">basis</span>. <b>This is lab step 3.</b></p>
+      <p class="small">$\binom{4}{2} = 6$ <span class="term">basic solutions</span>, 4 of them feasible: the 4 corners. Each pair of constraints is a <span class="term">basis</span>. <b>This is lab step 3.</b></p>
     </div>
     <div>
-      <div class="box ex"><span class="label">one more row: a degenerate corner</span>
-        <p class="small">Add row 5: $3x - y \le 6$. It cuts nothing off (check the four corners), but it also passes through $(2.5, 1.5)$.</p>
-        <p class="small">Now three rows are tight there, still rank 2. The pairs $\{3,4\}$, $\{3,5\}$ and $\{4,5\}$ all solve to the same point: three bases, one corner.</p>
+      <div class="box ex"><span class="label">one more constraint: a degenerate corner</span>
+        <p class="small">Add <span class="ref" data-ref="c5">constraint 5</span>: $3x - y \le 6$. It cuts nothing off (check the four corners), but it also passes through $(2.5, 1.5)$.</p>
+        <p class="small">Now three constraints are tight there, still rank 2. The pairs <span class="ref" data-ref="c3">3</span>–<span class="ref" data-ref="c4">4</span>, <span class="ref" data-ref="c3">3</span>–<span class="ref" data-ref="c5">5</span> and <span class="ref" data-ref="c4">4</span>–<span class="ref" data-ref="c5">5</span> all solve to the same point: three bases, one corner.</p>
         <p class="small">That corner is a <span class="term">degenerate vertex</span>. Enumerating pairs finds it three times, so the lab must <b>deduplicate</b>, and in unit 02 it is what can make simplex go round in circles.</p>
       </div>
       <p class="small muted">In $\mathbb{R}^3$ the same thing happens at the apex of a square pyramid: four facets meet where three would do. The lab's pyramid test is this slide in one more dimension.</p>
     </div>
   </div>
   <aside class="notes">
-    <p>The pairs with row 5: $\{1, 5\}$ gives $(0, -6)$ and $\{2, 5\}$ gives $(2, 0)$,
-    both infeasible (rows 2 and 4 fail). $\{3,5\}$: $x + y = 4$ and $3x - y = 6$ add to
+    <p>The pairs with <span class="ref" data-ref="c5">constraint 5</span>: $\{1, 5\}$ gives $(0, -6)$ and $\{2, 5\}$ gives $(2, 0)$,
+    both infeasible (constraints <span class="ref" data-ref="c2">2</span> and <span class="ref" data-ref="c4">4</span> fail). $\{3,5\}$: $x + y = 4$ and $3x - y = 6$ add to
     $4x = 10$, so $(2.5, 1.5)$. $\{4,5\}$: subtracting gives $2x = 5$, the same point.
     So 10 pairs, 6 feasible basic solutions, but only 4 distinct corners.</p>
     <p><b>Degeneracy</b> is harmless geometrically: the vertex is one point. It matters
@@ -476,33 +485,33 @@
           <li>$\operatorname{rank} A = n$.</li>
         </ul>
       </div>
-      <p class="small"><b>The strip:</b> its rows are $(0, -1)$ and $(0, 1)$, rank 1 &lt; 2. The direction $(1, 0)$ is invisible to every row, and that is the line.</p>
+      <p class="small"><b>The strip:</b> its constraints $-y \le 0$ and $y \le 1$ have normals $(0, -1)$ and $(0, 1)$: rank 1 &lt; 2. The direction $(1, 0)$ is invisible to every constraint, and that is the line.</p>
     </div>
     <div>
       <div class="box good"><span class="label">why you rarely notice</span>
-        <p>Any polyhedron inside $x \ge 0$ is pointed: the rows $x_j \ge 0$ already have rank $n$.
-        Standard form is pointed by construction. So is the running example, thanks to rows 1 and 2.</p>
+        <p>Any polyhedron inside $x \ge 0$ is pointed: the constraints $x_j \ge 0$ already have rank $n$.
+        Standard form is pointed by construction. So is <span class="ref" data-ref="P">the running example</span>, thanks to constraints <span class="ref" data-ref="c1">1</span> and <span class="ref" data-ref="c2">2</span>.</p>
       </div>
       <p class="muted">So "the optimum is at a vertex" needs a hypothesis. The fundamental theorem at the end of the unit states it.</p>
     </div>
   </div>
   <aside class="notes">
-    <p>The idea in one line: a line inside $P$ is a direction no row can see, and the
-    rows see every direction exactly when they have rank $n$.</p>
+    <p>The idea in one line: a line inside $P$ is a direction no constraint can see, and the
+    constraints see every direction exactly when they have rank $n$.</p>
     <h4>Full proof sketch</h4>
     <p>The <em>lineality space</em> is $\{d : Ad = 0\}$. If it contains
     $d \ne 0$, then $x + t d \in P$ for all real $t$: a line. Conversely, a line
     $x + t d$ in $P$ needs $A d \le 0$ and $-A d \le 0$, so $A d = 0$. And
     $\{d : Ad = 0\} = \{0\}$ exactly when $\operatorname{rank} A = n$.</p>
     <p>For the vertex direction: if $\operatorname{rank} A = n$, start at any
-    $x \in P$. While the tight rows have rank $&lt; n$, pick $d$ in their null space
-    but not in the null space of $A$, and move along $\pm d$ until a new row becomes
+    $x \in P$. While the tight constraints have rank $&lt; n$, pick $d$ in their null space
+    but not in the null space of $A$, and move along $\pm d$ until a new constraint becomes
     tight. Each move increases the rank of the tight set, so after at most $n$ moves
     you are at a BFS. The same walk is how <em>crossover</em> turns an
     interior-point solution into a basic one (unit 04).</p>
     <p>On the example: start at $(1,1)$ with nothing tight, move in direction $(1,0)$
-    until row 4 becomes tight at $(2,1)$, then slide along row 4, direction $(1,1)$,
-    until row 3 becomes tight at $(2.5, 1.5)$. Two moves, one corner.</p>
+    until <span class="ref" data-ref="c4">constraint 4</span> becomes tight at $(2,1)$, then slide along <span class="ref" data-ref="c4">constraint 4</span>, direction $(1,1)$,
+    until <span class="ref" data-ref="c3">constraint 3</span> becomes tight at $(2.5, 1.5)$. Two moves, one corner.</p>
   </aside>
 </section>
 
@@ -558,7 +567,7 @@
   <div class="cols">
     <div>
       <div class="box ex"><span class="label">a polytope: blend the corners</span>
-        <p class="small">$(1, 1)$ in the running example is a weighted average of its corners:</p>
+        <p class="small">$(1, 1)$ in <span class="ref" data-ref="P">the running example</span> is a weighted average of its corners:</p>
         <p class="small">$$(1,1) = 0.5\,(0,0) + 0.4\,(2.5,1.5) + 0.1\,(0,4)$$</p>
         <p class="small">Weights are $\ge 0$ and sum to 1. Check: $x = 0.4 \cdot 2.5 = 1$, $y = 0.4 \cdot 1.5 + 0.1 \cdot 4 = 1$.</p>
       </div>
@@ -625,7 +634,7 @@
   <div class="cols">
     <div>
       <div class="box"><span class="label">the idea</span>
-        <p class="small">Fix the other variables. Every row that mentions $x_k$ is either a <b>lower bound</b> or an <b>upper bound</b> on it. A value of $x_k$ exists exactly when <b>every lower bound is at most every upper bound</b>.</p>
+        <p class="small">Fix the other variables. Every constraint that mentions $x_k$ is either a <b>lower bound</b> or an <b>upper bound</b> on it. A value of $x_k$ exists exactly when <b>every lower bound is at most every upper bound</b>.</p>
         <p class="small">So write down "lower ≤ upper" for each pair, and $x_k$ is gone.</p>
       </div>
       <div class="box ex"><span class="label">tiny example</span>
@@ -634,10 +643,10 @@
       </div>
     </div>
     <div class="box thm"><span class="label">the rule (Fourier 1826, Motzkin 1936)</span>
-      <p class="small">Sort the rows by the sign of their $x_k$ coefficient: <span class="term">$Z$</span> (zero: keep as is), <span class="term">$U$</span> (positive: upper bounds), <span class="term">$L$</span> (negative: lower bounds).</p>
-      <p class="small">For each $p \in U$, $q \in L$, add the two rows with <b>positive</b> multipliers chosen so $x_k$ cancels:
+      <p class="small">Sort the constraints by the sign of their $x_k$ coefficient: <span class="term">$Z$</span> (zero: keep as is), <span class="term">$U$</span> (positive: upper bounds), <span class="term">$L$</span> (negative: lower bounds).</p>
+      <p class="small">For each $p \in U$, $q \in L$, add the two constraints with <b>positive</b> multipliers chosen so $x_k$ cancels:
       $$(-a_{qk})\,(a_p x \le b_p) \;+\; a_{pk}\,(a_q x \le b_q)$$</p>
-      <p class="small">The projection is: the $Z$ rows, plus one combined row per pair.</p>
+      <p class="small">The projection is: the $Z$ constraints, plus one combined constraint per pair.</p>
     </div>
   </div>
   <p class="muted small">Both multipliers are positive. Inequalities survive <span class="term">nonnegative combinations</span> and nothing else, and that is the whole difference from Gaussian elimination.</p>
@@ -647,10 +656,10 @@
     <h4>Full proof</h4>
     <p>Fix $x'$. The feasible values of $x_k$ form the interval
     $\max_{q\in L} \ell_q(x') \le x_k \le \min_{p \in U} u_p(x')$, intersected with
-    the requirement that the $Z$ rows hold. That interval is nonempty exactly when
+    the requirement that the $Z$ constraints hold. That interval is nonempty exactly when
     every lower bound is at most every upper bound: $\ell_q(x') \le u_p(x')$ for
     all pairs. Clear the denominators. Multiplying by $a_{pk} &gt; 0$ and by
-    $-a_{qk} &gt; 0$ preserves the direction, and you get the combined row
+    $-a_{qk} &gt; 0$ preserves the direction, and you get the combined constraint
     $(-a_{qk})\,(a_p x) + a_{pk}\,(a_q x) \le (-a_{qk})\, b_p + a_{pk}\, b_q$, in which
     $x_k$ cancels.</p>
     <p>If $U$ or $L$ is empty there are no pairs, the interval is unbounded on one side
@@ -659,7 +668,7 @@
     <p><b>Integer data stays integer.</b> The multipliers are the coefficients
     themselves, so no division ever happens. That is why the lab can do everything
     in exact integers and divide by a gcd only to tidy up.</p>
-    <p><b>Count.</b> The new system has $|Z| + |U|\cdot|L|$ rows. With $m$ rows split
+    <p><b>Count.</b> The new system has $|Z| + |U|\cdot|L|$ constraints. With $m$ constraints split
     evenly that is about $m^2/4$.</p>
     <p>Fourier described the method in 1826. Motzkin rediscovered it in his 1936
     thesis, and Dines had it in 1919; the name "Fourier–Motzkin" stuck.</p>
@@ -672,7 +681,7 @@
   <div class="cols wide-left">
     <div>
       <table style="font-size:.78em">
-        <thead><tr><th>row</th><th>as a bound on $x$</th><th>class</th></tr></thead>
+        <thead><tr><th>constraint</th><th>as a bound on $x$</th><th>class</th></tr></thead>
         <tbody>
           <tr><td>1: $-x \le 0$</td><td>$x \ge 0$</td><td><span class="term">$L$</span></td></tr>
           <tr><td>2: $-y \le 0$</td><td>no $x$</td><td><span class="term">$Z$</span></td></tr>
@@ -702,18 +711,18 @@
   </div>
   <p class="viz-link-row"><a class="viz-link" href="explore.html#/2" target="_blank" rel="noopener">explore interactively</a></p>
   <aside class="notes">
-    <p>Check the redundant row: $-y \le 1$ says $y \ge -1$, which $-y \le 0$
+    <p>Check the redundant constraint: $-y \le 1$ says $y \ge -1$, which $-y \le 0$
     already implies. FM has no idea it is redundant. Detecting redundancy exactly
-    means solving an LP per row (is $\max\,(-y)$ over the other rows at most $1$?),
-    so FM carries every such row forward and pairs it again at the next step. That
+    means solving an LP per constraint (is $\max\,(-y)$ over the other constraints at most $1$?),
+    so FM carries every such constraint forward and pairs it again at the next step. That
     is where the explosion comes from.</p>
     <p>Two refinements keep most of the junk out. <b>Chernikov's rule</b>: track which
-    original rows each derived row came from, and discard a derived row whose history
-    is a superset of another's. After $k$ eliminations, a row built from more than
-    $k+1$ original rows is redundant. <b>Imbert's</b> acceleration theorems sharpen
+    original constraints each derived constraint came from, and discard a derived constraint whose history
+    is a superset of another's. After $k$ eliminations, a constraint built from more than
+    $k+1$ original constraints is redundant. <b>Imbert's</b> acceleration theorems sharpen
     this. With them the growth is singly exponential, which is the best possible,
     since projections can have exponentially many facets.</p>
-    <p>The lab doesn't implement these. It deduplicates normalized rows, and
+    <p>The lab doesn't implement these. It deduplicates normalized constraints, and
     <code>then</code> shows you how far that is from enough.</p>
   </aside>
 </section>
@@ -724,7 +733,7 @@
   <div class="cols">
     <div>
       <div class="box thm"><span class="label">algorithm</span>
-        <p>Eliminate $x_1, \dots, x_n$ in turn. Every remaining row reads $0 \le c$.</p>
+        <p>Eliminate $x_1, \dots, x_n$ in turn. Every remaining constraint reads $0 \le c$.</p>
         <p>$Ax \le b$ is feasible $\iff$ every remaining $c \ge 0$.</p>
       </div>
       <p class="small"><b>On the example:</b> eliminating $y$ from $0 \le y \le 4$ pairs $y \le 4$ with $-y \le 0$ and leaves $0 \le 4$. True, so $P$ is nonempty.</p>
@@ -734,7 +743,7 @@
     <div>
       <p class="small">$n=6$, 14 random cuts + box. Pairwise worst case: $m \to m^2/4$ per step.</p>
       <table>
-        <thead><tr><th>eliminated</th><th class="num">FM rows</th><th class="num">true facets</th></tr></thead>
+        <thead><tr><th>eliminated</th><th class="num">FM constraints</th><th class="num">true facets</th></tr></thead>
         <tbody>
           <tr><td>0</td><td class="num">26</td><td class="num">—</td></tr>
           <tr><td>1</td><td class="num">64</td><td class="num">29</td></tr>
@@ -752,7 +761,7 @@
     redundancy removal the output can be exponential, so the problem is not
     only bad bookkeeping.</p>
     <p>Look at the table's third column. The projections themselves stay small (under
-    40 facets) while FM's description of them grows past seventy thousand rows. The
+    40 facets) while FM's description of them grows past seventy thousand constraints. The
     gap between "the object" and "a description FM can produce" is enormous.</p>
     <p>FM is still useful. It proves theorems (projection of a polyhedron is a
     polyhedron; Minkowski–Weyl; Farkas), and it is used in practice where
@@ -777,10 +786,10 @@
       <div class="box def"><span class="label">definition</span>
         <p>$y \in \mathbb{R}^m$ is a <span class="term">Farkas certificate</span> for $Ax \le b$ if
         $$y \ge 0, \qquad y^\top A = 0, \qquad y^\top b &lt; 0.$$</p>
-        <p class="small muted">In words: weights for the rows that make every variable cancel and leave a negative right-hand side.</p>
+        <p class="small muted">In words: weights for the constraints that make every variable cancel and leave a negative right-hand side.</p>
       </div>
       <div class="box"><span class="label">why it proves there is no solution</span>
-        <p class="small">Adding true inequalities with weights $\ge 0$ gives a true inequality. These weights produce $0 \le (\text{something negative})$, which is false. So the rows can't all be true at once.</p>
+        <p class="small">Adding true inequalities with weights $\ge 0$ gives a true inequality. These weights produce $0 \le (\text{something negative})$, which is false. So the constraints can't all be true at once.</p>
       </div>
     </div>
     <div>
@@ -802,7 +811,7 @@
     <p>This is the easy direction. The content of Farkas'
     lemma is the converse: <em>whenever</em> the system is infeasible, such a $y$
     exists. There is never an infeasible linear system whose infeasibility cannot be
-    shown by adding up its rows.</p>
+    shown by adding up its constraints.</p>
     <p>Contrast with unit 00. For vertex cover, a short lower-bound certificate
     sometimes did not exist (the triangle). For linear systems over the reals, the
     certificate always exists. That difference, integers versus reals, is roughly
@@ -849,18 +858,18 @@
   <div class="cols wide-left">
     <div>
       <div class="box"><span class="label">why a certificate always exists, by running FM</span>
-        <p class="small"><b>1.</b> Every row FM produces is a nonnegative combination of the original rows: it only ever adds rows with positive multipliers.</p>
-        <p class="small"><b>2.</b> Run FM until no variable is left. Every final row reads $0 \le c$, and each carries the weights $y \ge 0$ that built it.</p>
+        <p class="small"><b>1.</b> Every constraint FM produces is a nonnegative combination of the original constraints: it only ever adds constraints with positive multipliers.</p>
+        <p class="small"><b>2.</b> Run FM until no variable is left. Every final constraint reads $0 \le c$, and each carries the weights $y \ge 0$ that built it.</p>
         <p class="small"><b>3.</b> If some $c &lt; 0$, its weights are a certificate. If every $c \ge 0$, FM says the system is feasible. One of the two always happens.</p>
       </div>
       <div class="box ex"><span class="label">example</span>
-        <p class="small">$x \le 1$, $-x \le -2$. Eliminating $x$ pairs the two rows with multipliers $1, 1$: $\;0 \le -1$, built from $y = (1, 1)$. That is the certificate.</p>
+        <p class="small">$x \le 1$, $-x \le -2$. Eliminating $x$ pairs the two constraints with multipliers $1, 1$: $\;0 \le -1$, built from $y = (1, 1)$. That is the certificate.</p>
       </div>
     </div>
     <div class="box good"><span class="label">in code · lab step 5</span>
-      <p class="small">To remember the weights, append the unit vector $e_i$ to row $i$ as $m$ extra columns that are never eliminated. FM combines rows linearly, so the extra columns accumulate exactly $y$.</p>
-      <p class="small">When a row with zero $x$-part and $b &lt; 0$ appears, its tail <em>is</em> the certificate: the <span class="term">tail trick</span>.</p>
-      <p class="small">With tails, the example's rows are $(1 \mid 1, 0) \le 1$ and $(-1 \mid 0, 1) \le -2$, and their sum is $(0 \mid 1, 1) \le -1$.</p>
+      <p class="small">To remember the weights, append the unit vector $e_i$ to constraint $i$ as $m$ extra columns that are never eliminated. FM combines constraints linearly, so the extra columns accumulate exactly $y$.</p>
+      <p class="small">When a constraint with zero $x$-part and $b &lt; 0$ appears, its tail <em>is</em> the certificate: the <span class="term">tail trick</span>.</p>
+      <p class="small">With tails, the example's constraints are $(1 \mid 1, 0) \le 1$ and $(-1 \mid 0, 1) \le -2$, and their sum is $(0 \mid 1, 1) \le -1$.</p>
     </div>
   </div>
   <aside class="notes">
@@ -869,11 +878,11 @@
     come with an algorithm that finds the object, and many algorithms, run to
     completion, prove a theorem.</p>
     <h4>Full proof</h4>
-    <p><b>Invariant.</b> Every row FM produces is $y^\top(A, b)$ for some $y \ge 0$. By
-    induction: the original row $i$ is $e_i^\top(A, b)$, and each new row is a
-    positive combination of two rows that already have this form, so its $y$ is the
+    <p><b>Invariant.</b> Every constraint FM produces is $y^\top(A, b)$ for some $y \ge 0$. By
+    induction: the original constraint $i$ is $e_i^\top(A, b)$, and each new constraint is a
+    positive combination of two constraints that already have this form, so its $y$ is the
     same positive combination of theirs. <b>Termination.</b> After eliminating all
-    $n$ variables each row is $0 \le c$ with $y^\top A = 0$ and $y^\top b = c$. If some
+    $n$ variables each constraint is $0 \le c$ with $y^\top A = 0$ and $y^\top b = c$. If some
     $c &lt; 0$, that $y$ satisfies (II). If every $c \ge 0$, FM's correctness (each
     projection is exact) lifts a solution back up one variable at a time, so (I)
     holds. $\square$</p>
@@ -958,7 +967,7 @@
       <p><b>Solvers return certificates.</b> Gurobi: set <code>InfUnbdInfo=1</code> and read <code>FarkasDual</code>. HiGHS: <code>getDualRay</code>. An infeasible model comes with the $y$ you are building.</p>
     </div>
     <div>
-      <p><b>Cutting planes (unit 08).</b> A <span class="term">Chvátal–Gomory cut</span> is a nonnegative combination of rows whose coefficients happen to be integers, with the right side rounded down. It is Farkas plus rounding.</p>
+      <p><b>Cutting planes (unit 08).</b> A <span class="term">Chvátal–Gomory cut</span> is a nonnegative combination of constraints whose coefficients happen to be integers, with the right side rounded down. It is Farkas plus rounding.</p>
       <p><b>The KKT conditions (unit 29)</b> are the separation picture for curved sets.</p>
       <p class="muted">Solvers compute in floating point, so their $y$ satisfies $y^\top A \approx 0$. Your integer $y$ satisfies it exactly. Exact verification of solver claims is a live research area.</p>
     </div>
@@ -992,7 +1001,7 @@
       <p class="proof-pointer">full proof in the notes (N)</p>
     </div>
     <div class="box ex"><span class="label">example: the best corner of the running example</span>
-      <p class="small">Maximize $2x + y$:</p>
+      <p class="small">Maximize $2x + y$ over <span class="ref" data-ref="P">$P$</span>:</p>
       <table style="margin:0">
         <thead><tr><th>corner</th><th class="num">$2x + y$</th></tr></thead>
         <tbody>
@@ -1082,8 +1091,8 @@ uv run co then 01      # FM blow-up vs true facets · your vertices vs qhull · 
   </div>
   <aside class="notes">
     <p>The second checkpoint is the one the curriculum names, and it is meant to be
-    done on paper. FM by hand on a 3-variable system with 6 rows takes about ten
-    minutes. You can also often spot a certificate by eye: look for rows whose
+    done on paper. FM by hand on a 3-variable system with 6 constraints takes about ten
+    minutes. You can also often spot a certificate by eye: look for constraints whose
     $x$-coefficients cancel when added.</p>
     <p>In <code>NOTES.md</code>: your blow-up numbers, and your one-sentence
     explanation of why the certificate is a proof.</p>

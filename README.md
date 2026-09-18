@@ -138,7 +138,7 @@ tests, and a `then.py` whose numbers the slides and lab sheet quote.
   under a `<h4>Full proof</h4>`, with `<p class="proof-pointer">full proof in the
   notes (N)</p>` on the slide.
 - **A small worked example for every definition.** Prefer one running example the
-  whole deck returns to (unit 01's four-row polygon) over a fresh one per slide.
+  whole deck returns to (unit 01's four-constraint polygon) over a fresh one per slide.
   Examples go in `<div class="box ex">`, with numbers you have checked.
 - **Mark glossary terms.** Wrap a term's first use on a slide in
   `<span class="term">…</span>`, adding `data-term="…"` when the words differ from the
@@ -146,6 +146,16 @@ tests, and a `then.py` whose numbers the slides and lab sheet quote.
   which `co slides` builds from `GLOSSARY.org`; `co glossary` rebuilds every unit
   and reports a marked term the glossary lacks, or a glossary slide link that names
   no slide.
+- **Make the running example hoverable.** A reader should never page back to recall
+  what "constraint 3", "item B" or "node $a$" is. Each deck lists its example's
+  named pieces once, before `<div class="reveal">`, as
+  `<div class="refs" hidden><template data-ref="c3">…</template></div>` (the
+  content is shown as is: math, a note, a small SVG); each mention on a slide or in
+  the notes is `<span class="ref" data-ref="c3">constraint 3</span>`. Hover shows
+  it, a click or tap pins it. `deck-check.sh` fails on a ref with no template. A
+  term is a concept and opens its definition; a ref is an object and shows it.
+- **Plain words before matrix words.** Say "constraint", not "row", in prose;
+  "row" is for a row of a matrix.
 - **Figures are inline SVG** using the classes in `deck.css`, so they follow dark
   mode. Numbers on slides come from running code, never from memory.
 - **A lab is 2–3 hours and 4–6 steps.** Each step is one function of 10–40 lines,

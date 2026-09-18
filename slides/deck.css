@@ -334,6 +334,28 @@ body.reading { overflow: auto !important; height: auto !important; }
 }
 .reveal .term:hover { background: var(--accent-soft); border-radius: 3px; }
 
+/* <span class="ref">: a name for a piece of the running example; hover shows it.
+   Solid, thin and in the accent colour, so it never reads as a glossary term. */
+.reveal .ref {
+  cursor: zoom-in; white-space: nowrap;
+  border-bottom: 1px solid var(--accent);   /* a border, not text-decoration: it also underlines KaTeX */
+  padding-bottom: .04em;
+}
+.reveal .ref:hover { background: var(--accent-soft); border-radius: 3px; }
+.ref-card {
+  position: fixed; z-index: 61; max-width: min(420px, calc(100vw - 24px)); padding: 8px 12px;
+  background: var(--surface); color: var(--ink); border: 1px solid var(--rule);
+  border-left: 5px solid var(--accent); border-radius: 6px; box-shadow: 0 6px 28px rgba(0,0,0,.16);
+  font: 17px/1.45 var(--f-body);
+}
+.ref-card .ref-name {
+  display: block; font: 12px var(--f-mono); letter-spacing: .08em; text-transform: uppercase;
+  color: var(--accent); margin-bottom: 2px;
+}
+.ref-card .ref-name .katex { text-transform: none; letter-spacing: 0; font-size: 1.3em; }  /* keep $c_3$ as c₃ */
+.ref-card .ref-note { display: block; font-size: .82em; color: var(--ink-soft); }
+.ref-card svg { display: block; margin-top: 6px; }
+
 .gl-pop, .gl-index {
   position: fixed; z-index: 60; background: var(--surface); color: var(--ink);
   border: 1px solid var(--rule); border-left: 5px solid var(--unit); border-radius: 6px;
@@ -377,7 +399,7 @@ body.reading { overflow: auto !important; height: auto !important; }
 .reveal .proof-pointer { font-family: var(--f-mono); font-size: .44em; color: var(--ink-faint); letter-spacing: .04em; }
 
 @media print {
-  .gl-pop, .gl-index { display: none; }
+  .gl-pop, .gl-index, .ref-card { display: none; }
 }
 
 /* link to a unit's optional interactive figures (explore.html): small, muted, skippable */
