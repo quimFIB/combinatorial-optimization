@@ -73,7 +73,7 @@ def test_step1_duals_are_a_certificate(seed):
     inst = small(seed + 20)
     pats = all_patterns(inst.W, inst.widths)[: 3 * inst.m] + lab.initial_patterns(inst.W, inst.widths)
     value, x, duals = lab.solve_master(pats, inst.demands)
-    assert all(y >= -1e-9 for y in duals), "covering rows have nonnegative duals"
+    assert all(y >= -1e-9 for y in duals), "covering constraints have nonnegative duals"
     assert all(sum(a * y for a, y in zip(p, duals)) <= 1 + 1e-7 for p in pats), "dual feasibility"
     assert sum(d * y for d, y in zip(inst.demands, duals)) == pytest.approx(value), "strong duality"
 

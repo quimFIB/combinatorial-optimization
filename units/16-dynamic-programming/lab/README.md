@@ -6,11 +6,11 @@
 
 Every DP in this lab is a shortest path in a DAG of states. Knapsack's states are
 capacities, and Held–Karp's are (subset, last city). A tree DP's states are
-subtrees; a tree-decomposition DP's are (bag, subset of the bag). The lab is about
-seeing what the state space *is*, since its size is the running time. Knapsack is
-exponential in the number of digits of the capacity. Held–Karp is exponential in
-n, but only as 2ⁿ rather than n!. The decomposition DP is exponential in the width
-alone, and `then` plots it.
+(vertex, in or out); a tree-decomposition DP's are (bag, subset of the bag). The
+lab is about seeing what the state space *is*, since its size is the running time.
+Knapsack is exponential in the number of digits of the capacity. Held–Karp is
+exponential in n, but only as 2ⁿ rather than n!. The decomposition DP is
+exponential in the width alone, and `then` plots it.
 
 ## Given, and what you write
 
@@ -51,7 +51,7 @@ In the 0/1 version, each item may update each capacity once. That's why a 1-D ta
 needs the capacities in *decreasing* order, or a fresh row. In the unbounded
 version, the increasing order lets an item be reused.
 
-**Done when** `step 1 ✓`: brute force agrees on 40 instances, 10 with fractional
+**Done when** `step 1 ✓`: brute force agrees on 40 instances plus 10 with fractional
 values; capacity 100 000 runs within the limit. The unbounded version agrees on 30
 instances plus 10 shaped like unit 10's pricing problem (float duals, roll width 100).
 
@@ -78,8 +78,8 @@ runs without recursion errors, and a 300-vertex tree matches HiGHS.
 
 **Done when** `step 4 ✓`: your checker rejects each property's violation on its own.
 Your elimination always yields a valid decomposition. Min-degree finds width exactly
-k on k-trees, 2 on a cycle and 5 on K₆. The centre-first order on a star gives
-width 6.
+k on k-trees, 2 on a cycle and 5 on K₆. The centre-first order on a star with six
+leaves gives width 6.
 
 *Think about:* why does eliminating the centre of a star first cost so much? What
 does that say about how sensitive treewidth heuristics are to the ordering?

@@ -47,8 +47,8 @@ loops are unfolds.
 space (x and slacks). The work is rewriting it in x only, by substituting
 *s = b − Ax*, then clearing denominators.
 
-**Done when** `step 1 ✓`. On 12 random IPs, every cut from every fractional row
-is integer, is violated by the LP vertex, and removes no feasible integer point
+**Done when** `step 1 ✓`. On 12 random IPs, every cut from every fractional tableau
+row is integer, is violated by the LP vertex, and removes no feasible integer point
 (checked by enumeration). The textbook example gets a cut that forces *x₂ ≤ 1*.
 
 ## Step 2 — The pure Gomory loop  *(20 min)*
@@ -64,8 +64,8 @@ optimum, and the loop reaches the optimum on at least 12 of 15 instances within
 *Shape: a 0/1 knapsack DP.* Minimize Σ(1 − xⱼ) over sets with weight above the
 capacity. The DP table is indexed by accumulated weight, capped at capacity + 1.
 
-**Done when** `step 3 ✓`: on 25 random rows, when you return None no violated cover
-exists (checked over all subsets), and when you return a cover it really is one
+**Done when** `step 3 ✓`: on 25 random knapsack constraints, when you return None
+no violated cover exists (checked over all subsets), and when you return a cover it really is one
 and is violated. The small example must return the *most* violated cover.
 
 ## Step 4 — Lifting  *(35 min)*
@@ -73,8 +73,8 @@ and is violated. The small example must return the *most* violated cover.
 *Shape: a fold over the variables outside the cover.* Each coefficient is "how
 much room is left" when that variable is set to 1.
 
-**Done when** `step 4 ✓`: on 20 random rows the lifted inequality is valid for
-every feasible 0/1 point, and **maximal**: raising any lifted coefficient by 1
+**Done when** `step 4 ✓`: on 20 random knapsack constraints the lifted inequality
+is valid for every feasible 0/1 point, and **maximal**: raising any lifted coefficient by 1
 makes it invalid.
 
 ## Step 5 — The root loop  *(30 min)*
@@ -97,8 +97,8 @@ uv run co then 08
    36 cuts. Seed 16 **stalled**: after 80 cuts the bound is 24.5 against an
    optimum of 23, and the cut coefficients have grown to **13 digits**. This is why
    solvers run only a few rounds of Gomory-style cuts.
-2. **Covers at the root** on 20-item, 2-row knapsacks. Your cuts close 8–27% of the
-   gap. SCIP's root cuts close 45–78% on the instances where it reports a root bound.
+2. **Covers at the root** on 20-item knapsacks with 2 constraints. Your cuts close
+   8–27% of the gap. SCIP's root cuts close 45–78% on the instances where it reports a root bound.
 3. **SCIP nodes with cuts off / on** (presolve off): 45 / 34, 26 / 2, 386 / 322,
    88 / 66, 1 / 1, 209 / 184.
 

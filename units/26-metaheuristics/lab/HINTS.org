@@ -14,7 +14,7 @@ which is the cost to beat in section 1 of ~then~.
 ** Functional route
 Nearest neighbour is an unfold over the partial tour tuple, stopping when it has n cities.
 
-* Step 2 — 2-opt with neighbour lists and don't-look bits
+* Step 2 — 2-opt
 
 ** Rung 1 — the move, in positions
 Successor direction: a at position i, b = tour[i+1], c at position j, d = tour[j+1]. Reversing
@@ -89,7 +89,7 @@ anything within 2% of the best so far is accepted, which lets the search move si
 A ~reduce~ over iterations with an eight-field state. The segment update returns fresh score and
 use lists.
 
-* Step 6 — Time to target, and a test
+* Step 6 — Time to target, and a verdict
 
 ** Rung 1 — TTT points
 Sort the successful times. The i-th point sits at height (i + ½)/N, where N counts /all/ runs, so

@@ -1,8 +1,8 @@
 """Unit 01 lab — polyhedra, Fourier–Motzkin, and Farkas.  REFERENCE SOLUTION, functional.
 
 Fourier–Motzkin is a fold: eliminating all variables is
-`reduce(eliminate, range(n), system)`, and Farkas is the same fold over rows
-that carry their own multipliers. Checked by the same tests:
+`reduce(eliminate, range(n), system)`, and Farkas is the same fold over
+constraints that carry their own multipliers. Checked by the same tests:
     uv run co test 01 --solution functional
 """
 

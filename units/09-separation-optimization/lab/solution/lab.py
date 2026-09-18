@@ -98,7 +98,7 @@ def separate_subtours(n, x, eps=1e-6):
 # ---------------------------------------------------------------- step 4 ---
 
 def subtour_lp(tsp):
-    """The subtour elimination LP bound by lazy row generation.
+    """The subtour elimination LP bound by lazy constraints.
     Returns (value, x, cuts_added, lp_solves)."""
     n = tsp.n
     milp = degree_milp(tsp, integer=False)

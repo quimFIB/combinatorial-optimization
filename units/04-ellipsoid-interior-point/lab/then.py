@@ -57,7 +57,7 @@ def part1():
 
 
 def part2():
-    print("\n2 · Where floating point ends the pure barrier method (3 variables, 14 rows)")
+    print("\n2 · Where floating point ends the pure barrier method (3 variables, 14 constraints)")
     rows = random_polytope(3, 8, seed=0)
     A = np.array([a for a, _ in rows], float)
     b = np.array([bb for _, bb in rows], float)

@@ -3,7 +3,7 @@
 Ten bin packing instances (six uniform, four "triplets" where every bin must be exactly full), 20 s each:
 
   A  assignment model, x <= y linking, one bin per item
-  B  capacity rows linked to y
+  B  capacity constraints linked to y
   B' the same with SCIP's own symmetry handling switched off
   C  B + symmetry-breaking constraints
   D  C + first-fit-decreasing bin count + L2 fixing (bounded_model)
@@ -119,10 +119,10 @@ def config_f(sizes, C):
     return m, {}
 
 
-CONFIGS = [("A  x <= y linking", config_a), ("B  linked capacity", config_b),
+CONFIGS = [("A  x <= y linking", config_a), ("B  capacity linked", config_b),
            ("B' … symmetry handling off", config_b_nosym), ("C  B + symmetry breaking", config_c),
            ("D  C + FFD bins, L2 fixing", config_d), ("E  D + FFD as MIP start", config_e),
-           ("F  arc-flow", config_f)]
+           ("F  arc flow", config_f)]
 
 
 def sgm(values, shift=1.0):

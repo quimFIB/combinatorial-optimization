@@ -6,7 +6,7 @@
 
 A solver's speed on a model depends as much on the model as on the solver. This lab takes the
 textbook bin-packing model, which is the classic slow one (one bin per item, interchangeable bins, a
-weak LP), and applies one intervention at a time: link the capacity rows, break the symmetry, bound
+weak LP), and applies one intervention at a time: link the capacity constraints, break the symmetry, bound
 the bin count from both sides, offer a start, and finally reformulate. Every intervention must leave
 the optimum unchanged, and the tests check that it does. Then `then` measures each one separately. The
 measurements are the lesson: most single-run differences between interventions are smaller than
@@ -37,21 +37,21 @@ uv run co test 27 --solution functional
 ## Style
 
 A solver model is mutable by nature: you build it by calling `addVar` and `addCons`. The functional
-reference keeps those calls, but computes the rows, the start values and the arc set as values first.
+reference keeps those calls, but computes the constraints, the start values and the arc set as values first.
 First-fit decreasing, L2 and the parser are pure. The lab sheet says so rather than pretending otherwise.
 
 ---
 
 ## Step 1 — The assignment model  *(25 min)*
 
-*Shape: two families of variables, three families of rows.*
+*Shape: two families of variables, three families of constraints.*
 
 **Done when** `step 1 ✓`. Both variants find the DP optimum on 10 instances. The LP bound is exactly 1
-unlinked and exactly Σsizes/C linked, and the row counts are right.
+unlinked and exactly Σsizes/C linked, and the constraint counts are right.
 
 ## Step 2 — Symmetry breaking  *(15 min)*
 
-*Shape: n − 1 rows and a triangle of fixed variables.*
+*Shape: n − 1 constraints and a triangle of fixed variables.*
 
 **Done when** `step 2 ✓`. The optimum is unchanged on 10 instances, two symmetric copies are cut off
 (item 1 in bin 2, bin 1 used while bin 0 is empty), and a canonical packing is still allowed.
@@ -75,11 +75,11 @@ rejected. A packing whose bins would violate the symmetry breaking is renumbered
 
 ## Step 5 — Arc flow  *(30 min)*
 
-*Shape: a graph on 0..C; flow conservation; demand rows.*
+*Shape: a graph on 0..C; flow conservation; demand constraints.*
 
 **Done when** `step 5 ✓`. The optimum matches the DP on 10 instances, the LP is at least the
 assignment LP and at most OPT, three items of 51 get LP value 3 (the assignment LP says 1.53), and a
-hand-counted instance has exactly the right variables and rows.
+hand-counted instance has exactly the right variables and constraints.
 
 ## Step 6 — Reading the log  *(20 min)*
 
@@ -109,7 +109,7 @@ Ten instances (six uniform with 40 items in 20–60 and C = 100, four "triplets"
 | C  B + symmetry breaking | 9/10 | 3.80 | 598 | 0.62% |
 | D  C + FFD bin count, L2 fixing | 10/10 | 3.43 | 1 380 | 0.00% |
 | E  D + FFD as MIP start | 9/10 | 3.02 | 1 576 | 0.62% |
-| **F  arc-flow** | **10/10** | **1.40** | **1** | **0.00%** |
+| **F  arc flow** | **10/10** | **1.40** | **1** | **0.00%** |
 
 That looks like a tidy staircase. It isn't one. Wherever two consecutive rows disagreed about solving
 an instance, `then` re-ran both with three more SCIP random seeds (seconds, 20.0 = not solved):

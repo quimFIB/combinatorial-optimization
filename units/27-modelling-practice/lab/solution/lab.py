@@ -22,8 +22,8 @@ def _quiet(model):
 
 def assignment_model(sizes, capacity, nbins, linked=True, vtype="B"):
     """The assignment model. x[i, b] = item i in bin b, y[b] = bin b used; minimise sum y; each item in exactly
-    one bin. linked=False: capacity rows sum_i s_i x[i, b] <= capacity, plus x[i, b] <= y[b] for every pair.
-    linked=True: capacity rows sum_i s_i x[i, b] <= capacity * y[b], and no x <= y rows.
+    one bin. linked=False: capacity constraints sum_i s_i x[i, b] <= capacity, plus x[i, b] <= y[b] for every pair.
+    linked=True: capacity constraints sum_i s_i x[i, b] <= capacity * y[b], and no x <= y constraints.
     vtype="C" gives the LP relaxation (bounds 0..1). Returns (model, x, y) with x a dict and y a list."""
     m = _quiet(Model("binpacking"))
     n = len(sizes)

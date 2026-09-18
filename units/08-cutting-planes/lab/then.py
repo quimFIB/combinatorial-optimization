@@ -53,7 +53,7 @@ def part1():
 def part2_and_3():
     bare = {"presolving/maxrounds": 0, "separating/maxrounds": 0, "separating/maxroundsroot": 0}
     cuts_on = {"presolving/maxrounds": 0}
-    print("\n2 · Root gap closed on multi-dimensional knapsacks (20 items, 2 rows)")
+    print("\n2 · Root gap closed on multi-dimensional knapsacks (20 items, 2 constraints)")
     print(f"   {'seed':>4}{'LP':>10}{'opt':>8}{'yours: bound':>14}{'closed':>8}{'cuts':>6}"
           f"{'SCIP root, cuts':>17}{'closed':>8}")
     rows = []

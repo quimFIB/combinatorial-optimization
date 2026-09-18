@@ -125,7 +125,7 @@ def argmin_layer():
 
 
 def branching():
-    print("\n4. A learned branching rule, trained on 10 knapsacks (16 items, 3 rows), tested on 20 held-out (18 items)\n")
+    print("\n4. A learned branching rule, trained on 10 knapsacks (16 items, 3 constraints), tested on 20 held-out (18 items)\n")
     bb = unit("07")
     u28 = unit("28")
     train = [s for seed in range(100, 110) for s in lab.collect_strong_branching(multi_knapsack(16, 3, seed), 2000)]

@@ -2,7 +2,7 @@
 
 Steps 2–5 work on the tableau your unit-02 simplex returns
 (`LPResult.tableau`, layout [A | I | b] over [-c | 0 | z]), for LPs of the form
-max c.x, A x <= b, x >= 0 with m rows and n variables.
+max c.x, A x <= b, x >= 0 with m constraints and n variables.
 """
 
 from __future__ import annotations
@@ -16,8 +16,8 @@ simplex = ref.unit("02")          # reference two_phase and pivot; CO_MINE=02 us
 # ---------------------------------------------------------------- step 1 ---
 
 def dual(lp: GeneralLP) -> GeneralLP:
-    # For a max primal: row <= -> y >= 0, >= -> y <= 0, = -> free;
-    #                   x >= 0 -> dual row >=, x <= 0 -> <=, free -> =.
+    # For a max primal: constraint <= -> y >= 0, >= -> y <= 0, = -> free;
+    #                   x >= 0 -> dual constraint >=, x <= 0 -> <=, free -> =.
     # For a min primal every sign flips.
     flip = {"max": False, "min": True}[lp.sense]
     row_to_sign = {"<=": ">=0", ">=": "<=0", "=": "free"}
@@ -54,16 +54,16 @@ def certify_optimal(A, b, c, x, y) -> tuple[bool, str]:
         return False, "x has a negative entry"
     for i in range(m):
         if sum(A[i][j] * x[j] for j in range(n)) > b[i]:
-            return False, f"primal row {i} violated"
+            return False, f"primal constraint {i} violated"
     if any(v < 0 for v in y):
         return False, "y has a negative entry"
     for j in range(n):
         if sum(A[i][j] * y[i] for i in range(m)) < c[j]:
-            return False, f"dual row {j} violated"
+            return False, f"dual constraint {j} violated"
     for i in range(m):
         slack = b[i] - sum(A[i][j] * x[j] for j in range(n))
         if y[i] != 0 and slack != 0:
-            return False, f"complementary slackness fails on primal row {i}"
+            return False, f"complementary slackness fails on primal constraint {i}"
     for j in range(n):
         reduced = sum(A[i][j] * y[i] for i in range(m)) - c[j]
         if x[j] != 0 and reduced != 0:

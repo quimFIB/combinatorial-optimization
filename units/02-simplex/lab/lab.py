@@ -84,7 +84,7 @@ def simplex(A, b, c, rule="bland", eps=0):
 def two_phase(A, b, c, rule="bland", eps=0):
     """The two-phase method for any b.
 
-    Phase 1: negate each row with b_i < 0 and give it an artificial variable.
+    Phase 1: negate each constraint with b_i < 0 and give it an artificial variable.
     Maximize -(sum of artificials) from the basis of slacks and artificials.
     If that optimum is below -eps, return status "infeasible". Otherwise pivot
     any artificial still basic (at value 0) out of the basis; if its row has no

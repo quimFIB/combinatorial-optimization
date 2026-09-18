@@ -1,7 +1,7 @@
 """Unit 24 lab — LP rounding and the primal-dual method.  REFERENCE SOLUTION, imperative.
 
 LPs are solved by colib.approx.covering_lp (HiGHS): min c.x, A x >= 1, 0 <= x <= 1, returning the value, the
-primal and the row duals. Everything else is yours. Set cover and vertex cover instances are unit 00's classes;
+primal x and the duals y. Everything else is yours. Set cover and vertex cover instances are unit 00's classes;
 facility location is colib.approx.FacilityLocation. Dual values in the primal-dual algorithms are exact
 Fractions, so "tight" means equal, not close.
 """
@@ -43,7 +43,7 @@ def vertex_cover_rounding(n, edges, weights):
 # ---------------------------------------------------------------- step 2 ---
 
 def set_cover_lp(sc):
-    """The LP relaxation of set cover: one row per element, one column per set. Returns (value, x)."""
+    """The LP relaxation of set cover: one constraint per element, one variable per set. Returns (value, x)."""
     A = [[1 if e in s else 0 for s in sc.sets] for e in range(sc.universe)]
     value, x, _ = covering_lp(A, sc.costs)
     return value, x

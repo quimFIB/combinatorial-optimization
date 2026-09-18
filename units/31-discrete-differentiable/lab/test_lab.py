@@ -162,7 +162,7 @@ def random_qp(seed, n=5, m=6):
 def test_step4_active_constraints():
     A = np.array([[1.0, 0.0], [0.0, 1.0], [1.0, 1.0]])
     b = np.array([1.0, 2.0, 5.0])
-    assert lab.active_constraints(A, b, [1.0, 2.0], [0.5, 0.0, 0.0]) == [0], "row 1 is tight but not strictly complementary"
+    assert lab.active_constraints(A, b, [1.0, 2.0], [0.5, 0.0, 0.0]) == [0], "constraint 1 is tight but not strictly complementary"
     assert lab.active_constraints(A, b, [1.0, 2.0], [0.5, 0.2, 0.1]) == [0, 1]
 
 

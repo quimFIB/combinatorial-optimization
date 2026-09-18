@@ -69,12 +69,12 @@ bought. On vertex cover (f = 2), cost ≤ 2·OPT.
 
 ## Step 4 — Jain–Vazirani facility location  *(50 min)*
 
-*Shape: an event loop in exact arithmetic; a greedy independent set; nearest assignment.*
+*Shape: an event loop in exact arithmetic; a greedy non-conflicting set; nearest assignment.*
 
 **Done when** `step 4 ✓`. Three hand-traced ascents give exact α and opening times. On 25 random
 instances, no facility is overpaid, every temporarily open facility was paid exactly at its opening time,
 and each client froze at min over open facilities of max(opening time, distance). Σα ≤ OPT. Pruning keeps
-an independent, maximal set in opening order (strictly-paying clients only), and cost ≤ 3·Σα ≤ 3·OPT.
+a maximal non-conflicting set in opening order (strictly-paying clients only), and cost ≤ 3·Σα ≤ 3·OPT.
 
 *Think about:* the client-freezing test is stronger than the guarantee needs. Which invariant does the
 factor-3 proof actually use?

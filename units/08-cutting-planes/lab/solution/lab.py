@@ -3,7 +3,7 @@
 Part A (steps 1–2): Gomory fractional cuts for pure integer programs
     max c.x  s.t.  A x <= b,  x >= 0 integer,  A, b integer,
 read off unit 02's exact simplex tableau (layout [A | I | b] over [-c | 0 | z]).
-Part B (steps 3–5): knapsack cover cuts for 0/1 knapsack rows w.x <= cap,
+Part B (steps 3–5): knapsack cover cuts for 0/1 knapsack constraints w.x <= cap,
 lifted, inside a root cutting loop on colib.mip MILPs (minimization).
 """
 
@@ -151,7 +151,7 @@ def age_pool(pool, x, max_age):
 def root_cut_loop(milp: MILP, rounds=20, max_age=3):
     """Root cutting-plane loop for a 0/1 MILP whose A_ub rows are knapsacks with
     nonnegative integer weights. Each round: solve the LP with the pool's cuts,
-    age the pool, separate a lifted cover cut from every knapsack row, and add the
+    age the pool, separate a lifted cover cut from every knapsack constraint, and add the
     violated ones that are not already in the pool. Stop when a round adds nothing.
     Returns (bounds, pool_sizes, total_cuts_added): the LP bound and pool size at
     the start of every round."""

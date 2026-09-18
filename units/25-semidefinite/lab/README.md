@@ -33,7 +33,7 @@ The whole suite takes a few seconds, though most tests solve an SDP.
 ## Style
 
 Most of this unit is linear algebra, and numpy already expresses it without mutation. The functional
-reference differs from the imperative one mainly in step 3 (LP rows as comprehensions) and step 5
+reference differs from the imperative one mainly in step 3 (LP constraints as comprehensions) and step 5
 (local search as an unfold over cuts).
 
 ---
@@ -61,7 +61,7 @@ exact value worth having, and when would sampling be the only option?
 
 ## Step 3 — LP bounds  *(30 min)*
 
-*Shape: build rows, call the LP.*
+*Shape: build the constraints, call the LP.*
 
 **Done when** `step 3 ✓`. The edge LP always returns the total weight. The triangle LP gives 4 on C₅,
 6 on C₇, 4 on K₄ and 20/3 on K₅, and sits between OPT and the edge LP on 10 graphs. On three
@@ -126,7 +126,8 @@ out (60 s) at n = 60. The triangle LP took 1.9 s at n = 35.
 
 - [ ] `uv run co test 25` shows all five steps ✓.
 - [ ] You can show empirically that your GW cuts average well above 0.878 of optimum (`then`), and explain
-      why the guarantee is nonetheless tight: the per-edge angle, and gap instances for the SDP.
+      why the guarantee is nonetheless tight in all three senses: the per-edge angle, gap instances for
+      the SDP, and UGC hardness.
 - [ ] You can say why SDPs stay a theoretical tool at scale, with the numbers from `then`.
 
 ## Reading

@@ -55,7 +55,7 @@ def shifted_geometric_mean(values, shift=10.0):
 
 
 def par_seconds(run, timeout, penalty=1):
-    """Penalised run time: the measured seconds if solved, penalty * timeout otherwise (PAR1 for penalty 1)."""
+    """Penalised run time: the measured seconds if solved, penalty * timeout otherwise (PAR-1 for penalty 1)."""
     raise NotImplementedError  # TODO step 3
 
 
@@ -107,8 +107,8 @@ def geometric_ratio_ci(a, b, rng, shift=10.0, level=0.95, resamples=2000):
 # ---------------------------------------------------------------- step 6 ---
 
 def holm(pvalues):
-    """Holm-Bonferroni adjusted p-values, in the original order: sort ascending, multiply the k-th smallest (from 0)
-    by (m - k), take running maxima, cap at 1."""
+    """Holm-Bonferroni adjusted p-values, in the original order: sort ascending, multiply the k-th smallest (k = 1..m)
+    by (m - k + 1), take running maxima, cap at 1."""
     raise NotImplementedError  # TODO step 6
 
 

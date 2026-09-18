@@ -18,8 +18,8 @@ from t via ~to[parent[v] ^ 1]~ (the edge's tail) to find the bottleneck, then wa
 again to push it.
 
 ** Rung 3 — the cut
-From the finished flow (not the residual structure): residual u → v if f &lt; c,
-and v → u if f &gt; 0. BFS from s. Everything you reach is the source side, and the
+From the finished flow (not the residual structure): residual u → v if f < c,
+and v → u if f > 0. BFS from s. Everything you reach is the source side, and the
 original arcs leaving it are saturated. Their capacities sum to the flow value.
 
 ** Functional route

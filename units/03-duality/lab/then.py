@@ -3,7 +3,7 @@
   1. Sign conventions: the same LP's shadow prices as you compute them, as
      HiGHS reports them for max and for min, and as scipy reports them.
   2. Ranging: your rhs ranges against HiGHS's own ranging report, on the
-     binding rows of 50 random LPs.
+     binding constraints of 50 random LPs.
   3. Warm start: add a cut to a solved LP; your dual simplex's pivots against a
      cold two-phase re-solve, and HiGHS warm against HiGHS cold.
 
@@ -34,17 +34,17 @@ def part1():
     hmax = highs_lp(A, b, c, sense="max").row_duals
     hmin = highs_lp(A, b, [-v for v in c], sense="min").row_duals
     sp = linprog([-v for v in c], A_ub=A, b_ub=b, method="highs").ineqlin.marginals
-    print(f"   {'source':<42}{'y1':>6}{'y2':>6}")
+    print(f"   {'source':<42}{'u':>6}{'v':>6}")
     print(f"   {'yours (reduced costs of the slacks)':<42}{str(mine[0]):>6}{str(mine[1]):>6}")
     print(f"   {'HiGHS, sense=max':<42}{hmax[0]:>6.3g}{hmax[1]:>6.3g}")
     print(f"   {'HiGHS, same LP written as min -c.x':<42}{hmin[0]:>6.3g}{hmin[1]:>6.3g}")
     print(f"   {'scipy linprog (always min), ineqlin.marginals':<42}{sp[0]:>6.3g}{sp[1]:>6.3g}")
-    print("   All four are the same fact: loosening a row by 1 raises the max by 1.")
+    print("   All four are the same fact: loosening a constraint by 1 raises the max by 1.")
     print("   A 'dual' is d(objective)/d(rhs) in the solver's own objective sense.")
 
 
 def part2():
-    print("\n2 · Ranging against HiGHS on 50 random LPs, binding rows")
+    print("\n2 · Ranging against HiGHS on 50 random LPs, binding constraints")
     rows = agree = loose = 0
     for seed in range(50):
         A, b, c = random_lp(4, 5, seed, kind="bounded")
@@ -66,10 +66,10 @@ def part2():
             same = all((np.isinf(a) and np.isinf(t)) or abs(a - t) < 1e-6 for a, t in zip(mine, theirs))
             agree += same
             if not same and rows - agree <= 3:
-                print(f"   seed {seed} row {i}: yours [{mine[0]:.4g}, {mine[1]:.4g}]"
+                print(f"   seed {seed} constraint {i}: yours [{mine[0]:.4g}, {mine[1]:.4g}]"
                       f"  HiGHS [{theirs[0]:.4g}, {theirs[1]:.4g}]")
-    print(f"   rhs ranges agree on {agree}/{rows} binding rows")
-    print(f"   ({loose} non-binding rows skipped: their range is [activity, +inf) by the argument")
+    print(f"   rhs ranges agree on {agree}/{rows} binding constraints")
+    print(f"   ({loose} non-binding constraints skipped: their range is [activity, +inf) by the argument")
     print("    on the slides, and HiGHS's ranging report uses a different convention for them.)")
 
 

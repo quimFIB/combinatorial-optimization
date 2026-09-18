@@ -33,8 +33,8 @@ y. At a feasible y the phase-one value is 0, and weak duality makes the cut ≤ 
 
 ** Functional route
 Both cuts are expressions. The optimality cut is ~(Σ d·v, [−u_i α_i])~. The feasibility cut solves the
-phase-one LP (the same rows, cost 1 on the shortage variables), and reuses ~optimality_cut~ on its duals when
-the shortage is positive.
+phase-one LP (the same constraints, cost 1 on the unmet-demand variables z), and reuses ~optimality_cut~ on its duals when
+the unmet demand is positive.
 
 * Step 3 — The loop
 
@@ -69,7 +69,7 @@ with ~dict(st, ...)~. Stop with a generator that yields states up to the first ~
 * Step 4 — Pareto cuts
 
 ** Rung 1
-The variables are (v_0..v_{C−1}, α_0..α_{F−1}). Add F·C rows ~v_j − α_i ≤ c_ij~ and one row
+The variables are (v_0..v_{C−1}, α_0..α_{F−1}). Add F·C constraints ~v_j − α_i ≤ c_ij~ and one constraint
 "value at y ≥ q − ε". Bounds: 0 ≤ v ≤ penalty and α ≥ 0. Objective: maximise
 Σ d_j v_j − Σ u_i core_i α_i with ~highs_lp(..., sense="max", lower=0, upper=..., row_lower=...)~.
 
@@ -80,8 +80,8 @@ optimal. At the core (0.5, 0.5) the cut is worth 10v − 5(v − 1) − 5α_1, m
 once v ≥ 2 and α_1 = max(0, v − 2).
 
 ** Functional route
-One LP, built in one pass: a row per (facility, customer) pair, one row pinning the recourse value to its
-optimum, and an objective evaluated at the core point. The core point itself lives in the step-3 state and is
+One LP, built in one pass: a constraint per (facility, customer) pair, one constraint pinning the recourse value
+to its optimum, and an objective evaluated at the core point. The core point itself lives in the step-3 state and is
 updated as the midpoint of the old core and the new y, a pure average.
 
 * Step 5 — LP first

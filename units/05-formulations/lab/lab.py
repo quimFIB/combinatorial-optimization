@@ -27,7 +27,7 @@ from colib.mip import MILP, FacilityLocation, facility_names
 # ---------------------------------------------------------------- step 1 ---
 
 def ufl_aggregated(inst: FacilityLocation, M) -> MILP:
-    """Uncapacitated facility location with one linking row per facility:
+    """Uncapacitated facility location with one linking constraint per facility:
 
         sum_j x_ij <= M * y_i          (written as sum_j x_ij - M y_i <= 0)
 
@@ -40,7 +40,7 @@ def ufl_aggregated(inst: FacilityLocation, M) -> MILP:
 # ---------------------------------------------------------------- step 2 ---
 
 def ufl_disaggregated(inst: FacilityLocation) -> MILP:
-    """The same problem, with one linking row per (facility, customer) pair:
+    """The same problem, with one linking constraint per (facility, customer) pair:
 
         x_ij <= y_i                    (x_ij - y_i <= 0), F*C rows in A_ub
 

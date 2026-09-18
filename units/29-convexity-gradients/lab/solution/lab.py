@@ -133,10 +133,11 @@ def frank_wolfe(grad, lmo, x0, iterations):
 # ---------------------------------------------------------------- step 5 ---
 
 def lp_kkt_residuals(A, b, c, x, y):
-    """KKT conditions of max c.x, A x <= b, x >= 0, with multipliers y >= 0 for the rows (and the implied
+    """KKT conditions of max c.x, A x <= b, x >= 0, with multipliers y >= 0 for the constraints A x <= b (and the implied
     multipliers A^T y - c for x >= 0). Returns a dict of nonnegative residuals, each 0 exactly when that
     condition holds: "primal" (largest violation of A x <= b or x >= 0), "dual" (largest violation of
-    A^T y >= c or y >= 0), "slack_rows" (largest |y_i (b - A x)_i|), "slack_columns" (largest |x_j (A^T y - c)_j|)."""
+    A^T y >= c or y >= 0), "slack_rows" (complementarity for the constraints: largest |y_i (b - A x)_i|), "slack_columns"
+    (complementarity for the variables: largest |x_j (A^T y - c)_j|)."""
     A, b, c, x, y = (np.asarray(v, float) for v in (A, b, c, x, y))
     row_slack = b - A @ x
     reduced = A.T @ y - c

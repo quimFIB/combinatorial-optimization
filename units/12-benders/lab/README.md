@@ -34,14 +34,15 @@ uv run co test 12 --solution functional
 The loop is an unfold over an immutable record: cut sets, incumbent, phase and history.
 Each step maps scenarios to recourse results and derives cuts from them. The functional
 reference is written that way. A master that is re-solved from scratch each iteration
-suits that style; production codes keep the model and add rows, which is where mutation
+suits that style; production codes keep the model and add cuts, which is where mutation
 pays.
 
 ---
 
 ## Step 1 — The recourse LP  *(25 min)*
 
-*Shape: build (C + F) rows, call `highs_lp`, and read the signs of the duals.*
+*Shape: build the C demand and F capacity constraints, call `highs_lp`, and read the signs
+of the duals.*
 
 **Done when** `step 1 ✓`: your values match scipy's on every scenario of 20 instances, and
 your duals are nonnegative, dual feasible and satisfy strong duality. A fractional y works,

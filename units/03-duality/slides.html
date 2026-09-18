@@ -388,7 +388,7 @@
     each, and the constraint pieces are $1 \times 4$ and $1 \times 6$. The identity on the previous
     slide says the gap $(4u + 6v) - (3x + 2y) = 10 - 0$ equals $4 + 6 + 0 + 0$, and it does.
     The reference <code>certify_optimal</code> returns
-    <code>(False, "complementary slackness fails on primal row 0")</code>.</p>
+    <code>(False, "complementary slackness fails on primal constraint 0")</code>.</p>
     <p>Why "find the dual" works in general: at a nondegenerate optimum, the positive
     variables give exactly as many equations as there are prices left unknown on the
     tight constraints. Degeneracy can leave it underdetermined, and then several duals are

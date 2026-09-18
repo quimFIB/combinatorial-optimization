@@ -5,7 +5,7 @@
   2. Rosenbrock: fixed-step methods against BFGS.
   3. Least squares on the probability simplex (n = 200): projected gradient, Frank-Wolfe with the simplex's
      vertex oracle, and CVXPY, by accuracy and seconds.
-  4. Frank-Wolfe over a random polytope with your unit-02 simplex as the oracle, against CVXPY.
+  4. Frank-Wolfe over a random polytope with your unit-02 simplex as the oracle, against HiGHS as the oracle.
   5. KKT at an LP optimum: the residuals of HiGHS's primal-dual pair, and unit 03's certificate on the same pair.
 
     uv run co then 29
@@ -41,7 +41,7 @@ def first_below(values, tol):
 def quadratics():
     print("1. Quadratics, n = 100: iterations until f - f* <= 1e-8 (relative to f(x0) - f*)\n")
     curves = {}
-    print(f"  {'kappa':>7} {'GD':>7} {'heavy ball':>11} {'Nesterov':>9} {'CG':>5} {'L-BFGS-B':>9}   predicted GD / HB / NAG")
+    print(f"  {'kappa':>7} {'GD':>7} {'heavy ball':>11} {'Nesterov':>9} {'CG':>5} {'L-BFGS-B':>9}   predicted GD / HB / Nesterov bound")
     for kappa in (100.0, 10_000.0):
         Q, b = conditioned(100, kappa, 1)
         f, g = lab.quadratic(Q, b)

@@ -63,10 +63,10 @@ def separate_subtours(n, x, eps=1e-6):
 # ---------------------------------------------------------------- step 4 ---
 
 def subtour_lp(tsp: TSP):
-    """The subtour elimination LP bound by lazy row generation: solve the LP with
-    the rows found so far (degree_milp(tsp, integer=False) plus A_ub rows), separate
-    at its solution, add a row per violated set, repeat until none is found.
-    Return (value, x, number_of_rows_added, number_of_LP_solves)."""
+    """The subtour elimination LP bound by lazy constraints: solve the LP with
+    the subtour constraints found so far (degree_milp(tsp, integer=False) plus A_ub
+    rows), separate at its solution, add one per violated set, repeat until none is
+    found. Return (value, x, number_of_constraints_added, number_of_LP_solves)."""
     raise NotImplementedError("step 4: subtour_lp")
 
 
@@ -74,9 +74,9 @@ def subtour_lp(tsp: TSP):
 
 def tsp_exact(tsp: TSP):
     """An optimal tour by lazy constraints on the integer program: solve
-    degree_milp(tsp, integer=True) with the rows found so far using highs_mip
-    (pass options={"mip_rel_gap": 0.0}); if the chosen edges form more than one
-    cycle, add a subtour row for every cycle's vertex set and repeat.
-    Return (length, order, number_of_rows_added, number_of_MIP_solves), where
+    degree_milp(tsp, integer=True) with the subtour constraints found so far using
+    highs_mip (pass options={"mip_rel_gap": 0.0}); if the chosen edges form more than
+    one cycle, add a subtour constraint for every cycle's vertex set and repeat.
+    Return (length, order, number_of_constraints_added, number_of_MIP_solves), where
     order is the list of vertices along the tour."""
     raise NotImplementedError("step 5: tsp_exact")

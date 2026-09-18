@@ -12,8 +12,8 @@ One rung at a time; then ~solution/lab.py~ or ~solution/functional.py~.
 (the comprehension order matches the column order).
 
 ** Rung 2 — the rows
-Assignment row for customer /j/: 1 in column ~F + i*C + j~ for every /i/, rhs 1 → ~A_eq~.
-Linking row for facility /i/: 1 in columns ~F + i*C + j~ for every /j/, ~-M~ in column ~i~, rhs 0 → ~A_ub~.
+Assignment constraint for customer /j/, as a row: 1 in column ~F + i*C + j~ for every /i/, rhs 1 → ~A_eq~.
+Linking constraint for facility /i/, as a row: 1 in columns ~F + i*C + j~ for every /j/, ~-M~ in column ~i~, rhs 0 → ~A_ub~.
 ~ub = (1,)*n~, ~integer = (True,)*F + (False,)*(F*C)~. Everything a tuple.
 
 ** Functional route
@@ -47,9 +47,9 @@ Keep the minimum, and the set that achieved it.
 * Step 4 — Capacitated
 
 ** Rung 1
-Capacity row for facility /i/: ~demand[j]~ in column ~F + i*C + j~, ~-capacity[i]~ in
-column ~i~, rhs 0. Strong adds step 2's rows, then one row with ~-capacity[i]~ in
-every column ~i~ and rhs ~-sum(demand)~ (that is Σ uᵢ yᵢ ≥ D multiplied by −1).
+Capacity constraint for facility /i/, as a row: ~demand[j]~ in column ~F + i*C + j~, ~-capacity[i]~ in
+column ~i~, rhs 0. Strong adds step 2's linking constraints, then the cover constraint: one row with
+~-capacity[i]~ in every column ~i~ and rhs ~-sum(demand)~ (that is Σ uᵢ yᵢ ≥ D multiplied by −1).
 Keep the order the docstring gives; the test counts rows.
 
 ** Functional route

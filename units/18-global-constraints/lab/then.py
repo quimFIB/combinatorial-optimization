@@ -2,7 +2,8 @@
 
   1. Decomposed vs global models in your unit-17 engine: nodes, propagations, seconds.
   2. A Hall set named: on Inkala's sudoku, after pairwise != has done all it can, the
-     first value that alldifferent removes, and the cells whose domains force it.
+     first cell that alldifferent narrows, the values it removes there, and the cells whose
+     domains force it.
   3. CP-SAT with AddAllDifferent / pairwise != and AddNoOverlap / pairwise disjunctions.
 
     uv run co then 18
@@ -73,8 +74,9 @@ def hall_example():
                 union = sorted(set().union(*(store.dom[c] for c in cells)))
                 kind = "row" if len({c // 9 for c in g.xs}) == 1 else "column" if len({c % 9 for c in g.xs}) == 1 else "box"
                 print(f"  {depth} decisions down the path to the solution, pairwise != has reached its fixpoint.")
-                print(f"  alldifferent on the {kind} containing {name(x)} removes {a} from {name(x)}, "
-                      f"whose domain is {sorted(store.dom[x])}.")
+                print(f"  alldifferent on the {kind} containing {name(x)} removes "
+                      f"{', '.join(str(b) for y, b in removed if y == x)} from {name(x)}, "
+                      f"whose domain is {sorted(store.dom[x])}, leaving {sorted(out[x])}.")
                 print(f"  Hall set: {', '.join(name(c) for c in cells)}: {len(cells)} cells whose domains hold only "
                       f"{union} between them, so no other cell of the {kind} can take those values.")
                 print(f"  (alldifferent removes {len(removed)} value(s) from this {kind} at this point.)")

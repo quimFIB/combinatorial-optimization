@@ -18,10 +18,10 @@ things about duality that get used most:
 
 | Given | Yours in `lab.py` |
 |---|---|
-| `colib.lp.GeneralLP`: rows ≤/≥/=, variables ≥0/≤0/free | The dual transformer |
+| `colib.lp.GeneralLP`: constraints ≤/≥/=, variables ≥0/≤0/free | The dual transformer |
 | Unit 02's `two_phase`, `pivot` (via `colib.ref`) | Duals read off the tableau |
 | `colib.solvers.highs_general` (tests only) | An exact optimality certificate check |
-| | Adding a row to a solved tableau, and the dual simplex |
+| | Adding a constraint to a solved tableau, and the dual simplex |
 | | RHS ranging and objective prediction |
 
 ## Running it
@@ -58,7 +58,7 @@ six is wrong.)
 
 *Shape: a slice.* One line, once you see where the dual values sit.
 
-**Done when** `step 2 ✓`: (1, 1) on the textbook LP. On 30 random LPs your *y* is
+**Done when** `step 2 ✓`: (*u*, *v*) = (1, 1) on the textbook LP. On 30 random LPs your *y* is
 nonnegative, satisfies *Aᵀy ≥ c*, and has *bᵀy* equal to the primal optimum.
 
 ## Step 3 — Certify optimality  *(25 min)*
@@ -107,7 +107,7 @@ uv run co then 03
    **(−1, −1)**. They are the same fact, since a dual is d(objective)/d(rhs) in
    the solver's own objective sense.
 2. **Ranging.** Your ranges agree with HiGHS's ranging report on **103/103**
-   binding rows of 50 random LPs. For non-binding rows HiGHS reports a different
+   binding constraints of 50 random LPs. For non-binding constraints HiGHS reports a different
    quantity, so the script skips them. By the argument on the slides, their range
    is [activity, +∞).
 3. **Warm start.** Over 163 feasible re-solves after adding a cut, your dual

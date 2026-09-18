@@ -12,24 +12,24 @@ often the shorter answer. ~solution/functional.py~ is its reference, and
 * Step 1 — Eliminate one variable
 
 ** Rung 1 — nudge
-Take a row /p/ with ~a_p[k] > 0~ and a row /q/ with ~a_q[k] < 0~. Multiply /p/ by
+Take a constraint /p/ with ~a_p[k] > 0~ and a constraint /q/ with ~a_q[k] < 0~. Multiply /p/ by
 ~-a_q[k]~ and /q/ by ~a_p[k]~. Both multipliers are positive, and the
 /k/-coefficients cancel. With integer data you never need to divide.
 
 ** Rung 2 — approach
 Three lists: ~zero~, ~pos~, ~neg~. Output ~zero + [combine(p, q) for p in pos for
-q in neg]~. Then tidy: ~normalize~ each row, skip rows whose ~a~ is all zeros
-with ~b >= 0~, skip rows you've already seen (a ~set~ of normalized rows works,
-since rows are tuples).
+q in neg]~. Then tidy: ~normalize~ each constraint, skip constraints whose ~a~ is
+all zeros with ~b >= 0~, skip constraints you've already seen (a ~set~ of
+normalized constraints works, since they are tuples).
 
 ** Rung 3 — the case that trips people
-If ~pos~ is empty (or ~neg~ is), no pairs are formed and only the ~zero~ rows
-survive. That is correct: /x_k/ is unbounded in one direction, so any /y/ extends.
+If ~pos~ is empty (or ~neg~ is), no pairs are formed and only the ~zero~
+constraints survive. That is correct: /x_k/ is unbounded in one direction, so any /y/ extends.
 Don't special-case it.
 
 ** Functional route
 Three comprehensions for ~zero~, ~pos~ and ~neg~. A pure ~combine(p, q, k)~ that
-returns the new row. Then one ~tz.pipe~: start from
+returns the new constraint. Then one ~tz.pipe~: start from
 ~chain(zero, (combine(p, q, k) for p, q in product(pos, neg)))~, and pass it
 through curried ~map(normalize)~, curried ~filter(says_something)~, ~tz.unique~
 (which drops duplicates and keeps the order), and ~list~.
@@ -76,17 +76,19 @@ nonnegativity, ~yᵀA = 0~, ~yᵀb < 0~, so the cheap checks run first.
 * Step 5 — Find a certificate
 
 ** Rung 1 — nudge
-You need to know, for every row that FM produces, the multipliers on the
-/original/ rows. Is there a way to make those multipliers part of the row itself?
+You need to know, for every constraint that FM produces, the multipliers on the
+/original/ constraints. Is there a way to make those multipliers part of the
+constraint itself?
 
-** Rung 2 — the trick
-Append /m/ extra coordinates to every row: row /i/ gets the unit vector /eᵢ/
-appended to its ~a~. Now eliminate only the first /n/ coordinates, the real
-variables. FM combines rows linearly, so the tail of every derived row is
-exactly the combination of original rows that produced it. ~normalize~ scales
+** Rung 2 — the tail trick
+Append /m/ extra coordinates to every constraint: constraint /i/ gets the unit
+vector /eᵢ/ appended to its ~a~. Now eliminate only the first /n/ coordinates,
+the real variables. FM combines constraints linearly, so the tail of every
+derived constraint is exactly the combination of original constraints that
+produced it. ~normalize~ scales
 the head and the tail together, so the bookkeeping stays correct.
 
-At the end, find a row whose first /n/ coefficients are zero and whose ~b < 0~.
+At the end, find a constraint whose first /n/ coefficients are zero and whose ~b < 0~.
 Its tail is /y/.
 
 ** Rung 3 — near-code
@@ -101,11 +103,11 @@ for a, b in tagged:
         return tuple(a[n:])
 return None
 #+end_src
-One consequence: with the tails attached, far fewer rows count as duplicates,
+One consequence: with the tails attached, far fewer constraints count as duplicates,
 so the blow-up is worse. That is fine at test sizes, and it is a real cost of
 asking for a proof as well as an answer.
 
 ** Functional route
-Build the tagged rows with a comprehension, fold ~eliminate~ over ~range(n)~
+Build the tagged constraints with a comprehension, fold ~eliminate~ over ~range(n)~
 exactly as in step 2, and return
 ~next((tuple(a[n:]) for a, b in final if not any(a[:n]) and b < 0), None)~.

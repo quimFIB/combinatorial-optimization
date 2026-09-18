@@ -370,7 +370,7 @@
         <p class="small">If $x$ were between two other points of $P$, the objective at $x$ would be the average of its values there. One of them would be at least as good as $x$, so $x$ couldn't be the <em>only</em> best point.</p>
       </div>
       <div class="box"><span class="label">extreme ⇒ BFS</span>
-        <p class="small">If the tight walls had rank below $n$, $x$ could slide a little both ways along them (the tight-rows slide). Then $x$ is the midpoint of the two ends of that slide: not extreme.</p>
+        <p class="small">If the tight walls had rank below $n$, $x$ could slide a little both ways along them, as on the tight-constraints slide. Then $x$ is the midpoint of the two ends of that move: not extreme.</p>
       </div>
       <div class="box"><span class="label">BFS ⇒ vertex: add up the tight constraints</span>
         <p class="small">Take $c$ = the sum of the tight constraints. Every point of $P$ scores at most the sum of their right-hand sides, and only a point where all of them are tight scores exactly that. Rank $n$ means that point is $x$ alone.</p>
@@ -1048,7 +1048,7 @@
     <ol>
       <li><b>Eliminate</b> one variable by Fourier–Motzkin. Tested by sampling points against the exact projection.</li>
       <li><b>Decide feasibility</b> by eliminating everything. Agrees with HiGHS.</li>
-      <li><b>Enumerate vertices</b> over all $\binom{m}{n}$ bases, as on the pairs-of-rows slide. Agrees with qhull, and survives a degenerate pyramid.</li>
+      <li><b>Enumerate vertices</b> over all $\binom{m}{n}$ bases, as on the pairs-of-constraints slide. Agrees with qhull, and survives a degenerate pyramid.</li>
       <li><b>Check</b> a Farkas certificate.</li>
       <li><b>Find</b> one, using your own <code>eliminate</code> and the tail trick.</li>
     </ol>

@@ -4,7 +4,7 @@
 
 Step 1 works on general-form LPs (colib.lp.GeneralLP). Steps 2–5 work on the
 optimal tableaux that unit 02's simplex returns: LPs  max c.x, A x <= b, x >= 0
-with n variables and m rows, tableau layout
+with n variables and m constraints, tableau layout
 
     rows 0..m-1   [ A | I | b ]   (in the final basis)
     row  m        [ -c | 0 | z ]
@@ -29,8 +29,8 @@ def dual(lp: GeneralLP) -> GeneralLP:
     """The dual of a general-form LP, as a GeneralLP.
 
     sense flips (max <-> min); c and b swap; A is transposed (a tuple of
-    tuples: row j of the dual is column j of the primal). Row senses and variable
-    signs follow the table on the slides. Return tuples everywhere, so that
+    tuples: row j of the dual is column j of the primal). Constraint senses and
+    variable signs follow the table on the slides. Return tuples everywhere, so that
     dual(dual(lp)) == lp exactly.
     """
     raise NotImplementedError("step 1: dual")
@@ -61,7 +61,7 @@ def certify_optimal(A, b, c, x, y) -> tuple[bool, str]:
 # ---------------------------------------------------------------- step 4 ---
 
 def add_constraint(res: LPResult, a, beta):
-    """Add the row  a.x <= beta  to an optimal tableau.
+    """Add the constraint  a.x <= beta  to an optimal tableau.
 
     Return (T, basis): a new tableau with one more column (the new slack,
     inserted just before the rhs) and one more row (inserted just before the

@@ -68,7 +68,7 @@ entering column. What would pivoting on a negative entry do to feasibility?
 *Shape: an unfold.* Price, then ratio test, then pivot, until pricing finds
 nothing or the ratio test finds no row.
 
-**Done when** `step 3 ✓`. It must agree with HiGHS on 50 random LPs under both
+**Done when** `step 3 ✓`. It must agree with HiGHS on 25 random LPs under both
 rules, cycle on Beale's example under Dantzig's rule (raise `Cycling`), and
 finish it under Bland's rule with optimum 5/4.
 
@@ -79,7 +79,7 @@ repeated basis means a closed loop of zero-progress pivots.)
 ## Step 4 — Two phases  *(60 min)*
 
 *Shape: the same loop, run twice on two objectives.* This is the fiddliest step,
-and the time estimate reflects that. The bookkeeping is: which rows get
+and the time estimate reflects that. The bookkeeping is: which constraints get
 artificials, pricing out the phase-1 objective, driving zero-level artificials
 out of the basis, and restoring the real objective consistently with the basis.
 

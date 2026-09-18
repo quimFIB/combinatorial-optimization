@@ -98,7 +98,7 @@ then write each result back to ~machine[order[pos]]~.
 ** Rung 3 — the tight families
 ~[1] * (m * (m - 1)) + [m]~: the unit jobs spread evenly to height m − 1, then the long job
 lands on top. For LPT, ~[t for t in range(2*m - 1, m, -1) for _ in range(2)] + [m] * 3~. The
-pairs fill machines to 3m − 1 each, and the third m-job overflows onto one of them. The
+pairs and the first two m-jobs fill every machine to 3m − 1, and the third m-job overflows onto one of them. The
 optimum pairs (2m−1, m+1) and so on, with the three m's together.
 
 ** Functional route

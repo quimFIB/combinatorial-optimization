@@ -62,7 +62,7 @@ is feasible. Otherwise cut with ~a = A[i]~: every feasible point satisfies
 
 ** Functional route
 ~ellipsoid_step~ is two expressions returning a new (centre, P) pair. The method is an unfold over ~(iteration,
-centre, P)~: cut on the most violated row, and take the first state that is feasible or has hit ~max_iter~
+centre, P)~: cut on the most violated constraint, and take the first state that is feasible or has hit ~max_iter~
 with ~next(s for s in tz.iterate(step, start) if ...)~.
 
 * Step 5 — The bound

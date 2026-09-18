@@ -42,7 +42,7 @@ def _recourse_lp(inst, s, y, phase_one=False):
 
 def second_stage(inst, s, y):
     """Solve scenario s's recourse LP for fixed y. Returns (value, v, alpha): the optimal cost,
-    the demand-row duals v[j] >= 0 and the capacity-row duals alpha[i] >= 0, so that
+    the demand-constraint duals v[j] >= 0 and the capacity-constraint duals alpha[i] >= 0, so that
     value = sum_j d_sj v_j - sum_i u_i y_i alpha_i. Returns (INF, None, None) if infeasible."""
     info = _recourse_lp(inst, s, y)
     if info.status != "optimal":

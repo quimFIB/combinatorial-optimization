@@ -55,7 +55,8 @@ yours fixes two variables.
 
 *Think about:* why are "matched", "same SCC" and "can reach a free value" exactly the three
 ways an edge can belong to some maximum matching? (Berge, unit 15: an edge is in some maximum
-matching iff it's matched or lies on an even alternating cycle or path from a free vertex.)
+matching iff it's matched, or on an even alternating cycle, or on an even alternating path from a
+free value.)
 
 ## Step 3 — Cumulative  *(35 min)*
 
@@ -70,7 +71,7 @@ fails.
 *Shape: model builders, and a loop that tightens an objective bound.*
 
 **Done when** `step 4 ✓`. Global queens counts are right, with no more nodes than pairwise.
-Inkala's sudoku needs **5× fewer** nodes. Pigeonhole fails **at the root** with alldifferent,
+Inkala's sudoku needs **more than 5× fewer** nodes. Pigeonhole fails **at the root** with alldifferent,
 and takes at least (n−1)! nodes pairwise. Job-shop minimisation matches brute force with both
 machine models, and the node limit and the infeasible case behave.
 
@@ -112,7 +113,7 @@ r7c2, r7c4, r7c5 and r7c6 hold only {2, 4, 7, 9} between them.
 - [ ] **The curriculum's checkpoint:** on one instance your decomposed and global models give the
       same answer and differ by orders of magnitude in node count (pigeonhole: 725 758 vs 0),
       and you can name the Hall set responsible (`then` prints one on sudoku).
-- [ ] You can explain why alldifferent barely helps on queens but transforms sudoku.
+- [ ] You can explain why alldifferent is slower on queens and 6× faster on sudoku.
 
 ## Reading
 

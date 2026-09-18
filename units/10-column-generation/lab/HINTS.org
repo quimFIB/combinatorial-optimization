@@ -9,10 +9,10 @@ One rung at a time; then ~solution/lab.py~ or ~solution/functional.py~.
 ** Rung 1
 ~A[i][p] = patterns[p][i]~, with shape (items, patterns). Then call
 ~highs_lp(A, np.full(m, np.inf), np.ones(P), sense="min", row_lower=np.array(demands, float))~.
-Return ~info.value~, ~list(info.x)~ and the row duals.
+Return ~info.value~, ~list(info.x)~ and the constraints' duals (~info.row_duals~).
 
 ** Rung 2 — dual signs
-For a minimisation with ≥ rows, the duals are ≥ 0. HiGHS can return −1e-17 for a zero,
+For a minimisation with ≥ constraints, the duals are ≥ 0. HiGHS can return −1e-17 for a zero,
 so clip with ~max(0.0, y)~.
 
 ** Functional route
@@ -62,7 +62,7 @@ and done. Take the first state with ~done~, bounded by ~tz.take(max_iter, ...)~.
 
 ** Functional route
 Rounding up is a comprehension with ~math.ceil(v − 1e-9)~. The restricted master IP is an immutable ~MILP~
-built from the patterns (covering rows negated into ≤ form) and one ~highs_mip~ call.
+built from the patterns (covering constraints negated into ≤ form) and one ~highs_mip~ call.
 
 * Step 5 — Smoothing
 
@@ -106,7 +106,7 @@ dominated label that hasn't visited 7 might end in the best route. So dominance 
 the subset condition. The test with high duals and roomy vehicles catches its absence.
 
 ** Rung 4 — the LP
-Build rows for customers 1..n with ~row_lower = b = 1~ (equality). The duals are free in
+Build one constraint per customer 1..n with ~row_lower = b = 1~ (equality). The duals are free in
 sign; pass ~[0.0] + list(row_duals)~ to espprc. Add the routes with rc < −1e-6 that
 aren't already present, and stop when there are none.
 

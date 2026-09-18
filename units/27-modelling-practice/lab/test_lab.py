@@ -214,7 +214,7 @@ def test_step5_arcflow_size():
     m, z = lab.arcflow_model([3, 3, 5], 10)
     # item arcs: size 3 from d = 0..7 (8), size 5 from d = 0..5 (6); loss arcs 10; plus z
     assert m.getNVars() == 8 + 6 + 10 + 1
-    # flow out of 0, into 10, conservation at 1..9, one demand row per distinct size
+    # flow out of 0, into 10, conservation at 1..9, one demand constraint per distinct size
     assert m.getNConss() == 2 + 9 + 2
     assert solve(m) == 2
 

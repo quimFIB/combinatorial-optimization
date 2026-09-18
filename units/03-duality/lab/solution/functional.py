@@ -53,11 +53,11 @@ def certify_optimal(A, b, c, x, y) -> tuple[bool, str]:
     Aty = [sum(A[i][j] * y[i] for i in range(m)) for j in range(n)]
     checks = (
         (all(v >= 0 for v in x), "x has a negative entry"),
-        (all(l <= r for l, r in zip(Ax, b)), "a primal row is violated"),
+        (all(l <= r for l, r in zip(Ax, b)), "a primal constraint is violated"),
         (all(v >= 0 for v in y), "y has a negative entry"),
-        (all(l >= r for l, r in zip(Aty, c)), "a dual row is violated"),
+        (all(l >= r for l, r in zip(Aty, c)), "a dual constraint is violated"),
         (all(yi == 0 or bi == axi for yi, bi, axi in zip(y, b, Ax)),
-         "complementary slackness fails on a primal row"),
+         "complementary slackness fails on a primal constraint"),
         (all(xj == 0 or aty == cj for xj, aty, cj in zip(x, Aty, c)),
          "complementary slackness fails on a variable"),
     )

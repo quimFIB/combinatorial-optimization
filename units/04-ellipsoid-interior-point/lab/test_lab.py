@@ -44,7 +44,7 @@ def test_step1_outside_is_infinite():
     far = np.array([100.0, 0, 0])
     f, g, H = lab.barrier(A, b, c, far, 1.0)
     assert f == math.inf and g is None and H is None
-    on_boundary = np.array([10.0, 0, 0])          # the box row x1 <= 10 is tight
+    on_boundary = np.array([10.0, 0, 0])          # the box constraint x1 <= 10 is tight
     assert lab.barrier(A, b, c, on_boundary, 1.0)[0] == math.inf
 
 

@@ -66,9 +66,11 @@ is unit and ~learnt[0]~ can be enqueued with it as reason. That's the asserting 
 checks.
 
 ** Rung 4 — the textbook test
-Draw the implication graph: x2 → x4 (via −2 −3 4) and x2, x4 → x5 (via −2 −4 5); x4 and x5 are in
-conflict. Every path from the decision x2 to the conflict passes through x2, but not every path
-passes through x4 (x2 → x5 directly). So the first UIP is x2, and the learned clause is ¬x2 ∨ ¬x3.
+The clauses are c1 = (¬x1 ∨ x3), c2 = (¬x2 ∨ ¬x3 ∨ x4), c3 = (¬x2 ∨ ¬x4 ∨ x5) and
+c4 = (¬x4 ∨ ¬x5). Draw the implication graph: at level 1, x1 → x3 (via c1); at level 2,
+x2, x3 → x4 (via c2) and x2, x4 → x5 (via c3), and c4 is the conflict. Every path from the
+decision x2 to the conflict passes through x2, but not every path passes through x4 (x2 → x5
+directly). So the first UIP is x2, and the learned clause is ¬x2 ∨ ¬x3.
 
 ** Functional route
 Conflict analysis is where a functional reading teaches something: first-UIP learning is a sequence of
@@ -113,11 +115,13 @@ is a filter over the learnt clauses.
 * Step 5 — Encodings
 
 ** Rung 1 — sequential counter (at most one)
-s_i means "one of x_0..x_i is true":
-x_0 → s_0; for 0 < i < n−1: x_i → s_i, s_{i−1} → s_i, ¬(x_i ∧ s_{i−1}); finally ¬(x_{n−1} ∧ s_{n−2}).
+For x_1..x_n, s_i means "one of the first i is true":
+x_1 → s_1; for 1 < i < n: x_i → s_i, s_{i−1} → s_i, ¬(x_i ∧ s_{i−1}); finally ¬(x_n ∧ s_{n−1}).
+That is n − 1 new variables and 3n − 4 clauses.
 
 ** Rung 2 — bitwise
-With b = ceil(log₂ n) bits: for each i and bit j, x_i → (bit j) if bit j of i is 1, else ¬(bit j).
+With b = ceil(log₂ n) bits, and the literals numbered from 0: for each i and bit j,
+x_i → (bit j) if bit j of i is 1, else ¬(bit j).
 Two literals true at once would force two different bit patterns.
 
 ** Rung 3 — at most k

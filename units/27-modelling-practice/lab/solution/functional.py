@@ -2,7 +2,7 @@
 
 A solver model is a mutable object by nature: pyscipopt builds it by calling addVar and addCons. So the
 functional version keeps the model-building calls, but computes everything that goes into them (index
-sets, rows, the start solution, the arc set) as values first, and the pure parts (first-fit decreasing, L2,
+sets, constraints, the start solution, the arc set) as values first, and the pure parts (first-fit decreasing, L2,
 the statistics parser) have no mutation at all. The lab sheet says so rather than pretending otherwise.
 """
 

@@ -112,7 +112,8 @@ halves the search. Learning is what makes the search finite in practice.
 worker portfolio (6 full-problem CDCL/LP workers, 2 first-solution heuristics, 13 LNS workers); per-worker
 search statistics with conflicts, restarts, Boolean and integer propagations; clause learning and
 minimisation; clause deletion; the LP relaxation with cuts (CG, MIR and no-overlap-specific cuts); and
-LNS improvement rates. **Every one of them is something you have built in units 07–21.**
+LNS improvement rates. **Every one of them maps to a unit of this course:** the LP and its cuts to
+units 02–08, the search, learning, deletion and LNS to units 17–21, and presolve to unit 27, still ahead.
 
 ## Checkpoint
 

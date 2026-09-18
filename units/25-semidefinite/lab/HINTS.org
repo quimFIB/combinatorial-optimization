@@ -45,12 +45,12 @@ search as ~tz.nth(60, tz.iterate(shrink, bracket))~.
 * Step 3 — LP bounds
 
 ** Rung 1 — the edge LP
-Variables: n x's then m z's. Two rows per edge: z − x_u − x_v ≤ 0 and z + x_u + x_v ≤ 2. Call
+Variables: n x's then m z's. Two constraints per edge: z − x_u − x_v ≤ 0 and z + x_u + x_v ≤ 2. Call
 ~highs_lp(A, b, c, sense="max", upper=1.0)~. Before running it, predict the value. (x = ½ everywhere.)
 
 ** Rung 2 — the triangle LP
 One variable per pair i < j, indexed by ~combinations~. For each triple i < j < k, with
-a = (i,j), b = (j,k), c = (i,k), the four rows are z_a + z_b + z_c ≤ 2, z_a − z_b − z_c ≤ 0,
+a = (i,j), b = (j,k), c = (i,k), the four constraints are z_a + z_b + z_c ≤ 2, z_a − z_b − z_c ≤ 0,
 −z_a + z_b − z_c ≤ 0 and −z_a − z_b + z_c ≤ 0. Every cut satisfies them: a triangle is cut in 0 or 2
 edges. Non-edges get objective 0, but their variables still matter.
 

@@ -330,7 +330,7 @@
       <div class="box"><span class="label">the LP case</span>
         <p class="small">For $\max c^\top x$, $Ax \le b$, $x \ge 0$: multipliers $y \ge 0$ for $Ax \le b$ and $w \ge 0$ for $-x \le 0$. Stationarity: $c = A^\top y - w$, so $w = A^\top y - c \ge 0$: <b>dual feasibility</b>. Complementarity: $y_i (b - Ax)_i = 0$ and $x_j (A^\top y - c)_j = 0$: <b>complementary slackness</b>, exactly unit 03's certificate.</p>
       </div>
-      <p class="small">Lab <code>then</code>, HiGHS on an LP with m = 30, n = 50: <span class="term" data-term="KKT residuals">residuals</span> 3.6e−13, 0, 3.3e−13, 1.8e−13. <b>Unit 03's exact certificate rejects the same pair</b> rounded to 9 decimals: "primal row 12 violated".</p>
+      <p class="small">Lab <code>then</code>, HiGHS on an LP with m = 30, n = 50: <span class="term" data-term="KKT residuals">residuals</span> 3.6e−13, 0, 3.3e−13, 1.8e−13. <b>Unit 03's exact certificate rejects the same pair</b> rounded to 9 decimals: "primal constraint 12 violated".</p>
       <div class="box warn"><span class="label">in floating point</span>
         <p class="small">"Optimal" means "KKT residuals below a tolerance". Every solver has one. An exact certificate needs exact arithmetic, as unit 03 used.</p>
       </div>

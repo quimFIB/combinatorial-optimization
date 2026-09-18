@@ -10,6 +10,8 @@ One rung at a time; then ~solution/lab.py~ or ~solution/functional.py~.
 Keep the current time and the last vertex, starting at (ready₀, depot). For each customer c, the service
 start is max(ready_c, time + service_last + dist(last, c)). Waiting is free: that ~max~ is the whole
 time-window model. Check the due time as you go, the capacity once, and the return to the depot at the end.
+This is the start-time recurrence t_j = max(a_j, t_i + s_i + d_ij), with ~ready~ holding a, ~due~ holding b
+and ~service~ holding s.
 
 ** Rung 2 — the backward pass
 latest_starts is the same recurrence run from the other end, with ~min~ in place of ~max~: the vehicle
@@ -77,11 +79,11 @@ if not, remove the labels it dominates. The Feillet mask makes dominance fire mo
 that visited different customers can still nest once unreachable customers count as visited.
 
 ** Rung 3 — the master and its duals
-With HiGHS, add n equality rows first, then columns with ~addCol(cost, 0, inf, len, rows, ones)~:
-the artificial singletons (cost 2 Σ max distance + 1), then the real columns. After ~run()~,
-~getSolution().row_dual~ gives π, in the convention reduced cost = c − Σ π. Keep one ~Highs~ object for
-the whole loop and add columns as pricing finds them; rebuilding the LP every iteration works, but
-is slower.
+With HiGHS, add the n equality constraints first (~addRows~, one per customer), then columns with
+~addCol(cost, 0, inf, len, rows, ones)~: the artificial singletons (cost 2 Σ max distance + 1), then the
+real columns. After ~run()~, ~getSolution().row_dual~ gives π, in the convention reduced cost = c − Σ π.
+Keep one ~Highs~ object for the whole loop and add columns as pricing finds them; rebuilding the LP every
+iteration works, but is slower.
 
 ** Rung 4 — branching and the tree
 Node state is just the frozen set of forbidden arcs. Filter the shared columns by it, and give the pricer
@@ -108,7 +110,7 @@ The HiGHS master is a live object you add columns to, so it stays mutable, local
 ** Rung 1 — the model
 ~add_multiple_circuit([(i, j, literal), ...])~ treats node 0 as the depot, which may have many circuits
 through it, and every other node must be on exactly one of them. That constraint replaces the degree
-rows and the subtour logic at once. Time and load are then enforced by
+constraints and subtour elimination at once. Time and load are then enforced by
 ~m.add(t[j] >= t[i] + s_i + d_ij).only_enforce_if(b)~: no big-M, because CP-SAT propagates the
 implication directly.
 

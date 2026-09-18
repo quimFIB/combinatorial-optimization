@@ -9,7 +9,7 @@ lab mechanises the first links of the canonical NP-completeness chain: CNF → 3
 cover, vertex cover → set cover. Each solution map is checked both ways against brute force and exact
 solvers. Then it builds the knapsack FPTAS: the best possible approximation, available only because
 knapsack's hardness lives in the magnitude of its numbers (unit 16). The slides cover the rest of the
-hierarchy (PTAS, APX, log-approximable, inapproximable) and where each of unit 00's nine problems sits.
+hierarchy (PTAS, APX, log-APX, poly-APX, no ratio at all) and where each of unit 00's nine problems sits.
 
 ## Given, and what you write
 

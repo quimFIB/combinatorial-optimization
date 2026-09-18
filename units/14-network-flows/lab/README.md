@@ -49,7 +49,7 @@ value**. That equality is the optimality certificate.
 
 ## Step 2 — Dinic  *(35 min)*
 
-*Shape: phases, each a BFS for levels, then repeated DFS along level-increasing edges.*
+*Shape: phases, each a BFS for levels, then repeated DFS along level-increasing arcs.*
 The "current edge" pointer per node is what makes a phase linear.
 
 **Done when** `step 2 ✓` on 30 random networks.
@@ -57,7 +57,7 @@ The "current edge" pointer per node is what makes a phase linear.
 ## Step 3 — Push–relabel  *(40 min)*
 
 *Shape: a queue of active nodes and local operations.* There are no paths at all:
-excess moves downhill one edge at a time.
+excess moves downhill one arc at a time.
 
 **Done when** `step 3 ✓` on 30 random networks, and every run finishes within the time
 limit.
@@ -69,8 +69,8 @@ limit.
 ## Step 4 — Min-cost flow  *(40 min)*
 
 *Shape: Bellman–Ford once, then Dijkstra on reduced costs, repeatedly.* Potentials
-make every residual edge's reduced cost nonnegative, including the negative
-reverse edges that flow creates.
+make every residual arc's reduced cost nonnegative, including the negative-cost
+reverse arcs that flow creates.
 
 **Done when** `step 4 ✓`: it matches networkx's network simplex on 30 random
 networks and on one with negative-cost arcs, returns None when the demand exceeds
@@ -111,7 +111,8 @@ faster than your best on every family. Min-cost flow agrees with OR-Tools'
 - [ ] **The curriculum's checkpoint:** handed a problem you have not seen, you can
       decide whether it is a flow in disguise and write the reduction, including
       the capacities that encode the objective. Try baseball elimination (is team
-      *x* mathematically eliminated?) before reading the slide that solves it.
+      *x* mathematically eliminated?) before reading the slide "More flows in
+      disguise", which gives the reduction.
 - [ ] You can explain why integer capacities give an integer maximum flow in two
       ways: augmenting paths, and total unimodularity (unit 06).
 

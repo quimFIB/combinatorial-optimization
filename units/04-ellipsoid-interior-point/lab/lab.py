@@ -54,7 +54,7 @@ def central_path(A, b, c, x0, t0=1.0, mu=10.0, eps=1e-5):
     For t = t0, t0*mu, t0*mu^2, ...: centre with newton_center, starting from the
     previous centre, and record (t, x, y), where y = 1 / (t * (b - A x)) is the
     dual point that comes free with the centre. Stop after recording the first
-    point with m / t <= eps (m = number of rows). Return the list of (t, x, y).
+    point with m / t <= eps (m = number of constraints). Return the list of (t, x, y).
     """
     raise NotImplementedError("step 3: central_path")
 
@@ -76,7 +76,7 @@ def ellipsoid_step(center, P, a):
 def ellipsoid_feasible(A, b, R, max_iter):
     """Search for x with A x <= b, assuming any solution lies within distance R
     of the origin. Start with the ball of radius R (center 0, P = R^2 I). While
-    the centre violates some row, cut with the most violated row. Return
+    the centre violates some constraint, cut with the most violated one. Return
     (center, iterations) once the centre is feasible, or (None, max_iter).
     """
     raise NotImplementedError("step 4: ellipsoid_feasible")

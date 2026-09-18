@@ -37,27 +37,27 @@ def main():
         opt = {}
         for name, m in rows:
             opt[name] = scip_mip(m, time_limit=120).value
-        print(f"   {'formulation':<26}{'LP bound':>10}{'optimum':>10}{'gap':>8}")
+        print(f"   {'formulation':<30}{'LP bound':>10}{'optimum':>10}{'gap':>8}")
         lps = {}
         for name, m in rows:
             lp = lp_relaxation(m).value
             lps[name] = lp
-            print(f"   {name:<26}{lp:>10.1f}{opt[name]:>10.1f}{100 * (opt[name] - lp) / opt[name]:>7.1f}%")
+            print(f"   {name:<30}{lp:>10.1f}{opt[name]:>10.1f}{100 * (opt[name] - lp) / opt[name]:>7.1f}%")
         w, s = lps["UFL aggregated, M = C"], lps["UFL disaggregated"]
         print(f"   disaggregation closes {100 * lab.gap_closed(w, s, opt['UFL disaggregated']):.0f}% "
               f"of the M = C model's gap")
 
         print("\n2 · SCIP, presolve and cuts off (pure branch-and-bound)")
-        print(f"   {'formulation':<26}{'nodes':>8}{'seconds':>9}")
+        print(f"   {'formulation':<30}{'nodes':>8}{'seconds':>9}")
         for name, m in rows:
             r = scip_mip(m, time_limit=120, settings=BARE)
-            print(f"   {name:<26}{r.nodes:>8}{r.seconds:>9.2f}", flush=True)
+            print(f"   {name:<30}{r.nodes:>8}{r.seconds:>9.2f}", flush=True)
 
         print("\n3 · Default settings")
-        print(f"   {'formulation':<26}{'HiGHS nodes':>12}{'s':>7}{'SCIP nodes':>12}{'s':>7}")
+        print(f"   {'formulation':<30}{'HiGHS nodes':>12}{'s':>7}{'SCIP nodes':>12}{'s':>7}")
         for name, m in rows:
             h, sc = highs_mip(m, time_limit=120), scip_mip(m, time_limit=120)
-            print(f"   {name:<26}{h.nodes:>12}{h.seconds:>7.2f}{sc.nodes:>12}{sc.seconds:>7.2f}", flush=True)
+            print(f"   {name:<30}{h.nodes:>12}{h.seconds:>7.2f}{sc.nodes:>12}{sc.seconds:>7.2f}", flush=True)
     print("\nPresolve and cuts recover much of what a weak formulation loses, which is why a")
     print("bad model can look fine on a default solver. Part 2 shows what it costs when they can't.")
 

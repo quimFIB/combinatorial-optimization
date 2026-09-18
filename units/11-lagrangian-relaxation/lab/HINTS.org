@@ -93,7 +93,7 @@ load minus capacity.
 * Step 5 — Repair
 
 ** Rung 1
-For each job, the rows with x = 1: keep the cheapest, or None. Compute loads from what you
+For each job, the agents i with x[i][j] = 1: keep the cheapest, or None. Compute loads from what you
 kept. Loop: for each pending job, ~sorted((cost, agent))~ over agents with room. If any
 list is empty, return None. Regret = second − first (infinite if there's only one option).
 Place the max-regret job on its first option.

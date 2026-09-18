@@ -59,7 +59,7 @@ the variables touched.
 *Shape: a queue of arcs.*
 
 **Done when** `step 2 ✓`: 40 random binary CSPs match naive repeated sweeps, a chain
-x₀ < x₁ < … < x₉ collapses to singletons in under 180 revisions, and a wipe-out returns None.
+x₀ < x₁ < … < x₉ collapses to singletons in under 180 revise calls, and a wipe-out returns None.
 One test is a triangle with two colours: arc consistent, yet unsatisfiable.
 
 ## Step 3 — Propagators and the fixpoint  *(55 min)*
@@ -116,7 +116,7 @@ Same decomposed models for both:
 On queens, your pure-Python engine keeps up with CP-SAT, and is sometimes faster.
 Enumerating all solutions is a pure search-tree walk (CP-SAT enumerates single-threaded), and a
 small engine has less overhead per node. On sudoku, CP-SAT is 10× faster
-with fewer branches. On unsatisfiable 3-colouring near the phase transition, your engine
+even though it branches more (6 538 against your 3 598 nodes). On unsatisfiable 3-colouring near the phase transition, your engine
 explores 120 000 nodes where CP-SAT needs 3 000, and at n = 300 yours gives up after 300 000.
 The difference is **learning**: CP-SAT records why each branch failed and never repeats that
 mistake. Units 20 and 21 build exactly that.
@@ -127,8 +127,8 @@ mistake. Units 20 and 21 build exactly that.
 - [ ] **The curriculum's checkpoint:** you can trace your propagator's fixpoint by hand on a 4×4
       sudoku (try the one in the tests), and explain why arc consistency does not imply
       satisfiability (the two-colour triangle).
-- [ ] You can say what nodes and propagations each measure, and which one CP-SAT's
-      "conflicts" corresponds to.
+- [ ] You can say what nodes and propagations each measure, and why one usually rises when
+      the other falls.
 
 ## Reading
 

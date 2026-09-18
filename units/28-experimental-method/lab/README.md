@@ -57,7 +57,7 @@ are kept, and re-running with an extra seed performs only the new runs.
 *Shape: a formula; a penalty; a group-by.*
 
 **Done when** `step 3 ✓`. Hand values match. On 10 random samples the SGM lies between the minimum and
-the arithmetic mean, and tends to the mean as the shift grows. PAR1 and PAR10 penalties change the
+the arithmetic mean, and tends to the mean as the shift grows. PAR-1 and PAR-10 penalties change the
 table as they should.
 
 ## Step 4 — Performance profiles and the virtual best  *(30 min)*

@@ -48,13 +48,13 @@ Both matrices are a single nested comprehension over a membership test: ~int(v i
 * Step 4 — Assignment as an LP
 
 ** Rung 1
-Variable ~k = i*n + j~. Row for worker /i/: 1 where ~k // n == i~. Row for job /j/:
-1 where ~k % n == j~. Stack both families, ~b = [1]*(2n)~, then
-~highs_lp(A, b, c, sense="min", row_lower=b)~ makes every row an equality (upper and
+Variable ~k = i*n + j~. Constraint for worker /i/, as a row: 1 where ~k // n == i~.
+Constraint for job /j/: 1 where ~k % n == j~. Stack both families, ~b = [1]*(2n)~, then
+~highs_lp(A, b, c, sense="min", row_lower=b)~ makes every constraint an equality (upper and
 lower bound both 1). The default variable lower bound is 0.
 
 ** Functional route
-Build the two families of equality rows as generators (~k // n == i~ for rows, ~k % n == j~ for columns),
+Build the two families of equality constraints as generators (~k // n == i~ for workers, ~k % n == j~ for jobs),
 ~chain~ them, and make one ~highs_lp~ call. The reshape to n × n is the only step after it.
 
 * Step 5 — The odd cycle
@@ -72,7 +72,7 @@ until they meet. With ~left = [u, …, lca]~ and ~right = [w, …, lca]~, the cy
 
 ** Rung 3 — the half-integral point
 ~{frozenset((cycle[i], cycle[(i + 1) % k])): 0.5 for i in range(k)}~. It is optimal
-because every vertex constraint is tight, and on an odd cycle that system has a
+because every degree constraint is tight, and on an odd cycle that system has a
 unique solution.
 
 ** Functional route

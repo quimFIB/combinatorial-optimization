@@ -31,7 +31,7 @@ search = unit("19")
 
 
 def branching():
-    print("1. Unit 07's branching rules, re-run on 24 multi-dimensional knapsacks (18-22 items, 3 rows)\n")
+    print("1. Unit 07's branching rules, re-run on 24 multi-dimensional knapsacks (18-22 items, 3 constraints)\n")
     conn = lab.open_store(str(OUT / "bench.sqlite"))
     rules = {"most-fractional": bb.most_fractional, "pseudocost": bb.pseudocost, "strong": bb.strong_branching}
     instances = {f"mk{n}x3#{s}": (n, s) for n in (18, 20, 22) for s in range(8)}

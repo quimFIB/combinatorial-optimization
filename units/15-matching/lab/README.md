@@ -67,7 +67,7 @@ as any matching, so equal sizes prove both optimal.
 ## Step 3 — The Hungarian method  *(50 min)*
 
 *Shape: add one row at a time; for each, a Dijkstra over columns with the potentials
-shifted in place.* Work 1-based internally with column 0 as a virtual root; the hint
+shifted in place.* Work 1-based internally, with a virtual column 0 as the root; the hint
 ladder explains why this removes every special case.
 
 **Done when** `step 3 ✓`: 40 integer instances, 10 with negative costs, 10 with
@@ -141,7 +141,7 @@ odd cycles really constrained the answer.
       is optimal from its dual potentials alone, without re-running anything, and say
       which LP those potentials are feasible for.
 - [ ] You can explain why König's theorem fails on a triangle, and which inequality
-      (an odd-set constraint) repairs the LP.
+      (an odd-set inequality) repairs the LP.
 
 ## Reading
 

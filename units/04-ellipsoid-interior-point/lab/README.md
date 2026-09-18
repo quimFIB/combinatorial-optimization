@@ -110,7 +110,7 @@ uv run co then 04
    (6 ms). At *n* = 3000, IPM takes **0.14 s / 18 iterations** and simplex
    **0.95 s / 5268 iterations**. With `--big`, at *n* = 20 000: IPM 12 s (25 iterations),
    simplex 199 s (66 941 iterations).
-4. **Warm solves.** Add one row at *n* = 3000. Simplex re-solves in **0.033 s**
+4. **Warm solves.** Add one constraint at *n* = 3000. Simplex re-solves in **0.033 s**
    (22 iterations), while IPM re-solves in 0.136 s, which is slower than its own
    cold solve, because it starts over.
 5. **Ellipsoid.** Mean iterations against the volume bound grow from 7.8 vs 61

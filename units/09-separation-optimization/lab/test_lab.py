@@ -107,8 +107,8 @@ def test_step4_lazy_lp_equals_the_full_lp(seed):
     t = TSP.random(n, seed=seed)
     with time_limit(60):
         value, x, cuts, solves = lab.subtour_lp(t)
-    assert abs(value - full_subtour_lp(seed, n)) < 1e-6, "lazily generated rows must reach the same bound"
-    assert cuts < 2 ** (n - 1) - 1, "the point of lazy generation: far fewer rows than exist"
+    assert abs(value - full_subtour_lp(seed, n)) < 1e-6, "lazily generated constraints must reach the same bound"
+    assert cuts < 2 ** (n - 1) - 1, "the point of lazy generation: far fewer constraints than exist"
     assert all(cut_weight(n, x, S) >= 2 - 1e-6 for k in range(1, n) for S in itertools.combinations(range(n), k))
     assert value <= brute_force(t).value + 1e-6
 

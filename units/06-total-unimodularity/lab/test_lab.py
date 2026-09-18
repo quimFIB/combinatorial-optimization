@@ -35,7 +35,7 @@ def directed_incidence(n, arcs):
 # ---------------------------------------------------------------- step 1 ---
 
 @pytest.mark.parametrize("A, want", [
-    ([[1, 1, 0], [0, 1, 1], [1, 0, 1]], False),              # triangle incidence: det 2
+    ([[1, 1, 0], [0, 1, 1], [1, 0, 1]], False),              # triangle incidence (T of the slides, transposed): det 2
     ([[1, 1], [-1, 1]], False),
     ([[2]], False),
     ([[1, 1, 0], [0, 1, 1]], True),                          # path incidence

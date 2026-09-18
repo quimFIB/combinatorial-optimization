@@ -122,5 +122,5 @@ chosen subsets, mapped back to vertices.
 ** Functional route
 A fold over the bag layers from the leaves up, whose accumulator is ~{bag: {subset: best weight}}~. A bag's
 table is a dict comprehension over the valid subsets of that bag. Each entry adds, per child, the best child
-row that agrees on the shared vertices, minus the shared weight so it isn't counted twice. Reconstruction folds
-top-down: the root takes its cheapest row, and each child takes its best row consistent with its parent's choice.
+entry that agrees on the shared vertices, minus the shared weight so it isn't counted twice. Reconstruction folds
+top-down: the root takes its cheapest entry, and each child takes its best entry consistent with its parent's choice.

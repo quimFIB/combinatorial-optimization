@@ -38,8 +38,8 @@ gurobipy feel.
 
 ## Step 1 — Aggregated big-M  *(25 min)*
 
-*Shape: a list of rows.* One linking row per facility, with −M in the *yᵢ*
-column.
+*Shape: a list of rows.* One linking constraint per facility, its row with −M in
+the *yᵢ* column.
 
 **Done when** `step 1 ✓`. On 6 instances the MILP optimum matches brute force,
 with HiGHS and SCIP required to agree. Fixing the open set gives the right cost,
@@ -47,12 +47,12 @@ and the LP bound with M = 10C is below the bound with M = C.
 
 ## Step 2 — Disaggregated  *(15 min)*
 
-*Shape: the same, with one row per pair.*
+*Shape: the same, with one constraint per pair.*
 
 **Done when** `step 2 ✓`: correct on the same instances, and its LP bound is at
 least the aggregated one's.
 
-*Think about:* the disaggregated model has F·C linking rows instead of F, so it
+*Think about:* the disaggregated model has F·C linking constraints instead of F, so it
 is a much bigger LP. Why is it still the faster model to solve? (`then` part 2.)
 
 ## Step 3 — Brute force  *(15 min)*
@@ -64,15 +64,16 @@ structure: *y* determines *x*.
 
 ## Step 4 — Capacitated  *(35 min)*
 
-*Shape: more families.* The capacity row is required. The strong version adds
-the disaggregated linking rows and one aggregate cover row, and neither removes
-any integer solution.
+*Shape: more families.* The capacity constraint is required. The strong version
+adds the disaggregated linking constraints and one aggregate cover constraint,
+and neither removes any integer solution.
 
 **Done when** `step 4 ✓`: both variants have the same integer optimum, the
 solution respects capacity, and the strong LP bound is at least the weak one.
 
-*Think about:* with capacities, *xᵢⱼ ≤ yᵢ* is *implied* by the capacity row for
-integer *y*. So why add it? (The slides' "formulation strength" section.)
+*Think about:* with capacities, *xᵢⱼ ≤ yᵢ* is *implied* by the capacity constraint
+for integer *y*. So why add it? (Slide "When a constraint is implied, and still
+helps".)
 
 ## Step 5 — Gap closed  *(5 min)*
 

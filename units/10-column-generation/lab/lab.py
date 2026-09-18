@@ -41,7 +41,7 @@ def initial_patterns(W, widths):
 
 def solve_master(patterns, demands):
     """Solve the restricted master LP over `patterns`. Returns (value, x, duals): x has one
-    entry per pattern, duals one nonnegative entry per demand row.
+    entry per pattern, duals one nonnegative entry per demand constraint.
 
     highs_lp(A, b, c, sense="min", row_lower=...) solves min c.x with row_lower <= A x <= b
     and x >= 0; its SolveInfo carries .value, .x and .row_duals.

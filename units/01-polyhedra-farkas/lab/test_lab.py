@@ -48,7 +48,7 @@ SQUARE_PLUS = [((1, 1), 4), ((-1, 0), 0), ((0, -1), 0), ((1, -1), 1)]
 
 def test_step1_eliminated_variable_is_gone():
     out = lab.eliminate(SQUARE_PLUS, 0)
-    assert out, "this polygon's projection is a bounded interval, so some rows must remain"
+    assert out, "this polygon's projection is a bounded interval, so some constraints must remain"
     assert all(a[0] == 0 for a, _ in out)
     assert all(len(a) == 2 for a, _ in out), "keep the column, as zeros"
 
@@ -106,7 +106,7 @@ def test_step3_cube_has_eight_vertices():
 
 
 def test_step3_degenerate_apex_is_listed_once():
-    # square pyramid: 5 facets meet at the apex, only 3 are needed to pin it
+    # square pyramid: 4 facets meet at the apex, only 3 are needed to pin it
     pyramid = [((0, 0, -1), 0), ((1, 0, 1), 1), ((-1, 0, 1), 1), ((0, 1, 1), 1), ((0, -1, 1), 1)]
     vs = lab.vertices(pyramid)
     assert len(vs) == 5 and (0, 0, 1) in [tuple(map(int, v)) for v in vs]
@@ -120,7 +120,7 @@ def test_step3_matches_qhull(seed):
     for v in mine:
         assert satisfies(system, v), f"{v} is not in the polytope"
         tight = [a for a, b in system if dot(a, v) == b]
-        assert rank(tight) == n, f"{v} is not a vertex: its tight rows have rank {rank(tight)}"
+        assert rank(tight) == n, f"{v} is not a vertex: its tight constraints have rank {rank(tight)}"
     hs = np.array([[*a, -b] for a, b in system], dtype=float)
     ref = HalfspaceIntersection(hs, np.zeros(n)).intersections
     ref = {tuple(np.round(p, 6)) for p in ref}

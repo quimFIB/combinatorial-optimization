@@ -12,33 +12,33 @@ One rung at a time; then ~solution/lab.py~ or ~solution/functional.py~.
 all the objective setting you need. For the LP relaxation, pass ~vtype="C"~ with the same bounds.
 
 ** Rung 2 — why the unlinked LP is 1
-Put every item in every bin at 1/nbins and every y_b at 1/nbins. Every x ≤ y row holds, and so does
-every capacity row as long as sum/nbins ≤ capacity. Σy = 1. Linking capacity to y forces
+Put every item in every bin at 1/nbins and every y_b at 1/nbins. Every x ≤ y constraint holds, and so does
+every capacity constraint as long as sum/nbins ≤ capacity. Σy = 1. Linking capacity to y forces
 C·Σy ≥ Σ sizes, which is the continuous bound: that's a formulation doing the work that a hundred
 thousand nodes otherwise would.
 
 ** Functional route
 The model is built by calls, so compute what goes into them first. The variables are dict and list
-comprehensions over ~product(range(n), bins)~. The rows are one list whose second half depends on ~linked~
+comprehensions over ~product(range(n), bins)~. The constraints are one list whose second half depends on ~linked~
 (~load ≤ C·y~ per bin, or ~load ≤ C~ plus ~x ≤ y~ per pair). A single loop hands that list to ~addCons~.
 
 * Step 2 — Symmetry breaking
 
 ** Rung 1
-~y[b] >= y[b + 1]~ as rows, and ~model.chgVarUb(x[i, b], 0)~ for b > i. The second is valid because
+~y[b] >= y[b + 1]~ as constraints, and ~model.chgVarUb(x[i, b], 0)~ for b > i. The second is valid because
 you can renumber the bins of any packing by their smallest item, and then the bin holding item i has
 number at most i.
 
 ** Rung 2 — what SCIP does on its own
 SCIP detects symmetry in the model (~misc/usesymmetry~) and handles it with orbital fixing and
-symretopes. Your constraints and its handling can overlap, and ~then~ has a row with SCIP's switched
+symretopes. Your constraints and its handling can overlap, and ~then~ has a configuration, B′, with SCIP's switched
 off so you can see how much it was doing already.
 
 ** Functional route
-Two data first: the ordering rows ~y[b] >= y[b + 1]~ as a list, and the (item, bin) pairs to fix as a
-generator over the triangle b > i. The loops that add rows and change bounds are the only effects.
+Two data first: the ordering constraints ~y[b] >= y[b + 1]~ as a list, and the (item, bin) pairs to fix as a
+generator over the triangle b > i. The loops that add constraints and change bounds are the only effects.
 
-* Step 3 — Bounds
+* Step 3 — Bounds from both sides
 
 ** Rung 1 — L2 by hand
 For each α (0 and every size ≤ C/2), sort items into big (> C − α), medium (C/2 < s ≤ C − α) and
@@ -49,12 +49,12 @@ larger α sometimes better.
 ** Rung 2 — using both bounds
 The upper bound (first-fit decreasing) shrinks the model: no more bins than FFD used. The lower bound
 fixes variables: with symmetry breaking in place, bins 0 … L2−1 must be used. Use
-~model.chgVarLb(y[b], 1)~, and don't add a row.
+~model.chgVarLb(y[b], 1)~, and don't add a constraint.
 
 ** Functional route
 First-fit decreasing as a ~reduce~ over sorted items with a tuple of bins. L2 as ~max(map(bound, alphas))~.
 
-* Step 4 — The MIP start
+* Step 4 — A MIP start
 
 ** Rung 1 — the pyscipopt calls
 ~sol = model.createSol()~, then ~model.setSolVal(sol, var, value)~ for /every/ variable. Then
@@ -84,10 +84,10 @@ the optimum is the LP value rounded up. It has O(C × distinct sizes) variables,
 pseudo-polynomial: fine at C = 100 or 1000, hopeless at C = 10⁹.
 
 ** Functional route
-~tz.frequencies(sizes)~ for demands and ~tz.groupby~ on arc tails and heads. The rows are one list
+~tz.frequencies(sizes)~ for demands and ~tz.groupby~ on arc tails and heads. The constraints are one list
 built before any ~addCons~.
 
-* Step 6 — Reading the statistics
+* Step 6 — Reading the log
 
 ** Rung 1 — the layout
 A line that doesn't start with a space starts a section: ~Name : col1 col2 ...~. Indented lines are

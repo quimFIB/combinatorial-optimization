@@ -73,7 +73,7 @@ initial state.
 * Step 5 — KKT
 
 ** Rung 1 — the LP case
-For max c·x, Ax ≤ b, x ≥ 0 with multipliers y for the rows and w for x ≥ 0, stationarity says
+For max c·x, Ax ≤ b, x ≥ 0 with multipliers y for the constraints Ax ≤ b and w for x ≥ 0, stationarity says
 c = Aᵀy − w, so w = Aᵀy − c must be ≥ 0: that's dual feasibility. Complementarity: y_i·(b − Ax)_i = 0
 and x_j·w_j = 0. Those are exactly unit 03's complementary slackness conditions, and seeing that is
 the unit's checkpoint.
@@ -84,6 +84,6 @@ choose a tolerance. ~then~ shows unit 03's exact certificate rejecting a HiGHS o
 decimals: exact checks need exact arithmetic.
 
 ** Functional route
-Residuals are values, not booleans, and each is one numpy expression. Compute the row slack and reduced costs
+Residuals are values, not booleans, and each is one numpy expression. Compute the constraints' slacks and the reduced costs
 once, and write a small ~worst_negative(*arrays)~ helper for the sign conditions. Complementary slackness is
 ~max |y · slack|~ and ~max |x · reduced|~. Pass ~initial=0.0~ so empty arrays don't raise.

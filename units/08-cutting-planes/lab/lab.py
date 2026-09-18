@@ -8,7 +8,7 @@ read off unit 02's exact simplex tableau: rows [A | I | b] in the final basis,
 objective row [-c | 0 | z]. `simplex` below is unit 02's reference (two_phase);
 `res.tableau`, `res.basis`, `res.x`, `res.value` are what you read.
 
-Part B (steps 3–5): knapsack cover cuts for rows w.x <= capacity over 0/1
+Part B (steps 3–5): cover cuts for knapsack constraints w.x <= capacity over 0/1
 variables, lifted, inside a root cutting loop on colib.mip MILPs (minimization),
 with LPs solved by colib.mip.lp_relaxation.
 
@@ -35,10 +35,11 @@ def gomory_cut(res, A, b, row):
     the ORIGINAL variables x.
 
     With f(v) = v - floor(v), the row gives the valid inequality
-        sum_j f(t_row,j) z_j >= f(t_row,rhs)      over all columns z = (x, s),
-    where the slacks are s_k = b_k - A_k.x. Substitute the slacks, rewrite as
-    a.x <= beta, and scale by the lcm of the denominators so everything is an
-    int. Return (a, beta): a list of n ints and an int.
+        sum_j f(abar_row,j) z_j >= f(bbar_row)    over all columns z = (x, s),
+    where abar_row,j is the tableau entry in column j, bbar_row the row's
+    right-hand side, and the slacks are s_k = b_k - A_k.x. Substitute the
+    slacks, rewrite as a.x <= beta, and scale by the lcm of the denominators
+    so everything is an int. Return (a, beta): a list of n ints and an int.
     """
     raise NotImplementedError("step 1: gomory_cut")
 
@@ -66,7 +67,7 @@ def gomory_loop(A, b, c, rounds=50):
 # ---------------------------------------------------------------- step 3 ---
 
 def separate_cover(weights, capacity, x):
-    """Exact separation of cover inequalities for one knapsack row.
+    """Exact separation of cover inequalities for one knapsack constraint.
 
     A cover is a set C with sum_{j in C} w_j > capacity; its inequality is
     sum_{j in C} x_j <= |C| - 1, violated at x exactly when
@@ -102,15 +103,15 @@ def age_pool(pool, x, max_age):
 
 
 def root_cut_loop(milp: MILP, rounds=20, max_age=3):
-    """Root cutting-plane loop. The MILP's A_ub rows are knapsack rows (nonnegative
-    integer weights) over 0/1 variables.
+    """Root cutting-plane loop. The MILP's A_ub rows are knapsack constraints
+    (nonnegative integer weights) over 0/1 variables.
 
     For up to rounds + 1 iterations:
       solve the LP relaxation with the pool's cuts appended to A_ub/b_ub;
       record its value and the pool size (before aging);
       age the pool at the LP solution;
-      for every original knapsack row, separate a cover, lift it, and keep it if
-      it is violated at the LP solution and not already in the pool (compare
+      for every original knapsack constraint, separate a cover, lift it, and keep
+      it if it is violated at the LP solution and not already in the pool (compare
       (tuple(alpha), rhs));
       stop if nothing new was found; else add the new cuts with age 0.
     Return (bounds, pool_sizes, total_cuts_added).

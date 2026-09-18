@@ -1,6 +1,6 @@
 """Unit 26 — "Then": what the speed-ups buy, equal time budgets, time-to-target, and CVRP.
 
-  1. TSP, n = 1000: 2-opt without neighbour lists, with them, with don't-look bits, then Or-opt.
+  1. TSP, n = 1000: 2-opt with full neighbour lists, with 10 per city, with don't-look bits, then Or-opt.
   2. TSP, n = 200, ten instances, a 3-second budget each: multi-start local search, simulated annealing,
      iterated local search (double-bridge kicks), and OR-Tools' routing solver with guided local search.
   3. Time-to-target (n = 150) over 30 seeds for four heuristics built from your lab; Mann-Whitney verdicts;
@@ -54,13 +54,13 @@ def speedups():
             ("k = 10, don't-look bits", lambda: lab.two_opt(dist, start, nl10, dont_look=True))]
     for name, run in rows:
         tour, t = timed(run)
-        print(f"  {name:>26}: {lab.tour_length(dist, tour):>6}   {t:6.2f} s")
+        print(f"  {name:>29}: {lab.tour_length(dist, tour):>6}   {t:6.2f} s")
     tour, t = timed(lab.or_opt, dist, lab.two_opt(dist, start, nl10), nl10)
-    print(f"  {'+ Or-opt (k = 10)':>26}: {lab.tour_length(dist, tour):>6}   {t:6.2f} s")
+    print(f"  {'+ Or-opt (k = 10)':>29}: {lab.tour_length(dist, tour):>6}   {t:6.2f} s")
     rand = list(range(1000))
     random.Random(0).shuffle(rand)
     tour, t = timed(lab.two_opt, dist, rand, nl10, dont_look=True)
-    print(f"  {'random start, DLB, k = 10':>26}: {lab.tour_length(dist, tour):>6}   {t:6.2f} s")
+    print(f"  {"don't-look bits, random start":>29}: {lab.tour_length(dist, tour):>6}   {t:6.2f} s")
 
 
 def double_bridge(tour, rng):

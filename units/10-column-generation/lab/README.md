@@ -43,8 +43,8 @@ pure functions of the columns.
 
 ## Step 1 — The restricted master  *(25 min)*
 
-*Shape: build A (items × patterns) and call `highs_lp`.* Covering rows are
-`row_lower = demands`, `b = inf`.
+*Shape: build A (items × patterns) and call `highs_lp`.* The demand constraints are
+covering: `row_lower = demands`, `b = inf`.
 
 **Done when** `step 1 ✓`: on the initial patterns the value is Σ dᵢ / ⌊W/wᵢ⌋. On larger
 pattern sets your duals are nonnegative, dual feasible (no pattern prices above 1), and
@@ -86,7 +86,7 @@ drops.
 ## Step 6 — Routes  *(50 min)*
 
 *Shape: labels by path length, dominance per customer, then step 3's loop with
-set-partitioning rows.*
+set-partitioning constraints.*
 
 **Done when** `step 6 ✓`: your best reduced cost matches a brute force over all customer
 sets (Held–Karp per set) on 60 instances. 40 of those use high duals and roomy vehicles,
@@ -146,7 +146,7 @@ cuts (rounded capacity inequalities, subset-row cuts).
 - [ ] `uv run co test 10` shows all six steps ✓.
 - [ ] **The curriculum's checkpoint:** you can explain, in unit 03's vocabulary, why the
       master's dual values are exactly the objective coefficients of the pricing
-      problem. (The reduced cost of column a is c_a − yᵀa; minimising it over all
+      problem. (The reduced cost of column a is c(a) − yᵀa; minimising it over all
       columns is pricing.)
 - [ ] You can say why branching on a master variable x_p ≤ 0 breaks the pricing
       problem, and what Ryan–Foster branching does instead.

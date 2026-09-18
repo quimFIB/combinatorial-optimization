@@ -65,7 +65,7 @@ matrices are TU.
 
 ## Step 4 — Assignment as an LP  *(20 min)*
 
-*Shape: 2n equality rows, then one solver call.*
+*Shape: 2n equality constraints, then one solver call.*
 
 **Done when** `step 4 ✓`: the solution is integral on 10 random instances,
 although nothing asked for integers, and it matches SciPy's assignment solver.

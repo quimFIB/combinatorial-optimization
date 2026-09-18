@@ -13,7 +13,7 @@ reported as such.
 
 The problem is **vehicle routing with time windows** (VRPTW) on Solomon's 56 instances. The objective is
 total distance with an unlimited fleet, and distances are truncated to tenths: the conventions of the exact
-literature (slide 3). The four methods:
+literature (the slide "Two objectives, and why the numbers are in tenths"). The four methods:
 
 | | tradition | what you build | solver underneath |
 |---|---|---|---|
@@ -24,7 +24,7 @@ literature (slide 3). The four methods:
 
 Two deviations from the curriculum's brief, both deliberate. **SCIP replaces a commercial solver**, as
 everywhere in the course. The brief's **"cover and subtour cuts"** become rounded capacity inequalities,
-which contain subtour elimination as the case ⌈q(S)/Q⌉ = 1, while VRPTW has no knapsack rows for classical
+which contain subtour elimination as the case ⌈q(S)/Q⌉ = 1, while VRPTW has no knapsack constraints for classical
 covers to act on.
 
 ## Given, and what you write
@@ -48,7 +48,7 @@ uv run co then capstone                         # the full benchmark: see below 
 ```
 
 The tests never need Solomon's files. Every exact method is checked against brute force on random
-instances of 6–12 customers, and the whole suite takes under ten seconds against the reference.
+instances of 7 to 10 customers, and the whole suite takes under ten seconds against the reference.
 
 ## Style
 
@@ -70,7 +70,7 @@ accepts brute force's optima. `routes_from_arcs` rejects subtours and a vertex l
 
 ## Step 2 — (a) Branch-and-cut on SCIP  *(2 h)*
 
-*Shape: components of a support graph; a model of four families of rows; a callback.*
+*Shape: components of a support graph; a model of four families of constraints; a callback.*
 
 **Done when** `step 2 ✓`. Separation finds the hand-built fractional and integer violations, and never cuts
 off any of 180 random feasible solutions. `solve_mip` proves brute force's optimum on eight instances, with
@@ -101,10 +101,10 @@ honestly.
 
 *Shape: an O(1) test; a sort-and-pick loop; a regret fold; an annealing loop.*
 
-**Done when** `step 5 ✓`. `insertion_delta` agrees with a full reschedule at every position of 240 routes.
-Shaw removal replays a scripted rng exactly. Regret repair is feasible, prefers an existing route on a tie
-and opens a route when none has room. ALNS is valid, reproducible from its seed, stops at its time limit,
-and reaches the optimum on at least six of ten small instances in 300 iterations.
+**Done when** `step 5 ✓`. `insertion_delta` agrees with a full reschedule at every position of 40 routes on
+each of six instances. Shaw removal replays a scripted rng exactly. Regret repair is feasible, prefers an
+existing route on a tie and opens a route when none has room. ALNS is valid, reproducible from its seed,
+stops at its time limit, and reaches the optimum on at least six of ten small instances in 300 iterations.
 
 ## Step 6 — The referee  *(1 h)*
 
@@ -176,7 +176,7 @@ objectives differ, so that's a check of scale, not a score.
   (C2 splits 4–4 with CP-SAT) and 11 of 17 at n = 50. All 11 proofs at n = 100 are clustered or R1, and SCIP
   made each of them.
 - **Wide windows (R2, RC2): no exact method is reliable past 25 customers.** Labelling has long routes and
-  little dominance, and big-M rows are weak. At n = 25 B&P still proves 15 of 19, and ends two (RC204,
+  little dominance, and big-M time constraints are weak. At n = 25 B&P still proves 15 of 19, and ends two (RC204,
   RC208) with no usable solution.
 - **Beyond 25 customers, for solution quality: ALNS**, on every series, with every paired test decisive. CP-SAT
   with one worker is a clear second, and the compact MIP third.

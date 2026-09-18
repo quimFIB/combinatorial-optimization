@@ -33,7 +33,7 @@ def initial_patterns(W, widths):
 
 def solve_master(patterns, demands):
     """The restricted master LP. Returns (value, x, duals), x[p] per pattern and
-    duals[i] >= 0 per demand row."""
+    duals[i] >= 0 per demand constraint."""
     m, P = len(demands), len(patterns)
     A = np.array([[patterns[p][i] for p in range(P)] for i in range(m)], dtype=float)
     info = highs_lp(A, np.full(m, INF), np.ones(P), sense="min", row_lower=np.array(demands, float))

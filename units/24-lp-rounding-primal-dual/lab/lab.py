@@ -5,7 +5,7 @@ Fill in the functions marked TODO, one step at a time, and run
 after each. Read README.md first; HINTS.org has a ladder of hints per step.
 
 LPs are solved by colib.approx.covering_lp (HiGHS): min c.x, A x >= 1, 0 <= x <= 1, returning the value, the
-primal and the row duals. Everything else is yours. Set cover and vertex cover instances are unit 00's classes;
+primal x and the duals y. Everything else is yours. Set cover and vertex cover instances are unit 00's classes;
 facility location is colib.approx.FacilityLocation. Dual values in the primal-dual algorithms should be exact
 Fractions, so "tight" means equal, not close.
 """
@@ -42,7 +42,7 @@ def vertex_cover_rounding(n, edges, weights):
 # ---------------------------------------------------------------- step 2 ---
 
 def set_cover_lp(sc: SetCover):
-    """The LP relaxation of set cover: one row per element, one column per set. Returns (value, x)."""
+    """The LP relaxation of set cover: one constraint per element, one variable per set. Returns (value, x)."""
     raise NotImplementedError  # TODO step 2
 
 

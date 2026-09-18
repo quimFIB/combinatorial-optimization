@@ -2,9 +2,10 @@
 
 Three measurements, all using your lab.py:
 
-  1. Fourier–Motzkin blow-up: rows after each elimination, against the
-     worst case (m/2)^(2^k) and against the true number of facets of the
-     projection, which qhull computes. Most of what FM produces is redundant.
+  1. Fourier–Motzkin blow-up: constraints after each elimination (the
+     pairwise worst case is m -> m^2/4 per step), against the true number of
+     facets of the projection, which qhull computes. Most of what FM produces
+     is redundant.
   2. Vertex enumeration: your C(m, n) basis walk against qhull as m grows.
      Same answer; watch the time ratio.
   3. A Farkas certificate printed as a proof you can check by hand, and
@@ -36,11 +37,11 @@ def fmt_row(a, b, names="xyzuvw"):
 
 def part1_blowup():
     print("\n1 · Fourier–Motzkin blow-up   (n = 6 variables, m = 14 cuts + box)")
-    print(f"{'eliminated':>11}{'rows':>9}{'true facets':>13}{'seconds':>10}")
+    print(f"{'eliminated':>11}{'constraints':>13}{'true facets':>13}{'seconds':>10}")
     system = random_polytope(6, 14, seed=7)
     n = 6
     rows_series, facet_series = [len(system)], [len(system)]
-    print(f"{0:>11}{len(system):>9}{'':>13}{'':>10}")
+    print(f"{0:>11}{len(system):>13}{'':>13}{'':>10}")
     for k in range(n - 1):
         t = time.perf_counter()
         system = lab.eliminate(system, k)
@@ -49,9 +50,9 @@ def part1_blowup():
         facets = true_facets(system, remaining)
         rows_series.append(len(system))
         facet_series.append(facets)
-        print(f"{k + 1:>11}{len(system):>9}{facets:>13}{dt:>10.2f}")
+        print(f"{k + 1:>11}{len(system):>13}{facets:>13}{dt:>10.2f}")
         if len(system) > 20000:
-            print(f"{'':>11}stopping: the next step would pair ~{(len(system) // 2) ** 2:,} rows")
+            print(f"{'':>11}stopping: the next step would form ~{(len(system) // 2) ** 2:,} pairs")
             break
     return rows_series, facet_series
 
@@ -69,7 +70,7 @@ def true_facets(system, keep):
 
 def part2_vertices():
     print("\n2 · Vertex enumeration in R^3   (your basis walk vs qhull)")
-    print(f"{'cuts m':>7}{'C(m,3)':>9}{'vertices':>10}{'agree':>7}{'yours s':>10}{'qhull s':>10}{'ratio':>8}")
+    print(f"{'cuts m':>7}{'bases':>9}{'vertices':>10}{'agree':>7}{'yours s':>10}{'qhull s':>10}{'ratio':>8}")
     series = []
     for m in (4, 8, 16, 24, 32, 40):
         system = random_polytope(3, m, seed=m)
@@ -120,11 +121,11 @@ def plot(blowup, verts):
     OUT.mkdir(exist_ok=True)
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 3.8))
     rows, facets = blowup
-    ax1.semilogy(range(len(rows)), rows, "o-", label="FM rows")
+    ax1.semilogy(range(len(rows)), rows, "o-", label="FM constraints")
     ax1.semilogy(range(len(facets)), facets, "s--", label="true facets")
     ax1.set_xticks(range(len(rows)))
     ax1.set_xlabel("variables eliminated")
-    ax1.set_title("Fourier–Motzkin: most rows are redundant")
+    ax1.set_title("Fourier–Motzkin: most constraints are redundant")
     ax1.legend()
     ax2.loglog([v[0] for v in verts], [v[1] for v in verts], "o-", label="basis enumeration")
     ax2.loglog([v[0] for v in verts], [v[2] for v in verts], "s--", label="qhull")

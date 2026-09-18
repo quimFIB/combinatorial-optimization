@@ -128,7 +128,7 @@ simplex as the oracle (2.1 ms per call) and with HiGHS (1.2 ms per call), f − 
 
 **KKT at an LP optimum** (m = 30, n = 50): HiGHS's pair has residuals 3.6e−13, 0, 3.3e−13 and 1.8e−13,
 and a duality gap of −1.3e−13. **Unit 03's exact certificate rejects the same pair** rounded to 9
-decimals ("primal row 12 violated"): an exact check on floating-point data fails at the 1e−9 level.
+decimals ("primal constraint 12 violated"): an exact check on floating-point data fails at the 1e−9 level.
 Tolerances are part of the definition of "optimal" in floating point.
 
 ## Checkpoint

@@ -66,7 +66,7 @@ forward, with the soft sample's gradient. The exact expectation gradient matches
 
 ## Step 4 — Differentiating an argmin  *(30 min)*
 
-*Shape: select the active rows; one block linear solve.*
+*Shape: select the active constraints; one block linear solve.*
 
 **Done when** `step 4 ✓`. Active sets exclude weakly active constraints. On 8 random QPs with 6 constraints
 the Jacobian matches finite differences of CVXPY solutions to 1e−4. With no active constraint it's −Q⁻¹,

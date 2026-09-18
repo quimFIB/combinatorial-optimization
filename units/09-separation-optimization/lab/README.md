@@ -37,11 +37,11 @@ parameterized by "how to solve" and "how to separate".
 
 ---
 
-## Step 1 — Rows and components  *(20 min)*
+## Step 1 — A subtour constraint and components  *(20 min)*
 
 *Shape: a comprehension; a BFS.*
 
-**Done when** `step 1 ✓`: the row for {0, 1} on 4 vertices crosses exactly the 4
+**Done when** `step 1 ✓`: the constraint for {0, 1} on 4 vertices crosses exactly the 4
 right edges, and components match networkx on 20 random sparse supports.
 
 ## Step 2 — Minimum cut  *(45 min)*
@@ -70,8 +70,8 @@ and a bridge of total 1.5 are both caught, and a tour gives nothing.
 **equals** the LP with all 127 subtour constraints written out. You used fewer constraints, and
 your final point satisfies all 254 cut constraints.
 
-*Think about:* why is "no violated row found" a proof that the LP over *all* rows
-is solved? (Because the oracle is exact: a minimum cut below 2 exists iff some
+*Think about:* why is "no violated constraint found" a proof that the LP over *all*
+subtour constraints is solved? (Because the oracle is exact: a minimum cut below 2 exists iff some
 subtour constraint is violated.)
 
 ## Step 5 — The exact TSP  *(20 min)*
@@ -89,7 +89,7 @@ components alone, since a 0/1 degree-2 solution is a union of cycles.
 uv run co then 09
 ```
 
-| n | rows that exist | LP rows used | LP bound | optimum | MIP cuts | MIP s | gap |
+| n | constraints that exist | used by the LP | LP bound | optimum | MIP cuts | MIP s | gap |
 |---:|---:|---:|---:|---:|---:|---:|---:|
 | 30 | 5.4 × 10⁸ | 6 | 480.5 | 482 | 5 | 0.06 | 0.31% |
 | 80 | 6.0 × 10²³ | 16 | 725.0 | 726 | 24 | 1.7 | 0.14% |

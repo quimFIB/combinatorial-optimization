@@ -39,7 +39,7 @@ def second_stage(inst: StochasticFacility, s, y):
     value == sum_j demand[s][j] v[j] - sum_i capacity[i] y[i] alpha[i].
     Returns (INF, None, None) if the LP is infeasible.
 
-    With highs_lp(..., sense="min"), a >= row has a dual >= 0 and a <= row a dual <= 0."""
+    With highs_lp(..., sense="min"), a >= constraint has a dual >= 0 and a <= constraint a dual <= 0."""
     raise NotImplementedError  # TODO step 1
 
 
@@ -55,7 +55,7 @@ def feasibility_cut(inst: StochasticFacility, s, y):
     """If scenario s is infeasible at y, return a cut (const, coef) with const + coef . y > 0 that
     every y with a feasible scenario s satisfies with <= 0. Otherwise return None.
 
-    Solve the phase-one LP  min sum_j z_j  over the same rows (always with z). A positive value
+    Solve the phase-one LP  min sum_j z_j  over the same constraints (always with z). A positive value
     means infeasible, and its duals give the cut in the same form as optimality_cut."""
     raise NotImplementedError  # TODO step 2
 

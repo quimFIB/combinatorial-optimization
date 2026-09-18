@@ -86,12 +86,12 @@ def test_step3_accepts_an_optimal_pair():
 
 
 @pytest.mark.parametrize("x, y, why", [
-    ((3, 0), (0, F(3, 2)), "optimal value 9 < 10: fails complementary slackness"),
-    ((2, 2), (0, 2), "dual feasible, but x1 > 0 while its dual row is slack"),
+    ((3, 0), (0, F(3, 2)), "values agree at 9, but (u, v) = (0, 3/2) breaks u + v >= 2"),
+    ((2, 2), (0, 2), "dual feasible, but x = 2 > 0 while its dual constraint u + 2v >= 3 has slack 1"),
     ((F(5, 2), F(5, 2)), (1, 1), "x infeasible"),
     ((2, 2), (1, F(1, 2)), "y infeasible"),
     ((2, 2), (-1, 3), "negative dual"),
-    ((0, 0), (1, 1), "both feasible, but y1 > 0 while primal row 0 has slack 4"),
+    ((0, 0), (1, 1), "both feasible, but u = 1 > 0 while constraint 1 has slack 4"),
 ])
 def test_step3_rejects(x, y, why):
     ok, reason = lab.certify_optimal(*SMALL, x, y)

@@ -38,7 +38,7 @@ oracle call sees exactly the set it is asked about.
 List every independent set as a ~frozenset~ (enumerate all subsets and ask the
 oracle), and put them in a ~set~ for membership tests. Hereditary: for each
 independent S and element e of S, check that S − {e} is in the family. Exchange:
-for each pair A, B with |A| &lt; |B|, check some b ∈ B − A makes A ∪ {b} independent.
+for each pair A, B with |A| < |B|, check some b ∈ B − A makes A ∪ {b} independent.
 
 ** Rung 2 — why checking one element at a time is enough
 If every S minus one element stays independent, then by induction every subset of

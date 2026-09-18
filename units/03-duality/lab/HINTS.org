@@ -11,19 +11,19 @@ root maps Haskell names to Python and toolz.
 ** Rung 1 — the table, for a max primal
 | primal (max) | dual (min) |
 |---+---|
-| row /i/ is ~<=~ | /yᵢ/ ~>=0~ |
-| row /i/ is ~>=~ | /yᵢ/ ~<=0~ |
-| row /i/ is ~=~ | /yᵢ/ ~free~ |
-| /xⱼ/ ~>=0~ | dual row /j/ is ~>=~ |
-| /xⱼ/ ~<=0~ | dual row /j/ is ~<=~ |
-| /xⱼ/ ~free~ | dual row /j/ is ~=~ |
+| constraint /i/ is ~<=~ | /yᵢ/ ~>=0~ |
+| constraint /i/ is ~>=~ | /yᵢ/ ~<=0~ |
+| constraint /i/ is ~=~ | /yᵢ/ ~free~ |
+| /xⱼ/ ~>=0~ | dual constraint /j/ is ~>=~ |
+| /xⱼ/ ~<=0~ | dual constraint /j/ is ~<=~ |
+| /xⱼ/ ~free~ | dual constraint /j/ is ~=~ |
 
 For a min primal, apply the same table and then flip every ~>=0~​/​~<=0~ and
 every ~>=~​/​~<=~.
 
 ** Rung 2 — shapes
 ~A~ transposed as tuples: ~tuple(zip(*lp.A))~, whose rows are the primal
-columns. Then ~c = tuple(lp.b)~ and ~b = tuple(lp.c)~. The dual has ~lp.n~ rows and
+columns. Then ~c = tuple(lp.b)~ and ~b = tuple(lp.c)~. The dual has ~lp.n~ constraints and
 ~lp.m~ variables. Return every field as a tuple, or the equality test with the
 original fails even when the values are right.
 
@@ -54,8 +54,8 @@ returning a sentinel.
 
 ** Rung 1
 Six checks, in order: /x ≥ 0/; /Ax ≤ b/; /y ≥ 0/; /Aᵀy ≥ c/;
-for every row /i/, /yᵢ = 0/ or row /i/ is tight; for every column /j/, /xⱼ = 0/
-or dual row /j/ is tight. Compute ~Ax~ and ~Aty~ once each.
+for every constraint /i/, /yᵢ = 0/ or constraint /i/ is tight; for every
+variable /j/, /xⱼ = 0/ or dual constraint /j/ is tight. Compute ~Ax~ and ~Aty~ once each.
 
 ** Functional route
 #+begin_src python

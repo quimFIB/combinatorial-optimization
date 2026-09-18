@@ -108,7 +108,8 @@ def test_step2_hall_sets_explain_every_removal(seed):
 
 
 def test_step2_not_the_decomposition():
-    # pairwise != prunes nothing here; alldifferent sees that {x0, x1} use up {1, 2}
+    # x1, x2 in {1, 2}, x3 in {1, 2, 3}, x4 in {2, 3, 4} (positions 0-3): pairwise != prunes nothing;
+    # alldifferent sees that {x1, x2} use up {1, 2}
     dom = [frozenset({1, 2}), frozenset({1, 2}), frozenset({1, 2, 3}), frozenset({2, 3, 4})]
     pairwise = [cp.NotEqual(i, j) for i in range(4) for j in range(i + 1, 4)]
     assert all(apply(p, dom) == dom for p in pairwise)

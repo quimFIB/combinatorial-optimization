@@ -4,7 +4,7 @@
 
 One rung at a time; then ~solution/lab.py~ or ~solution/functional.py~.
 
-* Step 1 — Rows and components
+* Step 1 — A subtour constraint and components
 
 ** Rung 1
 Row: ~tuple(-1 if (i in S) != (j in S) else 0 for i, j in edges(n))~, with rhs ~-2~.

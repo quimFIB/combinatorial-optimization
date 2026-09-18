@@ -111,7 +111,7 @@ of the edges provably can't appear in any optimal tour.
 
 **GAP** (tightness 0.9, 300 iterations each):
 
-| m × n | optimum | LP | bound A (knapsacks) | bound B (capacities) | heuristic |
+| m × n | optimum | LP | bound A (knapsacks) | bound B (one agent per job) | heuristic |
 |---|---:|---:|---:|---:|---:|
 | 5 × 25 | 452 | 444.13 | **452.00** | 444.12 | 452 |
 | 5 × 40 | 682 | 671.18 | **682.00** | 671.12 | 682 |

@@ -61,9 +61,11 @@ networkx's. That makes it Kruskal's algorithm, which you never wrote.
 for matchings in a path, which the test re-checks; and "empty" and "hereditary"
 witnesses for two broken systems.
 
-*Think about:* the matching witness is ({1}, {0, 2}): the middle edge alone is
-maximal, but two disjoint edges exist. Greedy with weight 3 on the middle edge and
-2 on the others picks the middle one and stops at 3, while the optimum is 4.
+*Think about:* the test's path a-b-c-d has edges 0, 1, 2 = ab, bc, cd, and the
+matching witness is ({1}, {0, 2}), that is A = {bc} and B = {ab, cd}: the middle
+edge alone is maximal, but two disjoint edges exist. Greedy with weight 3 on the
+middle edge and 2 on the others picks the middle one and stops at 3, while the
+optimum is 4.
 
 ## Step 4 — Matroid intersection  *(45 min)*
 

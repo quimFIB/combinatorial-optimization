@@ -3,7 +3,7 @@
     uv run co test 13
 
 An independence system on the ground set range(n) is given by an ORACLE:
-a function independent(S) -> bool for any list/iterable S of elements. Steps 1
+a function independent(S) -> bool for any list/iterable S of elements. Step 1
 builds oracles; the rest only ever call them.
 
 Any style passes; the tests only check results. Oracles are naturally closures.
@@ -27,7 +27,7 @@ def graphic(n_vertices, edges):
 
 
 def uniform(k):
-    """The uniform matroid U_k: independent iff at most k elements."""
+    """The uniform matroid U_{k,n}: independent iff at most k elements."""
     raise NotImplementedError("step 1: uniform")
 
 

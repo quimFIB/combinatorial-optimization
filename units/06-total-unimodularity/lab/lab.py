@@ -61,7 +61,7 @@ def assignment_lp(cost):
     """The assignment problem as a plain LP with no integrality: variables
     x_ij >= 0 (row-major), sum_j x_ij = 1 for each i, sum_i x_ij = 1 for each j,
     minimize sum c_ij x_ij. Solve it with colib.solvers.highs_lp (use
-    row_lower=b to make the rows equalities, sense="min") and return the
+    row_lower=b to make the constraints equalities, sense="min") and return the
     n x n numpy array of x."""
     raise NotImplementedError("step 4: assignment_lp")
 

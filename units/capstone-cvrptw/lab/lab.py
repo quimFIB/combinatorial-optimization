@@ -14,6 +14,8 @@ method returns a result dict (build it with _result):
 
 Useful from colib.vrptw.VRPTW: inst.n, inst.customers, inst.dist, inst.demand, inst.ready, inst.due,
 inst.service, inst.capacity, inst.arcs(), inst.arc_possible(i, j), inst.route_cost(route), inst.cost(routes).
+Customer i's time window [a_i, b_i] is [inst.ready[i], inst.due[i]], its service time s_i is inst.service[i],
+its demand q_i is inst.demand[i], and d_ij is inst.dist[i][j].
 """
 
 from __future__ import annotations

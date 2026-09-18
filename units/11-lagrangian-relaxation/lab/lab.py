@@ -86,10 +86,10 @@ def gap_relax_capacity(gap: GAP, lam):
 # ---------------------------------------------------------------- step 5 ---
 
 def gap_repair(gap: GAP, x):
-    """A Lagrangian heuristic from the assignment relaxation's x (each agent's row respects
-    its capacity, but a job may appear in several rows or in none).
+    """A Lagrangian heuristic from the assignment relaxation's x (each agent's jobs fit its
+    capacity, but a job may be taken by several agents or by none).
 
-    Keep each multiply-assigned job with its cheapest agent among those rows. Then, while jobs
+    Keep each multiply-assigned job with its cheapest agent among those that took it. Then, while jobs
     remain unassigned: for each, list the agents that still have room for it, sorted by cost;
     if some job has none, return None. Otherwise place the job with the largest regret
     (second-cheapest cost minus cheapest; infinite if it has only one option) on its cheapest
