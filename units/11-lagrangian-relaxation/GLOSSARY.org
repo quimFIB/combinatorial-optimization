@@ -11,12 +11,12 @@ optimizing over \(X\) alone is easy.
 
 * Dualising
 
-- complicating constraints :: The rows \(Ax \ge b\) that make the problem hard;
+- complicating constraints :: The constraints \(Ax \ge b\) that make the problem hard;
   the ones to move into the objective. /Slide: The Lagrangian function./
 - dualising (relaxing) a constraint :: Removing it and adding a price for its
   violation to the objective.
-- Lagrange multipliers :: The prices \(u \ge 0\), one per dualised row; free sign
-  for equality rows.
+- Lagrange multipliers :: The prices \(u \ge 0\), one per dualised constraint; free
+  sign for equality constraints.
 - Lagrangian function :: \(L(u) = \min_{x \in X} c^\top x + u^\top (b - Ax)\).
 - Lagrangian subproblem :: The easy minimization over \(X\) that evaluates
   \(L(u)\).
@@ -42,7 +42,7 @@ optimizing over \(X\) alone is easy.
 * Subgradients
 
 - subgradient :: \(g\) with \(L(v) \le L(u) + g^\top (v - u)\) for all \(v\).
-  For the Lagrangian, \(g = b - Ax(u)\), the violation of the dualised rows: free
+  For the Lagrangian, \(g = b - Ax(u)\), the violation of the dualised constraints: free
   to compute. /Slide: Subgradient ascent./
 - subgradient ascent :: \(u \leftarrow [u + t_k g]_+\), projecting back onto
   \(u \ge 0\).

@@ -90,7 +90,7 @@ term can be looked up here and read properly there.
   its outermost blossom, instead of building \(G / B\).
 - Edmonds–Cobham thesis :: Polynomial running time is the right formal notion of a
   good algorithm (1965). Why P is the dividing line of unit 22.
-- matching polytope :: Degree rows plus odd-set inequalities \(x(E[S]) \le (|S| -
+- matching polytope :: Degree constraints plus odd-set inequalities \(x(E[S]) \le (|S| -
   1)/2\) for odd \(S\). The convex hull of matchings (Edmonds 1965). /Slide: The
   matching polytope./
 - \(E[S]\) :: The edges with both endpoints in \(S\).

@@ -11,6 +11,15 @@
 <link rel="stylesheet" href="../../slides/deck.css">
 </head>
 <body data-trunk="ip">
+<!-- The running example, once: what each <span class="ref"> on the slides shows on hover. -->
+<div class="refs" hidden>
+  <template data-ref="ufl"><span class="ref-name">the running example</span>UFL, 2 facilities (opening cost 6 each), 3 customers, serving costs $\begin{pmatrix}1 &amp; 1 &amp; 5\\ 5 &amp; 5 &amp; 1\end{pmatrix}$ <span class="ref-note">row $i$ is facility $i$, column $j$ customer $j$; integer optimum 13, facility 0 open alone</span></template>
+  <template data-ref="f1"><span class="ref-name">facility 1</span>opening cost 6; serves customers 0, 1, 2 at cost 5, 5, 1 <span class="ref-note">near customer 2 only: opening it too saves 4 in serving and costs 6</span></template>
+  <template data-ref="cust2"><span class="ref-name">customer 2</span>serving cost 5 from facility 0, 1 from facility 1 <span class="ref-note">the one customer near facility 1</span></template>
+  <template data-ref="opt"><span class="ref-name">the integer optimum</span>$z_{IP} = 13$: open facility 0 alone, $6 + (1 + 1 + 5)$ <span class="ref-note">by brute force; opening $\{1\}$ costs 17, opening both 15</span></template>
+  <template data-ref="agg"><span class="ref-name">aggregated LP, running example</span>$x_{i0} + x_{i1} + x_{i2} \le M\, y_i$ for $i = 0, 1$ <span class="ref-note">LP optimum: each customer to its nearest facility, $y = (\tfrac2M, \tfrac1M)$, bound $3 + 18/M$: 9 at $M = 3$, 3.6 at $M = 30$</span></template>
+  <template data-ref="disagg"><span class="ref-name">disaggregated LP, running example</span>$x_{ij} \le y_i$ for all six pairs $(i, j)$ <span class="ref-note">LP optimum $y = (1, 0)$, bound 13: already the integer optimum</span></template>
+</div>
 <div class="reveal"><div class="slides">
 
 <!-- ================================================================== -->
@@ -234,11 +243,11 @@
         <li>The relaxation lets $y = x/M$. With $M \gg u$, the LP opens a facility "a little": $y$ tiny, cost tiny, bound weak.</li>
         <li>The <span class="term">tightest valid M</span> is the best upper bound on $x$ you can prove. Finding it is modelling work, and presolve can sometimes do it for you.</li>
       </ul>
-      <div class="box ex"><span class="label">on the running example</span>
+      <div class="box ex"><span class="label">on the <span class="ref" data-ref="ufl">running example</span></span>
         <p class="small">A facility serves at most 3 customers, so $\sum_j x_{ij} \le 3\,y_i$ uses the tightest valid $M = 3$. The LP bound is <b>9</b>.<br>Write $M = 30$ instead, equally valid: the LP bound drops to <b>3.6</b>, with $y = (\tfrac1{15}, \tfrac1{30})$.</p>
       </div>
       <div class="box warn"><span class="label">two diseases at once</span>
-        <p class="small">A big M weakens the bound <b>and</b> mixes magnitudes in one row, which is unit 02's tolerance problem.</p>
+        <p class="small">A big M weakens the bound <b>and</b> mixes magnitudes in one constraint, which is unit 02's tolerance problem.</p>
       </div>
     </div>
   </div>
@@ -271,10 +280,10 @@
   <h2>Aggregated against disaggregated</h2>
   <div class="cols">
     <div>
-      <p><b><span class="term" data-term="aggregated formulation">Aggregated</span></b>, $F$ rows: $\;\sum_j x_{ij} \le C\, y_i$</p>
-      <p><b><span class="term" data-term="disaggregated formulation">Disaggregated</span></b>, $F \cdot C$ rows: $\;x_{ij} \le y_i$</p>
+      <p><b><span class="term" data-term="aggregated formulation">Aggregated</span></b>, $F$ constraints: $\;\sum_j x_{ij} \le C\, y_i$</p>
+      <p><b><span class="term" data-term="disaggregated formulation">Disaggregated</span></b>, $F \cdot C$ constraints: $\;x_{ij} \le y_i$</p>
       <div class="box thm"><span class="label">claim</span>
-        <p>Disaggregated is strictly stronger: it implies aggregated (sum its rows over $j$), and not the other way round.</p>
+        <p>Disaggregated is strictly stronger: it implies aggregated (sum its constraints over $j$), and not the other way round.</p>
       </div>
       <div class="box"><span class="label">a point only the weak model allows</span>
         <p class="small">Facility $i$ serves customer 1 alone: $x_{i1} = 1$, all other $x_{ij} = 0$. Aggregated allows $y_i = 1/C$. Disaggregated forces $y_i \ge x_{i1} = 1$ and pays the full opening cost.</p>
@@ -314,31 +323,31 @@
   <div class="cols">
     <div>
       <table>
-        <thead><tr><th>formulation</th><th>LP optimum $y$</th><th class="num">$z_{LP}$</th><th class="num">gap to 13</th></tr></thead>
+        <thead><tr><th>formulation</th><th>LP optimum $y$</th><th class="num">$z_{LP}$</th><th class="num">gap to <span class="ref" data-ref="opt">13</span></th></tr></thead>
         <tbody>
           <tr><td>aggregated, $M = 30$</td><td>$(\tfrac1{15}, \tfrac1{30})$</td><td class="num">3.6</td><td class="num">72%</td></tr>
           <tr><td>aggregated, $M = 3$</td><td>$(\tfrac23, \tfrac13)$</td><td class="num">9</td><td class="num">31%</td></tr>
           <tr><td>disaggregated</td><td>$(1, 0)$</td><td class="num"><b>13</b></td><td class="num"><b>0%</b></td></tr>
         </tbody>
       </table>
-      <p class="small">In the aggregated LP, facility 1 serves customer 2 <b>completely</b> ($x_{12} = 1$) while being open only <b>a third</b>. That is legal there: the row only asks $x_{10} + x_{11} + x_{12} \le 3y_1$, i.e. $1 \le 3 \cdot \tfrac13$.</p>
+      <p class="small">In the <span class="ref" data-ref="agg">aggregated LP</span>, <span class="ref" data-ref="f1">facility 1</span> serves <span class="ref" data-ref="cust2">customer 2</span> <b>completely</b> ($x_{12} = 1$) while being open only <b>a third</b>. That is legal there: the constraint only asks $x_{10} + x_{11} + x_{12} \le 3y_1$, i.e. $1 \le 3 \cdot \tfrac13$.</p>
     </div>
     <div>
       <div class="box ex"><span class="label">a valid inequality that cuts it off</span>
-        <p class="small">$x_{12} \le y_1$: "you can't serve customer 2 from facility 1 more than it is open". Every integer solution satisfies it (if $y_1 = 0$ then $x_{12} = 0$).</p>
-        <p class="small">The aggregated LP point has $x_{12} = 1 &gt; \tfrac13 = y_1$: <b>violated</b>. Adding all six such rows is the disaggregated formulation, and its LP optimum is already the integer optimum.</p>
+        <p class="small">$x_{12} \le y_1$: "you can't serve <span class="ref" data-ref="cust2">customer 2</span> from <span class="ref" data-ref="f1">facility 1</span> more than it is open". Every integer solution satisfies it (if $y_1 = 0$ then $x_{12} = 0$).</p>
+        <p class="small">The <span class="ref" data-ref="agg">aggregated LP</span> point has $x_{12} = 1 &gt; \tfrac13 = y_1$: <b>violated</b>. Adding all six such constraints is the <span class="ref" data-ref="disagg">disaggregated formulation</span>, and its LP optimum is already the integer optimum.</p>
       </div>
-      <p class="small">Same three integer solutions, same 13, and bounds of 3.6, 9 and 13. A branch-and-bound on the first must branch; on the last it stops at the root.</p>
+      <p class="small">Same three integer solutions, same <span class="ref" data-ref="opt">13</span>, and bounds of 3.6, 9 and 13. A branch-and-bound on the first must branch; on the last it stops at the root.</p>
     </div>
   </div>
   <p class="viz-link-row"><a class="viz-link" href="explore.html#/1" target="_blank" rel="noopener">explore interactively</a></p>
   <aside class="notes">
     <p>Gaps are $(13 - z_{LP}) / 13$: $9.4/13 = 72\%$, $4/13 = 31\%$, 0. All three LP values
-    and the $y$ vectors are HiGHS on the reference formulations. The disaggregated LP
+    and the $y$ vectors are HiGHS on the reference formulations. The <span class="ref" data-ref="disagg">disaggregated LP</span>
     returns $y = (1, 0)$ with $x_{00} = x_{01} = x_{02} = 1$: exactly the integer
     optimum, so for this instance the disaggregated polyhedron's optimal face is integral.</p>
-    <p>Why the disaggregated LP can't cheat the same way. To serve customer 2 from
-    facility 1 fully it needs $y_1 \ge 1$, cost 6, saving only 4 in serving. Serving it
+    <p>Why the disaggregated LP can't cheat the same way. To serve <span class="ref" data-ref="cust2">customer 2</span> from
+    <span class="ref" data-ref="f1">facility 1</span> fully it needs $y_1 \ge 1$, cost 6, saving only 4 in serving. Serving it
     partly, $x_{12} = t$, needs $y_1 \ge t$: cost $6t$ against a saving of $4t$. It never
     pays, so the LP keeps $y_1 = 0$.</p>
     <p>This is unit 08's whole method in miniature: find an inequality valid for the
@@ -352,16 +361,16 @@
   <div class="cols">
     <div>
       <p><span class="term" data-term="capacitated facility location">Capacitated facility location</span>: $\;\sum_j d_j x_{ij} \le u_i\, y_i$.</p>
-      <p class="small">For <b>integer</b> $y$ this already implies $x_{ij} \le y_i$: if $y_i = 0$, facility $i$ serves nothing. So the <span class="term" data-term="linking row">linking rows</span> remove no integer solution.</p>
-      <p class="small">For <b>fractional</b> $y$ they do. $y_i = 0.3$ lets the capacity row serve 30% of the capacity, but $x_{ij} \le 0.3$ also stops any single customer being served more than 30% by it.</p>
-      <p class="small">The <span class="term">cover row</span> $\sum_i u_i y_i \ge \sum_j d_j$ is valid for the same reason, and it forbids opening "too little capacity in total".</p>
+      <p class="small">For <b>integer</b> $y$ this already implies $x_{ij} \le y_i$: if $y_i = 0$, facility $i$ serves nothing. So the <span class="term" data-term="linking constraint">linking constraints</span> remove no integer solution.</p>
+      <p class="small">For <b>fractional</b> $y$ they do. $y_i = 0.3$ lets the capacity constraint serve 30% of the capacity, but $x_{ij} \le 0.3$ also stops any single customer being served more than 30% by it.</p>
+      <p class="small">The <span class="term">cover constraint</span> $\sum_i u_i y_i \ge \sum_j d_j$ is valid for the same reason, and it forbids opening "too little capacity in total".</p>
     </div>
     <div>
       <p class="small">Lab <code>then</code>, 20×60, capacity ratio 1.5:</p>
       <table>
         <thead><tr><th>CFL</th><th class="num">LP gap</th><th class="num">nodes*</th></tr></thead>
         <tbody>
-          <tr><td>capacity rows only</td><td class="num">5.5%</td><td class="num">102</td></tr>
+          <tr><td>capacity constraints only</td><td class="num">5.5%</td><td class="num">102</td></tr>
           <tr><td>+ linking + cover</td><td class="num">1.2%</td><td class="num">20</td></tr>
         </tbody>
       </table>
@@ -371,8 +380,8 @@
     </div>
   </div>
   <aside class="notes">
-    <p>The linking rows here are an example of <b>strengthening by disaggregation</b>,
-    and the cover row of a <b>knapsack-type valid inequality</b>: the capacities of
+    <p>The linking constraints here are an example of <b>strengthening by disaggregation</b>,
+    and the cover constraint of a <b>knapsack-type valid inequality</b>: the capacities of
     the open facilities must cover the demand. Unit 08 generates such inequalities
     automatically. Knapsack cover cuts, flow cover cuts and implied bound cuts are
     exactly the families that would find these, and a modern solver runs all of them
@@ -390,8 +399,8 @@
     <div>
       <p>An <span class="term">extended formulation</span>: a polytope with exponentially many facets can be the <b>projection</b> of a polytope in more variables with few facets.</p>
       <ul class="small">
-        <li><b>Spanning trees:</b> exponentially many subtour rows in edge variables, but $O(n^3)$ rows with flow variables (Martin 1991).</li>
-        <li><b><span class="term">Permutahedron</span>:</b> $2^n - 2$ facets, but $O(n \log n)$ variables and rows through a sorting network (Goemans).</li>
+        <li><b>Spanning trees:</b> exponentially many subtour constraints in edge variables, but $O(n^3)$ constraints with flow variables (Martin 1991).</li>
+        <li><b><span class="term">Permutahedron</span>:</b> $2^n - 2$ facets, but $O(n \log n)$ variables and constraints through a sorting network (Goemans).</li>
         <li><b>Disjunctions:</b> $\mathrm{conv}(P_1 \cup P_2)$ by copying variables (Balas).</li>
       </ul>
       <p class="small">Unit 01 said projection can create facets. This is the useful direction of that fact.</p>
@@ -426,7 +435,7 @@
         <li>The LP bound is the same in every symmetric branch, so branch-and-bound proves the same thing $K!$ times.</li>
         <li>With 20 bins, $20! \approx 2.4 \times 10^{18}$ copies.</li>
       </ul>
-      <p class="small"><b>Cures:</b> <span class="term" data-term="symmetry-breaking rows">symmetry-breaking rows</span> ($y_1 \ge y_2 \ge \dots$, or item $i$ only in bins $\le i$); <span class="term">orbital fixing</span> in the solver; or a formulation without labels at all (column generation, unit 10).</p>
+      <p class="small"><b>Cures:</b> <span class="term" data-term="symmetry-breaking constraints">symmetry-breaking constraints</span> ($y_1 \ge y_2 \ge \dots$, or item $i$ only in bins $\le i$); <span class="term">orbital fixing</span> in the solver; or a formulation without labels at all (column generation, unit 10).</p>
     </div>
     <div>
       <div class="box ex"><span class="label">3 items, 2 bins, every copy</span>
@@ -477,7 +486,7 @@
         <tbody>
           <tr><td>UFL aggregated, M = 10C</td><td class="num">5 644</td><td class="num">7</td><td class="num">1</td></tr>
           <tr><td>UFL disaggregated</td><td class="num">1</td><td class="num">1</td><td class="num">1</td></tr>
-          <tr><td>CFL capacity rows only</td><td class="num">102</td><td class="num">11</td><td class="num">27</td></tr>
+          <tr><td>CFL capacity constraints only</td><td class="num">102</td><td class="num">11</td><td class="num">27</td></tr>
           <tr><td>CFL + linking + cover</td><td class="num">20</td><td class="num">1</td><td class="num">4</td></tr>
         </tbody>
       </table>
@@ -485,8 +494,8 @@
     <div>
       <p>Default solvers derive much of the missing strength themselves:</p>
       <ul class="small">
-        <li><span class="term">bound tightening</span> in <span class="term">presolve</span> shrinks M to what is provable (on the running example it can take $M = 30$ back to 3, since each $x_{ij} \le 1$);</li>
-        <li><span class="term" data-term="implied bound cut">implied bound cuts</span> recover $x_{ij} \le y_i$ from bounds and linking rows;</li>
+        <li><span class="term">bound tightening</span> in <span class="term">presolve</span> shrinks M to what is provable (on the <span class="ref" data-ref="ufl">running example</span> it can take $M = 30$ back to 3, since each $x_{ij} \le 1$);</li>
+        <li><span class="term" data-term="implied bound cut">implied bound cuts</span> recover $x_{ij} \le y_i$ from bounds and linking constraints;</li>
         <li><span class="term" data-term="knapsack cover cut">knapsack</span> and <span class="term" data-term="flow cover cut">flow cover cuts</span> recover the capacity structure.</li>
       </ul>
       <div class="box warn"><span class="label">the trap</span>
@@ -526,7 +535,7 @@
   </div>
   <aside class="notes">
     <p>Presolve is the most bug-prone part of a MIP solver: hundreds of reductions,
-    each correct on paper and each with edge cases in floating point. Big-M rows are a
+    each correct on paper and each with edge cases in floating point. Big-M constraints are a
     classic trigger, because bound-tightening reductions interact with the huge
     coefficient. Solver developers test against libraries of instances with known
     optima (MIPLIB) for exactly this reason, and exact MIP solvers with verifiable

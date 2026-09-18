@@ -44,7 +44,7 @@ bounds.
 - valid M :: Any \(M\) at least the true upper bound \(u\) on \(x\).
 - tightest valid M :: The best upper bound on \(x\) you can prove. A larger
   \(M\) lets the LP set \(y = x/M\), opening a facility "a little" and weakening
-  the bound; it also mixes magnitudes in one row, inviting unit 02's tolerance
+  the bound; it also mixes magnitudes in one constraint, inviting unit 02's tolerance
   problems.
 - indicator constraint :: \(y = 1 \Rightarrow a^\top x \le b\), given to the
   solver directly so it handles the switch by branching or by choosing \(M\)
@@ -53,22 +53,22 @@ bounds.
   copying variables (Balas 1979).
 - UFL :: Uncapacitated facility location: choose facilities to open and assign
   every customer, minimizing opening plus service cost.
-- aggregated formulation :: One linking row per facility, \(\sum_j x_{ij} \le C
+- aggregated formulation :: One linking constraint per facility, \(\sum_j x_{ij} \le C
   y_i\). /Slide: Aggregated against disaggregated./
-- disaggregated formulation :: One linking row per facility–customer pair,
-  \(x_{ij} \le y_i\). Strictly stronger: its rows sum to the aggregated ones, and
+- disaggregated formulation :: One linking constraint per facility–customer pair,
+  \(x_{ij} \le y_i\). Strictly stronger: its constraints sum to the aggregated ones, and
   it forbids \(y_i = 1/C\) for a facility serving one customer.
 - capacitated facility location (CFL) :: UFL with capacities, \(\sum_j d_j x_{ij}
   \le u_i y_i\). /Slide: When a constraint is implied, and still helps./
-- linking row :: \(x_{ij} \le y_i\) added to CFL. Removes no integer solution but
+- linking constraint :: \(x_{ij} \le y_i\) added to CFL. Removes no integer solution but
   cuts off fractional ones.
-- cover row :: \(\sum_i u_i y_i \ge \sum_j d_j\): open capacity must cover total
+- cover constraint :: \(\sum_i u_i y_i \ge \sum_j d_j\): open capacity must cover total
   demand. Valid, and it tightens the relaxation.
 - valid inequality :: One satisfied by every integer solution. Adding it never
   changes the MILP and may tighten its relaxation. All of unit 08 in one sentence.
 - extended formulation :: A description in extra variables whose projection is
   the polytope you want. Can replace exponentially many facets with polynomially
-  many rows. /Slide: Extended formulations: add variables, lose facets./
+  many constraints. /Slide: Extended formulations: add variables, lose facets./
 - permutahedron :: The convex hull of all permutations of \((1, \dots, n)\).
   \(2^n - 2\) facets, but an \(O(n \log n)\) extended formulation via a sorting
   network.
@@ -81,7 +81,7 @@ bounds.
   times under relabelling, such as \(K!\) copies of each bin packing. Branch and
   bound proves the same thing once per copy. /Slide: Symmetry is a formulation
   defect./
-- symmetry-breaking rows :: Constraints that pick one representative, such as
+- symmetry-breaking constraints :: Constraints that pick one representative, such as
   \(y_1 \ge y_2 \ge \dots\), or item \(i\) only in bins \(\le i\).
 - orbital fixing :: A solver technique that fixes variables using the symmetry
   group it detects in the model.
@@ -93,7 +93,7 @@ bounds.
 - bound tightening :: A presolve reduction that shrinks variable bounds, and so
   \(M\), to what is provable.
 - implied bound cut :: A cut that recovers \(x_{ij} \le y_i\) from bounds and
-  linking rows.
+  linking constraints.
 - knapsack cover cut, flow cover cut :: Cut families that recover capacity
   structure (unit 08).
 - node count :: The number of branch-and-bound nodes solved. Within one solver, a

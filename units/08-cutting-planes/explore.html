@@ -37,12 +37,12 @@
   <p class="small muted">Try: step through the deck's example, then the four-round one. Static version: <a href="slides.html#/6">both cuts, drawn</a>.</p>
   <aside class="notes">
     <p><b>What it shows.</b> The pure cutting-plane method on three two-variable integer programs.
-    Each round solves the LP over the rows so far, reads a Gomory fractional cut off the most
+    Each round solves the LP over the constraints so far, reads a Gomory fractional cut off the most
     fractional row of the optimal tableau, and adds it. The ring is the LP optimum the cut
     removes; the light red region is what the cuts have removed from the original LP region.</p>
     <p>Recorded by <code>slides/viz/traces/u08.py</code> with the reference
     <code>gomory_loop</code> (exact fractions); each round's LP is re-solved with unit 02's
-    reference <code>two_phase</code> on the rows gomory_loop had at that point, and the LP
+    reference <code>two_phase</code> on the constraints gomory_loop had at that point, and the LP
     bounds are checked against the ones gomory_loop returns.</p>
   </aside>
 </section>
@@ -53,11 +53,11 @@
   <div class="viz" data-viz="cover" data-weights="5,5,5,5,8" data-capacity="12" data-x="1,0.7,0.7,0,0"></div>
   <p class="small muted">Try: raise x4; lower x1 below 0.5; push everything to 1. Static versions: <a href="slides.html#/10">separating a cover</a>, <a href="slides.html#/11">lifting</a>.</p>
   <aside class="notes">
-    <p><b>What it shows.</b> The deck's knapsack row $5x_0 + 5x_1 + 5x_2 + 5x_3 + 8x_4 \le 12$. For the
+    <p><b>What it shows.</b> The deck's knapsack constraint $5x_0 + 5x_1 + 5x_2 + 5x_3 + 8x_4 \le 12$. For the
     LP values you set, every minimal cover is listed with its cost $\sum_{j \in C}(1 - x_j^*)$; a
     cost below 1 means the cover inequality is violated. The most violated cover is then
     lifted, in index order, and its left side evaluated at $x^*$. Covers, costs and lifting are
-    enumerated in the page from the row written in this file (the row is small enough).</p>
+    enumerated in the page from the constraint written in this file (it is small enough).</p>
     <ul>
       <li>At the start, $x^* = (1, 0.7, 0.7, 0, 0)$: cover $\{0,1,2\}$ costs 0.6, the deck's example,
       and its lifted form $x_0 + x_1 + x_2 + x_3 + 2x_4 \le 2$ is still violated (2.4).</li>

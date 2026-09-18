@@ -11,6 +11,11 @@
 <link rel="stylesheet" href="../../slides/deck.css">
 </head>
 <body data-trunk="cp">
+<!-- The running example, once: what each <span class="ref"> on the slides shows on hover. -->
+<div class="refs" hidden>
+  <template data-ref="ad"><span class="ref-name">the running example</span>alldifferent$(x_1, x_2, x_3, x_4)$ with $x_1, x_2 \in \{1, 2\}$, $x_3 \in \{1, 2, 3\}$, $x_4 \in \{2, 3, 4\}$ <span class="ref-note">Hall set $\{x_1, x_2\}$ takes $\{1, 2\}$, so $x_3 = 3$, then $x_4 = 4$; pairwise $\ne$ prunes nothing</span></template>
+  <template data-ref="vg"><span class="ref-name">its value graph</span>variables left, values right: ten edges <span class="ref-note">thick: a maximum matching; dashed: the four edges Régin's filter removes</span><svg viewBox="0 0 280 230" width="170" aria-hidden="true"><g class="ink" stroke-width="1.8"><line x1="50" y1="40" x2="220" y2="40" style="stroke:var(--accent);stroke-width:5"/><line x1="50" y1="40" x2="220" y2="90"/><line x1="50" y1="90" x2="220" y2="40"/><line x1="50" y1="90" x2="220" y2="90" style="stroke:var(--accent);stroke-width:5"/><line x1="50" y1="140" x2="220" y2="40" style="stroke-dasharray:6 5"/><line x1="50" y1="140" x2="220" y2="90" style="stroke-dasharray:6 5"/><line x1="50" y1="140" x2="220" y2="140" style="stroke:var(--accent);stroke-width:5"/><line x1="50" y1="190" x2="220" y2="90" style="stroke-dasharray:6 5"/><line x1="50" y1="190" x2="220" y2="140" style="stroke-dasharray:6 5"/><line x1="50" y1="190" x2="220" y2="190" style="stroke:var(--accent);stroke-width:5"/></g><g class="fill-ground ink" stroke-width="1.5"><circle cx="50" cy="40" r="16"/><circle cx="50" cy="90" r="16"/><circle cx="50" cy="140" r="16"/><circle cx="50" cy="190" r="16"/><circle cx="220" cy="40" r="16"/><circle cx="220" cy="90" r="16"/><circle cx="220" cy="140" r="16"/><circle cx="220" cy="190" r="16"/></g><g font-size="16" text-anchor="middle" class="mono"><text x="50" y="45">x₁</text><text x="50" y="95">x₂</text><text x="50" y="145">x₃</text><text x="50" y="195">x₄</text><text x="220" y="45">1</text><text x="220" y="95">2</text><text x="220" y="145">3</text><text x="220" y="195">4</text></g></svg></template>
+</div>
 <div class="reveal"><div class="slides">
 
 <section class="title-slide">
@@ -29,7 +34,7 @@
     becomes the inner loop of a CP propagator. In unit 21 the same propagators will explain
     themselves to a SAT solver.</p>
     <h4>How to read this deck</h4>
-    <p>The four-variable alldifferent of "What pairwise ≠ cannot see" is the running example: its
+    <p>The <span class="ref" data-ref="ad">four-variable alldifferent</span> of "What pairwise ≠ cannot see" is the running example: its
     value graph, orientation and strongly connected components are worked on one slide. Scheduling
     gets two small traces, a compulsory-part profile for three tasks and one edge-finding deduction
     with numbers. Every result was produced by the lab's reference propagators.</p>
@@ -131,7 +136,7 @@
           <text x="220" y="44">1</text><text x="220" y="94">2</text><text x="220" y="144">3</text><text x="220" y="194">4</text>
         </g>
       </svg>
-      <p class="cap">Thick: a maximum matching. Dashed: edges in no maximum matching, removed. {x₁, x₂} ↔ {1, 2} is an alternating cycle, so those edges stay. The next slide works it out.</p>
+      <p class="cap">The value graph of <span class="ref" data-ref="ad">the example</span>. Thick: a maximum matching. Dashed: edges in no maximum matching, removed. {x₁, x₂} ↔ {1, 2} is an alternating cycle, so those edges stay. The next slide works it out.</p>
     </div>
     <div>
       <ol class="small">
@@ -161,7 +166,7 @@
   <h2>Régin's filter, on the example</h2>
   <div class="cols">
     <div>
-      <p class="small">$x_1, x_2 \in \{1,2\}$, $x_3 \in \{1,2,3\}$, $x_4 \in \{2,3,4\}$. Ten edges in the value graph.</p>
+      <p class="small">$x_1, x_2 \in \{1,2\}$, $x_3 \in \{1,2,3\}$, $x_4 \in \{2,3,4\}$. Ten edges in the <span class="ref" data-ref="vg">value graph</span>.</p>
       <table>
         <thead><tr><th>step</th><th>result</th></tr></thead>
         <tbody>
@@ -196,7 +201,7 @@
     <p><b>The Hall sets</b> are what the reference <code>hall_set</code> returns for each removal:
     positions $[0, 1]$ for $x_3 = 1$, $x_3 = 2$ and $x_4 = 2$, and $[0, 1, 2]$ for $x_4 = 3$. The last
     one only exists because $x_3$ is itself squeezed to value 3.</p>
-    <p>The matching, oriented graph and components are the reference <code>maximum_matching</code>,
+    <p>The <span class="ref" data-ref="vg">matching</span>, oriented graph and components are the reference <code>maximum_matching</code>,
     <code>_digraph</code> and <code>_sccs</code>; <code>AllDifferent.prune</code> returns
     $x_3 \in \{3\}$, $x_4 \in \{4\}$.</p>
   </aside>
@@ -223,7 +228,7 @@
     </div>
     <div>
       <div class="box def"><span class="label">a Hall set, by name</span>
-        <p class="small">Two decisions down Inkala's solution path, pairwise ≠ at its fixpoint: alldifferent on row 7 removes <b>2</b> from r7c1 (domain {2, 4, 5, 7}). The Hall set: <b>r7c2, r7c4, r7c5, r7c6</b>, whose domains hold only {2, 4, 7, 9}.</p>
+        <p class="small">Two decisions down Inkala's solution path, pairwise ≠ at its fixpoint: alldifferent on row 7 removes <b>2, 4 and 7</b> from cell r7c1 (row 7, column 1; domain {2, 4, 5, 7}), leaving 5. The Hall set: <b>r7c2, r7c4, r7c5, r7c6</b>, whose domains hold only {2, 4, 7, 9}.</p>
       </div>
       <ul class="small">
         <li><b>Queens:</b> a Hall set rarely forms before a variable is fixed, so alldifferent saves 18% of nodes and costs a matching per call. Slower.</li>

@@ -58,7 +58,7 @@ window.GLOSSARY = [
 },
 {
 "term_html": "clique detection",
-"html": "Merging pairwise conflicts between binaries into one clique row.",
+"html": "Merging pairwise conflicts between binaries into one clique constraint.",
 "section": "Before branching",
 "slide": "What presolve does, and what defeats it",
 "keys": [
@@ -264,7 +264,7 @@ window.GLOSSARY = [
 },
 {
 "term_html": "performance variability",
-"html": "Large changes in solve time from irrelevant changes such as the random seed or row order.",
+"html": "Large changes in solve time from irrelevant changes such as the random seed or constraint order.",
 "section": "Logs and variability",
 "slide": "Performance variability: the same model, different seeds",
 "keys": [

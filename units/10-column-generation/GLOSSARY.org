@@ -50,9 +50,9 @@ term can be looked up here and read properly there.
   \(\lambda\) are the master's columns.
 - convexification :: That replacement. Strengthens the formulation by taking the
   hull of a substructure.
-- linking constraints :: The rows that tie the blocks together; they stay in the
+- linking constraints :: The constraints that tie the blocks together; they stay in the
   master.
-- convexity row :: \(\sum_p \lambda_{kp} = 1\), one per block, with dual
+- convexity constraint :: \(\sum_p \lambda_{kp} = 1\), one per block, with dual
   \(\mu_k\).
 - DW pricing :: For block \(k\), \(\min_{x \in X_k} (c_k - D_k^\top y)^\top x -
   \mu_k\).

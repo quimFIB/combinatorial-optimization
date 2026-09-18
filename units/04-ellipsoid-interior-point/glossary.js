@@ -47,7 +47,7 @@ window.GLOSSARY = [
 },
 {
 "term_html": "ellipsoid method",
-"html": "Start with a ball containing the feasible set. If the centre is infeasible, keep the half on the feasible side of a violated row, wrap it in the smallest ellipsoid, repeat. Stop when the centre is feasible or the ellipsoid is too small to hold the set.",
+"html": "Start with a ball containing the feasible set. If the centre is infeasible, keep the half on the feasible side of a violated constraint, wrap it in the smallest ellipsoid, repeat. Stop when the centre is feasible or the ellipsoid is too small to hold the set.",
 "section": "The ellipsoid method",
 "slide": "The idea",
 "keys": [
@@ -146,7 +146,7 @@ window.GLOSSARY = [
 },
 {
 "term_html": "analytic centre",
-"html": "The minimizer of the barrier alone (\\(t \\to 0\\)). Depends on the description, not just the shape: a redundant row moves it.",
+"html": "The minimizer of the barrier alone (\\(t \\to 0\\)). Depends on the description, not just the shape: a redundant constraint moves it.",
 "section": "Interior-point methods",
 "slide": "The log barrier and the central path",
 "keys": [
@@ -218,7 +218,7 @@ window.GLOSSARY = [
 },
 {
 "term_html": "approximate complementary slackness",
-"html": "\\(y_i s_i = 1/t\\) in every row, instead of unit 03's \\(y_i s_i = 0\\).",
+"html": "\\(y_i s_i = 1/t\\) for every constraint, instead of unit 03's \\(y_i s_i = 0\\).",
 "section": "Interior-point methods",
 "slide": "Duality comes for free on the path",
 "keys": [

@@ -11,6 +11,16 @@
 <link rel="stylesheet" href="../../slides/deck.css">
 </head>
 <body>
+<!-- The running example, once: what each <span class="ref"> on the slides shows on hover. -->
+<div class="refs" hidden>
+  <template data-ref="tiny"><span class="ref-name">the four-customer example</span>depot 0 at $(0, 0)$, window $[0, 400]$<br>customer 1 at $(0, 30)$, window $[0, 50]$<br>customer 2 at $(40, 30)$, window $[60, 100]$<br>customer 3 at $(40, 0)$, window $[100, 200]$<br>customer 4 at $(80, 0)$, window $[0, 300]$ <span class="ref-note">service 10 and demand 1 each, capacity 5; optimum 200, on one route $0 \to 1 \to 2 \to 4 \to 3 \to 0$</span></template>
+  <template data-ref="k1"><span class="ref-name">customer 1</span>at $(0, 30)$, window $[0, 50]$, service 10 <span class="ref-note">first on both routes: $d_{01} = 30$, so it starts at 30</span></template>
+  <template data-ref="k2"><span class="ref-name">customer 2</span>at $(40, 30)$, window $[60, 100]$, service 10 <span class="ref-note">$d_{12} = 40$, $d_{23} = 30$, $d_{24} = 50$; starts at 80 on both routes</span></template>
+  <template data-ref="k3"><span class="ref-name">customer 3</span>at $(40, 0)$, window $[100, 200]$, service 10 <span class="ref-note">$d_{23} = 30$, $d_{34} = 40$, $d_{30} = 40$; starts at 120 on $0 \to 1 \to 2 \to 3 \to 0$, at 190 on the optimum</span></template>
+  <template data-ref="k4"><span class="ref-name">customer 4</span>at $(80, 0)$, window $[0, 300]$, service 10 <span class="ref-note">$d_{24} = 50$, $d_{34} = 40$, $d_{14} = 85$, $d_{04} = 80$; the customer left out of $0 \to 1 \to 2 \to 3 \to 0$</span></template>
+  <template data-ref="r3"><span class="ref-name">route 0 → 1 → 2 → 3 → 0</span>$0 \to 1 \to 2 \to 3 \to 0$, distance 140 <span class="ref-note">starts 30, 80, 120, back at the depot at 170; customer 4 not yet served</span></template>
+  <template data-ref="opt"><span class="ref-name">the optimum</span>$0 \to 1 \to 2 \to 4 \to 3 \to 0$, distance 200 <span class="ref-note">all four customers on one route; starts 30, 80, 140, 190, back at 240</span></template>
+</div>
 <div class="reveal"><div class="slides">
 
 <section class="title-slide">
@@ -103,20 +113,20 @@
             <tr><td>depot</td><td>$120 + 10 + 40 = 170$</td><td class="num">$170 \le 400$ ✓</td></tr>
           </tbody>
         </table>
-        <p class="small">Distance $30 + 40 + 30 + 40 = 140$. Customer 4 still needs a place.</p>
+        <p class="small">Distance $30 + 40 + 30 + 40 = 140$. <span class="ref" data-ref="k4">Customer 4</span> still needs a place.</p>
       </div>
       <p class="small">The optimum serves all four on <b>one</b> route, $0 \to 1 \to 2 \to 4 \to 3 \to 0$, distance <b>200</b>: starts 30, 80, 140, 190, back at 240.</p>
     </div>
   </div>
   <p class="viz-link-row"><a class="viz-link" href="explore.html#/1" target="_blank" rel="noopener">explore interactively</a></p>
   <aside class="notes">
-    <p><b>Checking the optimum.</b> After 2 (start 80) go to 4: $80 + 10 + 50 = 140 \le 300$. Then 3:
+    <p><b>Checking <span class="ref" data-ref="opt">the optimum</span>.</b> After <span class="ref" data-ref="k2">2</span> (start 80) go to <span class="ref" data-ref="k4">4</span>: $80 + 10 + 50 = 140 \le 300$. Then 3:
     $\max(100, 140 + 10 + 40) = 190 \le 200$, with only 10 to spare. Back at $190 + 10 + 40 = 240$. Distance
     $30 + 40 + 50 + 40 + 40 = 200$.</p>
     <p>Brute force over every set partition of the four customers and every order within each block, using
     the reference <code>schedule</code> to reject infeasible routes, gives 200 with the single route
-    $[1, 2, 4, 3]$; the reference <code>solve_cpsat</code> proves the same value. Note that 3 before 4 would be
-    the geographic order, but 1 must be served by 50 and 3 by 200, which leaves room to visit 4 in between.</p>
+    <span class="ref" data-ref="opt">$[1, 2, 4, 3]$</span>; the reference <code>solve_cpsat</code> proves the same value. Note that <span class="ref" data-ref="k3">3</span> before <span class="ref" data-ref="k4">4</span> would be
+    the geographic order, but <span class="ref" data-ref="k1">1</span> must be served by 50 and <span class="ref" data-ref="k3">3</span> by 200, which leaves room to visit <span class="ref" data-ref="k4">4</span> in between.</p>
     <p>In code: <code>VRPTW.build("tiny", [(0,0), (0,30), (40,30), (40,0), (80,0)], [0,1,1,1,1], [0,0,60,100,0], [400,50,100,200,300], [0,10,10,10,10], 5)</code>.</p>
   </aside>
 </section>
@@ -195,7 +205,7 @@
       & t_j \ge t_i + s_i + d_{ij} - M_{ij}(1 - x_{ij})
       \end{aligned}$$
       <p class="small">with $M_{ij} = \max(0,\ b_i + s_i + d_{ij} - a_j)$, the smallest $M$ that's valid.</p>
-      <p class="small">The time rows already rule out subtours: around a cycle, each start would exceed the previous one by $s_i + d_{ij} &gt; 0$. They don't limit <b>load</b>.</p>
+      <p class="small">The time constraints already rule out subtours: around a cycle, each start would exceed the previous one by $s_i + d_{ij} &gt; 0$. They don't limit <b>load</b>.</p>
     </div>
     <div>
       <div class="box thm"><span class="label"><span class="term" data-term="rounded capacity inequality">rounded capacity inequalities</span></span>
@@ -208,8 +218,8 @@
   <aside class="notes">
     <p>The curriculum's brief says "cover and subtour cuts". For VRPTW the rounded capacity inequality is the
     natural family: with $\lceil q(S)/Q \rceil$ replaced by 1 it's the subtour elimination constraint of unit
-    09, and it plays the role that covers played for knapsack rows in unit 08. The lab uses it for both
-    purposes. There are no knapsack rows here for classical covers to act on.</p>
+    09, and it plays the role that covers played for knapsack constraints in unit 08. The lab uses it for both
+    purposes. There are no knapsack constraints here for classical covers to act on.</p>
     <p>Big-M time windows give famously weak LP bounds. That's the price of a compact model, and it's what
     section 3's tables show: the MIP proves small tight-window instances fast and stalls as horizons widen.
     Stronger compact models exist (time-indexed or path-based), but they're larger, and at that point the
@@ -264,7 +274,7 @@ for (i, j), b in x.items():
         m.add(t[j] >= t[i] + s[i] + d[i][j]).only_enforce_if(b)
         m.add(u[j] >= u[i] + q[j]).only_enforce_if(b)
 m.minimize(sum(d[i][j] * b for (i, j), b in x.items()))</code></pre>
-      <p class="small">The <span class="term">multiple-circuit constraint</span>: vertex 0 may carry many circuits; every other vertex is on exactly one. That replaces the degree rows and subtour elimination at once. No big-M: the <span class="term" data-term="enforced implication">enforced implication</span> is propagated directly, and lazy clause generation (unit 21) learns from its failures.</p>
+      <p class="small">The <span class="term">multiple-circuit constraint</span>: vertex 0 may carry many circuits; every other vertex is on exactly one. That replaces the degree constraints and subtour elimination at once. No big-M: the <span class="term" data-term="enforced implication">enforced implication</span> is propagated directly, and lazy clause generation (unit 21) learns from its failures.</p>
     </div>
     <div>
       <div class="box def"><span class="label">search choices you make</span>
@@ -328,17 +338,17 @@ m.minimize(sum(d[i][j] * b for (i, j), b in x.items()))</code></pre>
   <h2>Constant-time insertion, with numbers</h2>
   <div class="cols">
     <div>
-      <p class="small">Route $0 \to 1 \to 2 \to 3 \to 0$ from the four-customer example. Insert customer 4 (window $[0, 300]$).</p>
+      <p class="small"><span class="ref" data-ref="r3">Route $0 \to 1 \to 2 \to 3 \to 0$</span> from <span class="ref" data-ref="tiny">the four-customer example</span>. Insert <span class="ref" data-ref="k4">customer 4</span> (window $[0, 300]$).</p>
       <div class="box ex"><span class="label">latest starts, computed backwards</span>
         <table style="margin:0">
           <thead><tr><th>position</th><th>$\ell = \min(b,\ \ell_{\text{next}} - s - d)$</th><th class="num">start $t$</th></tr></thead>
           <tbody>
-            <tr><td>3</td><td>$\min(200,\ 400 - 10 - 40) = 200$</td><td class="num">120</td></tr>
-            <tr><td>2</td><td>$\min(100,\ 200 - 10 - 30) = 100$</td><td class="num">80</td></tr>
-            <tr><td>1</td><td>$\min(50,\ 100 - 10 - 40) = 50$</td><td class="num">30</td></tr>
+            <tr><td><span class="ref" data-ref="k3">3</span></td><td>$\min(200,\ 400 - 10 - 40) = 200$</td><td class="num">120</td></tr>
+            <tr><td><span class="ref" data-ref="k2">2</span></td><td>$\min(100,\ 200 - 10 - 30) = 100$</td><td class="num">80</td></tr>
+            <tr><td><span class="ref" data-ref="k1">1</span></td><td>$\min(50,\ 100 - 10 - 40) = 50$</td><td class="num">30</td></tr>
           </tbody>
         </table>
-        <p class="small">Customer 2 has only <b>20 of slack</b> for anything inserted before it: it starts at 80, and its latest start is 100, its window's end.</p>
+        <p class="small"><span class="ref" data-ref="k2">Customer 2</span> has only <b>20 of slack</b> for anything inserted before it: it starts at 80, and its latest start is 100, its window's end.</p>
       </div>
     </div>
     <div>
@@ -352,7 +362,7 @@ m.minimize(sum(d[i][j] * b for (i, j), b in x.items()))</code></pre>
             <tr><td>3 and depot</td><td>170</td><td>back at $260 \le 400$ ✓</td><td class="num">80</td></tr>
           </tbody>
         </table>
-        <p class="small">Two numbers per position, no rescheduling of the rest. The cheapest feasible insertion, 60, gives the optimal route of distance $140 + 60 = 200$.</p>
+        <p class="small">Two numbers per position, no rescheduling of the rest. The cheapest feasible insertion, 60, gives <span class="ref" data-ref="opt">the optimal route</span> of distance $140 + 60 = 200$.</p>
       </div>
     </div>
   </div>
@@ -394,7 +404,7 @@ m.minimize(sum(d[i][j] * b for (i, j), b in x.items()))</code></pre>
     <div>
       <div class="box def"><span class="label"><span class="term">primal gap</span> (Berthold 2013)</span>
         <p class="small">$\gamma(v, v^*) = |v - v^*| / \max(|v|, |v^*|)$, 1 with no solution. $v^*$ is the best value <b>any</b> method found.</p>
-        <p class="small"><b>On the example</b> ($v^* = 200$): inserting 4 at the end gives $v = 220$, $\gamma = 20/220 = 0.091$. Serving 4 on its own route gives $140 + 160 = 300$, $\gamma = 100/300 = 0.333$. No solution: 1.</p>
+        <p class="small"><b>On <span class="ref" data-ref="tiny">the example</span></b> (<span class="ref" data-ref="opt">$v^* = 200$</span>): inserting <span class="ref" data-ref="k4">4</span> at the end of <span class="ref" data-ref="r3">$0 \to 1 \to 2 \to 3 \to 0$</span> gives $v = 220$, $\gamma = 20/220 = 0.091$. Serving <span class="ref" data-ref="k4">4</span> on its own route gives $140 + 160 = 300$, $\gamma = 100/300 = 0.333$. No solution: 1.</p>
       </div>
       <div class="box def"><span class="label">two questions, two metrics</span>
         <p class="small"><b>Who finds good solutions?</b> Primal gap at the limit, all four methods. <b>Who proves optimality fastest?</b> <span class="term">PAR1</span> seconds, the three exact methods. ALNS never proves anything, so it has no place in the second.</p>

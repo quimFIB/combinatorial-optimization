@@ -85,7 +85,7 @@ window.GLOSSARY = [
 },
 {
 "term_html": "master problem",
-"html": "\\(\\min f^\\top y + \\theta\\) subject to the cuts so far and \\(y \\in Y\\). A MIP that grows by a row per iteration.",
+"html": "\\(\\min f^\\top y + \\theta\\) subject to the cuts so far and \\(y \\in Y\\). A MIP that gains cuts every iteration.",
 "section": "Splitting",
 "slide": "The loop, and why it ends",
 "keys": [

@@ -16,11 +16,11 @@ x, y \ge 0\), optimal at \(x = y = 2\) with dual \((1, 1)\) and value 10.
 - dual :: The LP whose solutions are the multipliers \(y\) giving an upper
   bound on the primal, minimized: \(\min\{b^\top y : A^\top y \ge c,\ y \ge
   0\}\). /Slide: Where the dual comes from./
-- dual variable (multiplier) :: \(y_i\), the weight put on primal row \(i\) when
+- dual variable (multiplier) :: \(y_i\), the weight put on primal constraint \(i\) when
   combining constraints into a bound.
-- dualization rules :: \(\le\) rows get \(y_i \ge 0\), \(\ge\) rows get \(y_i
-  \le 0\), equality rows get free \(y_i\); \(x_j \ge 0\) gives a \(\ge c_j\) dual
-  row, \(x_j \le 0\) a \(\le\) row, free \(x_j\) an equality. Rebuild them from
+- dualization rules :: \(\le\) constraints get \(y_i \ge 0\), \(\ge\) constraints get
+  \(y_i \le 0\), equality constraints get free \(y_i\); \(x_j \ge 0\) gives a
+  \(\ge c_j\) dual constraint, \(x_j \le 0\) a \(\le\) one, free \(x_j\) an equality. Rebuild them from
   the bounding argument rather than memorizing. /Slide: The rules, once./
 - involution :: The dual of the dual is the primal, exactly. Lab step 1 tests
   it.
@@ -39,7 +39,7 @@ x, y \ge 0\), optimal at \(x = y = 2\) with dual \((1, 1)\) and value 10.
 * The dual as a certificate
 
 - complementary slackness :: Feasible \(x, y\) are both optimal if and only if
-  \(y_i (b_i - a_i x) = 0\) for every row and \(x_j ((A^\top y)_j - c_j) = 0\)
+  \(y_i (b_i - a_i x) = 0\) for every constraint and \(x_j ((A^\top y)_j - c_j) = 0\)
   for every variable. In words: a constraint with slack has price 0, and a used
   variable has zero reduced cost. /Slide: Complementary slackness./
 - optimality certificate :: A primal–dual pair checked for feasibility of both
@@ -95,7 +95,7 @@ x, y \ge 0\), optimal at \(x = y = 2\) with dual \((1, 1)\) and value 10.
 
 * In the lab
 
-- ~GeneralLP~ :: An LP with \(\le\), \(\ge\) and \(=\) rows and variables that
+- ~GeneralLP~ :: An LP with \(\le\), \(\ge\) and \(=\) constraints and variables that
   are \(\ge 0\), \(\le 0\) or free: the input the dual transformer handles.
 - ~CO_MINE=02~ :: Runs this unit's tests on top of your own unit 02 simplex
   instead of the reference one.

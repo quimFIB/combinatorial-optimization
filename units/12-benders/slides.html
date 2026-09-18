@@ -11,6 +11,20 @@
 <link rel="stylesheet" href="../../slides/deck.css">
 </head>
 <body data-trunk="ip">
+<!-- The running example, once: what each <span class="ref"> on the slides shows on hover. -->
+<div class="refs" hidden>
+  <template data-ref="ex"><span class="ref-name">the example</span>facilities A (open 10, capacity 5, 1 per unit) and B (open 6, capacity 5, 3 per unit); one customer, demand 4 or 8 with probability $\tfrac12$ each; unmet demand 10 per unit <span class="ref-note">best: open both, total 25</span></template>
+  <template data-ref="A"><span class="ref-name">facility A</span>open cost 10, capacity 5, cost 1 per unit served <span class="ref-note">the cheap one to serve from, the dear one to open</span></template>
+  <template data-ref="B"><span class="ref-name">facility B</span>open cost 6, capacity 5, cost 3 per unit served <span class="ref-note">cheaper to open, dearer to serve from</span></template>
+  <template data-ref="s1"><span class="ref-name">scenario 1</span>demand 4, probability $\tfrac12$ <span class="ref-note">$Q_1$ = 40 (none), 4 (A only), 12 (B only), 4 (both)</span></template>
+  <template data-ref="s2"><span class="ref-name">scenario 2</span>demand 8, probability $\tfrac12$ <span class="ref-note">$Q_2$ = 80 (none), 35 (A only), 45 (B only), 14 (both)</span></template>
+  <template data-ref="none"><span class="ref-name">"none"</span>$y_A = 0,\ y_B = 0$: $Q_1 = 40$, $Q_2 = 80$ <span class="ref-note">total $0 + 60 = 60$: every unit of demand pays the penalty</span></template>
+  <template data-ref="Aonly"><span class="ref-name">"A only"</span>$y_A = 1,\ y_B = 0$: $Q_1 = 4$, $Q_2 = 5 + 30 = 35$ <span class="ref-note">total $10 + 19.5 = 29.5$</span></template>
+  <template data-ref="Bonly"><span class="ref-name">"B only"</span>$y_A = 0,\ y_B = 1$: $Q_1 = 12$, $Q_2 = 15 + 30 = 45$ <span class="ref-note">total $6 + 28.5 = 34.5$</span></template>
+  <template data-ref="both"><span class="ref-name">"both"</span>$y_A = 1,\ y_B = 1$: $Q_1 = 4$, $Q_2 = 5 + 9 = 14$ <span class="ref-note">total $16 + 9 = 25$: the optimum</span></template>
+  <template data-ref="cut1"><span class="ref-name">the cut from scenario 1 at "none"</span>$\theta_1 \ge 40 - 45\,y_A - 35\,y_B$ <span class="ref-note">duals $v = 10$, $\alpha_A = 9$, $\alpha_B = 7$; exact at "none", weak elsewhere</span></template>
+  <template data-ref="cut2"><span class="ref-name">the cut from scenario 2 at "both"</span>$\theta_2 \ge 24 - 10\,y_A$ <span class="ref-note">duals $v = 3$, $\alpha_A = 2$, $\alpha_B = 0$; tight at "both" (14)</span></template>
+</div>
 <div class="reveal"><div class="slides">
 
 <section class="title-slide">
@@ -184,35 +198,35 @@
   <h2>Cuts from duals, with numbers</h2>
   <div class="cols">
     <div>
-      <div class="box ex"><span class="label">scenario 2 at "open both"</span>
-        <p class="small">Demand 8: A serves 5, B serves 3. The duals price what one more unit would change:</p>
+      <div class="box ex"><span class="label"><span class="ref" data-ref="s2">scenario 2</span> at <span class="ref" data-ref="both">"open both"</span></span>
+        <p class="small">Demand 8: <span class="ref" data-ref="A">A</span> serves 5, <span class="ref" data-ref="B">B</span> serves 3. The duals price what one more unit would change:</p>
         <ul class="small">
           <li>$v = 3$: one more unit of demand would come from B, at cost 3.</li>
           <li>$\alpha_A = 2$: one more unit of A's capacity would replace a B unit, saving $3 - 1 = 2$.</li>
           <li>$\alpha_B = 0$: B has spare capacity.</li>
         </ul>
         <p class="small">Cut $\theta_2 \ge d\,v - 5\alpha_A y_A - 5\alpha_B y_B = 24 - 10\,y_A$.</p>
-        <p class="small">Check it: at "both" it gives 14 $= Q_2$, tight. At "A only", 14 $\le 35$; at "B only", 24 $\le 45$; at "none", 24 $\le 80$. Valid everywhere, as promised.</p>
+        <p class="small">Check it: at <span class="ref" data-ref="both">"both"</span> it gives 14 $= Q_2$, tight. At <span class="ref" data-ref="Aonly">"A only"</span>, 14 $\le 35$; at <span class="ref" data-ref="Bonly">"B only"</span>, 24 $\le 45$; at <span class="ref" data-ref="none">"none"</span>, 24 $\le 80$. Valid everywhere, as promised.</p>
       </div>
     </div>
     <div>
-      <div class="box ex"><span class="label">scenario 1 at "open none"</span>
+      <div class="box ex"><span class="label"><span class="ref" data-ref="s1">scenario 1</span> at <span class="ref" data-ref="none">"open none"</span></span>
         <p class="small">Everything unmet: $v = 10$, and each unit of capacity would save $10 - 1 = 9$ at A, $10 - 3 = 7$ at B.</p>
-        <p class="small">Cut $\theta_1 \ge 40 - 45\,y_A - 35\,y_B$: exact at "none" (40), but weak elsewhere: $-5$ at "A only", $5$ at "B only", $-40$ at "both", where the true values are 4, 12, 4.</p>
+        <p class="small">Cut $\theta_1 \ge 40 - 45\,y_A - 35\,y_B$: exact at <span class="ref" data-ref="none">"none"</span> (40), but weak elsewhere: $-5$ at <span class="ref" data-ref="Aonly">"A only"</span>, $5$ at <span class="ref" data-ref="Bonly">"B only"</span>, $-40$ at <span class="ref" data-ref="both">"both"</span>, where the true values are 4, 12, 4.</p>
       </div>
       <div class="box warn"><span class="label">without the penalty: a feasibility cut</span>
-        <p class="small">Drop the unmet-demand option. At "A only", scenario 2 needs 8 but has capacity 5: infeasible. The phase-one LP gives $v = 1$, $\alpha_A = \alpha_B = 1$:</p>
-        <p class="small">$8 - 5y_A - 5y_B \le 0$: "open at least 8 units of capacity". It removes "A only", "B only" and "none" at once.</p>
+        <p class="small">Drop the unmet-demand option. At <span class="ref" data-ref="Aonly">"A only"</span>, <span class="ref" data-ref="s2">scenario 2</span> needs 8 but has capacity 5: infeasible. The phase-one LP gives $v = 1$, $\alpha_A = \alpha_B = 1$:</p>
+        <p class="small">$8 - 5y_A - 5y_B \le 0$: "open at least 8 units of capacity". It removes <span class="ref" data-ref="Aonly">"A only"</span>, <span class="ref" data-ref="Bonly">"B only"</span> and <span class="ref" data-ref="none">"none"</span> at once.</p>
       </div>
     </div>
   </div>
   <aside class="notes">
     <p><b>Dual feasibility</b> of the two dual solutions, against $v - \alpha_i \le c_i$ and
-    $0 \le v \le 10$: at "both", $3 - 2 = 1 \le 1$ and $3 - 0 \le 3$; at "none", $10 - 9 = 1 \le 1$
+    $0 \le v \le 10$: at <span class="ref" data-ref="both">"both"</span>, $3 - 2 = 1 \le 1$ and $3 - 0 \le 3$; at <span class="ref" data-ref="none">"none"</span>, $10 - 9 = 1 \le 1$
     and $10 - 7 = 3 \le 3$. Both are tight, which is why they are optimal. And since the
     feasible duals don't depend on $y$, the same numbers give valid cuts at every $y$.</p>
     <p><b>The feasibility cut.</b> With no penalty, the phase-one LP minimises unmet demand $z$.
-    Its optimum at "A only" is $z = 3$; the duals $v = 1$ (one more unit of demand, one more
+    Its optimum at <span class="ref" data-ref="Aonly">"A only"</span> is $z = 3$; the duals $v = 1$ (one more unit of demand, one more
     unmet) and $\alpha = 1$ (one more unit of capacity, one fewer unmet) give
     $8 \cdot 1 - 5 \cdot 1 \cdot y_A - 5 \cdot 1 \cdot y_B \le 0$. The reference
     <code>feasibility_cut</code> returns const 8 and coefficients $(-5, -5)$; at "both" it
@@ -237,28 +251,28 @@
       </ol>
     </div>
     <div>
-      <div class="box ex"><span class="label">on the example (one cut per scenario)</span>
+      <div class="box ex"><span class="label">on <span class="ref" data-ref="ex">the example</span> (one cut per scenario)</span>
         <table style="margin:0">
           <thead><tr><th class="num">it</th><th>master picks</th><th class="num">LB</th><th class="num">UB</th><th>cuts added</th></tr></thead>
           <tbody>
-            <tr><td class="num">0</td><td>none</td><td class="num">0</td><td class="num">60</td><td>$\theta_1 \ge 40 - 45y_A - 35y_B$, $\ \theta_2 \ge 80 - 45y_A - 35y_B$</td></tr>
-            <tr><td class="num">1</td><td>A, B</td><td class="num">16</td><td class="num">25</td><td>$\theta_1 \ge 4$, $\ \theta_2 \ge 24 - 10y_A$</td></tr>
-            <tr><td class="num">2</td><td>A, B</td><td class="num"><b>25</b></td><td class="num"><b>25</b></td><td>stop</td></tr>
+            <tr><td class="num">0</td><td><span class="ref" data-ref="none">none</span></td><td class="num">0</td><td class="num">60</td><td><span class="ref" data-ref="cut1">$\theta_1 \ge 40 - 45y_A - 35y_B$</span>, $\ \theta_2 \ge 80 - 45y_A - 35y_B$</td></tr>
+            <tr><td class="num">1</td><td><span class="ref" data-ref="both">A, B</span></td><td class="num">16</td><td class="num">25</td><td>$\theta_1 \ge 4$, <span class="ref" data-ref="cut2">$\theta_2 \ge 24 - 10y_A$</span></td></tr>
+            <tr><td class="num">2</td><td><span class="ref" data-ref="both">A, B</span></td><td class="num"><b>25</b></td><td class="num"><b>25</b></td><td>stop</td></tr>
           </tbody>
         </table>
       </div>
       <p class="small">It always ends: there are only finitely many dual vertices, hence finitely many cuts (<span class="term">finite convergence</span>).</p>
-      <p class="small">The master is a MIP that grows by a row per iteration and is re-solved each time. That re-solve is the method's cost centre, and section 4 is mostly about avoiding it.</p>
+      <p class="small">The master is a MIP that gains cuts every iteration and is re-solved each time. That re-solve is the method's cost centre, and section 4 is mostly about avoiding it.</p>
     </div>
   </div>
   <p class="viz-link-row"><a class="viz-link" href="explore.html#/1" target="_blank" rel="noopener">explore interactively</a></p>
   <aside class="notes">
-    <p><b>The example, iteration by iteration.</b> Iteration 0: the master has no cuts and
-    $\theta \ge 0$, so it opens nothing: LB 0, and the true cost of "none" is 60. Iteration 1:
-    with the two cuts from "none", opening both makes both cuts' right-hand sides at most zero ($-40$ and $0$), so
-    the master pays only 16 for opening; "A only" would pay $10 + \tfrac12 \cdot 0 + \tfrac12 \cdot 35 = 27.5$.
-    LB 16, true cost 25. Iteration 2: now "both" costs $16 + \tfrac12 \cdot 4 + \tfrac12 \cdot 14 = 25$,
-    "A only" costs $10 + 2 + 17.5 = 29.5$, "B only" $6 + 2.5 + 22.5 = 31$. LB 25 = UB: optimal.
+    <p><b><span class="ref" data-ref="ex">The example</span>, iteration by iteration.</b> Iteration 0: the master has no cuts and
+    $\theta \ge 0$, so it opens nothing: LB 0, and the true cost of <span class="ref" data-ref="none">"none"</span> is 60. Iteration 1:
+    with the two cuts from <span class="ref" data-ref="none">"none"</span>, opening <span class="ref" data-ref="both">both</span> makes both cuts' right-hand sides at most zero ($-40$ and $0$), so
+    the master pays only 16 for opening; <span class="ref" data-ref="Aonly">"A only"</span> would pay $10 + \tfrac12 \cdot 0 + \tfrac12 \cdot 35 = 27.5$.
+    LB 16, true cost 25. Iteration 2: now <span class="ref" data-ref="both">"both"</span> costs $16 + \tfrac12 \cdot 4 + \tfrac12 \cdot 14 = 25$,
+    <span class="ref" data-ref="Aonly">"A only"</span> costs $10 + 2 + 17.5 = 29.5$, <span class="ref" data-ref="Bonly">"B only"</span> $6 + 2.5 + 22.5 = 31$. LB 25 = UB: optimal.
     The single-cut version takes the same three iterations here.</p>
     <p><b>Why it ends</b>, in full: $\Pi$ has finitely many vertices and extreme rays, so there
     are finitely many distinct cuts. A cut regenerated at an unchanged $\bar y$ means the
@@ -372,7 +386,7 @@
       <ul class="small">
         <li><b>Tight capacities</b> (1.6× demand): Benders wins from $S = 5$. A handful of cuts settles which facilities must open.</li>
         <li><b>Loose capacities</b> (3×): many near-equivalent facility sets, 20–60 iterations. The extensive form wins until single-cut overtakes it between $S = 50$ and $100$.</li>
-        <li>Multi-cut always uses fewer iterations, and pays for each with a master that has $S\times$ more rows.</li>
+        <li>Multi-cut always uses fewer iterations, and pays for each with a master that has $S\times$ more cuts.</li>
       </ul>
       <p class="small">The <span class="term" data-term="crossover (Benders vs extensive form)">crossover</span> depends on <b>iterations × cost per iteration</b>, and the instance family controls the first factor. Report it as a plot per family, never as one number.</p>
     </div>

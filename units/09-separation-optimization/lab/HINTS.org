@@ -74,7 +74,7 @@ The same loop with ~highs_mip(..., options={"mip_rel_gap": 0.0})~ and
 ** Rung 2 — why components are enough here
 An integer solution of the degree equations gives every vertex exactly two chosen
 edges, which makes it a disjoint union of cycles. If there is more than one cycle,
-each cycle's vertex set has zero crossing weight, so its subtour row is violated.
+each cycle's vertex set has zero crossing weight, so its subtour constraint is violated.
 
 ** Functional route
 The same ~lazy~ unfold with an integer ~solve~ (~highs_mip~ with a zero gap) and a separator that only

@@ -11,6 +11,18 @@
 <link rel="stylesheet" href="../../slides/deck.css">
 </head>
 <body data-trunk="root">
+<!-- The running example, once: what each <span class="ref"> on the slides shows on hover. -->
+<div class="refs" hidden>
+  <template data-ref="G"><span class="ref-name">the running example $G$</span>vertices $0, 1, 2, 3$; edges $01,\ 02,\ 12,\ 23$ <span class="ref-note">a triangle $0,1,2$ plus one edge to $3$. 16 candidates, 7 covers, the smallest of size 2</span><svg viewBox="0 0 380 210" width="170" aria-hidden="true"><line x1="70" y1="45" x2="70" y2="185" class="rule" stroke-width="4"/><line x1="70" y1="45" x2="190" y2="115" class="rule" stroke-width="4"/><line x1="70" y1="185" x2="190" y2="115" class="rule" stroke-width="4"/><line x1="190" y1="115" x2="310" y2="115" class="rule" stroke-width="4"/><circle cx="70" cy="45" r="18" class="fill-ground ink" stroke-width="2"/><circle cx="70" cy="185" r="18" class="fill-ground ink" stroke-width="2"/><circle cx="190" cy="115" r="18" class="fill-ground ink" stroke-width="2"/><circle cx="310" cy="115" r="18" class="fill-ground ink" stroke-width="2"/><text x="38" y="54" text-anchor="middle" class="mono" font-size="28">0</text><text x="38" y="194" text-anchor="middle" class="mono" font-size="28">1</text><text x="190" y="160" text-anchor="middle" class="mono" font-size="28">2</text><text x="348" y="124" text-anchor="middle" class="mono" font-size="28">3</text></svg></template>
+  <template data-ref="e01"><span class="ref-name">edge $01$</span>$x_0 + x_1 \ge 1$ <span class="ref-note">a side of the triangle: vertex 0 or vertex 1 must be picked</span><svg viewBox="0 0 380 210" width="170" aria-hidden="true"><line x1="70" y1="45" x2="70" y2="185" class="accent" stroke-width="9"/><line x1="70" y1="45" x2="190" y2="115" class="rule" stroke-width="4"/><line x1="70" y1="185" x2="190" y2="115" class="rule" stroke-width="4"/><line x1="190" y1="115" x2="310" y2="115" class="rule" stroke-width="4"/><circle cx="70" cy="45" r="18" class="fill-ground ink" stroke-width="2"/><circle cx="70" cy="185" r="18" class="fill-ground ink" stroke-width="2"/><circle cx="190" cy="115" r="18" class="fill-ground ink" stroke-width="2"/><circle cx="310" cy="115" r="18" class="fill-ground ink" stroke-width="2"/><text x="38" y="54" text-anchor="middle" class="mono" font-size="28">0</text><text x="38" y="194" text-anchor="middle" class="mono" font-size="28">1</text><text x="190" y="160" text-anchor="middle" class="mono" font-size="28">2</text><text x="348" y="124" text-anchor="middle" class="mono" font-size="28">3</text></svg></template>
+  <template data-ref="e02"><span class="ref-name">edge $02$</span>$x_0 + x_2 \ge 1$ <span class="ref-note">a side of the triangle: vertex 0 or vertex 2 must be picked</span><svg viewBox="0 0 380 210" width="170" aria-hidden="true"><line x1="70" y1="45" x2="70" y2="185" class="rule" stroke-width="4"/><line x1="70" y1="45" x2="190" y2="115" class="accent" stroke-width="9"/><line x1="70" y1="185" x2="190" y2="115" class="rule" stroke-width="4"/><line x1="190" y1="115" x2="310" y2="115" class="rule" stroke-width="4"/><circle cx="70" cy="45" r="18" class="fill-ground ink" stroke-width="2"/><circle cx="70" cy="185" r="18" class="fill-ground ink" stroke-width="2"/><circle cx="190" cy="115" r="18" class="fill-ground ink" stroke-width="2"/><circle cx="310" cy="115" r="18" class="fill-ground ink" stroke-width="2"/><text x="38" y="54" text-anchor="middle" class="mono" font-size="28">0</text><text x="38" y="194" text-anchor="middle" class="mono" font-size="28">1</text><text x="190" y="160" text-anchor="middle" class="mono" font-size="28">2</text><text x="348" y="124" text-anchor="middle" class="mono" font-size="28">3</text></svg></template>
+  <template data-ref="e12"><span class="ref-name">edge $12$</span>$x_1 + x_2 \ge 1$ <span class="ref-note">a side of the triangle: vertex 1 or vertex 2 must be picked</span><svg viewBox="0 0 380 210" width="170" aria-hidden="true"><line x1="70" y1="45" x2="70" y2="185" class="rule" stroke-width="4"/><line x1="70" y1="45" x2="190" y2="115" class="rule" stroke-width="4"/><line x1="70" y1="185" x2="190" y2="115" class="accent" stroke-width="9"/><line x1="190" y1="115" x2="310" y2="115" class="rule" stroke-width="4"/><circle cx="70" cy="45" r="18" class="fill-ground ink" stroke-width="2"/><circle cx="70" cy="185" r="18" class="fill-ground ink" stroke-width="2"/><circle cx="190" cy="115" r="18" class="fill-ground ink" stroke-width="2"/><circle cx="310" cy="115" r="18" class="fill-ground ink" stroke-width="2"/><text x="38" y="54" text-anchor="middle" class="mono" font-size="28">0</text><text x="38" y="194" text-anchor="middle" class="mono" font-size="28">1</text><text x="190" y="160" text-anchor="middle" class="mono" font-size="28">2</text><text x="348" y="124" text-anchor="middle" class="mono" font-size="28">3</text></svg></template>
+  <template data-ref="e23"><span class="ref-name">edge $23$</span>$x_2 + x_3 \ge 1$ <span class="ref-note">the pendant edge, outside the triangle: vertex 2 or vertex 3</span><svg viewBox="0 0 380 210" width="170" aria-hidden="true"><line x1="70" y1="45" x2="70" y2="185" class="rule" stroke-width="4"/><line x1="70" y1="45" x2="190" y2="115" class="rule" stroke-width="4"/><line x1="70" y1="185" x2="190" y2="115" class="rule" stroke-width="4"/><line x1="190" y1="115" x2="310" y2="115" class="accent" stroke-width="9"/><circle cx="70" cy="45" r="18" class="fill-ground ink" stroke-width="2"/><circle cx="70" cy="185" r="18" class="fill-ground ink" stroke-width="2"/><circle cx="190" cy="115" r="18" class="fill-ground ink" stroke-width="2"/><circle cx="310" cy="115" r="18" class="fill-ground ink" stroke-width="2"/><text x="38" y="54" text-anchor="middle" class="mono" font-size="28">0</text><text x="38" y="194" text-anchor="middle" class="mono" font-size="28">1</text><text x="190" y="160" text-anchor="middle" class="mono" font-size="28">2</text><text x="348" y="124" text-anchor="middle" class="mono" font-size="28">3</text></svg></template>
+  <template data-ref="C"><span class="ref-name">the cover $\{1, 2\}$</span>$x = (0, 1, 1, 0)$, size 2 <span class="ref-note">a smallest cover: every edge has an end in it. The one brute force reports</span><svg viewBox="0 0 380 210" width="170" aria-hidden="true"><line x1="70" y1="45" x2="70" y2="185" class="rule" stroke-width="4"/><line x1="70" y1="45" x2="190" y2="115" class="rule" stroke-width="4"/><line x1="70" y1="185" x2="190" y2="115" class="rule" stroke-width="4"/><line x1="190" y1="115" x2="310" y2="115" class="rule" stroke-width="4"/><circle cx="70" cy="45" r="18" class="fill-ground ink" stroke-width="2"/><circle cx="70" cy="185" r="18" class="fill-unit ink" stroke-width="2"/><circle cx="190" cy="115" r="18" class="fill-unit ink" stroke-width="2"/><circle cx="310" cy="115" r="18" class="fill-ground ink" stroke-width="2"/><text x="38" y="54" text-anchor="middle" class="mono" font-size="28">0</text><text x="38" y="194" text-anchor="middle" class="mono" font-size="28">1</text><text x="190" y="160" text-anchor="middle" class="mono" font-size="28">2</text><text x="348" y="124" text-anchor="middle" class="mono" font-size="28">3</text></svg></template>
+  <template data-ref="C02"><span class="ref-name">the other smallest cover</span>$\{0, 2\}$, $x = (1, 0, 1, 0)$, size 2 <span class="ref-note">ties with $\{1,2\}$; brute force meets it later and keeps the first</span><svg viewBox="0 0 380 210" width="170" aria-hidden="true"><line x1="70" y1="45" x2="70" y2="185" class="rule" stroke-width="4"/><line x1="70" y1="45" x2="190" y2="115" class="rule" stroke-width="4"/><line x1="70" y1="185" x2="190" y2="115" class="rule" stroke-width="4"/><line x1="190" y1="115" x2="310" y2="115" class="rule" stroke-width="4"/><circle cx="70" cy="45" r="18" class="fill-unit ink" stroke-width="2"/><circle cx="70" cy="185" r="18" class="fill-ground ink" stroke-width="2"/><circle cx="190" cy="115" r="18" class="fill-unit ink" stroke-width="2"/><circle cx="310" cy="115" r="18" class="fill-ground ink" stroke-width="2"/><text x="38" y="54" text-anchor="middle" class="mono" font-size="28">0</text><text x="38" y="194" text-anchor="middle" class="mono" font-size="28">1</text><text x="190" y="160" text-anchor="middle" class="mono" font-size="28">2</text><text x="348" y="124" text-anchor="middle" class="mono" font-size="28">3</text></svg></template>
+  <template data-ref="M"><span class="ref-name">the matching $M = \{01, 23\}$</span>two edges, no shared endpoint <span class="ref-note">so any cover needs 2 different vertices: with $\{1,2\}$ it proves 2 optimal</span><svg viewBox="0 0 380 210" width="170" aria-hidden="true"><line x1="70" y1="45" x2="70" y2="185" class="accent" stroke-width="9"/><line x1="70" y1="45" x2="190" y2="115" class="rule" stroke-width="4"/><line x1="70" y1="185" x2="190" y2="115" class="rule" stroke-width="4"/><line x1="190" y1="115" x2="310" y2="115" class="accent" stroke-width="9"/><circle cx="70" cy="45" r="18" class="fill-ground ink" stroke-width="2"/><circle cx="70" cy="185" r="18" class="fill-unit ink" stroke-width="2"/><circle cx="190" cy="115" r="18" class="fill-unit ink" stroke-width="2"/><circle cx="310" cy="115" r="18" class="fill-ground ink" stroke-width="2"/><text x="38" y="54" text-anchor="middle" class="mono" font-size="28">0</text><text x="38" y="194" text-anchor="middle" class="mono" font-size="28">1</text><text x="190" y="160" text-anchor="middle" class="mono" font-size="28">2</text><text x="348" y="124" text-anchor="middle" class="mono" font-size="28">3</text></svg></template>
+  <template data-ref="tri"><span class="ref-name">the triangle</span>three vertices, three edges <span class="ref-note">largest matching 1 edge (thick), smallest cover 2 vertices (filled): no matching certifies it</span><svg viewBox="0 0 220 200" width="130" aria-hidden="true"><line x1="110" y1="30" x2="35" y2="160" class="rule" stroke-width="3"/><line x1="110" y1="30" x2="185" y2="160" class="accent" stroke-width="7"/><line x1="35" y1="160" x2="185" y2="160" class="rule" stroke-width="3"/><circle cx="110" cy="30" r="15" class="fill-unit ink" stroke-width="2"/><circle cx="35" cy="160" r="15" class="fill-unit ink" stroke-width="2"/><circle cx="185" cy="160" r="15" class="fill-ground ink" stroke-width="2"/></svg></template>
+</div>
 <div class="reveal"><div class="slides">
 
 <!-- ================================================================== -->
@@ -59,7 +71,7 @@
   <p class="muted" style="margin-top:1em">Roadmap: definitions → the nine → spaces and symmetry → certificates →
   the oracle and the harness → the wall.</p>
   <div class="box good"><span class="label">getting around</span>
-    <p class="small">Words with a <span class="term" data-term="certificate">dotted underline</span> are glossary terms: click one for its definition. <kbd>G</kbd> lists every term in the unit, <kbd>N</kbd> shows the notes. One small graph, the running example, comes back on most slides. Optional extra: <a href="explore.html" target="_blank" rel="noopener">interactive figures</a>, linked from the slides they support by a small ▸ chip; skip them freely.</p>
+    <p class="small">Words with a <span class="term" data-term="certificate">dotted underline</span> are glossary terms: click one for its definition. <kbd>G</kbd> lists every term in the unit, <kbd>N</kbd> shows the notes. One small graph, <span class="ref" data-ref="G">the running example</span>, comes back on most slides; a solid underline like that one shows it on hover. Optional extra: <a href="explore.html" target="_blank" rel="noopener">interactive figures</a>, linked from the slides they support by a small ▸ chip; skip them freely.</p>
   </div>
   <aside class="notes">
     <p>The course is built on one working method: build the naive thing, check it
@@ -122,11 +134,11 @@
         <tbody>
           <tr><td>$(0,1,1,0)$</td><td>$\{1, 2\}$</td><td>none ✓</td><td class="num">2</td></tr>
           <tr><td>$(1,1,0,1)$</td><td>$\{0, 1, 3\}$</td><td>none ✓</td><td class="num">3</td></tr>
-          <tr><td>$(0,0,1,1)$</td><td>$\{2, 3\}$</td><td><b>$01$ ✗</b></td><td class="num">—</td></tr>
-          <tr><td>$(0,0,1,0)$</td><td>$\{2\}$</td><td><b>$01$ ✗</b></td><td class="num">—</td></tr>
+          <tr><td>$(0,0,1,1)$</td><td>$\{2, 3\}$</td><td><b><span class="ref" data-ref="e01">$01$</span> ✗</b></td><td class="num">—</td></tr>
+          <tr><td>$(0,0,1,0)$</td><td>$\{2\}$</td><td><b><span class="ref" data-ref="e01">$01$</span> ✗</b></td><td class="num">—</td></tr>
         </tbody>
       </table>
-      <p class="small"><b>Feasibility is checking every edge.</b> $\{2,3\}$ misses edge $01$, so it is not in $F$ and its size doesn't matter. Of all $2^4 = 16$ candidates, <b>7</b> are covers, and the smallest have <b>2</b> vertices.</p>
+      <p class="small"><b>Feasibility is checking every edge.</b> $\{2,3\}$ misses <span class="ref" data-ref="e01">edge $01$</span>, so it is not in $F$ and its size doesn't matter. Of all $2^4 = 16$ candidates, <b>7</b> are covers, and the smallest have <b>2</b> vertices.</p>
       <p class="small muted">The space $S$ is all 16 candidates. The feasible set $F$ is the 7 covers. Nobody wrote $F$ down: the four edge constraints describe it.</p>
     </div>
     <div class="fig">
@@ -151,7 +163,7 @@
   <aside class="notes">
     <p>The seven covers, by size. Size 2: $\{1,2\}$ and $\{0,2\}$. Size 3:
     $\{0,1,2\}$, $\{0,1,3\}$, $\{0,2,3\}$, $\{1,2,3\}$. Size 4: all four vertices. No
-    single vertex is a cover: vertex 2 touches three edges but misses $01$.</p>
+    single vertex is a cover: vertex 2 touches three edges but misses <span class="ref" data-ref="e01">$01$</span>.</p>
     <p>Why this graph. It is small enough to check by hand, and it contains a triangle,
     which is where the certificates section gets interesting: the triangle on its own
     has no short proof of optimality of the kind used below, but this graph does. The
@@ -176,7 +188,7 @@
         </tbody>
       </table>
       <p>Enumerating is always <b>correct</b> and almost always <b>useless</b>.</p>
-      <p class="small">The running example has $2^4 = 16$ candidates. Each vertex added doubles that: a graph with 50 vertices has the number in the first row.</p>
+      <p class="small"><span class="ref" data-ref="G">The running example</span> has $2^4 = 16$ candidates. Each vertex added doubles that: a graph with 50 vertices has the number in the first row.</p>
       <p class="muted">Almost always useless, but it is not worthless: for $n \lesssim 20$
       it is the only solver whose correctness you can see by reading it.</p>
     </div>
@@ -208,12 +220,12 @@
   <p class="eyebrow">00 · definitions</p>
   <h2>Four questions about one instance</h2>
   <table style="font-size:.78em">
-    <thead><tr><th>version</th><th>asks</th><th>on the running example, $k = 2$</th></tr></thead>
+    <thead><tr><th>version</th><th>asks</th><th>on <span class="ref" data-ref="G">the running example</span>, $k = 2$</th></tr></thead>
     <tbody>
       <tr><td><b><span class="term" data-term="decision version">decision</span></b></td><td>is there $x \in F$ with $c(x) \le k$?</td><td>is there a cover with at most 2 vertices? <b>yes</b> <span class="muted">(with $k = 1$: no)</span></td></tr>
       <tr><td><b><span class="term" data-term="evaluation version">evaluation</span></b></td><td>what is $\min_{x\in F} c(x)$?</td><td>the smallest cover has <b>2</b> vertices</td></tr>
-      <tr><td><b><span class="term" data-term="search (optimization) version">search / optimization</span></b></td><td>find an $x^*$ achieving it</td><td>here is one: <b>$\{1, 2\}$</b></td></tr>
-      <tr><td><b><span class="term" data-term="counting version">counting</span></b></td><td>how many $x \in F$ have $c(x) \le k$?</td><td><b>2</b> covers: $\{1,2\}$ and $\{0,2\}$</td></tr>
+      <tr><td><b><span class="term" data-term="search (optimization) version">search / optimization</span></b></td><td>find an $x^*$ achieving it</td><td>here is one: <b><span class="ref" data-ref="C">$\{1, 2\}$</span></b></td></tr>
+      <tr><td><b><span class="term" data-term="counting version">counting</span></b></td><td>how many $x \in F$ have $c(x) \le k$?</td><td><b>2</b> covers: <span class="ref" data-ref="C">$\{1, 2\}$</span> and <span class="ref" data-ref="C02">$\{0, 2\}$</span></td></tr>
     </tbody>
   </table>
   <div class="cols">
@@ -222,7 +234,7 @@
       equally hard, up to polynomial factors. Counting can be much harder.</p>
     </div>
     <div class="box ex"><span class="label">how, on the example</span>
-      <p class="small">Decision to evaluation: ask $k = 0, 1, 2, \dots$ and stop at the first yes. Evaluation to search: delete vertex 0 and its edges. The rest ($12$, $23$) needs 1, one less than 2, so some best cover uses 0. Keep it and repeat on the rest.</p>
+      <p class="small">Decision to evaluation: ask $k = 0, 1, 2, \dots$ and stop at the first yes. Evaluation to search: delete vertex 0 and its edges. The rest (<span class="ref" data-ref="e12">$12$</span>, <span class="ref" data-ref="e23">$23$</span>) needs 1, one less than 2, so some best cover uses 0. Keep it and repeat on the rest.</p>
     </div>
   </div>
   <aside class="notes">
@@ -234,11 +246,11 @@
     less. If it is, $v$ belongs to some optimal cover: commit to it and recurse.
     That is $|V|$ more evaluation calls.</p>
     <p><b>The example box, finished.</b> The optimum is 2. Deleting vertex 0 leaves edges
-    $12, 23$, whose optimum is 1 (vertex 2), one less than 2, so some optimal cover
+    <span class="ref" data-ref="e12">$12$</span>, <span class="ref" data-ref="e23">$23$</span>, whose optimum is 1 (vertex 2), one less than 2, so some optimal cover
     contains 0: keep it and recurse on $\{12, 23\}$, optimum 1. Deleting vertex 1
     there leaves $23$, optimum still 1, not one less, so 1 is not needed. Deleting vertex 2 leaves
-    nothing, optimum 0: keep 2. Result $\{0, 2\}$. Trying the vertices in a different
-    order can give the other optimal cover, $\{1, 2\}$.</p>
+    nothing, optimum 0: keep 2. Result <span class="ref" data-ref="C02">$\{0, 2\}$</span>. Trying the vertices in a different
+    order can give the other optimal cover, <span class="ref" data-ref="C">$\{1, 2\}$</span>.</p>
     <p><b>Counting</b> is a different world. Deciding whether a bipartite graph has
     a perfect matching takes polynomial time (unit 15). <em>Counting</em> perfect
     matchings is #P-complete (Valiant 1979), and so is computing the permanent of a
@@ -469,8 +481,8 @@ model.Minimize(sum(x))</code></pre>
       is not: that is NP ≠ <span class="term" data-term="coNP">coNP</span>.</p>
     </div>
   </div>
-  <div class="box ex"><span class="label">on the running example</span>
-    <p class="small"><b>At most 2:</b> hand over $\{1,2\}$; checking it is four edge lookups. <b>At least 2:</b> enumeration checks all 16 candidates and finds no cover of size 0 or 1. That works at 4 vertices, not at 50. The next two slides replace it with <b>two edges</b>.</p>
+  <div class="box ex"><span class="label">on <span class="ref" data-ref="G">the running example</span></span>
+    <p class="small"><b>At most 2:</b> hand over <span class="ref" data-ref="C">$\{1, 2\}$</span>; checking it is four edge lookups. <b>At least 2:</b> enumeration checks all 16 candidates and finds no cover of size 0 or 1. That works at 4 vertices, not at 50. The next two slides replace it with <b><span class="ref" data-ref="M">two edges</span></b>.</p>
   </div>
   <p>For particular instances, and for whole problem classes, short lower-bound
   proofs do exist. <b>Finding them is most of the course.</b></p>
@@ -529,7 +541,7 @@ model.Minimize(sum(x))</code></pre>
         <text x="260" y="95" text-anchor="middle" class="mono soft" font-size="14">3</text>
         <text x="150" y="132" text-anchor="middle" font-size="14" class="soft">cover {1, 2} · matching {01, 23}</text>
       </svg>
-      <p class="cap">Filled vertices: a cover of size 2. Thick edges: a matching of size 2. Each proves the other optimal.</p>
+      <p class="cap">A path on four vertices. Filled vertices: a cover of size 2. Thick edges: a matching of size 2. Each proves the other optimal.</p>
     </div>
   </div>
   <aside class="notes">
@@ -555,13 +567,13 @@ model.Minimize(sum(x))</code></pre>
   <h2>A certificate, checked step by step</h2>
   <div class="cols wide-left">
     <div>
-      <p class="small">Claim: <b>the smallest cover of the running example has 2 vertices.</b> The certificate is a cover $C = \{1,2\}$ and a matching $M = \{01, 23\}$.</p>
+      <p class="small">Claim: <b>the smallest cover of <span class="ref" data-ref="G">the running example</span> has 2 vertices.</b> The certificate is a cover <span class="ref" data-ref="C">$C = \{1,2\}$</span> and a matching $M = \{01, 23\}$.</p>
       <table>
         <thead><tr><th>check</th><th>on the example</th><th></th></tr></thead>
         <tbody>
-          <tr><td>1. every edge of $M$ is an edge of $G$</td><td>$01$ ✓, $23$ ✓</td><td>✓</td></tr>
+          <tr><td>1. every edge of $M$ is an edge of $G$</td><td><span class="ref" data-ref="e01">$01$</span> ✓, <span class="ref" data-ref="e23">$23$</span> ✓</td><td>✓</td></tr>
           <tr><td>2. edges of $M$ share no endpoint</td><td>endpoints $0,1,2,3$: all different</td><td>✓</td></tr>
-          <tr><td>3. $C$ covers every edge</td><td>$01{:}\,1$ · $02{:}\,2$ · $12{:}\,1,2$ · $23{:}\,2$</td><td>✓</td></tr>
+          <tr><td>3. $C$ covers every edge</td><td><span class="ref" data-ref="e01">$01{:}\,1$</span> · <span class="ref" data-ref="e02">$02{:}\,2$</span> · <span class="ref" data-ref="e12">$12{:}\,1,2$</span> · <span class="ref" data-ref="e23">$23{:}\,2$</span></td><td>✓</td></tr>
           <tr><td>4. sizes agree</td><td>$|C| = 2 = |M|$</td><td>✓</td></tr>
         </tbody>
       </table>
@@ -592,13 +604,13 @@ model.Minimize(sum(x))</code></pre>
     is a pass over at most $|V|$ endpoints, check 3 is a pass over the edges. Linear
     time, against $2^{|V|}$ candidates for enumeration. That contrast is what
     "short certificate" means. Lab step 4 asks you to write exactly these checks.</p>
-    <p>Notice what check 4 does not need: it doesn't need $M$ to be a <em>maximum</em>
-    matching, or $C$ to be a <em>minimum</em> cover. Equal sizes are enough, because each
+    <p>Notice what check 4 does not need: it doesn't need <span class="ref" data-ref="M">$M$</span> to be a <em>maximum</em>
+    matching, or <span class="ref" data-ref="C">$C$</span> to be a <em>minimum</em> cover. Equal sizes are enough, because each
     one bounds the other. If the sizes differed, say $|C| = 3$ and $|M| = 2$, the
     certificate would only prove $2 \le \text{optimum} \le 3$.</p>
-    <p>The running example contains a triangle, and the next slide shows that a triangle
-    on its own has no such certificate. Here the pendant edge $23$ rescues it: it
-    gives the matching a second edge, disjoint from $01$, that the triangle alone cannot supply.</p>
+    <p><span class="ref" data-ref="G">The running example</span> contains a triangle, and the next slide shows that a triangle
+    on its own has no such certificate. Here the pendant <span class="ref" data-ref="e23">edge $23$</span> rescues it: it
+    gives the matching a second edge, disjoint from <span class="ref" data-ref="e01">$01$</span>, that the triangle alone cannot supply.</p>
   </aside>
 </section>
 
@@ -609,7 +621,7 @@ model.Minimize(sum(x))</code></pre>
     <div>
       <p>On a triangle, the largest matching has <b>1</b> edge, and the smallest cover
       needs <b>2</b> vertices. No matching certifies the optimum. This <span class="term">duality gap</span> is real.</p>
-      <p class="small">Delete the running example's edge $23$ and you are here: the matching loses its second edge, the cover still needs 2.</p>
+      <p class="small">Delete the running example's <span class="ref" data-ref="e23">edge $23$</span> and you are here: the matching loses its second edge, the cover still needs 2.</p>
       <div class="box thm"><span class="label"><span class="term" data-term="König's theorem">könig, 1931</span></span>
         <p>In a <span class="term" data-term="bipartite graph">bipartite</span> graph, $\max |M| = \min |C|$. The certificate always exists.</p>
       </div>
@@ -637,7 +649,7 @@ model.Minimize(sum(x))</code></pre>
     this is the 2-approximation for vertex cover in unit 23, which is this slide
     turned into an algorithm.</p>
     <p>The fractional view (unit 24): relax both to LPs. The fractional vertex cover
-    $x_v = \tfrac12$ on the triangle costs $\tfrac32$, and the fractional matching
+    $x_v = \tfrac12$ on <span class="ref" data-ref="tri">the triangle</span> costs $\tfrac32$, and the fractional matching
     $y_e = \tfrac12$ has value $\tfrac32$. These two LPs are duals, so their optima
     coincide:
     $$\nu = 1 \;\le\; \nu^* = \tfrac32 = \tau^* \;\le\; \tau = 2.$$
@@ -645,7 +657,7 @@ model.Minimize(sum(x))</code></pre>
     graphs the constraint matrix is totally unimodular (unit 06), so the LPs have
     integral optima, and König's theorem follows from LP duality.</p>
     <p>The lab's step 4 test runs your checker over every cover and every edge set
-    of the triangle, and expects every certificate to be rejected.</p>
+    of <span class="ref" data-ref="tri">the triangle</span>, and expects every certificate to be rejected.</p>
   </aside>
 </section>
 
@@ -681,8 +693,8 @@ model.Minimize(sum(x))</code></pre>
       <p><b><span class="term">Self-certifying</span></b>: <code>examined == space.size()</code> is the lower-bound proof.</p>
       <p><b>Generic</b>: one function for all nine problems, because every problem has
       the same <span class="term">problem interface</span>.</p>
-      <div class="box ex"><span class="label">on the running example</span>
-        <p class="small"><code>examined=16</code>, <code>feasible=7</code>, value <b>2</b> at <code>(0, 1, 1, 0)</code>: the cover $\{1,2\}$. It keeps the first best it meets, so the tie $\{0,2\}$, found later, is not reported.</p>
+      <div class="box ex"><span class="label">on <span class="ref" data-ref="G">the running example</span></span>
+        <p class="small"><code>examined=16</code>, <code>feasible=7</code>, value <b>2</b> at <code>(0, 1, 1, 0)</code>: the cover <span class="ref" data-ref="C">$\{1, 2\}$</span>. It keeps the first best it meets, so the tie <span class="ref" data-ref="C02">$\{0, 2\}$</span>, found later, is not reported.</p>
       </div>
     </div>
   </div>
@@ -698,8 +710,8 @@ model.Minimize(sum(x))</code></pre>
     gets an oracle for free.</p>
     <p><b>The example, step by step.</b> The space lists the 16 vectors in order
     $(0,0,0,0), (0,0,0,1), \dots, (1,1,1,1)$. The first feasible one is
-    $(0,1,1,0)$, the 7th examined, value 2: it becomes <code>best</code>. The next feasible
-    one of value 2 is $(1,0,1,0)$, examined 11th; <code>better(2, 2, "min")</code> is false, so
+    <span class="ref" data-ref="C">$(0,1,1,0)$</span>, the 7th examined, value 2: it becomes <code>best</code>. The next feasible
+    one of value 2 is <span class="ref" data-ref="C02">$(1,0,1,0)$</span>, examined 11th; <code>better(2, 2, "min")</code> is false, so
     <code>best_x</code> stays. Five more covers, all of size 3 or 4, change nothing.</p>
     <p>Keeping both counts, <code>feasible</code> and <code>examined</code>, costs
     nothing and gives two sanity checks. <code>examined</code> must equal the size of
@@ -854,7 +866,7 @@ model.Minimize(sum(x))</code></pre>
       <li><b>Model it</b>: feasibility and objective for vertex cover and bin packing.</li>
       <li><b>Set partitions</b>: the restricted-growth-string enumerator.</li>
       <li><b>The oracle</b>: generic brute force, checked against the reference on all nine problems.</li>
-      <li><b>A certificate</b>: the matching lower bound, and a checker that rejects the triangle.</li>
+      <li><b>A certificate</b>: the matching lower bound, and a checker that rejects <span class="ref" data-ref="tri">the triangle</span>.</li>
       <li><b>Break it</b>: a heuristic you believe, and the harness proving you wrong.</li>
     </ol>
   </div>
@@ -879,7 +891,7 @@ uv run co then 00      # find your wall</code></pre>
       <li>All five lab steps are ✓.</li>
       <li>You can generate and exactly solve an instance of any of the nine problems at the sizes your wall allows.</li>
       <li>The harness caught your deliberately wrong heuristic without you pointing it at the failure.</li>
-      <li>Without notes, you can explain the two kinds of certificate, and use the triangle to show why a matching cannot always certify a cover.</li>
+      <li>Without notes, you can explain the two kinds of certificate, and use <span class="ref" data-ref="tri">the triangle</span> to show why a matching cannot always certify a cover.</li>
     </ul>
   </div>
   <div class="cols">

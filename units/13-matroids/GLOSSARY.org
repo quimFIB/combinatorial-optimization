@@ -44,7 +44,7 @@ term can be looked up here and read properly there.
 - incidence vector :: The 0/1 vector of a subset of \(E\).
 - matroid polytope :: \(P(M) = \{x \ge 0 : \sum_{e \in S} x_e \le r(S)\ \forall S
   \subseteq E\}\), the convex hull of the independent sets (Edmonds 1970). TDI, with
-  exponentially many rows. /Slide: The matroid polytope./
+  exponentially many constraints. /Slide: The matroid polytope./
 - greedy dual certificate :: \(y_{S_i} = w(e_i) - w(e_{i+1})\) on the prefixes of
   greedy's order: a dual solution proving greedy optimal by LP duality.
 

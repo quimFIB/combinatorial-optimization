@@ -253,7 +253,7 @@
     shifted by $\ell_i$ lands on $i$ with probability $e^{\ell_i} / \sum_j e^{\ell_j}$; it is the discrete-choice
     identity behind logit models. The frequencies above are the reference <code>gumbel_max_sample</code> with
     <code>default_rng(0)</code>; the single hand sample used <code>default_rng(3)</code>.</p>
-    <p>The three numbers $G_i$: $-\log(-\log 0.086) = -\log 2.458 = -0.899$, and so on. Uniforms near 1 give
+    <p>The three numbers $G_i$: $-\log(-\log 0.0856) = -\log 2.458 = -0.899$, and so on (the table shows the uniforms rounded to three places). Uniforms near 1 give
     large positive noise, which is why the third option won.</p>
   </aside>
 </section>
@@ -343,7 +343,7 @@
           </tbody>
         </table>
       </div>
-      <p class="small">With nothing active, the KKT system is $1 \cdot x = -q$: slope $-1$. With a bound active, the extra row pins $x$, and the solve returns 0. At $q = 0$ the bound $x \ge 0$ is active with multiplier 0: degenerate, and the two one-sided slopes disagree.</p>
+      <p class="small">With nothing active, the KKT system is $1 \cdot x = -q$: slope $-1$. With a bound active, its equation pins $x$, and the solve returns 0. At $q = 0$ the bound $x \ge 0$ is active with multiplier 0: degenerate, and the two one-sided slopes disagree.</p>
     </div>
   </div>
   <aside class="notes">

@@ -23,8 +23,8 @@ term can be looked up here and read properly there.
 - GLS theorem (separation ⇔ optimization) :: For a family of well-described
   polyhedra, optimization is polynomial if and only if separation is (Grötschel,
   Lovász & Schrijver 1981). /Slide: Grötschel, Lovász & Schrijver (1981)./
-- sliding objective :: In the ellipsoid method, cutting with the objective row
-  when the centre is feasible, to push toward the optimum.
+- sliding objective :: In the ellipsoid method, cutting with the objective, as the
+  constraint \(c^\top x \ge \gamma\), when the centre is feasible, to push toward the optimum.
 - polar \(P^\circ\) :: \(\{a : a^\top x \le 1\ \forall x \in P\}\), with \(0\)
   in the interior of \(P\). Its vertices are \(P\)'s facets and vice versa, so
   optimizing over \(P\) is separating over \(P^\circ\).
@@ -40,24 +40,24 @@ term can be looked up here and read properly there.
 
 * Subtours
 
-- subtour :: A cycle through only some of the cities. The degree rows alone allow
+- subtour :: A cycle through only some of the cities. The degree constraints alone allow
   a solution made of several disjoint ones. /Slide: The subtour elimination LP./
 - \(\delta(v)\), \(\delta(S)\) :: The edges with exactly one endpoint at \(v\),
   or in \(S\): the cut around \(S\).
-- degree rows :: \(\sum_{e \in \delta(v)} x_e = 2\) for every city.
-- subtour elimination row :: \(\sum_{e \in \delta(S)} x_e \ge 2\) for every
+- degree constraints :: \(\sum_{e \in \delta(v)} x_e = 2\) for every city.
+- subtour elimination constraint :: \(\sum_{e \in \delta(S)} x_e \ge 2\) for every
   proper nonempty \(S\): every set must be entered and left. There are
   \(2^{n-1} - 1\).
-- DFJ formulation :: Dantzig, Fulkerson & Johnson's 1954 TSP model: degree rows
-  plus all subtour rows over edge variables. The first cutting-plane computation.
+- DFJ formulation :: Dantzig, Fulkerson & Johnson's 1954 TSP model: degree constraints
+  plus all subtour constraints over edge variables. The first cutting-plane computation.
 - subtour polytope :: The LP relaxation of the DFJ formulation; strictly contains
   the TSP polytope.
 - support graph :: The graph of edges with \(x^*_e > 0\), weighted by
   \(x^*_e\).
 - global minimum cut :: The lightest \(\delta(S)\) over all proper \(S\). \(x^*\)
-  violates a subtour row iff this is below 2. /Slide: Separation is a minimum
+  violates a subtour constraint iff this is below 2. /Slide: Separation is a minimum
   cut./
-- connected components check :: For integer points, a solution of the degree rows
+- connected components check :: For integer points, a solution of the degree constraints
   is a union of cycles, and each cycle's vertex set has cut weight 0. Components
   suffice.
 - Stoer–Wagner algorithm :: Global minimum cut without flows: build a
@@ -72,17 +72,17 @@ term can be looked up here and read properly there.
 
 * In practice
 
-- lazy constraint :: A row checked on every candidate integer solution; a violated
+- lazy constraint :: A constraint checked on every candidate integer solution; a violated
   one rejects the solution and is added. Required for correctness. /Slide: Lazy
   constraints and callbacks./
-- user cut :: A row separated at fractional LP points to tighten the bound.
+- user cut :: A constraint separated at fractional LP points to tighten the bound.
   Optional, for speed only.
 - callback :: The solver hook where lazy constraints and user cuts are added
   (Gurobi's ~cbLazy~ and ~cbCut~).
 - constraint handler :: SCIP's version, with ~check~, ~enforce~ and ~separate~
   methods.
 - enforcement :: Checking a candidate integer solution against the implicit
-  constraints. Subtour rows only as user cuts can let a tour made of subtours
+  constraints. Subtour constraints only as user cuts can let a tour made of subtours
   through.
 - 4/3 conjecture :: That the subtour LP's integrality gap for metric TSP is
   \(\tfrac43\). Proved at most \(\tfrac32\); open. /Slide: How good is the bound,

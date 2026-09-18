@@ -11,6 +11,14 @@
 <link rel="stylesheet" href="../../slides/deck.css">
 </head>
 <body data-trunk="cp">
+<!-- The running example, once: what each <span class="ref"> on the slides shows on hover. -->
+<div class="refs" hidden>
+  <template data-ref="c1"><span class="ref-name">clause <span style="text-transform:none">$c_1$</span></span>$(\lnot x_1 \lor x_3)$ <span class="ref-note">after deciding $x_1$ (level 1) it is unit: the reason for $x_3$</span></template>
+  <template data-ref="c2"><span class="ref-name">clause <span style="text-transform:none">$c_2$</span></span>$(\lnot x_2 \lor \lnot x_3 \lor x_4)$ <span class="ref-note">after deciding $x_2$ (level 2) it is unit: the reason for $x_4$</span></template>
+  <template data-ref="c3"><span class="ref-name">clause <span style="text-transform:none">$c_3$</span></span>$(\lnot x_2 \lor \lnot x_4 \lor x_5)$ <span class="ref-note">unit once $x_4$ is set: the reason for $x_5$ (level 2)</span></template>
+  <template data-ref="c4"><span class="ref-name">clause <span style="text-transform:none">$c_4$</span></span>$(\lnot x_4 \lor \lnot x_5)$ <span class="ref-note">the conflict: both literals false once $x_4$ and $x_5$ are set</span></template>
+  <template data-ref="ig"><span class="ref-name">the implication graph</span>decide $x_1$, then $x_2$ (outlined) <span class="ref-note">each edge comes from a reason clause; first UIP $x_2$, learned clause $\lnot x_2 \lor \lnot x_3$</span><svg viewBox="0 0 300 230" width="170" aria-hidden="true"><defs><marker id="ari-ref" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" class="fill-ink"/></marker></defs><g class="ink" stroke-width="2" fill="none"><path d="M60,40 L60,95" marker-end="url(#ari-ref)"/><path d="M150,40 L205,95" marker-end="url(#ari-ref)"/><path d="M72,110 L193,110" marker-end="url(#ari-ref)"/><path d="M150,40 C 230,40 250,120 250,165" marker-end="url(#ari-ref)"/><path d="M220,120 L245,165" marker-end="url(#ari-ref)"/><path d="M210,125 L165,185" marker-end="url(#ari-ref)"/><path d="M245,185 L178,195" marker-end="url(#ari-ref)"/></g><g class="fill-ground ink" stroke-width="1.5"><circle cx="60" cy="30" r="16"/><circle cx="60" cy="110" r="16"/><circle cx="150" cy="30" r="16" style="stroke:var(--accent);stroke-width:3"/><circle cx="210" cy="110" r="16"/><circle cx="250" cy="178" r="16"/></g><rect x="140" y="182" width="36" height="24" rx="4" class="fill-soft ink"/><g font-size="15" text-anchor="middle" class="mono"><text x="60" y="35">x₁</text><text x="60" y="115">x₃</text><text x="150" y="35">x₂</text><text x="210" y="115">x₄</text><text x="250" y="183">x₅</text><text x="158" y="199">⊥</text></g><g font-size="14" class="muted"><text x="80" y="30">level 1</text><text x="100" y="64">level 2</text></g></svg></template>
+</div>
 <div class="reveal"><div class="slides">
 
 <section class="title-slide">
@@ -103,16 +111,16 @@
       <table class="dense">
         <thead><tr><th>just assigned</th><th>visit clauses watching</th><th>what happens</th></tr></thead>
         <tbody>
-          <tr><td>$x_1$ (decision, level 1)</td><td>$\lnot x_1$: $c_1$</td><td>no replacement, other watch $x_3$ free: <b>unit</b>, $x_3$</td></tr>
-          <tr><td>$x_3$</td><td>$\lnot x_3$: $c_2$</td><td>replacement $x_4$ is free: <b>watch moves</b> to $x_4$</td></tr>
-          <tr><td>$x_2$ (decision, level 2)</td><td>$\lnot x_2$: $c_2$, $c_3$</td><td>$c_2$: only $\lnot x_3$ left, false: <b>unit</b>, $x_4$. $\ c_3$: watch moves to $x_5$</td></tr>
-          <tr><td>$x_4$</td><td>$\lnot x_4$: $c_3$, $c_4$</td><td>$c_3$: <b>unit</b>, $x_5$. $\ c_4$: both literals false: <b>conflict</b></td></tr>
+          <tr><td>$x_1$ (decision, level 1)</td><td>$\lnot x_1$: <span class="ref" data-ref="c1">$c_1$</span></td><td>no replacement, other watch $x_3$ free: <b>unit</b>, $x_3$</td></tr>
+          <tr><td>$x_3$</td><td>$\lnot x_3$: <span class="ref" data-ref="c2">$c_2$</span></td><td>replacement $x_4$ is free: <b>watch moves</b> to $x_4$</td></tr>
+          <tr><td>$x_2$ (decision, level 2)</td><td>$\lnot x_2$: <span class="ref" data-ref="c2">$c_2$</span>, <span class="ref" data-ref="c3">$c_3$</span></td><td><span class="ref" data-ref="c2">$c_2$</span>: only $\lnot x_3$ left, false: <b>unit</b>, $x_4$. <span class="ref" data-ref="c3">$c_3$</span>: watch moves to $x_5$</td></tr>
+          <tr><td>$x_4$</td><td>$\lnot x_4$: <span class="ref" data-ref="c3">$c_3$</span>, <span class="ref" data-ref="c4">$c_4$</span></td><td><span class="ref" data-ref="c3">$c_3$</span>: <b>unit</b>, $x_5$. <span class="ref" data-ref="c4">$c_4$</span>: both literals false: <b>conflict</b></td></tr>
         </tbody>
       </table>
     </div>
     <div class="box ex"><span class="label">what the watches saved</span>
-      <p class="small">$x_1$ touched one clause, $x_3$ one. $c_4$ was not looked at until $x_4$ was set: before that it had two unassigned watches, so it could not be unit.</p>
-      <p class="small">Undoing level 2 unassigns $x_2, x_4, x_5$ and <b>moves no watch back</b>: $c_2$ still watches $x_4$ and $\lnot x_2$, both unassigned again, which is a valid state.</p>
+      <p class="small">$x_1$ touched one clause, $x_3$ one. <span class="ref" data-ref="c4">$c_4$</span> was not looked at until $x_4$ was set: before that it had two unassigned watches, so it could not be unit.</p>
+      <p class="small">Undoing level 2 unassigns $x_2, x_4, x_5$ and <b>moves no watch back</b>: <span class="ref" data-ref="c2">$c_2$</span> still watches $x_4$ and $\lnot x_2$, both unassigned again, which is a valid state.</p>
     </div>
   </div>
   <p class="viz-link-row"><a class="viz-link" href="explore.html#/1" target="_blank" rel="noopener">explore interactively</a></p>
@@ -120,10 +128,10 @@
     <p>The trace is the reference <code>propagate</code>, instrumented to print each visit. One
     detail it shows: when a watched literal becomes false the solver first swaps it into
     position 1, looks at position 0 (the other watch), then scans positions 2 onward for a
-    literal that is not false. For $c_2$ at $x_3$, the scan found $x_4$; for $c_2$ at $x_2$ the
-    scan found only $\lnot x_3$, false, so $c_2$ became unit on $x_4$.</p>
+    literal that is not false. For <span class="ref" data-ref="c2">$c_2$</span> at $x_3$, the scan found $x_4$; for <span class="ref" data-ref="c2">$c_2$</span> at $x_2$ the
+    scan found only $\lnot x_3$, false, so <span class="ref" data-ref="c2">$c_2$</span> became unit on $x_4$.</p>
     <p>The final trail is $x_1$ (level 1), $x_3$ (level 1), $x_2$ (level 2), $x_4$ (level 2),
-    $x_5$ (level 2), with the conflict in $c_4$. That is the implication graph of the next
+    $x_5$ (level 2), with the conflict in <span class="ref" data-ref="c4">$c_4$</span>. That is the <span class="ref" data-ref="ig">implication graph</span> of the next
     section's slide.</p>
   </aside>
 </section>
@@ -162,7 +170,7 @@
         </g>
         <g font-size="10" class="muted"><text x="78" y="30">level 1</text><text x="100" y="60">level 2</text></g>
       </svg>
-      <p class="cap">Lab step 2's textbook example. Clauses (¬x₁∨x₃), (¬x₂∨¬x₃∨x₄), (¬x₂∨¬x₄∨x₅), (¬x₄∨¬x₅). Decisions x₁, then x₂.</p>
+      <p class="cap">Lab step 2's textbook example. Clauses <span class="ref" data-ref="c1">(¬x₁∨x₃)</span>, <span class="ref" data-ref="c2">(¬x₂∨¬x₃∨x₄)</span>, <span class="ref" data-ref="c3">(¬x₂∨¬x₄∨x₅)</span>, <span class="ref" data-ref="c4">(¬x₄∨¬x₅)</span>. Decisions x₁, then x₂.</p>
     </div>
     <div>
       <p class="small"><span class="term">Implication graph</span>: a node per assigned literal (at its <span class="term">decision level</span>, on the <span class="term">trail</span>), with edges from the <span class="term" data-term="reason clause">reason clause</span>'s other literals. A conflict is a clause with every literal false.</p>
@@ -175,9 +183,9 @@
   </div>
   <p class="viz-link-row"><a class="viz-link" href="explore.html#/1" target="_blank" rel="noopener">explore interactively</a></p>
   <aside class="notes">
-    <p>Resolution trace for the example. Conflict (¬x₄∨¬x₅). Resolve with x₅'s reason (¬x₂∨¬x₄∨x₅)
+    <p>Resolution trace for the example. Conflict <span class="ref" data-ref="c4">(¬x₄∨¬x₅)</span>. Resolve with x₅'s reason <span class="ref" data-ref="c3">(¬x₂∨¬x₄∨x₅)</span>
     to get (¬x₂∨¬x₄): two current-level literals, x₂ and x₄. Resolve with x₄'s reason
-    (¬x₂∨¬x₃∨x₄) to get (¬x₂∨¬x₃): one current-level literal (x₂), stop. The functional reference
+    <span class="ref" data-ref="c2">(¬x₂∨¬x₃∨x₄)</span> to get (¬x₂∨¬x₃): one current-level literal (x₂), stop. The functional reference
     writes exactly this unfold. The imperative MiniSat loop computes the same thing with a counter
     and a seen-array.</p>
     <p>Why first UIP and not the decision (all-decision learning) or a later UIP: Zhang, Madigan,
@@ -195,8 +203,8 @@
         <table style="margin:0">
           <thead><tr><th>clause so far</th><th>level-2 literals</th><th>resolve with</th></tr></thead>
           <tbody>
-            <tr><td>$c_4 = (\lnot x_4 \lor \lnot x_5)$</td><td class="num">2</td><td>reason of $x_5$: $c_3$</td></tr>
-            <tr><td>$(\lnot x_2 \lor \lnot x_4)$</td><td class="num">2</td><td>reason of $x_4$: $c_2$</td></tr>
+            <tr><td><span class="ref" data-ref="c4">$c_4 = (\lnot x_4 \lor \lnot x_5)$</span></td><td class="num">2</td><td>reason of $x_5$: <span class="ref" data-ref="c3">$c_3$</span></td></tr>
+            <tr><td>$(\lnot x_2 \lor \lnot x_4)$</td><td class="num">2</td><td>reason of $x_4$: <span class="ref" data-ref="c2">$c_2$</span></td></tr>
             <tr><td>$(\lnot x_2 \lor \lnot x_3)$</td><td class="num"><b>1</b></td><td>stop</td></tr>
           </tbody>
         </table>
@@ -206,7 +214,7 @@
     <div>
       <div class="box ex"><span class="label">the RUP check a proof checker does</span>
         <p class="small">To accept $(\lnot x_2 \lor \lnot x_3)$ as a lemma, assume its negation, $x_2$ and $x_3$, and propagate over the clauses so far:</p>
-        <p class="small">$c_2$ gives $x_4$. $\ c_3$ gives $x_5$. $\ c_4$ is now false: <b>conflict</b>, so the lemma is implied. ✓</p>
+        <p class="small"><span class="ref" data-ref="c2">$c_2$</span> gives $x_4$. <span class="ref" data-ref="c3">$c_3$</span> gives $x_5$. <span class="ref" data-ref="c4">$c_4$</span> is now false: <b>conflict</b>, so the lemma is implied. ✓</p>
         <p class="small">No search, no heuristics: two unit propagations. That is why checking a <span class="term" data-term="DRAT proof">DRAT proof</span> is cheap even when finding it wasn't.</p>
       </div>
       <p class="small">The backjump skipped nothing here, but with ten decisions between level 1 and the conflict it would skip all of them: <span class="term">non-chronological backjumping</span>.</p>
@@ -214,9 +222,9 @@
   </div>
   <p class="viz-link-row"><a class="viz-link" href="explore.html#/1" target="_blank" rel="noopener">explore interactively</a></p>
   <aside class="notes">
-    <p><b>The two resolution steps.</b> $(\lnot x_4 \lor \lnot x_5)$ and $(\lnot x_2 \lor \lnot x_4 \lor x_5)$
+    <p><b>The two resolution steps.</b> <span class="ref" data-ref="c4">$(\lnot x_4 \lor \lnot x_5)$</span> and <span class="ref" data-ref="c3">$(\lnot x_2 \lor \lnot x_4 \lor x_5)$</span>
     clash on $x_5$; the resolvent keeps everything else, $(\lnot x_2 \lor \lnot x_4)$. That still has
-    two level-2 literals. Resolving on $x_4$ with $(\lnot x_2 \lor \lnot x_3 \lor x_4)$ gives
+    two level-2 literals. Resolving on $x_4$ with <span class="ref" data-ref="c2">$(\lnot x_2 \lor \lnot x_3 \lor x_4)$</span> gives
     $(\lnot x_2 \lor \lnot x_3)$, with a single level-2 literal.</p>
     <p>The reference <code>analyze</code> returns this clause with the asserting literal first, the
     backjump level 1 and LBD 2. After backjumping, the trail is $x_1, x_3$ at level 1, and the

@@ -58,7 +58,7 @@ window.GLOSSARY = [
 },
 {
 "term_html": "sliding objective",
-"html": "In the ellipsoid method, cutting with the objective row when the centre is feasible, to push toward the optimum.",
+"html": "In the ellipsoid method, cutting with the objective, as the constraint \\(c^\\top x \\ge \\gamma\\), when the centre is feasible, to push toward the optimum.",
 "section": "The theorem",
 "slide": "Grötschel, Lovász & Schrijver (1981)",
 "keys": [
@@ -112,7 +112,7 @@ window.GLOSSARY = [
 },
 {
 "term_html": "subtour",
-"html": "A cycle through only some of the cities. The degree rows alone allow a solution made of several disjoint ones.",
+"html": "A cycle through only some of the cities. The degree constraints alone allow a solution made of several disjoint ones.",
 "section": "Subtours",
 "slide": "The subtour elimination LP",
 "keys": [
@@ -131,26 +131,26 @@ window.GLOSSARY = [
 ]
 },
 {
-"term_html": "degree rows",
+"term_html": "degree constraints",
 "html": "\\(\\sum_{e \\in \\delta(v)} x_e = 2\\) for every city.",
 "section": "Subtours",
 "slide": "The subtour elimination LP",
 "keys": [
-"degree rows"
+"degree constraints"
 ]
 },
 {
-"term_html": "subtour elimination row",
+"term_html": "subtour elimination constraint",
 "html": "\\(\\sum_{e \\in \\delta(S)} x_e \\ge 2\\) for every proper nonempty \\(S\\): every set must be entered and left. There are \\(2^{n-1} - 1\\).",
 "section": "Subtours",
 "slide": "The subtour elimination LP",
 "keys": [
-"subtour elimination row"
+"subtour elimination constraint"
 ]
 },
 {
 "term_html": "DFJ formulation",
-"html": "Dantzig, Fulkerson &amp; Johnson's 1954 TSP model: degree rows plus all subtour rows over edge variables. The first cutting-plane computation.",
+"html": "Dantzig, Fulkerson &amp; Johnson's 1954 TSP model: degree constraints plus all subtour constraints over edge variables. The first cutting-plane computation.",
 "section": "Subtours",
 "slide": "The subtour elimination LP",
 "keys": [
@@ -177,7 +177,7 @@ window.GLOSSARY = [
 },
 {
 "term_html": "global minimum cut",
-"html": "The lightest \\(\\delta(S)\\) over all proper \\(S\\). \\(x^*\\) violates a subtour row iff this is below 2.",
+"html": "The lightest \\(\\delta(S)\\) over all proper \\(S\\). \\(x^*\\) violates a subtour constraint iff this is below 2.",
 "section": "Subtours",
 "slide": "Separation is a minimum cut",
 "keys": [
@@ -186,7 +186,7 @@ window.GLOSSARY = [
 },
 {
 "term_html": "connected components check",
-"html": "For integer points, a solution of the degree rows is a union of cycles, and each cycle's vertex set has cut weight 0. Components suffice.",
+"html": "For integer points, a solution of the degree constraints is a union of cycles, and each cycle's vertex set has cut weight 0. Components suffice.",
 "section": "Subtours",
 "slide": "Separation is a minimum cut",
 "keys": [
@@ -231,7 +231,7 @@ window.GLOSSARY = [
 },
 {
 "term_html": "lazy constraint",
-"html": "A row checked on every candidate integer solution; a violated one rejects the solution and is added. Required for correctness.",
+"html": "A constraint checked on every candidate integer solution; a violated one rejects the solution and is added. Required for correctness.",
 "section": "In practice",
 "slide": "Lazy constraints and callbacks",
 "keys": [
@@ -240,7 +240,7 @@ window.GLOSSARY = [
 },
 {
 "term_html": "user cut",
-"html": "A row separated at fractional LP points to tighten the bound. Optional, for speed only.",
+"html": "A constraint separated at fractional LP points to tighten the bound. Optional, for speed only.",
 "section": "In practice",
 "slide": "Lazy constraints and callbacks",
 "keys": [
@@ -267,7 +267,7 @@ window.GLOSSARY = [
 },
 {
 "term_html": "enforcement",
-"html": "Checking a candidate integer solution against the implicit constraints. Subtour rows only as user cuts can let a tour made of subtours through.",
+"html": "Checking a candidate integer solution against the implicit constraints. Subtour constraints only as user cuts can let a tour made of subtours through.",
 "section": "In practice",
 "slide": "Lazy constraints and callbacks",
 "keys": [

@@ -11,6 +11,10 @@
 <link rel="stylesheet" href="../../slides/deck.css">
 </head>
 <body data-trunk="comb">
+<!-- The running example, once: what each <span class="ref"> on the slides shows on hover. -->
+<div class="refs" hidden>
+  <template data-ref="tri"><span class="ref-name">the triangle</span>maximum matching 1 edge, minimum vertex cover 2 vertices <span class="ref-note">and $x_e = \tfrac12$ on all three edges is a fractional matching of value $\tfrac32$: the LP beats every matching. From the notes on König and Hall</span></template>
+</div>
 <div class="reveal"><div class="slides">
 
 <section class="title-slide">
@@ -571,7 +575,7 @@
         <p class="small">The convex hull of matchings of $G$, the <span class="term">matching polytope</span>, is (with <span class="term" data-term="\(E[S]\)">$E[S]$</span> the edges inside $S$)</p>
         $$\begin{aligned} x(\delta(v)) &\le 1 && \forall v \\ x(E[S]) &\le \tfrac{|S| - 1}{2} && \forall S \subseteq V,\ |S| \text{ odd} \\ x &\ge 0 \end{aligned}$$
       </div>
-      <p class="small">The <b>odd-set inequalities</b> cut off $x_e = \tfrac12$ on a triangle: $x(E[S]) = \tfrac32 &gt; 1$.</p>
+      <p class="small">The <b>odd-set inequalities</b> cut off $x_e = \tfrac12$ on <span class="ref" data-ref="tri">a triangle</span>: $x(E[S]) = \tfrac32 &gt; 1$.</p>
     </div>
     <div>
       <ul class="small">
@@ -717,7 +721,7 @@ uv run co then 15     # vs scipy, OR-Tools, HiGHS · networkx for bipartite and 
     <ul>
       <li>Lab steps 1–5 are ✓ (6 if you took the stretch).</li>
       <li>You can verify your Hungarian algorithm's answer is optimal by checking complementary slackness against its dual potentials, without re-running the algorithm.</li>
-      <li>You can explain why König fails on a triangle and which inequality repairs the LP.</li>
+      <li>You can explain why König fails on <span class="ref" data-ref="tri">a triangle</span> and which inequality repairs the LP.</li>
     </ul>
   </div>
   <div class="cols">

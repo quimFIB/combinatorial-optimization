@@ -38,7 +38,7 @@
   <aside class="notes">
     <p><b>What it shows.</b> The textbook LP $\max 3x + 2y$, $x + y \le b_1$, $2x + y \le b_2$, with
     both right-hand sides on sliders. Left: the region and its optimum. Right: $z^*$ as a function
-    of $b_1$ (with $b_2$ fixed), the prices $y_1, y_2$ read off the optimum, and the interval of
+    of $b_1$ (with $b_2$ fixed), the prices $u, v$ read off the optimum, and the interval of
     $b_1$ over which they stay the same.</p>
     <p><b>How the numbers are computed.</b> In the page, from the rows: the optimum by comparing
     corners, the prices by writing $c$ as a nonnegative combination of the two rows tight at the
@@ -46,9 +46,9 @@
     shaded range as the run of those values where the same two rows and weights are optimal.</p>
     <ul>
       <li>At $b_1 = 4$, $b_2 = 6$: optimum $(2, 2)$, $z^* = 10$, prices $(1, 1)$, range $[3, 6]$: "Ranging: how long the price holds".</li>
-      <li>Inside the range the dashed prediction $z^* + y_1 \Delta$ lies on the curve; outside it leaves the curve, which is why lab step 5 refuses to predict there.</li>
+      <li>Inside the range the dashed prediction $z^* + u \Delta$ lies on the curve; outside it leaves the curve, which is why lab step 5 refuses to predict there.</li>
       <li>Below $b_1 = 3$ the row $2x + y \le 6$ has slack: its price drops to 0 and $b_1$'s price jumps to 3.</li>
-      <li>The check row is strong duality: $b_1 y_1 + b_2 y_2 = z^*$ for every slider position.</li>
+      <li>The check row is strong duality: $b_1 u + b_2 v = z^*$ for every slider position.</li>
     </ul>
   </aside>
 </section>

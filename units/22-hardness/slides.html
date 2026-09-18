@@ -11,6 +11,19 @@
 <link rel="stylesheet" href="../../slides/deck.css">
 </head>
 <body data-trunk="apx">
+<!-- The running example, once: what each <span class="ref"> on the slides shows on hover. -->
+<div class="refs" hidden>
+  <template data-ref="F"><span class="ref-name">the example formula</span>$(x_1 \lor \lnot x_2 \lor x_3) \land (\lnot x_1 \lor x_2 \lor \lnot x_3)$ <span class="ref-note">$n = 3$ variables, $m = 2$ clauses; its gadget graph has 12 vertices, 15 edges, and $k = 7$</span><svg viewBox="0 0 350 235" width="170" aria-hidden="true"><g class="rule" stroke-width="2"><line x1="75" y1="200" x2="30" y2="40"/><line x1="110" y1="140" x2="200" y2="40"/><line x1="145" y1="200" x2="270" y2="40"/><line x1="205" y1="200" x2="80" y2="40"/><line x1="240" y1="140" x2="150" y2="40"/><line x1="275" y1="200" x2="320" y2="40"/></g><g class="ink" stroke-width="3"><line x1="30" y1="40" x2="80" y2="40"/><line x1="150" y1="40" x2="200" y2="40"/><line x1="270" y1="40" x2="320" y2="40"/><line x1="75" y1="200" x2="110" y2="140"/><line x1="110" y1="140" x2="145" y2="200"/><line x1="75" y1="200" x2="145" y2="200"/><line x1="205" y1="200" x2="240" y2="140"/><line x1="240" y1="140" x2="275" y2="200"/><line x1="205" y1="200" x2="275" y2="200"/></g><circle cx="30" cy="40" r="15" class="fill-ground ink" stroke-width="2"/><circle cx="80" cy="40" r="15" class="fill-ground ink" stroke-width="2"/><circle cx="150" cy="40" r="15" class="fill-ground ink" stroke-width="2"/><circle cx="200" cy="40" r="15" class="fill-ground ink" stroke-width="2"/><circle cx="270" cy="40" r="15" class="fill-ground ink" stroke-width="2"/><circle cx="320" cy="40" r="15" class="fill-ground ink" stroke-width="2"/><circle cx="75" cy="200" r="12" class="fill-ground ink" stroke-width="2"/><circle cx="110" cy="140" r="12" class="fill-ground ink" stroke-width="2"/><circle cx="145" cy="200" r="12" class="fill-ground ink" stroke-width="2"/><circle cx="205" cy="200" r="12" class="fill-ground ink" stroke-width="2"/><circle cx="240" cy="140" r="12" class="fill-ground ink" stroke-width="2"/><circle cx="275" cy="200" r="12" class="fill-ground ink" stroke-width="2"/><g font-size="20" text-anchor="middle"><text x="30" y="18">x₁</text><text x="80" y="18">¬x₁</text><text x="150" y="18">x₂</text><text x="200" y="18">¬x₂</text><text x="270" y="18">x₃</text><text x="320" y="18">¬x₃</text></g></svg></template>
+  <template data-ref="cl1"><span class="ref-name">clause 1</span>$x_1 \lor \lnot x_2 \lor x_3$ <span class="ref-note">the left triangle of the gadget, each corner joined to its literal</span><svg viewBox="0 0 350 235" width="170" aria-hidden="true"><g class="rule" stroke-width="2"><line x1="75" y1="200" x2="30" y2="40"/><line x1="110" y1="140" x2="200" y2="40"/><line x1="145" y1="200" x2="270" y2="40"/><line x1="205" y1="200" x2="80" y2="40"/><line x1="240" y1="140" x2="150" y2="40"/><line x1="275" y1="200" x2="320" y2="40"/></g><g class="ink" stroke-width="3"><line x1="30" y1="40" x2="80" y2="40"/><line x1="150" y1="40" x2="200" y2="40"/><line x1="270" y1="40" x2="320" y2="40"/><line x1="205" y1="200" x2="240" y2="140"/><line x1="240" y1="140" x2="275" y2="200"/><line x1="205" y1="200" x2="275" y2="200"/></g><g class="accent" stroke-width="6"><line x1="75" y1="200" x2="110" y2="140"/><line x1="110" y1="140" x2="145" y2="200"/><line x1="75" y1="200" x2="145" y2="200"/></g><circle cx="30" cy="40" r="15" class="fill-ground ink" stroke-width="2"/><circle cx="80" cy="40" r="15" class="fill-ground ink" stroke-width="2"/><circle cx="150" cy="40" r="15" class="fill-ground ink" stroke-width="2"/><circle cx="200" cy="40" r="15" class="fill-ground ink" stroke-width="2"/><circle cx="270" cy="40" r="15" class="fill-ground ink" stroke-width="2"/><circle cx="320" cy="40" r="15" class="fill-ground ink" stroke-width="2"/><circle cx="75" cy="200" r="12" class="fill-ground ink" stroke-width="2"/><circle cx="110" cy="140" r="12" class="fill-ground ink" stroke-width="2"/><circle cx="145" cy="200" r="12" class="fill-ground ink" stroke-width="2"/><circle cx="205" cy="200" r="12" class="fill-ground ink" stroke-width="2"/><circle cx="240" cy="140" r="12" class="fill-ground ink" stroke-width="2"/><circle cx="275" cy="200" r="12" class="fill-ground ink" stroke-width="2"/><g font-size="20" text-anchor="middle"><text x="30" y="18">x₁</text><text x="80" y="18">¬x₁</text><text x="150" y="18">x₂</text><text x="200" y="18">¬x₂</text><text x="270" y="18">x₃</text><text x="320" y="18">¬x₃</text></g></svg></template>
+  <template data-ref="cl2"><span class="ref-name">clause 2</span>$\lnot x_1 \lor x_2 \lor \lnot x_3$ <span class="ref-note">the right triangle of the gadget, each corner joined to its literal</span><svg viewBox="0 0 350 235" width="170" aria-hidden="true"><g class="rule" stroke-width="2"><line x1="75" y1="200" x2="30" y2="40"/><line x1="110" y1="140" x2="200" y2="40"/><line x1="145" y1="200" x2="270" y2="40"/><line x1="205" y1="200" x2="80" y2="40"/><line x1="240" y1="140" x2="150" y2="40"/><line x1="275" y1="200" x2="320" y2="40"/></g><g class="ink" stroke-width="3"><line x1="30" y1="40" x2="80" y2="40"/><line x1="150" y1="40" x2="200" y2="40"/><line x1="270" y1="40" x2="320" y2="40"/><line x1="75" y1="200" x2="110" y2="140"/><line x1="110" y1="140" x2="145" y2="200"/><line x1="75" y1="200" x2="145" y2="200"/></g><g class="accent" stroke-width="6"><line x1="205" y1="200" x2="240" y2="140"/><line x1="240" y1="140" x2="275" y2="200"/><line x1="205" y1="200" x2="275" y2="200"/></g><circle cx="30" cy="40" r="15" class="fill-ground ink" stroke-width="2"/><circle cx="80" cy="40" r="15" class="fill-ground ink" stroke-width="2"/><circle cx="150" cy="40" r="15" class="fill-ground ink" stroke-width="2"/><circle cx="200" cy="40" r="15" class="fill-ground ink" stroke-width="2"/><circle cx="270" cy="40" r="15" class="fill-ground ink" stroke-width="2"/><circle cx="320" cy="40" r="15" class="fill-ground ink" stroke-width="2"/><circle cx="75" cy="200" r="12" class="fill-ground ink" stroke-width="2"/><circle cx="110" cy="140" r="12" class="fill-ground ink" stroke-width="2"/><circle cx="145" cy="200" r="12" class="fill-ground ink" stroke-width="2"/><circle cx="205" cy="200" r="12" class="fill-ground ink" stroke-width="2"/><circle cx="240" cy="140" r="12" class="fill-ground ink" stroke-width="2"/><circle cx="275" cy="200" r="12" class="fill-ground ink" stroke-width="2"/><g font-size="20" text-anchor="middle"><text x="30" y="18">x₁</text><text x="80" y="18">¬x₁</text><text x="150" y="18">x₂</text><text x="200" y="18">¬x₂</text><text x="270" y="18">x₃</text><text x="320" y="18">¬x₃</text></g></svg></template>
+  <template data-ref="asg"><span class="ref-name">the assignment we started from</span>$x_1 = x_2 = 1,\ x_3 = 0$ <span class="ref-note">satisfies clause 1 through $x_1$ and clause 2 through $x_2$</span></template>
+  <template data-ref="cov7"><span class="ref-name">the cover we built</span>$x_1,\ x_2,\ \lnot x_3$ on top; corners $\lnot x_2, x_3$ and $\lnot x_1, \lnot x_3$ <span class="ref-note">7 vertices $= k$, from $x_1 = x_2 = 1$, $x_3 = 0$ (filled)</span><svg viewBox="0 0 350 235" width="170" aria-hidden="true"><g class="rule" stroke-width="2"><line x1="75" y1="200" x2="30" y2="40"/><line x1="110" y1="140" x2="200" y2="40"/><line x1="145" y1="200" x2="270" y2="40"/><line x1="205" y1="200" x2="80" y2="40"/><line x1="240" y1="140" x2="150" y2="40"/><line x1="275" y1="200" x2="320" y2="40"/></g><g class="ink" stroke-width="3"><line x1="30" y1="40" x2="80" y2="40"/><line x1="150" y1="40" x2="200" y2="40"/><line x1="270" y1="40" x2="320" y2="40"/><line x1="75" y1="200" x2="110" y2="140"/><line x1="110" y1="140" x2="145" y2="200"/><line x1="75" y1="200" x2="145" y2="200"/><line x1="205" y1="200" x2="240" y2="140"/><line x1="240" y1="140" x2="275" y2="200"/><line x1="205" y1="200" x2="275" y2="200"/></g><circle cx="30" cy="40" r="15" class="fill-unit ink" stroke-width="2"/><circle cx="80" cy="40" r="15" class="fill-ground ink" stroke-width="2"/><circle cx="150" cy="40" r="15" class="fill-unit ink" stroke-width="2"/><circle cx="200" cy="40" r="15" class="fill-ground ink" stroke-width="2"/><circle cx="270" cy="40" r="15" class="fill-ground ink" stroke-width="2"/><circle cx="320" cy="40" r="15" class="fill-unit ink" stroke-width="2"/><circle cx="75" cy="200" r="12" class="fill-ground ink" stroke-width="2"/><circle cx="110" cy="140" r="12" class="fill-unit ink" stroke-width="2"/><circle cx="145" cy="200" r="12" class="fill-unit ink" stroke-width="2"/><circle cx="205" cy="200" r="12" class="fill-unit ink" stroke-width="2"/><circle cx="240" cy="140" r="12" class="fill-ground ink" stroke-width="2"/><circle cx="275" cy="200" r="12" class="fill-unit ink" stroke-width="2"/><g font-size="20" text-anchor="middle"><text x="30" y="18">x₁</text><text x="80" y="18">¬x₁</text><text x="150" y="18">x₂</text><text x="200" y="18">¬x₂</text><text x="270" y="18">x₃</text><text x="320" y="18">¬x₃</text></g></svg></template>
+  <template data-ref="knap"><span class="ref-name">the four-item knapsack</span>values $16, 28, 16, 25$; weights $8, 12, 7, 7$ <span class="ref-note">items 0–3, capacity 24, $\varepsilon = 0.5$, so $K = 3.5$ and rounded values $4, 8, 4, 7$</span></template>
+  <template data-ref="kopt"><span class="ref-name">the exact optimum</span>items 0, 2, 3: value $16 + 16 + 25 = 57$ <span class="ref-note">weight 22 of 24; rounded score $4 + 4 + 7 = 15$</span></template>
+  <template data-ref="kfp"><span class="ref-name">what the FPTAS returns</span>items 1, 3: value $28 + 25 = 53$ <span class="ref-note">weight 19; the same rounded score 15, and lighter, so the DP keeps it</span></template>
+  <template data-ref="binY"><span class="ref-name">the yes-instance</span>sizes $3, 1, 1, 2, 2, 1$, bins of capacity 5 <span class="ref-note">$\{3, 2\}$ and $\{1, 1, 2, 1\}$ fill two bins exactly: OPT $= 2$</span></template>
+  <template data-ref="binN"><span class="ref-name">the no-instance</span>sizes $4, 4, 2$, bins of capacity 5 <span class="ref-note">no subset sums to 5, so two bins can't do it: OPT $= 3$</span></template>
+</div>
 <div class="reveal"><div class="slides">
 
 <section class="title-slide">
@@ -27,9 +40,9 @@
     how good a guarantee is <em>possible</em>. It tells you when a better algorithm is worth looking for
     and when the search is over unless P = NP.</p>
     <h4>How to read this deck</h4>
-    <p>Three small instances carry the unit: a two-clause 3-CNF pushed through the vertex-cover
-    gadget and back, a four-item knapsack run through the FPTAS, and two six-number partition
-    instances that show bin packing's 3/2 gap. Every number came from the lab's reference
+    <p>Four small instances carry the unit: <span class="ref" data-ref="F">a two-clause 3-CNF</span> pushed through the vertex-cover
+    gadget and back, <span class="ref" data-ref="knap">a four-item knapsack</span> run through the FPTAS, and two partition
+    instances, <span class="ref" data-ref="binY">six numbers</span> and <span class="ref" data-ref="binN">three</span>, that show bin packing's 3/2 gap. Every number came from the lab's reference
     solution or brute force. The hardness theorems are stated with a one-line reason; the proofs
     that are short enough are in the notes.</p>
   </aside>
@@ -200,8 +213,8 @@
           <thead><tr><th>piece</th><th>rule</th><th>in the cover</th></tr></thead>
           <tbody>
             <tr><td>variable edges</td><td>the true literal</td><td>$x_1$, $x_2$, $\lnot x_3$</td></tr>
-            <tr><td>clause 1</td><td>skip one corner with a true literal ($x_1$)</td><td>corners $\lnot x_2$, $x_3$</td></tr>
-            <tr><td>clause 2</td><td>skip one corner with a true literal ($x_2$)</td><td>corners $\lnot x_1$, $\lnot x_3$</td></tr>
+            <tr><td><span class="ref" data-ref="cl1">clause 1</span></td><td>skip one corner with a true literal ($x_1$)</td><td>corners $\lnot x_2$, $x_3$</td></tr>
+            <tr><td><span class="ref" data-ref="cl2">clause 2</span></td><td>skip one corner with a true literal ($x_2$)</td><td>corners $\lnot x_1$, $\lnot x_3$</td></tr>
           </tbody>
         </table>
         <p class="small">$3 + 2 + 2 = 7$ vertices. Every one of the 15 edges has an end in the cover; the two skipped corners are covered through $x_1$ and $x_2$ above them.</p>
@@ -210,9 +223,9 @@
     <div>
       <div class="box ex"><span class="label">backward: a cover the solver picked</span>
         <p class="small">Brute force over all $2^{12} = 4096$ vertex sets finds 234 covers, the smallest of size 7. The first one found takes $\lnot x_1$, $\lnot x_2$, $\lnot x_3$ at the top.</p>
-        <p class="small">Read it as $x_1 = x_2 = x_3 = \text{false}$. Clause 1 is satisfied by $\lnot x_2$, clause 2 by $\lnot x_1$. A <b>different</b> satisfying assignment from the one we started with, and just as good.</p>
+        <p class="small">Read it as $x_1 = x_2 = x_3 = \text{false}$. <span class="ref" data-ref="cl1">Clause 1</span> is satisfied by $\lnot x_2$, <span class="ref" data-ref="cl2">clause 2</span> by $\lnot x_1$. A <b>different</b> satisfying assignment from <span class="ref" data-ref="asg">the one we started with</span>, and just as good.</p>
       </div>
-      <p class="small">The <span class="term" data-term="solution map">solution map</span> never needed the cover to be the one we built: any cover of size $k$ has one vertex per variable edge and two per triangle, and that is enough.</p>
+      <p class="small">The <span class="term" data-term="solution map">solution map</span> never needed the cover to be <span class="ref" data-ref="cov7">the one we built</span>: any cover of size $k$ has one vertex per variable edge and two per triangle, and that is enough.</p>
     </div>
   </div>
   <p class="viz-link-row"><a class="viz-link" href="explore.html#/1" target="_blank" rel="noopener">explore interactively</a></p>
@@ -223,7 +236,7 @@
     corners per triangle. The uncovered corner's link to its literal must then be covered by the
     literal, which is why that literal is true.</p>
     <p>All counts are from the reference <code>sat_to_vertex_cover</code>,
-    <code>cover_from_assignment</code> (which returns the 7-vertex cover on the slide),
+    <code>cover_from_assignment</code> (which returns <span class="ref" data-ref="cov7">the 7-vertex cover</span> on the slide),
     <code>assignment_from_cover</code>, and unit 00's <code>brute_force</code> on the resulting
     <code>VertexCover</code>: minimum 7, 234 feasible, 4096 examined.</p>
   </aside>
@@ -345,7 +358,7 @@
     </div>
   </div>
   <aside class="notes">
-    <p>The next slide runs the three steps on four items, where the loss is not zero.</p>
+    <p>The next slide runs the three steps on <span class="ref" data-ref="knap">four items</span>, where the loss is not zero.</p>
     <p>Why the actual loss is zero: with 100 items of similar size, the optimum contains about 50 of
     them, and rounding error is spread across many items whose ties are broken nearly at random. The
     $nK$ worst case needs every item in the optimum to lose almost $K$ and the rounded optimum to pick a
@@ -376,7 +389,7 @@
     <div>
       <div class="box ex"><span class="label">what rounding changes</span>
         <p class="small"><b>Exact optimum:</b> items 0, 2, 3, weight 22, value <b>57</b>.</p>
-        <p class="small"><b>In rounded values</b> that set scores $4 + 4 + 7 = 15$, but so do items 1, 3 ($8 + 7 = 15$, weight 19). Rounding erased the difference, and the DP returns items 1, 3: true value <b>53</b>.</p>
+        <p class="small"><b>In rounded values</b> <span class="ref" data-ref="kopt">that set</span> scores $4 + 4 + 7 = 15$, but so do items 1, 3 ($8 + 7 = 15$, weight 19). Rounding erased the difference, and the DP returns <span class="ref" data-ref="kfp">items 1, 3</span>: true value <b>53</b>.</p>
         <p class="small">Loss $4/57 = 7\%$, well inside the promised 50%. The proof's bound says at least $57 - nK = 57 - 14 = 43$.</p>
       </div>
       <p class="small muted">Rounding by $K$ loses less than $K$ per item, at most $nK = \varepsilon\,v_{\max}$ in all. That is the whole proof on the previous slide.</p>
@@ -386,12 +399,12 @@
   <aside class="notes">
     <p><b>The rounded DP.</b> Rounded values sum to 23, so the value table has 24 entries instead of
     86 for the exact values: that shrinkage is where the speed comes from. Among sets fitting in
-    capacity 24, the best rounded score is 15, reached by $\{0,2,3\}$ (weight 22) and $\{1,3\}$
+    capacity 24, the best rounded score is 15, reached by <span class="ref" data-ref="kopt">items 0, 2, 3</span> (weight 22) and <span class="ref" data-ref="kfp">items 1, 3</span>
     (weight 19); $\{1,2\}$ scores 12, $\{0,1\}$ 12. The reference DP keeps the lighter way of
-    reaching each value, so it returns $\{1, 3\}$.</p>
+    reaching each value, so it returns <span class="ref" data-ref="kfp">items 1, 3</span>.</p>
     <p>The instance was found by searching small random knapsacks for one where the reference
     <code>knapsack_fptas</code> with $\varepsilon = 0.5$ loses value against
-    <code>knapsack_by_value</code>, which returned 57 for items $\{0, 2, 3\}$.</p>
+    <code>knapsack_by_value</code>, which returned 57 for <span class="ref" data-ref="kopt">items 0, 2, 3</span>.</p>
   </aside>
 </section>
 
@@ -472,8 +485,8 @@
     instance), make items of those sizes and bins of capacity $T$. Two bins suffice exactly when the
     numbers split into two halves of equal sum. Otherwise at least 3 bins are needed. An algorithm with
     ratio below 3/2 must therefore answer exactly 2 on the yes-instances.</p>
-    <p>Both instances were checked by enumeration: the six-number one has a subset summing to 5
-    (several), and $\{4, 4, 2\}$ has none.</p>
+    <p>Both instances were checked by enumeration: <span class="ref" data-ref="binY">the six-number one</span> has a subset summing to 5
+    (several), and <span class="ref" data-ref="binN">the no-instance 4, 4, 2</span> has none.</p>
   </aside>
 </section>
 

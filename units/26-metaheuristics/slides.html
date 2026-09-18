@@ -11,6 +11,12 @@
 <link rel="stylesheet" href="../../slides/deck.css">
 </head>
 <body data-trunk="apx">
+<!-- The running example, once: what each <span class="ref"> on the slides shows on hover. -->
+<div class="refs" hidden>
+  <template data-ref="six"><span class="ref-name">the six cities</span>$A$–$F$ at $(0,0), (3,0), (6,0), (6,4), (3,4), (0,4)$ <span class="ref-note">a 3 × 4 grid: the unit's local-search example</span><svg viewBox="10 20 300 220" width="170" aria-hidden="true"><g class="fill-ground ink" stroke-width="2"><circle cx="40" cy="210" r="16"/><circle cx="160" cy="210" r="16"/><circle cx="280" cy="210" r="16"/><circle cx="280" cy="50" r="16"/><circle cx="160" cy="50" r="16"/><circle cx="40" cy="50" r="16"/></g><g font-size="20" class="mono" text-anchor="middle"><text x="40" y="217">A</text><text x="160" y="217">B</text><text x="280" y="217">C</text><text x="280" y="57">D</text><text x="160" y="57">E</text><text x="40" y="57">F</text></g></svg></template>
+  <template data-ref="rect"><span class="ref-name">the rectangle</span>tour $A\,B\,C\,D\,E\,F$, length 20 <span class="ref-note">the optimal tour, reached from 24 by one 2-opt or one Or-opt move</span><svg viewBox="10 20 300 220" width="170" aria-hidden="true"><polygon points="40,210 160,210 280,210 280,50 160,50 40,50" fill="none" class="accent" stroke-width="6"/><g class="fill-ground ink" stroke-width="2"><circle cx="40" cy="210" r="16"/><circle cx="160" cy="210" r="16"/><circle cx="280" cy="210" r="16"/><circle cx="280" cy="50" r="16"/><circle cx="160" cy="50" r="16"/><circle cx="40" cy="50" r="16"/></g><g font-size="20" class="mono" text-anchor="middle"><text x="40" y="217">A</text><text x="160" y="217">B</text><text x="280" y="217">C</text><text x="280" y="57">D</text><text x="160" y="57">E</text><text x="40" y="57">F</text></g></svg></template>
+  <template data-ref="cross"><span class="ref-name">the crossing tour</span>$A\,B\,D\,C\,E\,F$, length 24 <span class="ref-note">dashed in the six-city figure: diagonals $BD$ and $CE$ cross</span><svg viewBox="10 20 300 220" width="170" aria-hidden="true"><polyline points="40,210 160,210 280,50 280,210 160,50 40,50 40,210" fill="none" class="warn" stroke-width="3" stroke-dasharray="8 5"/><g class="fill-ground ink" stroke-width="2"><circle cx="40" cy="210" r="16"/><circle cx="160" cy="210" r="16"/><circle cx="280" cy="210" r="16"/><circle cx="280" cy="50" r="16"/><circle cx="160" cy="50" r="16"/><circle cx="40" cy="50" r="16"/></g><g font-size="20" class="mono" text-anchor="middle"><text x="40" y="217">A</text><text x="160" y="217">B</text><text x="280" y="217">C</text><text x="280" y="57">D</text><text x="160" y="57">E</text><text x="40" y="57">F</text></g></svg></template>
+</div>
 <div class="reveal"><div class="slides">
 
 <section class="title-slide">
@@ -133,16 +139,16 @@
       </div>
       <div class="box ex"><span class="label">one Or-opt move</span>
         <p class="small">Tour $A\,C\,B\,D\,E\,F$, also 24. Take segment $[B]$ out: saves $CB + BD - CD = 3 + 5 - 4 = 4$. Put it between $A$ and $C$: costs $AB + BC - AC = 3 + 3 - 6 = 0$.</p>
-        <p class="small">$\Delta = 0 - 4 = -4$: again the rectangle, 20. No single 2-opt reversal of the right stretch is needed; one city just moves.</p>
+        <p class="small">$\Delta = 0 - 4 = -4$: again <span class="ref" data-ref="rect">the rectangle</span>, 20. No single 2-opt reversal of the right stretch is needed; one city just moves.</p>
       </div>
     </div>
   </div>
   <p class="viz-link-row"><a class="viz-link" href="explore.html#/1" target="_blank" rel="noopener">explore interactively</a></p>
   <aside class="notes">
     <p><b>Checking the lengths.</b> $A\,B\,D\,C\,E\,F$: $AB = 3$, $BD = \sqrt{3^2 + 4^2} = 5$, $DC = 4$,
-    $CE = 5$, $EF = 3$, $FA = 4$: total 24. The rectangle is $3 + 3 + 4 + 3 + 3 + 4 = 20$, and it is
+    $CE = 5$, $EF = 3$, $FA = 4$: total 24. <span class="ref" data-ref="rect">The rectangle</span> is $3 + 3 + 4 + 3 + 3 + 4 = 20$, and it is
     optimal: any tour through the six points has at least this length, since the rectangle is their
-    convex hull. The reference <code>two_opt</code> (sweep, neighbour lists of 5) turns the dashed tour
+    convex hull. The reference <code>two_opt</code> (sweep, neighbour lists of 5) turns <span class="ref" data-ref="cross">the dashed tour</span>
     into <code>[0, 1, 2, 3, 4, 5]</code>, length 20.</p>
     <p><b>The Or-opt tour</b> $A\,C\,B\,D\,E\,F$: $AC = 6$, $CB = 3$, $BD = 5$, $DE = 3$, $EF = 3$, $FA = 4$:
     24. The move's arithmetic is by hand; the lab's <code>or_opt</code> requires at least 8 cities,
@@ -229,7 +235,7 @@
   <h2>One worsening move, at three temperatures</h2>
   <div class="cols">
     <div>
-      <p class="small">Back on the six cities, from the rectangle (20), annealing proposes a 2-opt move that recreates the crossing: $\Delta = +4$. <span class="term" data-term="Metropolis acceptance">Metropolis acceptance</span> takes it with probability $e^{-\Delta/T}$.</p>
+      <p class="small">Back on <span class="ref" data-ref="six">the six cities</span>, from <span class="ref" data-ref="rect">the rectangle</span> (20), annealing proposes a 2-opt move that recreates <span class="ref" data-ref="cross">the crossing</span>: $\Delta = +4$. <span class="term" data-term="Metropolis acceptance">Metropolis acceptance</span> takes it with probability $e^{-\Delta/T}$.</p>
       <table>
         <thead><tr><th class="num">$T$</th><th class="num">$e^{-4/T}$</th><th>with $u = 0.5$</th></tr></thead>
         <tbody>
@@ -345,7 +351,7 @@
           <thead><tr><th class="num">time</th><th class="num">0.4</th><th class="num">0.6</th><th class="num">0.9</th><th class="num">1.2</th></tr></thead>
           <tbody><tr><td class="num">height</td><td class="num">0.1</td><td class="num">0.3</td><td class="num">0.5</td><td class="num">0.7</td></tr></tbody>
         </table>
-        <p class="small">Read it as "by 0.9 s, half of <b>all</b> runs had hit the target". The curve stops at 0.7, not 1: the failure stays in the denominator.</p>
+        <p class="small">Read the height as a share of <b>all</b> runs: at 0.9 s it steps from 2 of 5 to 3 of 5, and the plotted 0.5 is the middle of that step. The curve stops at 0.7, not 1: the failure stays in the denominator.</p>
       </div>
     </div>
     <div>

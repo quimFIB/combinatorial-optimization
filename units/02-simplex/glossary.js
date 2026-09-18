@@ -312,7 +312,7 @@ window.GLOSSARY = [
 },
 {
 "term_html": "phase 1",
-"html": "Finding a feasible basis: add an artificial variable to each row with \\(b_i &lt; 0\\) and maximize \\(-\\sum a_i\\). Optimum below 0 means the LP is infeasible.",
+"html": "Finding a feasible basis: add an artificial variable to each constraint with \\(b_i &lt; 0\\) and maximize \\(-\\sum a_i\\). Optimum below 0 means the LP is infeasible.",
 "section": "Starting, and what real codes do",
 "slide": "Getting started: two phases",
 "keys": [

@@ -11,6 +11,10 @@
 <link rel="stylesheet" href="../../slides/deck.css">
 </head>
 <body data-trunk="comb">
+<!-- The running example, once: what each <span class="ref"> on the slides shows on hover. -->
+<div class="refs" hidden>
+  <template data-ref="path"><span class="ref-name">the matching path</span>$a - b - c - d$, edge weights $ab = 2$, $bc = 3$, $cd = 2$ <span class="ref-note">greedy takes $bc$ and blocks both ends: 3. The optimum $\{ab, cd\}$ gets 4. From the slide on independence systems</span></template>
+</div>
 <div class="reveal"><div class="slides">
 
 <section class="title-slide">
@@ -209,7 +213,7 @@
       <p class="proof-pointer">full proof in the notes (N)</p>
     </div>
     <div class="box ex"><span class="label">not a matroid ⇒ weights that fool greedy</span>
-      <p class="small">Find $A, B$ where exchange fails, give $A$ slightly more weight than $B$. For matchings on the path $a\!-\!b\!-\!c\!-\!d$: $A = \{bc\}$, $B = \{ab, cd\}$, neither edge of $B$ fits next to $bc$. Weights $2, 3, 2$ are exactly such weights: greedy 3, optimum 4.</p>
+      <p class="small">Find $A, B$ where exchange fails, give $A$ slightly more weight than $B$. For matchings on <span class="ref" data-ref="path">the path $a\!-\!b\!-\!c\!-\!d$</span>: $A = \{bc\}$, $B = \{ab, cd\}$, neither edge of $B$ fits next to $bc$. Weights $2, 3, 2$ are exactly such weights: greedy 3, optimum 4.</p>
     </div>
   </div>
   <p class="small muted">Lab step 3 finds the $(A, B)$, an <span class="term">exchange witness</span>. Step 2's greedy on the graphic oracle is Kruskal, matched against networkx on 25 graphs.</p>
@@ -250,7 +254,7 @@
       <p><b>Why unit 06 and unit 09 meet here:</b></p>
       <ul class="small">
         <li>The system is TDI: integrality comes from the dual, not from total unimodularity.</li>
-        <li>There are exponentially many rows, but separation over $P(M)$ is <b>submodular function minimization</b> (min over $S$ of $r(S) - x(S)$), which is polynomial.</li>
+        <li>There are exponentially many constraints, but separation over $P(M)$ is <b>submodular function minimization</b> (min over $S$ of $r(S) - x(S)$), which is polynomial.</li>
         <li>So by GLS, optimizing over two matroids' polytopes together is polynomial too: that is intersection, next.</li>
       </ul>
     </div>

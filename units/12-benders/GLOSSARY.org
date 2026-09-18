@@ -34,7 +34,7 @@ Convention throughout: \(\min_{y \in Y} f^\top y + Q(y)\) with
 - complete recourse :: Every \(y\) leaves a feasible subproblem, for example via a
   penalty on unmet demand. Feasibility cuts then never occur.
 - master problem :: \(\min f^\top y + \theta\) subject to the cuts so far and \(y
-  \in Y\). A MIP that grows by a row per iteration. /Slide: The loop, and why it
+  \in Y\). A MIP that gains cuts every iteration. /Slide: The loop, and why it
   ends./
 - \(\theta\) :: The master's estimate of \(Q(y)\), built from below by the cuts.
   Needs a starting lower bound, such as \(\theta \ge 0\).

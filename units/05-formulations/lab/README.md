@@ -93,7 +93,7 @@ Reference run, 20 facilities and 60 customers:
 | UFL aggregated, M = 10C | 46.1 % | **5 644** (5.9 s) | 7 / 1 |
 | UFL aggregated, M = C | 41.3 % | 4 293 (4.2 s) | 7 / 1 |
 | UFL disaggregated | 0.0 % | **1** | 1 / 1 |
-| CFL capacity rows only | 5.5 % | 102 | 11 / 27 |
+| CFL capacity constraints only | 5.5 % | 102 | 11 / 27 |
 | CFL + linking + cover | 1.2 % | 20 | 1 / 4 |
 
 The ordering by LP bound predicts the ordering by nodes exactly when the solver

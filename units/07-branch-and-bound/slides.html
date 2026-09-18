@@ -11,6 +11,16 @@
 <link rel="stylesheet" href="../../slides/deck.css">
 </head>
 <body data-trunk="ip">
+<!-- The running example, once: what each <span class="ref"> on the slides shows on hover. -->
+<div class="refs" hidden>
+  <template data-ref="ip"><span class="ref-name">the running example</span>$\min\ -x - 5y$ s.t. $7x + 3y \le 22$, $-3x + 3y \le 2$, $x, y \ge 0$ integer <span class="ref-note">7 integer points (dots); optimum $(2, 2)$, value $-12$ (filled); root LP $(2, \tfrac83)$, value $-15.33$ (ring)</span><svg viewBox="30 70 280 210" width="170" aria-hidden="true"><line x1="60" y1="75" x2="60" y2="275" class="rule" stroke-width="2"/><line x1="35" y1="260" x2="305" y2="260" class="rule" stroke-width="2"/><polygon points="60,260 248.6,260 180,100 60,220" class="fill-soft unit" stroke-width="3"/><g class="fill-ink"><circle cx="60" cy="260" r="6"/><circle cx="120" cy="260" r="6"/><circle cx="180" cy="260" r="6"/><circle cx="240" cy="260" r="6"/><circle cx="120" cy="200" r="6"/><circle cx="180" cy="200" r="6"/></g><circle cx="180" cy="140" r="9" class="fill-accent"/><circle cx="180" cy="100" r="9" fill="none" class="warn" stroke-width="3"/></svg></template>
+  <template data-ref="root"><span class="ref-name">the root</span>LP optimum $(2, \tfrac83) = (2, 2.67)$, bound $-\tfrac{46}{3} = -15.33$ <span class="ref-note">the example with integrality dropped; $y$ is fractional, so branch into $y \le 2$ and $y \ge 3$</span></template>
+  <template data-ref="ny2"><span class="ref-name">a node of the tree</span>node $y \le 2$: LP optimum $(\tfrac{16}{7}, 2) = (2.29, 2)$, bound $-\tfrac{86}{7} = -12.29$ <span class="ref-note">child of the root; $x$ is fractional, so branch into $x \le 2$ and $x \ge 3$</span></template>
+  <template data-ref="ny3"><span class="ref-name">a node of the tree</span>node $y \ge 3$: LP infeasible <span class="ref-note">child of the root: the polygon's top is at $y = \tfrac83$, so pruned at once</span></template>
+  <template data-ref="nx2"><span class="ref-name">a node of the tree</span>node $x \le 2$: LP optimum $(2, 2)$, value $-12$ <span class="ref-note">child of $y \le 2$; integral, so it becomes the incumbent: the optimum</span></template>
+  <template data-ref="nx3"><span class="ref-name">a node of the tree</span>node $x \ge 3$: LP optimum $(3, \tfrac13)$, bound $-\tfrac{14}{3} = -4.67$ <span class="ref-note">child of $y \le 2$; worse than the incumbent $-12$, so pruned by bound (depth-first branches it before that)</span></template>
+  <template data-ref="opt"><span class="ref-name">the optimum</span>$(x, y) = (2, 2)$, value $-12$ <span class="ref-note">the best of the 7 integer points; found at node $x \le 2$</span></template>
+</div>
 <div class="reveal"><div class="slides">
 
 <section class="title-slide">
@@ -153,9 +163,9 @@
       </ol>
       <div class="box def"><span class="label">prune a node when</span>
         <ul class="small">
-          <li>its LP is <span class="term" data-term="prune by infeasibility">infeasible</span> ($y \ge 3$);</li>
-          <li>its LP is <span class="term" data-term="prune by integrality">integral</span>: it becomes the <span class="term">incumbent</span> if better ($(2,2)$);</li>
-          <li>its LP bound is $\ge$ the incumbent: <span class="term" data-term="prune by bound">nothing below it can win</span> ($x \ge 3$).</li>
+          <li>its LP is <span class="term" data-term="prune by infeasibility">infeasible</span> (<span class="ref" data-ref="ny3">$y \ge 3$</span>);</li>
+          <li>its LP is <span class="term" data-term="prune by integrality">integral</span>: it becomes the <span class="term">incumbent</span> if better (<span class="ref" data-ref="opt">$(2,2)$</span>);</li>
+          <li>its LP bound is $\ge$ the incumbent: <span class="term" data-term="prune by bound">nothing below it can win</span> (<span class="ref" data-ref="nx3">$x \ge 3$</span>).</li>
         </ul>
       </div>
     </div>
@@ -189,7 +199,7 @@
       <p><span class="term" data-term="upper bound U">Upper bound</span> $U$: the incumbent's objective value, or $+\infty$ before one is found.</p>
       <p><span class="term" data-term="lower bound L">Lower bound</span> $L$: the smallest LP bound among open nodes. Every unexplored integer point lies in some open node.</p>
       $$L \le z^* \le U, \qquad \text{gap} = \frac{U - L}{|U|}$$
-      <p class="small"><b>On the example</b>, after the root and its two children: $U = +\infty$, $L = -12.29$. After $(2,2)$ is found: $U = -12$, and the only open node has bound $-4.67 \ge U$, so $L$ jumps to $-12$ and the <span class="term">gap</span> closes to 0.</p>
+      <p class="small"><b>On the <span class="ref" data-ref="ip">example</span></b>, after the root and its two children: $U = +\infty$, $L = -12.29$. After <span class="ref" data-ref="opt">$(2,2)$</span> is found: $U = -12$, and <span class="ref" data-ref="nx3">the only open node</span> has bound $-4.67 \ge U$, so $L$ jumps to $-12$ and the <span class="term">gap</span> closes to 0.</p>
       <p class="small">The solver stops when the gap is 0, or below a <span class="term" data-term="relative gap tolerance">tolerance</span> (HiGHS and Gurobi default to a relative gap of $10^{-4}$; SCIP to 0).</p>
     </div>
     <div class="box good"><span class="label">two hard jobs</span>
@@ -270,10 +280,10 @@
         <table style="margin:0">
           <thead><tr><th class="num">pop</th><th>node</th><th class="num">bound</th><th>outcome</th></tr></thead>
           <tbody>
-            <tr><td class="num">1</td><td>root</td><td class="num">−15.33</td><td>branch on $y$</td></tr>
-            <tr><td class="num">2</td><td>$y \le 2$</td><td class="num">−12.29</td><td>branch on $x$</td></tr>
-            <tr><td class="num">3</td><td>$x \le 2$</td><td class="num">−12</td><td>integral: $U = -12$</td></tr>
-            <tr><td class="num">4</td><td>$x \ge 3$</td><td class="num">−4.67</td><td>bound $\ge U$: pruned</td></tr>
+            <tr><td class="num">1</td><td><span class="ref" data-ref="root">root</span></td><td class="num">−15.33</td><td>branch on $y$</td></tr>
+            <tr><td class="num">2</td><td><span class="ref" data-ref="ny2">$y \le 2$</span></td><td class="num">−12.29</td><td>branch on $x$</td></tr>
+            <tr><td class="num">3</td><td><span class="ref" data-ref="nx2">$x \le 2$</span></td><td class="num">−12</td><td>integral: $U = -12$</td></tr>
+            <tr><td class="num">4</td><td><span class="ref" data-ref="nx3">$x \ge 3$</span></td><td class="num">−4.67</td><td>bound $\ge U$: pruned</td></tr>
           </tbody>
         </table>
         <p class="small">It takes the smaller bound first, $-12$ before $-4.67$, finds the optimum there, and the other node dies without being branched.</p>
@@ -284,23 +294,23 @@
         <table style="margin:0">
           <thead><tr><th class="num">pop</th><th>node</th><th class="num">bound</th><th>outcome</th></tr></thead>
           <tbody>
-            <tr><td class="num">1</td><td>root</td><td class="num">−15.33</td><td>branch on $y$</td></tr>
-            <tr><td class="num">2</td><td>$y \le 2$</td><td class="num">−12.29</td><td>branch on $x$</td></tr>
-            <tr><td class="num">3</td><td>$x \ge 3$</td><td class="num">−4.67</td><td>branch on $y$</td></tr>
+            <tr><td class="num">1</td><td><span class="ref" data-ref="root">root</span></td><td class="num">−15.33</td><td>branch on $y$</td></tr>
+            <tr><td class="num">2</td><td><span class="ref" data-ref="ny2">$y \le 2$</span></td><td class="num">−12.29</td><td>branch on $x$</td></tr>
+            <tr><td class="num">3</td><td><span class="ref" data-ref="nx3">$x \ge 3$</span></td><td class="num">−4.67</td><td>branch on $y$</td></tr>
             <tr><td class="num">4</td><td>$y \le 0$</td><td class="num">−3.14</td><td>branch on $x$</td></tr>
             <tr><td class="num">5</td><td>$x \le 3$</td><td class="num">−3</td><td>integral: $U = -3$</td></tr>
-            <tr><td class="num">6</td><td>$x \le 2$</td><td class="num">−12</td><td>integral: $U = -12$</td></tr>
+            <tr><td class="num">6</td><td><span class="ref" data-ref="nx2">$x \le 2$</span></td><td class="num">−12</td><td>integral: $U = -12$</td></tr>
           </tbody>
         </table>
-        <p class="small">It dives into the <em>last</em> child created, $x \ge 3$, and digs to a poor solution $(3, 0)$ before coming back. Four extra nodes, two of them infeasible children.</p>
+        <p class="small">It dives into the <em>last</em> child created, <span class="ref" data-ref="nx3">$x \ge 3$</span>, and digs to a poor solution $(3, 0)$ before coming back. Four extra nodes, two of them infeasible children.</p>
       </div>
     </div>
   </div>
   <p class="viz-link-row"><a class="viz-link" href="explore.html#/1" target="_blank" rel="noopener">explore interactively</a></p>
   <aside class="notes">
     <p>"Nodes" counts every LP solved: the root plus every child created. Best-first creates
-    the root, $y \le 2$, $y \ge 3$ (infeasible), $x \le 2$, $x \ge 3$: five. Depth-first
-    additionally branches $x \ge 3$ into $y \le 0$ (LP $(\tfrac{22}{7}, 0)$, value
+    the <span class="ref" data-ref="root">root</span>, <span class="ref" data-ref="ny2">$y \le 2$</span>, <span class="ref" data-ref="ny3">$y \ge 3$</span> (infeasible), <span class="ref" data-ref="nx2">$x \le 2$</span>, <span class="ref" data-ref="nx3">$x \ge 3$</span>: five. Depth-first
+    additionally branches <span class="ref" data-ref="nx3">$x \ge 3$</span> into $y \le 0$ (LP $(\tfrac{22}{7}, 0)$, value
     $-3.14$) and $y \ge 1$ (infeasible, since $x \ge 3$ forces $y \le \tfrac13$), then
     $y \le 0$ into $x \le 3$ (integral $(3, 0)$, value $-3$) and $x \ge 4$ (infeasible):
     nine.</p>
@@ -384,7 +394,7 @@
   <div class="cols">
     <div>
       <div class="box ex"><span class="label">a product score from the real tree</span>
-        <p class="small">At node $y \le 2$ (bound $-12.29$) we branched on $x = 2.29$:</p>
+        <p class="small">At node <span class="ref" data-ref="ny2">$y \le 2$</span> (bound $-12.29$) we branched on $x = 2.29$:</p>
         <p class="small">$\Delta^- = -12 - (-12.29) = 0.29$, $\quad \Delta^+ = -4.67 - (-12.29) = 7.62$</p>
         <p class="small">score $= 0.29 \times 7.62 = 2.18$</p>
       </div>
@@ -404,7 +414,7 @@
         <table style="margin:0">
           <thead><tr><th>branch</th><th class="num">gain</th><th class="num">÷ fractional part</th><th class="num">per unit</th></tr></thead>
           <tbody>
-            <tr><td>$y$ down, at root</td><td class="num">3.05</td><td class="num">$\div\ 0.67$</td><td class="num">4.57</td></tr>
+            <tr><td>$y$ down, at <span class="ref" data-ref="root">root</span></td><td class="num">3.05</td><td class="num">$\div\ 0.67$</td><td class="num">4.57</td></tr>
             <tr><td>$x$ down</td><td class="num">0.29</td><td class="num">$\div\ 0.29$</td><td class="num">1.00</td></tr>
             <tr><td>$x$ up</td><td class="num">7.62</td><td class="num">$\div\ 0.71$</td><td class="num">10.67</td></tr>
           </tbody>
@@ -415,12 +425,12 @@
     </div>
   </div>
   <aside class="notes">
-    <p><b>Exact values.</b> Node $y \le 2$ has bound $-\tfrac{86}{7}$. Its children have
+    <p><b>Exact values.</b> Node <span class="ref" data-ref="ny2">$y \le 2$</span> has bound $-\tfrac{86}{7}$. Its children have
     $-12$ and $-\tfrac{14}{3}$, so $\Delta^- = \tfrac27$ and $\Delta^+ = \tfrac{160}{21}$, and the
     product is $\tfrac{320}{147} \approx 2.18$.</p>
-    <p><b>Pseudocosts</b> divide a gain by how far the variable had to move. At the root
+    <p><b>Pseudocosts</b> divide a gain by how far the variable had to move. At the <span class="ref" data-ref="root">root</span>
     $y = \tfrac83$ moves down by $\tfrac23$, gain $-\tfrac{86}{7} + \tfrac{46}{3} = \tfrac{64}{21}$,
-    per unit $\tfrac{32}{7} = 4.57$. At node $y \le 2$, $x = \tfrac{16}{7}$ moves down by
+    per unit $\tfrac{32}{7} = 4.57$. At node <span class="ref" data-ref="ny2">$y \le 2$</span>, $x = \tfrac{16}{7}$ moves down by
     $\tfrac27$ (gain $\tfrac27$, per unit 1) and up by $\tfrac57$ (gain $\tfrac{160}{21}$, per unit
     $\tfrac{32}{3} = 10.67$). These are exactly the lists the reference tree stores in
     <code>stats["pseudo"]</code>.</p>
@@ -451,7 +461,7 @@
     </div>
     <div class="box"><span class="label">in the lab's tree</span>
       <p class="small">No heuristics: incumbents only come from integral LP leaves. That is one reason the DFS runs in <code>then</code> are so much larger than SCIP's. SCIP typically has a near-optimal solution before its tree has a dozen nodes.</p>
-      <p class="small">On the running example, rounding the root LP $(2, 2.67)$ down gives $(2, 2)$, the optimum, before any branching.</p>
+      <p class="small">On the <span class="ref" data-ref="ip">running example</span>, rounding the <span class="ref" data-ref="root">root LP</span> $(2, 2.67)$ down gives <span class="ref" data-ref="opt">$(2, 2)$</span>, the optimum, before any branching.</p>
       <p class="small muted">Unit 26's local search and unit 19's LNS are the same idea used as stand-alone methods.</p>
     </div>
   </div>

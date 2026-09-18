@@ -11,6 +11,13 @@
 <link rel="stylesheet" href="../../slides/deck.css">
 </head>
 <body data-trunk="ip">
+<!-- The running example, once: what each <span class="ref"> on the slides shows on hover. -->
+<div class="refs" hidden>
+  <template data-ref="inst"><span class="ref-name">the small instance</span>rolls $W = 10$; pieces of width $3, 4, 6$; demands $5, 3, 2$ <span class="ref-note">the cutting-stock example of "The loop, on a small instance": LP optimum 4 rolls, reached at iteration 2</span></template>
+  <template data-ref="it0"><span class="ref-name">iteration 0</span>master $5.17$ over $(3,0,0)$, $(0,2,0)$, $(0,0,1)$; duals $y = (\tfrac13, \tfrac12, 1)$ <span class="ref-note">pricing finds $(0,1,1)$, a 4 and a 6: worth 1.5, reduced cost $-0.5$; Farley bound 3.44</span></template>
+  <template data-ref="it1"><span class="ref-name">iteration 1</span>master $4.17$; duals $y = (\tfrac13, \tfrac12, \tfrac12)$ <span class="ref-note">pricing finds $(2,1,0)$, two 3s and a 4: worth $\tfrac76$, reduced cost $-0.17$; Farley bound 3.57</span></template>
+  <template data-ref="it2"><span class="ref-name">iteration 2</span>master $4$: $1 \times (3,0,0),\ 2 \times (0,1,1),\ 1 \times (2,1,0)$; duals $y = (\tfrac13, \tfrac13, \tfrac23)$ <span class="ref-note">no pattern is worth more than 1: reduced cost 0, stop; Farley bound 4</span></template>
+</div>
 <div class="reveal"><div class="slides">
 
 <section class="title-slide">
@@ -200,22 +207,22 @@
     </tbody>
   </table>
   <div class="cols">
-    <div class="box ex"><span class="label">reading row 0</span>
+    <div class="box ex"><span class="label">reading iteration 0</span>
       <p class="small">The duals price a 3-piece at $\tfrac13$ of a roll, a 4 at $\tfrac12$, a 6 at a full roll. The pattern "a 4 and a 6" fits ($4 + 6 = 10$) and is worth $\tfrac12 + 1 = 1.5$ rolls of value while costing 1 roll: reduced cost $1 - 1.5 = -0.5$. It enters.</p>
     </div>
     <div class="box ex"><span class="label">the end</span>
-      <p class="small">At row 2 no pattern is worth more than 1, so the LP over <b>all</b> patterns is solved, at value 4. It happens to be integral: one roll of three 3s, two rolls of 4+6, one roll of 3+3+4. Four rolls, and the LP proves no cutting uses fewer.</p>
+      <p class="small">At <span class="ref" data-ref="it2">iteration 2</span> no pattern is worth more than 1, so the LP over <b>all</b> patterns is solved, at value 4. It happens to be integral: one roll of three 3s, two rolls of 4+6, one roll of 3+3+4. Four rolls, and the LP proves no cutting uses fewer.</p>
     </div>
   </div>
   <p class="viz-link-row"><a class="viz-link" href="explore.html#/1" target="_blank" rel="noopener">explore interactively</a></p>
   <aside class="notes">
-    <p><b>Pricing, row 1.</b> Maximise $\tfrac13 a_1 + \tfrac12 a_2 + \tfrac12 a_3$ subject to
+    <p><b>Pricing, <span class="ref" data-ref="it1">iteration 1</span>.</b> Maximise $\tfrac13 a_1 + \tfrac12 a_2 + \tfrac12 a_3$ subject to
     $3a_1 + 4a_2 + 6a_3 \le 10$, $a$ nonnegative integers. Candidates: $(3,0,0)$ is worth 1;
     $(2,1,0)$ is worth $\tfrac23 + \tfrac12 = \tfrac76$; $(0,1,1)$ is worth 1; $(0,2,0)$ is worth 1;
     $(1,0,1)$ is worth $\tfrac13 + \tfrac12 = \tfrac56$. The best is $(2,1,0)$ at $\tfrac76$.</p>
-    <p><b>Farley bounds.</b> $d^\top y / v$: row 0, $(\tfrac53 + \tfrac32 + 2)/1.5 = \tfrac{31}{6} / \tfrac32 = 3.44$;
-    row 1, $(\tfrac53 + \tfrac32 + 1)/\tfrac76 = \tfrac{25}{6} / \tfrac76 = 3.57$; row 2, $4/1 = 4$.
-    So after row 0 we already know the answer is between 3.44 and 5.17, hence at least 4
+    <p><b>Farley bounds.</b> $d^\top y / v$: <span class="ref" data-ref="it0">iteration 0</span>, $(\tfrac53 + \tfrac32 + 2)/1.5 = \tfrac{31}{6} / \tfrac32 = 3.44$;
+    <span class="ref" data-ref="it1">iteration 1</span>, $(\tfrac53 + \tfrac32 + 1)/\tfrac76 = \tfrac{25}{6} / \tfrac76 = 3.57$; <span class="ref" data-ref="it2">iteration 2</span>, $4/1 = 4$.
+    So after <span class="ref" data-ref="it0">iteration 0</span> we already know the answer is between 3.44 and 5.17, hence at least 4
     rolls. The bound slide in section 3 explains why dividing by $v$ is valid.</p>
     <p><b>Checking the final cutting.</b> Pieces of 3: $3 + 2 = 5$. Pieces of 4: $2 + 1 = 3$. Pieces
     of 6: 2. All from the reference <code>solve_master</code>, <code>price</code> and
@@ -241,7 +248,7 @@
     </div>
     <div>
       <div class="box def"><span class="label">master and pricing</span>
-        <p class="small">The <span class="term" data-term="Dantzig–Wolfe decomposition">Dantzig–Wolfe</span> <span class="term" data-term="master problem">master</span>: linking rows plus one <span class="term" data-term="convexity row">convexity row</span> per block, over the $\lambda$ columns. <b>Pricing</b> for block $k$, with linking duals $y$ and convexity dual $\mu_k$:</p>
+        <p class="small">The <span class="term" data-term="Dantzig–Wolfe decomposition">Dantzig–Wolfe</span> <span class="term" data-term="master problem">master</span>: linking constraints plus one <span class="term" data-term="convexity constraint">convexity constraint</span> per block, over the $\lambda$ columns. <b>Pricing</b> for block $k$, with linking duals $y$ and convexity dual $\mu_k$:</p>
         $$\min_{x \in X_k}\ (c_k - D_k^\top y)^\top x - \mu_k$$
       </div>
       <div class="box thm"><span class="label">the <span class="term" data-term="Dantzig–Wolfe bound">bound</span> (Geoffrion 1974)</span>
@@ -251,7 +258,7 @@
   </div>
   <aside class="notes">
     <p>Cutting stock is the case of identical blocks (every roll is the same knapsack), so
-    the blocks aggregate into one pricing problem, and the convexity rows combine into the
+    the blocks aggregate into one pricing problem, and the convexity constraints combine into the
     objective "number of rolls". That aggregation is also what removes the $K!$ symmetry.</p>
     <p>The integrality property is the key design question. If the pricing problem is an
     LP with integral vertices (a shortest path without resources, an assignment), the DW
@@ -309,12 +316,12 @@
       <div class="box thm"><span class="label"><span class="term" data-term="Farley bound">Farley</span> 1990 · unit costs</span>
         <p class="small">For any $y \ge 0$ with $v = \max_a y^\top a$, $\ y / v$ is dual feasible, so</p>
         $$z_{LP} \ge d^\top y \,/\, v$$
-        <p class="small">At the master duals, that is $z_{RMP} / v$ (lab step 2). On the small instance: 3.44, 3.57, 4.</p>
+        <p class="small">At the master duals, that is $z_{RMP} / v$ (lab step 2). On <span class="ref" data-ref="inst">the small instance</span>: 3.44, 3.57, 4.</p>
         <p class="proof-pointer">why: notes (N)</p>
       </div>
     </div>
     <div>
-      <p class="small">Lab <code>then</code>: <span class="term">early termination</span> when $\lceil\text{bound}\rceil = \lceil z_{RMP}\rceil$, since the integer bound is then known. On the small instance, iteration 1 already has $\lceil 3.57 \rceil = 4$ but $\lceil 4.17 \rceil = 5$, so it can't stop yet.</p>
+      <p class="small">Lab <code>then</code>: <span class="term">early termination</span> when $\lceil\text{bound}\rceil = \lceil z_{RMP}\rceil$, since the integer bound is then known. On <span class="ref" data-ref="inst">the small instance</span>, <span class="ref" data-ref="it1">iteration 1</span> already has $\lceil 3.57 \rceil = 4$ but $\lceil 4.17 \rceil = 5$, so it can't stop yet.</p>
       <table>
         <thead><tr><th class="num">items</th><th class="num">iterations</th><th class="num">could stop at</th></tr></thead>
         <tbody>

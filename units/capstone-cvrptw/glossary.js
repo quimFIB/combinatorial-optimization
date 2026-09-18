@@ -83,7 +83,7 @@ window.GLOSSARY = [
 },
 {
 "term_html": "arc MIP",
-"html": "Binary arc variables, start-time variables, and big-M time rows \\(t_j \\ge t_i + s_i + d_{ij} - M_{ij}(1 - x_{ij})\\) with the smallest valid \\(M_{ij}\\). The time rows rule out subtours but not overloads.",
+"html": "Binary arc variables, start-time variables, and big-M time constraints \\(t_j \\ge t_i + s_i + d_{ij} - M_{ij}(1 - x_{ij})\\) with the smallest valid \\(M_{ij}\\). The time constraints rule out subtours but not overloads.",
 "section": "Four models of one problem",
 "slide": "A compact model whose capacity lives in your cuts",
 "keys": [
@@ -103,7 +103,7 @@ window.GLOSSARY = [
 },
 {
 "term_html": "rounded capacity inequality",
-"html": "\\(x(\\delta^-(S)) \\ge \\lceil q(S)/Q \\rceil\\) for every customer set \\(S\\): at least that many vehicles must enter it. With the right side 1 it is unit 09's subtour row.",
+"html": "\\(x(\\delta^-(S)) \\ge \\lceil q(S)/Q \\rceil\\) for every customer set \\(S\\): at least that many vehicles must enter it. With the right side 1 it is unit 09's subtour constraint.",
 "section": "Four models of one problem",
 "slide": "A compact model whose capacity lives in your cuts",
 "keys": [
@@ -197,7 +197,7 @@ window.GLOSSARY = [
 },
 {
 "term_html": "multiple-circuit constraint",
-"html": "CP-SAT's constraint that arc literals form circuits through a depot visited by many and every other vertex on exactly one. Replaces degree rows and subtour elimination.",
+"html": "CP-SAT's constraint that arc literals form circuits through a depot visited by many and every other vertex on exactly one. Replaces degree constraints and subtour elimination.",
 "section": "Four models of one problem",
 "slide": "A circuit constraint, enforced implications, and a strategy",
 "keys": [

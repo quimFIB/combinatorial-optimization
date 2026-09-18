@@ -28,7 +28,7 @@ Convention throughout: \(\max\{c^\top x : Ax \le b\}\) with
   a centre \(x\) and a positive definite matrix \(P\). /Slide: The update, and
   why the volume shrinks./
 - ellipsoid method :: Start with a ball containing the feasible set. If the
-  centre is infeasible, keep the half on the feasible side of a violated row, wrap
+  centre is infeasible, keep the half on the feasible side of a violated constraint, wrap
   it in the smallest ellipsoid, repeat. Stop when the centre is feasible or the
   ellipsoid is too small to hold the set. /Slide: The idea./
 - central cut :: A cut through the current centre, \(\{a^\top z \le a^\top x\}\),
@@ -61,7 +61,7 @@ Convention throughout: \(\max\{c^\top x : Ax \le b\}\) with
 - barrier function \(f_t\) :: \(f_t(x) = -t\, c^\top x - \sum_i \log(b_i -
   a_i^\top x)\). The parameter \(t\) weighs the objective against the barrier.
 - analytic centre :: The minimizer of the barrier alone (\(t \to 0\)). Depends
-  on the description, not just the shape: a redundant row moves it.
+  on the description, not just the shape: a redundant constraint moves it.
 - central path :: The curve of minimizers \(x^*(t)\) as \(t\) grows, running
   from the analytic centre to an optimal point.
 - Newton's method :: Minimizing \(f_t\) by repeatedly solving with its Hessian
@@ -75,7 +75,7 @@ Convention throughout: \(\max\{c^\top x : Ax \le b\}\) with
   \(A^\top y = c,\ y > 0\). /Slide: Duality comes for free on the path./
 - duality gap on the path :: Exactly \(m/t\). To reach accuracy \(\varepsilon\),
   run until \(t \ge m/\varepsilon\).
-- approximate complementary slackness :: \(y_i s_i = 1/t\) in every row, instead
+- approximate complementary slackness :: \(y_i s_i = 1/t\) for every constraint, instead
   of unit 03's \(y_i s_i = 0\).
 - path following :: Centre at \(t\), multiply \(t\) by \(\mu\), re-centre from
   the previous point. With \(\mu = 1 + 1/\sqrt m\) the total is

@@ -11,6 +11,12 @@
 <link rel="stylesheet" href="../../slides/deck.css">
 </head>
 <body data-trunk="comb">
+<!-- The running example, once: what each <span class="ref"> on the slides shows on hover. -->
+<div class="refs" hidden>
+  <template data-ref="net"><span class="ref-name">the network</span>arcs $s \to a$ 3, $s \to b$ 2, $a \to b$ 1, $a \to t$ 3, $b \to t$ 2 <span class="ref-note">lab step 1's network, capacities on the arcs; max flow 5</span><svg viewBox="5 15 320 205" width="170" aria-hidden="true"><defs><marker id="ref14-n" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" class="fill-ink"/></marker></defs><path d="M60,115 L140,55" fill="none" stroke-width="2" class="ink" marker-end="url(#ref14-n)"/><path d="M60,115 L140,175" fill="none" stroke-width="2" class="ink" marker-end="url(#ref14-n)"/><path d="M160,62 L160,165" fill="none" stroke-width="2" class="ink" marker-end="url(#ref14-n)"/><path d="M170,50 L278,104" fill="none" stroke-width="2" class="ink" marker-end="url(#ref14-n)"/><path d="M170,180 L278,126" fill="none" stroke-width="2" class="ink" marker-end="url(#ref14-n)"/><g class="fill-ground ink" stroke-width="2"><circle cx="45" cy="115" r="18"/><circle cx="155" cy="45" r="18"/><circle cx="155" cy="185" r="18"/><circle cx="295" cy="115" r="18"/></g><g font-size="22" class="mono" text-anchor="middle"><text x="45" y="122">s</text><text x="155" y="52">a</text><text x="155" y="192">b</text><text x="295" y="122">t</text></g><g font-size="20" class="mono"><text x="84" y="72">3</text><text x="80" y="176">2</text><text x="170" y="120">1</text><text x="222" y="64">3</text><text x="222" y="180">2</text></g></svg></template>
+  <template data-ref="cut"><span class="ref-name">a minimum cut</span>$S = \{s, a, b\}$: its leaving arcs $a \to t$ and $b \to t$ have capacity $3 + 2 = 5$ <span class="ref-note">from the first figure; shaded: the source side</span><svg viewBox="5 15 320 205" width="170" aria-hidden="true"><defs><marker id="ref14-c" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" class="fill-ink"/></marker></defs><rect x="10" y="20" width="160" height="195" rx="10" class="fill-soft" style="fill-opacity:.6"/><path d="M60,115 L140,55" fill="none" stroke-width="2" class="ink" marker-end="url(#ref14-c)"/><path d="M60,115 L140,175" fill="none" stroke-width="2" class="ink" marker-end="url(#ref14-c)"/><path d="M160,62 L160,165" fill="none" stroke-width="2" class="ink" marker-end="url(#ref14-c)"/><path d="M170,50 L278,104" fill="none" stroke-width="3.5" class="accent" marker-end="url(#ref14-c)"/><path d="M170,180 L278,126" fill="none" stroke-width="3.5" class="accent" marker-end="url(#ref14-c)"/><g class="fill-ground ink" stroke-width="2"><circle cx="45" cy="115" r="18"/><circle cx="155" cy="45" r="18"/><circle cx="155" cy="185" r="18"/><circle cx="295" cy="115" r="18"/></g><g font-size="22" class="mono" text-anchor="middle"><text x="45" y="122">s</text><text x="155" y="52">a</text><text x="155" y="192">b</text><text x="295" y="122">t</text></g><g font-size="20" class="mono"><text x="84" y="72">3</text><text x="80" y="176">2</text><text x="170" y="120">1</text><text x="222" y="64">3</text><text x="222" y="180">2</text></g></svg></template>
+  <template data-ref="flow"><span class="ref-name">the maximum flow</span>3 on $s \to a \to t$, 2 on $s \to b \to t$: value 5 <span class="ref-note">$(3, 2, 0, 3, 2)$ on $(sa, sb, ab, at, bt)$; arc $a \to b$ unused. Shown as flow/capacity</span><svg viewBox="5 15 320 205" width="170" aria-hidden="true"><defs><marker id="ref14-f" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" class="fill-ink"/></marker></defs><path d="M60,115 L140,55" fill="none" stroke-width="3.5" class="accent" marker-end="url(#ref14-f)"/><path d="M60,115 L140,175" fill="none" stroke-width="3.5" class="accent" marker-end="url(#ref14-f)"/><path d="M160,62 L160,165" fill="none" stroke-width="2" class="ink" marker-end="url(#ref14-f)"/><path d="M170,50 L278,104" fill="none" stroke-width="3.5" class="accent" marker-end="url(#ref14-f)"/><path d="M170,180 L278,126" fill="none" stroke-width="3.5" class="accent" marker-end="url(#ref14-f)"/><g class="fill-ground ink" stroke-width="2"><circle cx="45" cy="115" r="18"/><circle cx="155" cy="45" r="18"/><circle cx="155" cy="185" r="18"/><circle cx="295" cy="115" r="18"/></g><g font-size="22" class="mono" text-anchor="middle"><text x="45" y="122">s</text><text x="155" y="52">a</text><text x="155" y="192">b</text><text x="295" y="122">t</text></g><g font-size="20" class="mono"><text x="84" y="72">3/3</text><text x="80" y="176">2/2</text><text x="170" y="120">0/1</text><text x="222" y="64">3/3</text><text x="222" y="180">2/2</text></g></svg></template>
+</div>
 <div class="reveal"><div class="slides">
 
 <section class="title-slide">
@@ -101,7 +107,7 @@
       <div class="box thm"><span class="label"><span class="term" data-term="weak duality (flows)">weak duality</span></span>
         <p>Every flow's value is at most every cut's capacity.</p>
         <p class="small">Why: value = (flow out of $S$) − (flow into $S$) ≤ capacity out of $S$.</p>
-        <p class="small muted">On the figure: the cut $\{s\}$ has capacity 5, $\{s, a\}$ has $2 + 1 + 3 = 6$, $\{s, a, b\}$ has 5. Any flow is at most 5.</p>
+        <p class="small muted">On the figure: the cut $\{s\}$ has capacity 5, $\{s, a\}$ has $2 + 1 + 3 = 6$, <span class="ref" data-ref="cut">$\{s, a, b\}$</span> has 5. Any flow is at most 5.</p>
       </div>
     </div>
   </div>
@@ -111,7 +117,7 @@
     weak duality, and it is unit 00's certificate pattern once more. A cut is a short
     proof that no flow is larger.</p>
     <p>For this network: arcs s→a (3), s→b (2), a→b (1), a→t (3), b→t (2). The flow
-    sends 3 along s→a→t and 2 along s→b→t, so the a→b arc is unused. The cut {s, a, b}
+    sends 3 along s→a→t and 2 along s→b→t, so the a→b arc is unused. <span class="ref" data-ref="cut">The cut {s, a, b}</span>
     crosses a→t and b→t, capacity 5.</p>
   </aside>
 </section>
@@ -125,7 +131,7 @@
         <p>The maximum flow value equals the minimum cut capacity. With integer capacities there is an integral maximum flow.</p>
       </div>
       <div class="box"><span class="label">why, via the residual graph</span>
-        <p class="small">The <span class="term">residual graph</span> has $u \to v$ with capacity $c - f$ (room to send more) and $v \to u$ with capacity $f$ (room to undo). If $t$ is reachable from $s$, an <span class="term">augmenting path</span> improves the flow. If not, the reachable set $S$ has every leaving arc <span class="term" data-term="saturated arc">saturated</span> and every entering arc empty, so the flow equals $S$'s capacity. The next slide does it on the network.</p>
+        <p class="small">The <span class="term">residual graph</span> has $u \to v$ with capacity $c - f$ (room to send more) and $v \to u$ with capacity $f$ (room to undo). If $t$ is reachable from $s$, an <span class="term">augmenting path</span> improves the flow. If not, the reachable set $S$ has every leaving arc <span class="term" data-term="saturated arc">saturated</span> and every entering arc empty, so the flow equals $S$'s capacity. The next slide does it on <span class="ref" data-ref="net">the network</span>.</p>
       </div>
     </div>
     <div>
@@ -180,7 +186,7 @@
         <text x="84" y="168" font-size="13" class="mono">2</text><text x="164" y="118" font-size="13" class="mono">1</text><text x="232" y="170" font-size="13" class="mono">2</text>
         <text x="10" y="232" font-size="12" class="soft">dashed: backward arcs, the flow that can be undone</text>
       </svg>
-      <p class="cap">Residual graph after the first augmentation, 3 units on $s \to a \to t$. Arcs $s \to a$ and $a \to t$ are gone (saturated); their reverses appear.</p>
+      <p class="cap">Residual graph of <span class="ref" data-ref="net">the network</span> after the first augmentation, 3 units on $s \to a \to t$. Arcs $s \to a$ and $a \to t$ are gone (saturated); their reverses appear.</p>
     </div>
     <div>
       <table>
@@ -193,7 +199,7 @@
       </table>
       <div class="box ex"><span class="label">reading off the certificate</span>
         <p class="small">After step 2, from $s$ the residual graph reaches: $s$ itself; not $a$ ($s \to a$ saturated); not $b$ ($s \to b$ saturated). So $S = \{s\}$, and its leaving arcs $s \to a$, $s \to b$ carry $3 + 2 = 5$ = the flow.</p>
-        <p class="small">The figure's cut $\{s, a, b\}$ is another minimum cut, also 5. The algorithm returns the one on the source side.</p>
+        <p class="small"><span class="ref" data-ref="cut">The earlier cut $\{s, a, b\}$</span> is another minimum cut, also 5. The algorithm returns the one on the source side.</p>
       </div>
     </div>
   </div>
@@ -204,8 +210,8 @@
     Pushing 3 turns $s \to a$ (capacity 3) into residual 0 forward, 3 backward, and the same for
     $a \to t$. <b>Step 2.</b> From $s$ only $s \to b$ has room; from $b$, $b \to t$ has 2 and $b \to a$
     has 0 (the arc $a \to b$ carries no flow yet, so its reverse is empty). Path $s \to b \to t$,
-    bottleneck 2. The final flow is $(3, 2, 0, 3, 2)$ on $(sa, sb, ab, at, bt)$.</p>
-    <p>The backward arcs are not used on this small network. They matter when an early path
+    bottleneck 2. <span class="ref" data-ref="flow">The final flow</span> is $(3, 2, 0, 3, 2)$ on $(sa, sb, ab, at, bt)$.</p>
+    <p>The backward arcs are not used on <span class="ref" data-ref="net">this small network</span>. They matter when an early path
     was a poor choice: had step 1 used $s \to a \to b \to t$ (bottleneck 1), step 2 could send one
     unit along $s \to b \to a \to t$, cancelling that use of $a \to b$. The push–relabel run two
     slides on shows exactly such an undo.</p>
@@ -292,13 +298,13 @@
   <div class="cols">
     <div>
       <div class="box ex"><span class="label">Dinic: one phase is enough</span>
-        <p class="small">BFS levels: $s$ 0, $a$ 1, $b$ 1, $t$ 2. The level graph keeps only arcs going one level up: $s \to a$, $s \to b$, $a \to t$, $b \to t$. Arc $a \to b$ joins two level-1 nodes and is dropped.</p>
+        <p class="small">BFS levels on <span class="ref" data-ref="net">the network</span>: $s$ 0, $a$ 1, $b$ 1, $t$ 2. The level graph keeps only arcs going one level up: $s \to a$, $s \to b$, $a \to t$, $b \to t$. Arc $a \to b$ joins two level-1 nodes and is dropped.</p>
         <p class="small">Blocking flow: DFS sends 3 on $s \to a \to t$, then 2 on $s \to b \to t$. Now every $s$–$t$ path in the level graph has a saturated arc. The next BFS can't reach $t$: done, value 5, in <b>one</b> phase.</p>
       </div>
       <p class="small muted">On a deep layered network, phases take turns: each one raises the $s$–$t$ distance by at least 1.</p>
     </div>
     <div>
-      <p class="small"><b>FIFO push–relabel</b>, heights $h$ and excesses in order $(s, a, b, t)$:</p>
+      <p class="small"><b>FIFO push–relabel</b> on <span class="ref" data-ref="net">the network</span>, heights $h$ and excesses in order $(s, a, b, t)$:</p>
       <table style="font-size:.62em">
         <thead><tr><th>step</th><th>$h$</th><th>excess</th></tr></thead>
         <tbody>
@@ -313,7 +319,7 @@
           <tr><td>push 1 $a \to t$</td><td>4, 1, 2, 0</td><td>−5, 0, 0, <b>5</b></td></tr>
         </tbody>
       </table>
-      <p class="small">No excess left: a maximum flow of 5, same flow as Edmonds–Karp.</p>
+      <p class="small">No excess left: a maximum flow of 5, <span class="ref" data-ref="flow">the same flow as Edmonds–Karp</span>.</p>
     </div>
   </div>
   <p class="viz-link-row"><a class="viz-link" href="explore.html#/2" target="_blank" rel="noopener">explore interactively</a></p>
@@ -327,7 +333,7 @@
     and $a$ sends it on to $t$ through the capacity it still has.</p>
     <p>The undo is the whole point of residual arcs, now inside a different algorithm:
     $a$'s early push to $b$ was a mistake, and heights rising above $a$ are what let $b$ return
-    it. The final flow $(3, 2, 0, 3, 2)$ is the same as Edmonds–Karp's.</p>
+    it. <span class="ref" data-ref="flow">The final flow</span> $(3, 2, 0, 3, 2)$ is the same as Edmonds–Karp's.</p>
     <p><b>Dinic</b> matches the reference <code>dinic</code>: one BFS, a blocking flow of value 5,
     and a second BFS that fails.</p>
   </aside>

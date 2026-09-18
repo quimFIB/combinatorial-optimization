@@ -121,7 +121,7 @@ window.GLOSSARY = [
 },
 {
 "term_html": "TU-preserving operations",
-"html": "Transposing, negating a row or column, permuting, duplicating or deleting rows and columns, appending a unit row or column, and pivoting. A flow model with bound rows stays TU.",
+"html": "Transposing, negating a row or column, permuting, duplicating or deleting rows and columns, appending a unit row or column, and pivoting. A flow model with bound constraints stays TU.",
 "section": "Recognizing TU",
 "slide": "Three families",
 "keys": [
@@ -139,7 +139,7 @@ window.GLOSSARY = [
 },
 {
 "term_html": "TU core with side constraints",
-"html": "A mostly TU model broken by a few extra rows, such as a flow with a budget row. The setting Lagrangian relaxation exploits (unit 11).",
+"html": "A mostly TU model broken by a few extra constraints, such as a flow with a budget constraint. The setting Lagrangian relaxation exploits (unit 11).",
 "section": "Recognizing TU",
 "slide": "Testing by brute force, and why nobody does",
 "keys": [
@@ -211,7 +211,7 @@ window.GLOSSARY = [
 },
 {
 "term_html": "perfect matrix",
-"html": "The clique constraints of a perfect graph; the stable-set LP with clique rows is integral.",
+"html": "The clique constraints of a perfect graph; the stable-set LP with clique constraints is integral.",
 "section": "Where it ends",
 "slide": "Beyond TU",
 "keys": [

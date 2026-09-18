@@ -11,6 +11,24 @@
 <link rel="stylesheet" href="../../slides/deck.css">
 </head>
 <body data-trunk="apx">
+<!-- The running example, once: what each <span class="ref"> on the slides shows on hover. -->
+<div class="refs" hidden>
+  <template data-ref="c5w"><span class="ref-name">the weighted 5-cycle</span>weights $3, 2, 2, 3, 4$ on $v_0, \dots, v_4$ <span class="ref-note">LP 7 (all ½), optimum 8, threshold rounding 14, primal–dual 10</span><svg viewBox="0 0 240 200" width="170" aria-hidden="true"><g class="ink" stroke-width="2"><line x1="120" y1="30" x2="205" y2="90"/><line x1="205" y1="90" x2="172" y2="170"/><line x1="172" y1="170" x2="68" y2="170"/><line x1="68" y1="170" x2="35" y2="90"/><line x1="35" y1="90" x2="120" y2="30"/></g><circle cx="120" cy="30" r="16" class="fill-soft ink" stroke-width="2"/><circle cx="205" cy="90" r="16" class="fill-soft ink" stroke-width="2"/><circle cx="172" cy="170" r="16" class="fill-soft ink" stroke-width="2"/><circle cx="68" cy="170" r="16" class="fill-soft ink" stroke-width="2"/><circle cx="35" cy="90" r="16" class="fill-soft ink" stroke-width="2"/><g class="mono" font-size="16" text-anchor="middle"><text x="120" y="36">3</text><text x="205" y="96">2</text><text x="172" y="176">2</text><text x="68" y="176">3</text><text x="35" y="96">4</text></g><g class="soft" font-size="14" text-anchor="middle"><text x="120" y="12">v0</text><text x="228" y="80">v1</text><text x="196" y="194">v2</text><text x="44" y="194">v3</text><text x="12" y="80">v4</text></g></svg></template>
+  <template data-ref="vopt"><span class="ref-name">the optimal cover</span>$v_0, v_1, v_3$: $3 + 2 + 3 = 8$ <span class="ref-note">the cheapest three vertices touching all five edges (filled)</span><svg viewBox="0 0 240 200" width="170" aria-hidden="true"><g class="ink" stroke-width="2"><line x1="120" y1="30" x2="205" y2="90"/><line x1="205" y1="90" x2="172" y2="170"/><line x1="172" y1="170" x2="68" y2="170"/><line x1="68" y1="170" x2="35" y2="90"/><line x1="35" y1="90" x2="120" y2="30"/></g><circle cx="120" cy="30" r="16" class="fill-unit ink" stroke-width="2"/><circle cx="205" cy="90" r="16" class="fill-unit ink" stroke-width="2"/><circle cx="172" cy="170" r="16" class="fill-soft ink" stroke-width="2"/><circle cx="68" cy="170" r="16" class="fill-unit ink" stroke-width="2"/><circle cx="35" cy="90" r="16" class="fill-soft ink" stroke-width="2"/><g class="mono" font-size="16" text-anchor="middle"><text x="120" y="36">3</text><text x="205" y="96">2</text><text x="172" y="176">2</text><text x="68" y="176">3</text><text x="35" y="96">4</text></g><g class="soft" font-size="14" text-anchor="middle"><text x="120" y="12">v0</text><text x="228" y="80">v1</text><text x="196" y="194">v2</text><text x="44" y="194">v3</text><text x="12" y="80">v4</text></g></svg></template>
+  <template data-ref="vpd"><span class="ref-name">the primal–dual cover</span>$v_0, v_1, v_2, v_3$: $3 + 2 + 2 + 3 = 10$ <span class="ref-note">dual sum 6, so its own certificate says $10 \le 2 \cdot 6$ (filled)</span><svg viewBox="0 0 240 200" width="170" aria-hidden="true"><g class="ink" stroke-width="2"><line x1="120" y1="30" x2="205" y2="90"/><line x1="205" y1="90" x2="172" y2="170"/><line x1="172" y1="170" x2="68" y2="170"/><line x1="68" y1="170" x2="35" y2="90"/><line x1="35" y1="90" x2="120" y2="30"/></g><circle cx="120" cy="30" r="16" class="fill-unit ink" stroke-width="2"/><circle cx="205" cy="90" r="16" class="fill-unit ink" stroke-width="2"/><circle cx="172" cy="170" r="16" class="fill-unit ink" stroke-width="2"/><circle cx="68" cy="170" r="16" class="fill-unit ink" stroke-width="2"/><circle cx="35" cy="90" r="16" class="fill-soft ink" stroke-width="2"/><g class="mono" font-size="16" text-anchor="middle"><text x="120" y="36">3</text><text x="205" y="96">2</text><text x="172" y="176">2</text><text x="68" y="176">3</text><text x="35" y="96">4</text></g><g class="soft" font-size="14" text-anchor="middle"><text x="120" y="12">v0</text><text x="228" y="80">v1</text><text x="196" y="194">v2</text><text x="44" y="194">v3</text><text x="12" y="80">v4</text></g></svg></template>
+  <template data-ref="tri"><span class="ref-name">the three-element example</span>sets $\{0,1\}, \{1,2\}, \{0,2\}$, unit cost <span class="ref-note">each set misses one element; LP $= 1.5$ at $x = \tfrac12$, OPT $= 2$. It is GF(2)<sup>k</sup> with $k = 2$</span></template>
+  <template data-ref="pd4"><span class="ref-name">the 4-cycle instance</span>$S_0 = \{0,1\}$: 3, $\ S_1 = \{1,2\}$: 2, $\ S_2 = \{2,3\}$: 3, $\ S_3 = \{3,0\}$: 2 <span class="ref-note">elements 0–3, set: cost, $f = 2$. Primal–dual buys $S_3, S_0, S_1$ for 7; the optimum $S_1 + S_3$ costs 4</span></template>
+  <template data-ref="S0"><span class="ref-name">set $S_0$</span>$\{0,1\}$, cost 3 <span class="ref-note">bought second, when element 1 raised $y_1$; redundant in the end</span></template>
+  <template data-ref="S1"><span class="ref-name">set $S_1$</span>$\{1,2\}$, cost 2 <span class="ref-note">bought third, when element 2 raised $y_2$; in the optimum</span></template>
+  <template data-ref="S2"><span class="ref-name">set $S_2$</span>$\{2,3\}$, cost 3 <span class="ref-note">never bought</span></template>
+  <template data-ref="S3"><span class="ref-name">set $S_3$</span>$\{3,0\}$, cost 2 <span class="ref-note">bought first, when element 0 raised $y_0$ by 2; in the optimum</span></template>
+  <template data-ref="jv"><span class="ref-name">the instance on a line</span>facilities A at 0 and B at 10, opening cost 4 each; clients at 1, 2, 9 <span class="ref-note">distance is the gap on the line. Optimum: open both, cost 12</span><svg viewBox="0 10 360 95" width="200" aria-hidden="true"><line x1="20" y1="60" x2="340" y2="60" class="rule" stroke-width="2"/><rect x="12" y="50" width="16" height="20" class="fill-unit ink" stroke-width="1.5"/><rect x="332" y="50" width="16" height="20" class="fill-unit ink" stroke-width="1.5"/><circle cx="52" cy="60" r="7" class="fill-accent"/><circle cx="84" cy="60" r="7" class="fill-accent"/><circle cx="308" cy="60" r="7" class="fill-accent"/><g font-size="16" class="mono" text-anchor="middle"><text x="24" y="96">A: 0</text><text x="336" y="96">B: 10</text><text x="52" y="38">c₀: 1</text><text x="96" y="22">c₁: 2</text><text x="308" y="38">c₂: 9</text></g></svg></template>
+  <template data-ref="A"><span class="ref-name">facility A</span>at position 0, opening cost 4 <span class="ref-note">fully paid by $c_0$ and $c_1$ at time 3.5: opens then</span></template>
+  <template data-ref="B"><span class="ref-name">facility B</span>at position 10, opening cost 4 <span class="ref-note">fully paid by $c_2$ alone at time 5: opens then</span></template>
+  <template data-ref="c0"><span class="ref-name">client $c_0$</span>at position 1: 1 from A, 9 from B <span class="ref-note">pays A from time 1; freezes at $\alpha = 3.5$</span></template>
+  <template data-ref="c1"><span class="ref-name">client $c_1$</span>at position 2: 2 from A, 8 from B <span class="ref-note">pays A from time 2; freezes at $\alpha = 3.5$</span></template>
+  <template data-ref="c2"><span class="ref-name">client $c_2$</span>at position 9: 9 from A, 1 from B <span class="ref-note">pays B from time 1; freezes at $\alpha = 5$</span></template>
+</div>
 <div class="reveal"><div class="slides">
 
 <section class="title-slide">
@@ -27,9 +45,9 @@
     primal–dual compares against a dual feasible solution it builds itself. Weak duality makes both
     lower bounds on OPT.</p>
     <h4>How to read this deck</h4>
-    <p>Every method is run once on something small enough to check by hand: a weighted 5-cycle for
-    threshold rounding and primal–dual vertex cover, three sets on three elements for randomized
-    rounding, four sets on a 4-cycle for primal–dual set cover, and two facilities on a line for
+    <p>Every method is run once on something small enough to check by hand: <span class="ref" data-ref="c5w">a weighted 5-cycle</span> for
+    threshold rounding and primal–dual vertex cover, <span class="ref" data-ref="tri">three sets on three elements</span> for randomized
+    rounding, <span class="ref" data-ref="pd4">four sets on a 4-cycle</span> for primal–dual set cover, and <span class="ref" data-ref="jv">two facilities on a line</span> for
     Jain–Vazirani. All numbers come from the lab's reference solution. The longer analyses (the
     factor 3 of Jain–Vazirani, the Markov step) are in the notes under <b>Full proof</b>.</p>
   </aside>
@@ -165,10 +183,10 @@
     $14/2 = 7$, and no cheaper fractional cover exists for these weights. The reference
     <code>vertex_cover_lp</code> with weights $(3,2,2,3,4)$ returns value 7 at all halves.</p>
     <p><b>The optimum.</b> A cover of an odd cycle needs 3 vertices. The cheapest triple that
-    touches all five edges is $v_0, v_1, v_3$: $3 + 2 + 3 = 8$ (it covers $v_0v_1, v_1v_2, v_2v_3,
+    touches all five edges is <span class="ref" data-ref="vopt"><i>v</i><sub>0</sub>, <i>v</i><sub>1</sub>, <i>v</i><sub>3</sub></span>: $3 + 2 + 3 = 8$ (it covers $v_0v_1, v_1v_2, v_2v_3,
     v_3v_4, v_4v_0$).</p>
     <p><b>Primal–dual</b> treats vertices as sets and edges as elements. It raises the edge duals
-    in order and buys $v_0, v_1, v_2, v_3$ for 10, with dual sum 6 ($y = (2, 0, 2, 1, 1)$ on edges
+    in order and buys <span class="ref" data-ref="vpd"><i>v</i><sub>0</sub>, <i>v</i><sub>1</sub>, <i>v</i><sub>2</sub>, <i>v</i><sub>3</sub></span> for 10, with dual sum 6 ($y = (2, 0, 2, 1, 1)$ on edges
     $v_0v_1, \dots, v_4v_0$), so its own certificate says $10 \le 2 \cdot 6$.</p>
   </aside>
 </section>
@@ -310,30 +328,30 @@
       <table>
         <thead><tr><th>element</th><th>sets, still unpaid</th><th class="num">raise $y$ by</th><th>tight, buy</th></tr></thead>
         <tbody>
-          <tr><td>0</td><td>$S_0$: 3, $S_3$: 2</td><td class="num">2</td><td>$S_3$ (covers 3, 0)</td></tr>
-          <tr><td>1</td><td>$S_0$: 1, $S_1$: 2</td><td class="num">1</td><td>$S_0$ (covers 0, 1)</td></tr>
-          <tr><td>2</td><td>$S_1$: 1, $S_2$: 3</td><td class="num">1</td><td>$S_1$ (covers 1, 2)</td></tr>
+          <tr><td>0</td><td><span class="ref" data-ref="S0"><i>S</i><sub>0</sub></span>: 3, <span class="ref" data-ref="S3"><i>S</i><sub>3</sub></span>: 2</td><td class="num">2</td><td><span class="ref" data-ref="S3"><i>S</i><sub>3</sub></span> (covers 3, 0)</td></tr>
+          <tr><td>1</td><td><span class="ref" data-ref="S0"><i>S</i><sub>0</sub></span>: 1, <span class="ref" data-ref="S1"><i>S</i><sub>1</sub></span>: 2</td><td class="num">1</td><td><span class="ref" data-ref="S0"><i>S</i><sub>0</sub></span> (covers 0, 1)</td></tr>
+          <tr><td>2</td><td><span class="ref" data-ref="S1"><i>S</i><sub>1</sub></span>: 1, <span class="ref" data-ref="S2"><i>S</i><sub>2</sub></span>: 3</td><td class="num">1</td><td><span class="ref" data-ref="S1"><i>S</i><sub>1</sub></span> (covers 1, 2)</td></tr>
           <tr><td>3</td><td colspan="3" class="muted">already covered</td></tr>
         </tbody>
       </table>
     </div>
     <div>
       <div class="box ex"><span class="label">the bill</span>
-        <p class="small">Bought $S_3, S_0, S_1$: cost $2 + 3 + 2 = 7$.</p>
+        <p class="small">Bought <span class="ref" data-ref="S3"><i>S</i><sub>3</sub></span>, <span class="ref" data-ref="S0"><i>S</i><sub>0</sub></span>, <span class="ref" data-ref="S1"><i>S</i><sub>1</sub></span>: cost $2 + 3 + 2 = 7$.</p>
         <p class="small">Dual $y = (2, 1, 1, 0)$, sum 4, feasible: each set's elements pay at most its cost. So $\mathrm{OPT} \ge 4$.</p>
-        <p class="small">Guarantee $7 \le f \cdot 4 = 8$ ✓. Optimum: $S_1 + S_3$ covers everything for <b>4</b>.</p>
+        <p class="small">Guarantee $7 \le f \cdot 4 = 8$ ✓. Optimum: <span class="ref" data-ref="S1"><i>S</i><sub>1</sub></span> $+$ <span class="ref" data-ref="S3"><i>S</i><sub>3</sub></span> covers everything for <b>4</b>.</p>
       </div>
-      <p class="small">$S_0$ was bought and turned out redundant: $S_3$ and $S_1$ already cover 0 and 1. Primal–dual has no clean-up step here; Steiner forest's reverse delete is exactly such a step.</p>
+      <p class="small"><span class="ref" data-ref="S0"><i>S</i><sub>0</sub></span> was bought and turned out redundant: <span class="ref" data-ref="S3"><i>S</i><sub>3</sub></span> and <span class="ref" data-ref="S1"><i>S</i><sub>1</sub></span> already cover 0 and 1. Primal–dual has no clean-up step here; Steiner forest's reverse delete is exactly such a step.</p>
     </div>
   </div>
   <p class="viz-link-row"><a class="viz-link" href="explore.html#/2" target="_blank" rel="noopener">explore interactively</a></p>
   <aside class="notes">
-    <p><b>Step by step.</b> Element 0 is in $S_0$ (unpaid 3) and $S_3$ (unpaid 2): raise $y_0$ by 2,
-    $S_3$ is tight, buy it. $S_0$ now has 1 unpaid. Element 1 is in $S_0$ (1 unpaid) and $S_1$ (2):
-    raise $y_1$ by 1, $S_0$ tight, buy. $S_1$ has 1 left. Element 2 is in $S_1$ (1) and $S_2$ (3): raise
-    by 1, buy $S_1$. Element 3 is covered by $S_3$.</p>
+    <p><b>Step by step.</b> Element 0 is in <span class="ref" data-ref="S0"><i>S</i><sub>0</sub></span> (unpaid 3) and <span class="ref" data-ref="S3"><i>S</i><sub>3</sub></span> (unpaid 2): raise $y_0$ by 2,
+    <span class="ref" data-ref="S3"><i>S</i><sub>3</sub></span> is tight, buy it. <span class="ref" data-ref="S0"><i>S</i><sub>0</sub></span> now has 1 unpaid. Element 1 is in <span class="ref" data-ref="S0"><i>S</i><sub>0</sub></span> (1 unpaid) and <span class="ref" data-ref="S1"><i>S</i><sub>1</sub></span> (2):
+    raise $y_1$ by 1, <span class="ref" data-ref="S0"><i>S</i><sub>0</sub></span> tight, buy. <span class="ref" data-ref="S1"><i>S</i><sub>1</sub></span> has 1 left. Element 2 is in <span class="ref" data-ref="S1"><i>S</i><sub>1</sub></span> (1) and <span class="ref" data-ref="S2"><i>S</i><sub>2</sub></span> (3): raise
+    by 1, buy <span class="ref" data-ref="S1"><i>S</i><sub>1</sub></span>. Element 3 is covered by <span class="ref" data-ref="S3"><i>S</i><sub>3</sub></span>.</p>
     <p><b>Relaxed complementary slackness, seen.</b> Every bought set is tight (primal CS exact).
-    But $y_1 = 1 &gt; 0$ while element 1 is covered twice, by $S_0$ and $S_1$: dual CS fails, within the
+    But $y_1 = 1 &gt; 0$ while element 1 is covered twice, by <span class="ref" data-ref="S0"><i>S</i><sub>0</sub></span> and <span class="ref" data-ref="S1"><i>S</i><sub>1</sub></span>: dual CS fails, within the
     factor $f = 2$. The reference <code>primal_dual_set_cover</code> returns $x = (1, 1, 0, 1)$ and
     $y = (2, 1, 1, 0)$.</p>
   </aside>
@@ -405,10 +423,10 @@
       <table>
         <thead><tr><th class="num">time</th><th>event</th></tr></thead>
         <tbody>
-          <tr><td class="num">1</td><td>$c_0$ reaches A, $c_2$ reaches B: both start paying</td></tr>
-          <tr><td class="num">2</td><td>$c_1$ reaches A; A now collects $(t-1) + (t-2)$</td></tr>
-          <tr><td class="num">3.5</td><td>A has collected $2.5 + 1.5 = 4$: <b>opens</b>; $c_0, c_1$ freeze at $\alpha = 3.5$</td></tr>
-          <tr><td class="num">5</td><td>B has collected $5 - 1 = 4$ from $c_2$: <b>opens</b>; $c_2$ freezes at $\alpha = 5$</td></tr>
+          <tr><td class="num">1</td><td><span class="ref" data-ref="c0"><i>c</i><sub>0</sub></span> reaches <span class="ref" data-ref="A">A</span>, <span class="ref" data-ref="c2"><i>c</i><sub>2</sub></span> reaches <span class="ref" data-ref="B">B</span>: both start paying</td></tr>
+          <tr><td class="num">2</td><td><span class="ref" data-ref="c1"><i>c</i><sub>1</sub></span> reaches A; A now collects $(t-1) + (t-2)$</td></tr>
+          <tr><td class="num">3.5</td><td>A has collected $2.5 + 1.5 = 4$: <b>opens</b>; <span class="ref" data-ref="c0"><i>c</i><sub>0</sub></span>, <span class="ref" data-ref="c1"><i>c</i><sub>1</sub></span> freeze at $\alpha = 3.5$</td></tr>
+          <tr><td class="num">5</td><td>B has collected $5 - 1 = 4$ from <span class="ref" data-ref="c2"><i>c</i><sub>2</sub></span>: <b>opens</b>; $c_2$ freezes at $\alpha = 5$</td></tr>
         </tbody>
       </table>
       <div class="box ex"><span class="label">the result</span>
@@ -420,9 +438,9 @@
   <aside class="notes">
     <p><b>The ascent.</b> Every $\alpha$ grows with time $t$ until it freezes. A client pays a
     facility $\max(0, \alpha_j - d_{ij})$. A's receipts after time 2 are $(t - 1) + (t - 2) = 2t - 3$,
-    which reaches 4 at $t = 3.5$. At that moment $c_0$ and $c_1$ are within reach of the open A, so they
-    freeze. $c_2$ is 9 away from A, so it keeps growing and pays only B: $t - 1 = 4$ at $t = 5$.</p>
-    <p><b>Pruning.</b> $c_0$ and $c_1$ pay only A ($3.5 &lt; 9, 8$), $c_2$ pays only B ($5 &lt; 9$). No
+    which reaches 4 at $t = 3.5$. At that moment <span class="ref" data-ref="c0"><i>c</i><sub>0</sub></span> and <span class="ref" data-ref="c1"><i>c</i><sub>1</sub></span> are within reach of the open A, so they
+    freeze. <span class="ref" data-ref="c2"><i>c</i><sub>2</sub></span> is 9 away from A, so it keeps growing and pays only B: $t - 1 = 4$ at $t = 5$.</p>
+    <p><b>Pruning.</b> <span class="ref" data-ref="c0"><i>c</i><sub>0</sub></span> and <span class="ref" data-ref="c1"><i>c</i><sub>1</sub></span> pay only A ($3.5 &lt; 9, 8$), <span class="ref" data-ref="c2"><i>c</i><sub>2</sub></span> pays only B ($5 &lt; 9$). No
     conflicts, both kept. Brute force over the three open sets gives $\{A\}$: $4 + 1 + 2 + 9 = 16$;
     $\{B\}$: $4 + 9 + 8 + 1 = 22$; both: 12. On bigger instances the pruning step does real work, and
     the factor 3 is paid only there.</p>
@@ -474,7 +492,7 @@
         <p class="small">$\sup_I \mathrm{OPT}(I) / \mathrm{LP}(I)$ for minimisation. An algorithm proved via $\mathrm{ALG} \le \rho\,\mathrm{LP}$ has $\rho \ge$ the gap, since it can't beat OPT on the worst instance.</p>
       </div>
       <p class="small"><b><span class="term" data-term="gap instance">Gap instances</span>. Vertex cover, $K_n$.</b> All ½ gives $n/2$. Two uncovered vertices leave their edge uncovered, so $\mathrm{OPT} = n - 1$. Gap $2 - 2/n$.</p>
-      <p class="small"><b>Set cover, <span class="term" data-term="GF(2)^k family">GF(2)<sup>k</sup></span>.</b> The smallest case, $k = 2$: three sets on three elements, each set missing one element; LP 1.5, OPT 2: the three-element example of section 1. Elements and sets are the nonzero vectors; set $v$ holds $\{u : u \cdot v = 1\}$. Every set has $2^{k-1}$ elements, so $x = 2^{1-k}$ gives LP $&lt; 2$. Sets $v_1, \dots, v_r$ miss every nonzero $u$ orthogonal to all of them, so $\mathrm{OPT} = k$.</p>
+      <p class="small"><b>Set cover, <span class="term" data-term="GF(2)^k family">GF(2)<sup>k</sup></span>.</b> The smallest case, $k = 2$: three sets on three elements, each set missing one element; LP 1.5, OPT 2: <span class="ref" data-ref="tri">the three-element example</span> of section 1. Elements and sets are the nonzero vectors; set $v$ holds $\{u : u \cdot v = 1\}$. Every set has $2^{k-1}$ elements, so $x = 2^{1-k}$ gives LP $&lt; 2$. Sets $v_1, \dots, v_r$ miss every nonzero $u$ orthogonal to all of them, so $\mathrm{OPT} = k$.</p>
     </div>
     <div>
       <table class="dense">

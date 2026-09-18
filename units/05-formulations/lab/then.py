@@ -24,7 +24,7 @@ def models(F, C):
         ("UFL aggregated, M = 10C", lab.ufl_aggregated(ufl, 10 * C)),
         ("UFL aggregated, M = C", lab.ufl_aggregated(ufl, C)),
         ("UFL disaggregated", lab.ufl_disaggregated(ufl)),
-        ("CFL capacity rows only", lab.cfl(cap, False)),
+        ("CFL capacity constraints only", lab.cfl(cap, False)),
         ("CFL + linking + cover", lab.cfl(cap, True)),
     ]
 

@@ -177,7 +177,7 @@ window.GLOSSARY = [
 },
 {
 "term_html": "matroid polytope",
-"html": "\\(P(M) = \\{x \\ge 0 : \\sum_{e \\in S} x_e \\le r(S)\\ \\forall S \\subseteq E\\}\\), the convex hull of the independent sets (Edmonds 1970). TDI, with exponentially many rows.",
+"html": "\\(P(M) = \\{x \\ge 0 : \\sum_{e \\in S} x_e \\le r(S)\\ \\forall S \\subseteq E\\}\\), the convex hull of the independent sets (Edmonds 1970). TDI, with exponentially many constraints.",
 "section": "Greedy and matroids",
 "slide": "The matroid polytope",
 "keys": [

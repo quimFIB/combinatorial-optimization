@@ -41,7 +41,7 @@
     each remaining group is attached), takes the last group's attachment as a candidate cut
     (red edges), and merges the last two groups (shaded bands).</p>
     <p>On the six cities the best cut is $\{3, 4, 5\}$ with weight 1: below 2, so the subtour
-    row for that set is violated even though every degree is 2 and the support graph is
+    constraint for that set is violated even though every degree is 2 and the support graph is
     connected. Recorded by <code>slides/viz/traces/u09.py</code>, which copies the reference
     <code>min_cut</code> loop with a record of every step and checks its result against the
     reference function.</p>
@@ -55,10 +55,10 @@
   <p class="small muted">Try: drag y inside and outside the square; switch to the triangle and the hexagon. Static version: <a href="slides.html#/5">a square and its polar</a>.</p>
   <aside class="notes">
     <p><b>What it shows.</b> For $P = \{x : a_i \cdot x \le 1\}$ the polar $P^\circ$ is the convex
-    hull of the rows $a_i$. Deciding whether $y$ is in $P$, and finding a violated row if not,
-    is maximizing $a \cdot y$ over $P^\circ$: the best vertex is the most violated row. On the
+    hull of the rows $a_i$. Deciding whether $y$ is in $P$, and finding a violated constraint if not,
+    is maximizing $a \cdot y$ over $P^\circ$: the best vertex is the most violated constraint. On the
     right, the dashed line $\{a : a \cdot y = 1\}$ keeps all of $P^\circ$ on one side exactly when
-    $y \in P$. Everything is computed in the page from the rows written in this file.</p>
+    $y \in P$. Everything is computed in the page from the constraints written in this file.</p>
   </aside>
 </section>
 

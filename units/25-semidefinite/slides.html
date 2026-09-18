@@ -11,6 +11,12 @@
 <link rel="stylesheet" href="../../slides/deck.css">
 </head>
 <body data-trunk="apx">
+<!-- The running example, once: what each <span class="ref"> on the slides shows on hover. -->
+<div class="refs" hidden>
+  <template data-ref="X"><span class="ref-name">the matrix $X$</span>$X = \begin{pmatrix} 1 &amp; -\tfrac12 \\ -\tfrac12 &amp; 1 \end{pmatrix}$ <span class="ref-note">PSD: eigenvalues $\tfrac12$ and $\tfrac32$. The Gram matrix of two unit vectors at 120°</span></template>
+  <template data-ref="C5"><span class="ref-name">the 5-cycle $C_5$</span>vertices $0, \dots, 4$; edges $01, 12, 23, 34, 40$ <span class="ref-note">Max-Cut OPT 4 (an odd cycle loses one edge); $\alpha = 2$, $\vartheta = \sqrt5$, $\chi(\bar C_5) = 3$</span></template>
+  <template data-ref="vecs"><span class="ref-name">the SDP vectors for $C_5$</span>$v_k$ at $k \times 144°$: neighbours 144° apart <span class="ref-note">SDP 4.5225, E[GW] 4.0000 = OPT. Dashed: one hyperplane, cutting 4 edges</span><svg viewBox="30 20 210 210" width="170" aria-hidden="true"><circle cx="130" cy="125" r="90" fill="none" class="rule" stroke-width="2"/><line x1="112.6" y1="26.5" x2="147.4" y2="223.5" class="accent" stroke-width="3" stroke-dasharray="8 5"/><g stroke-width="4"><line x1="130" y1="125" x2="220" y2="125" class="accent"/><line x1="130" y1="125" x2="57.2" y2="72.1" class="ink"/><line x1="130" y1="125" x2="157.8" y2="210.6" class="accent"/><line x1="130" y1="125" x2="157.8" y2="39.4" class="accent"/><line x1="130" y1="125" x2="57.2" y2="177.9" class="ink"/></g><g font-size="20" text-anchor="middle" class="mono"><text x="222" y="112">v₀</text><text x="52" y="60">v₁</text><text x="178" y="220">v₂</text><text x="176" y="44">v₃</text><text x="52" y="204">v₄</text></g></svg></template>
+</div>
 <div class="reveal"><div class="slides">
 
 <section class="title-slide">
@@ -27,8 +33,8 @@
     an interior-point method, and unit 04 is where you met them. Nothing from lazy clause generation is
     used.</p>
     <h4>How to read this deck</h4>
-    <p>The 5-cycle $C_5$ carries the unit: its SDP vectors are drawn and cut by one hyperplane, and its
-    theta number is squeezed between two integers you can check by hand. A 2×2 matrix shows what PSD
+    <p><span class="ref" data-ref="C5">The 5-cycle</span> $C_5$ carries the unit: <span class="ref" data-ref="vecs">its SDP vectors</span> are drawn and cut by one hyperplane, and its
+    theta number is squeezed between two integers you can check by hand. <span class="ref" data-ref="X">A 2×2 matrix</span> shows what PSD
     means before any of that. Every value was computed with the lab's reference solution (CLARABEL
     through cvxpy). The analysis of the constant 0.878 is on the slide as an idea, with the
     calculation in the notes.</p>
@@ -124,7 +130,7 @@
   <aside class="notes">
     <p>The eigenvalues of $\begin{pmatrix}1 & c\\ c & 1\end{pmatrix}$ are $1 + c$ and $1 - c$, both
     nonnegative exactly when $|c| \le 1$. For $c = -\tfrac12$: $\tfrac12, \tfrac32$; for $c = 2$: $3, -1$.</p>
-    <p>The reference <code>vectors_from_gram</code> on $X$ returns $(-0.5, -0.866)$ and $(-0.5, 0.866)$:
+    <p>The reference <code>vectors_from_gram</code> on <span class="ref" data-ref="X"><i>X</i></span> returns $(-0.5, -0.866)$ and $(-0.5, 0.866)$:
     a rotated copy of the vectors on the slide, still at 120°. Factorizations are unique only up to
     rotation, which is exactly why the random hyperplane has to be uniform.</p>
     <p>Why the 3×3 case already goes beyond cosines: three unit vectors can't be pairwise at 180°.
@@ -264,7 +270,7 @@
         <li><b>Expected GW: 0.956–0.962</b> of OPT, far above 0.878.</li>
         <li><b>Single hyperplanes vary</b>: one cut only 0.752 of OPT. The theorem is about the expectation.</li>
         <li><b>The <span class="term">edge LP</span> is useless</b>: $x = \tfrac12$ makes every $z_e = 1$.</li>
-        <li><b>The <span class="term" data-term="triangle (metric) LP">triangle LP</span> beat the SDP</b> on these small graphs (exact to three decimals). But all $z = \tfrac23$ is feasible for it, so on large dense random graphs it's stuck at ⅔ of the total weight, while the optimum tends to ½. It also needs $4\binom{n}{3}$ rows.</li>
+        <li><b>The <span class="term" data-term="triangle (metric) LP">triangle LP</span> beat the SDP</b> on these small graphs (exact to three decimals). But all $z = \tfrac23$ is feasible for it, so on large dense random graphs it's stuck at ⅔ of the total weight, while the optimum tends to ½. It also needs $4\binom{n}{3}$ constraints.</li>
       </ul>
     </div>
   </div>
@@ -285,7 +291,7 @@
     <div>
       <p class="small">The <span class="term">three senses of tightness</span>:</p>
       <div class="box def"><span class="label">1 · the analysis is tight per edge</span>
-        <p class="small">Rounding recovers $\frac{\theta/\pi}{(1-\cos\theta)/2}$ of each edge's SDP value. On C₅ the SDP vectors sit 144° apart: SDP 4.5225, E[GW] 4.0000, ratio <b>0.8845</b>. Graphs whose vectors sit at 133.6° attain α (Karloff 1999).</p>
+        <p class="small">Rounding recovers $\frac{\theta/\pi}{(1-\cos\theta)/2}$ of each edge's SDP value. On C₅ <span class="ref" data-ref="vecs">the SDP vectors</span> sit 144° apart: SDP 4.5225, E[GW] 4.0000, ratio <b>0.8845</b>. Graphs whose vectors sit at 133.6° attain α (Karloff 1999).</p>
       </div>
       <div class="box def"><span class="label">2 · the relaxation has that gap</span>
         <p class="small">Feige & Schechtman (2002): graphs on points of a high-dimensional sphere, joined when their angle is about 133.6°, with OPT / SDP → α. No rounding of <b>this SDP</b> can beat α.</p>
@@ -300,7 +306,7 @@
         <tbody>
           <tr><td>90°</td><td class="num">1.0000</td></tr>
           <tr><td>133.56° (worst)</td><td class="num">0.8786</td></tr>
-          <tr><td>144° (C₅)</td><td class="num">0.8845</td></tr>
+          <tr><td>144° (<span class="ref" data-ref="vecs">C₅</span>)</td><td class="num">0.8845</td></tr>
           <tr><td>180°</td><td class="num">1.0000</td></tr>
         </tbody>
       </table>
@@ -313,7 +319,7 @@
     rounding scheme can do better against it. (3) No polynomial-time algorithm at all can do better,
     under a complexity assumption. Unit 24's integrality gaps were type (2), and unit 22's hardness
     results were type (3).</p>
-    <p>C₅ has OPT = 4 = E[GW] exactly: every hyperplane through five vectors at 144° spacing cuts 4 of
+    <p><span class="ref" data-ref="C5">C₅</span> has OPT = 4 = E[GW] exactly: every hyperplane through five vectors at 144° spacing cuts 4 of
     the 5 edges. The gap there is entirely between the SDP and OPT.</p>
   </aside>
 </section>
@@ -340,7 +346,7 @@
       <table class="dense">
         <thead><tr><th>graph</th><th class="num">α</th><th class="num">θ</th><th class="num">χ(Ḡ)</th></tr></thead>
         <tbody>
-          <tr><td>C₅</td><td class="num">2</td><td class="num">2.2361</td><td class="num">3</td></tr>
+          <tr><td><span class="ref" data-ref="C5">C₅</span></td><td class="num">2</td><td class="num">2.2361</td><td class="num">3</td></tr>
           <tr><td>C₇</td><td class="num">3</td><td class="num">3.3177</td><td class="num">4</td></tr>
           <tr><td>Petersen</td><td class="num">4</td><td class="num">4.0000</td><td class="num">5</td></tr>
           <tr><td>5-cube</td><td class="num">16</td><td class="num">16.0000</td><td class="num">16</td></tr>
@@ -371,18 +377,18 @@
   <div class="cols">
     <div>
       <div class="box ex"><span class="label">independence number: 2</span>
-        <p class="small">$\{0, 2\}$ has no edge. Three vertices of a 5-cycle always include two neighbours. So $\alpha(C_5) = 2$.</p>
+        <p class="small">$\{0, 2\}$ has no edge. Three vertices of <span class="ref" data-ref="C5">a 5-cycle</span> always include two neighbours. So $\alpha(C_5) = 2$.</p>
         <p class="small">It feeds theta a feasible matrix: $X = \tfrac12 \mathbf 1_S \mathbf 1_S^\top$ with $S = \{0,2\}$ has trace 1, is 0 on every edge, is PSD, and its entries sum to <b>2</b>.</p>
       </div>
       <div class="box ex"><span class="label">clique cover number: 3</span>
-        <p class="small">The cliques of $C_5$ are its edges and vertices. Cover the 5 vertices with $\{0,1\}, \{2,3\}, \{4\}$: 3 cliques. Two can't do it, since each covers at most 2 vertices. So $\chi(\bar C_5) = 3$.</p>
+        <p class="small">The cliques of <span class="ref" data-ref="C5">C₅</span> are its edges and vertices. Cover the 5 vertices with $\{0,1\}, \{2,3\}, \{4\}$: 3 cliques. Two can't do it, since each covers at most 2 vertices. So $\chi(\bar C_5) = 3$.</p>
       </div>
     </div>
     <div>
       <p class="small">The sandwich for $C_5$:</p>
       $$2 \;\le\; \vartheta(C_5) = \sqrt5 = 2.2361 \;\le\; 3$$
       <p class="small">θ lands strictly between, so $C_5$ is <b>not perfect</b>: the two NP-hard numbers differ, and the SDP says exactly how far apart the truth could be.</p>
-      <p class="small">Compare the 5-cycle's Max-Cut on the previous slides: the same odd cycle, a different SDP, and again a gap caused by oddness.</p>
+      <p class="small">Compare <span class="ref" data-ref="vecs">the 5-cycle's Max-Cut</span> on the previous slides: the same odd cycle, a different SDP, and again a gap caused by oddness.</p>
     </div>
   </div>
   <aside class="notes">

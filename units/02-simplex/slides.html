@@ -18,6 +18,14 @@
 </style>
 </head>
 <body data-trunk="lp">
+<!-- The running example, once: what each <span class="ref"> on the slides shows on hover. -->
+<div class="refs" hidden>
+  <template data-ref="LP"><span class="ref-name">the running example</span>$\max\ 2x + y$ s.t. $x + y \le 4,\ \ x - y \le 1,\ \ x, y \ge 0$ <span class="ref-note">unit 01's polygon, slacks $s_1, s_2$. Optimum $(2.5, 1.5)$, $z = 6.5$</span><svg viewBox="20 20 350 320" width="170" aria-hidden="true"><line x1="60" y1="24" x2="60" y2="336" class="rule" stroke-width="2"/><line x1="24" y1="300" x2="366" y2="300" class="rule" stroke-width="2"/><polygon points="60,300 120,300 210,210 60,60" class="fill-soft unit" stroke-width="3"/><circle cx="60" cy="300" r="8" class="fill-ink"/><text x="22" y="326" font-size="24">(0,0)</text><circle cx="120" cy="300" r="8" class="fill-ink"/><text x="120" y="326" font-size="24">(1,0)</text><circle cx="210" cy="210" r="11" class="fill-accent"/><text x="222" y="216" font-size="24">(2.5,1.5)</text><circle cx="60" cy="60" r="8" class="fill-ink"/><text x="72" y="66" font-size="24">(0,4)</text></svg></template>
+  <template data-ref="s1"><span class="ref-name">slack $s_1$</span>$x + y + s_1 = 4$ <span class="ref-note">$s_1 = 0$ on the edge $x + y = 4$ (unit 01's constraint 3), shadow price $3/2$</span><svg viewBox="20 20 350 320" width="170" aria-hidden="true"><line x1="60" y1="24" x2="60" y2="336" class="rule" stroke-width="2"/><line x1="24" y1="300" x2="366" y2="300" class="rule" stroke-width="2"/><polygon points="60,300 120,300 210,210 60,60" class="fill-soft unit" stroke-width="3"/><line x1="30" y1="30" x2="330" y2="330" class="accent" stroke-width="5"/></svg></template>
+  <template data-ref="s2"><span class="ref-name">slack $s_2$</span>$x - y + s_2 = 1$ <span class="ref-note">$s_2 = 0$ on the edge $x - y = 1$ (unit 01's constraint 4), shadow price $1/2$</span><svg viewBox="20 20 350 320" width="170" aria-hidden="true"><line x1="60" y1="24" x2="60" y2="336" class="rule" stroke-width="2"/><line x1="24" y1="300" x2="366" y2="300" class="rule" stroke-width="2"/><polygon points="60,300 120,300 210,210 60,60" class="fill-soft unit" stroke-width="3"/><line x1="90" y1="330" x2="360" y2="60" class="accent" stroke-width="5"/></svg></template>
+  <template data-ref="c5"><span class="ref-name">unit 01's constraint 5</span>$3x - y \le 6$, slack $s_5$ <span class="ref-note">cuts nothing off, but passes through $(2.5, 1.5)$: three walls meet there</span><svg viewBox="20 20 350 320" width="170" aria-hidden="true"><line x1="60" y1="24" x2="60" y2="336" class="rule" stroke-width="2"/><line x1="24" y1="300" x2="366" y2="300" class="rule" stroke-width="2"/><polygon points="60,300 120,300 210,210 60,60" class="fill-soft unit" stroke-width="3"/><line x1="168" y1="336" x2="246" y2="102" class="accent" stroke-width="5"/></svg></template>
+  <template data-ref="beale"><span class="ref-name">Beale's example</span>$\max\ \tfrac34 x_1 - 20x_2 + \tfrac12 x_3 - 6x_4$<br>$\tfrac14 x_1 - 8x_2 - x_3 + 9x_4 \le 0$<br>$\tfrac12 x_1 - 12x_2 - \tfrac12 x_3 + 3x_4 \le 0$<br>$x_3 \le 1,\ \ x \ge 0$ <span class="ref-note">Dantzig's rule cycles back to the start after 6 pivots; Bland's reaches the optimum $\tfrac54$ at $(1, 0, 1, 0)$</span></template>
+</div>
 <div class="reveal"><div class="slides">
 
 <!-- ================================================================== -->
@@ -42,8 +50,8 @@
     <p>Convention for the whole unit: $\max\{c^\top x : Ax \le b,\ x \ge 0\}$,
     $A \in \mathbb{Q}^{m\times n}$, with slacks $s = b - Ax \ge 0$.</p>
     <h4>How to read this deck</h4>
-    <p>The running example is unit 01's polygon, maximizing $2x + y$: its rows
-    $x + y \le 4$ and $x - y \le 1$ get slacks $s_1$ and $s_2$ (rows 1 and 2 of unit 01,
+    <p>The running example is unit 01's polygon, maximizing $2x + y$: its constraints
+    $x + y \le 4$ and $x - y \le 1$ get slacks $s_1$ and $s_2$ (constraints 1 and 2 of unit 01,
     $x, y \ge 0$, are the sign constraints). Most slides show the idea on it with
     actual numbers. Where a statement has a proof worth knowing, the slide says why in
     plain words and the notes carry the argument under <b>Full proof</b>.</p>
@@ -63,7 +71,7 @@
   </div>
   <p class="muted">Lab: pivot, pricing rules, the loop with cycle detection, two phases, and Klee–Minty. Then 1000 LPs against HiGHS.</p>
   <div class="box good"><span class="label">getting around</span>
-    <p class="small">Words with a <span class="term" data-term="basis">dotted underline</span> are glossary terms: click one for its definition. <kbd>G</kbd> lists every term in the unit, <kbd>N</kbd> shows the notes. Unit 01's polygon, maximizing $2x + y$, is the running example. Optional extra: <a href="explore.html" target="_blank" rel="noopener">interactive figures</a>, linked from the slides they support by a small ▸ chip; skip them freely.</p>
+    <p class="small">Words with a <span class="term" data-term="basis">dotted underline</span> are glossary terms: click one for its definition. <kbd>G</kbd> lists every term in the unit, <kbd>N</kbd> shows the notes. Unit 01's polygon, maximizing $2x + y$, is <span class="ref" data-ref="LP">the running example</span>: a solid underline like that one shows it on hover. Optional extra: <a href="explore.html" target="_blank" rel="noopener">interactive figures</a>, linked from the slides they support by a small ▸ chip; skip them freely.</p>
   </div>
   <aside class="notes">
     <p>Reading plan: section 1 is the algorithm, and the worked tableau example should
@@ -96,7 +104,7 @@
     <div class="box"><span class="label">the starting basis</span>
       <p>If $b \ge 0$, the <span class="term" data-term="slack basis">slacks form a feasible basis</span>: $x = 0,\ s = b$. The origin is a vertex.</p>
       <p class="small muted">If some $b_i &lt; 0$ it is not feasible. That is what phase 1 (section 3) is for.</p>
-      <p class="small"><b>Picture it:</b> "nonbasic" means "held at 0", and a slack at 0 means its row is tight. So choosing a basis is choosing which walls to stand on. The next slide does all six choices for the polygon.</p>
+      <p class="small"><b>Picture it:</b> "nonbasic" means "held at 0", and a slack at 0 means its constraint is tight. So choosing a basis is choosing which walls to stand on. The next slide does all six choices for <span class="ref" data-ref="LP">the polygon</span>.</p>
     </div>
   </div>
   <aside class="notes">
@@ -130,7 +138,7 @@
           <tr><td>$x, y$</td><td>$s_1, s_2$</td><td>$x = 2.5,\ y = 1.5$</td><td>$(2.5, 1.5)$</td><td>✓</td></tr>
         </tbody>
       </table>
-      <p class="small"><b>Four feasible bases, four corners:</b> the same table as unit 01's "Finding corners by trying pairs of rows", now in the language of variables. A negative basic value is a violated row.</p>
+      <p class="small"><b>Four feasible bases, four corners:</b> the same table as unit 01's "Finding corners by trying pairs of constraints", now in the language of variables. A negative basic value is a violated constraint.</p>
     </div>
     <div class="fig">
       <svg viewBox="0 0 380 350" width="380" role="img" aria-label="the polygon with each corner labelled by the two variables set to zero there">
@@ -156,12 +164,12 @@
     first gives $x = 4$, the second $s_2 = 1 - 4 = -3 &lt; 0$, which says $(4,0)$ breaks
     $x - y \le 1$. $\{y, s_1\}$: $x = s_2 = 0$ gives $-y = 1$, so $y = -1$, and
     $s_1 = 4 - (-1) = 5$. $\{y, s_2\}$: $x = s_1 = 0$ gives $y = 4$ and
-    $s_2 = 1 + 4 = 5$. $\{x, y\}$: both slacks 0, so the two rows are equalities,
+    $s_2 = 1 + 4 = 5$. $\{x, y\}$: both slacks 0, so the two constraints are equalities,
     adding gives $2x = 5$.</p>
     <p>The dictionary between the two languages: in unit 01, a vertex had $n = 2$ tight
-    rows. Here the sign constraints $x \ge 0$, $y \ge 0$ count as rows too, and "row
+    constraints. Here the sign constraints $x \ge 0$, $y \ge 0$ count too, and "constraint
     tight" becomes "its variable is 0", for a structural variable or a slack alike.
-    The two nonbasic variables are the two tight rows.</p>
+    The two nonbasic variables are the two tight constraints.</p>
   </aside>
 </section>
 
@@ -180,13 +188,13 @@
       </div>
       <p class="small">If some $\bar c_j &gt; 0$, raising $x_j$ from 0 improves the objective at rate $\bar c_j$. That $j$ may be the <span class="term">entering variable</span>.</p>
     </div>
-    <div class="box ex"><span class="label">the <span class="term">dictionary</span>, on the example</span>
+    <div class="box ex"><span class="label">the <span class="term">dictionary</span>, on <span class="ref" data-ref="LP">the example</span></span>
       <p class="small"><b>At the origin</b> (basis $s_1, s_2$):</p>
       <p class="small">$s_1 = 4 - x - y,\quad s_2 = 1 - x + y$<br>$z = 0 + \mathbf{2}\,x + \mathbf{1}\,y$</p>
       <p class="small">Reduced costs $2$ and $1$ are positive: not optimal, and either may enter.</p>
       <p class="small"><b>At $(2.5, 1.5)$</b> (basis $x, y$):</p>
       <p class="small">$z = 6.5 - \tfrac32\, s_1 - \tfrac12\, s_2$</p>
-      <p class="small">Both negative: raising either slack (leaving a wall) only lowers $z$. <b>Optimal</b>, certified by two signs.</p>
+      <p class="small">Both negative: raising either slack, <span class="ref" data-ref="s1">$s_1$</span> or <span class="ref" data-ref="s2">$s_2$</span> (leaving a wall), only lowers $z$. <b>Optimal</b>, certified by two signs.</p>
     </div>
   </div>
   <aside class="notes">
@@ -241,9 +249,9 @@
       <div class="box"><span class="label">degenerate step</span>
         <p class="small">If the minimizing $\bar b_i = 0$, then $t^* = 0$. The basis changes but the point does not move: a <span class="term">degenerate pivot</span>.</p>
       </div>
-      <div class="box ex"><span class="label">on the example, at the origin</span>
-        <p class="small"><b>Enter $x$:</b> $d = (1, 1)$, $\bar b = (4, 1)$. Ratios $4/1$ and $1/1$: $t^* = 1$, $s_2$ leaves. Move to $(1, 0)$.</p>
-        <p class="small"><b>Enter $y$ instead:</b> $d = (1, -1)$. Only the $s_1$ row counts: $t^* = 4$, move to $(0, 4)$. The $s_2$ row has $d_2 &lt; 0$: $s_2 = 1 + y$ only grows.</p>
+      <div class="box ex"><span class="label">on <span class="ref" data-ref="LP">the example</span>, at the origin</span>
+        <p class="small"><b>Enter $x$:</b> $d = (1, 1)$, $\bar b = (4, 1)$. Ratios $4/1$ and $1/1$: $t^* = 1$, <span class="ref" data-ref="s2">$s_2$</span> leaves. Move to $(1, 0)$.</p>
+        <p class="small"><b>Enter $y$ instead:</b> $d = (1, -1)$. Only the <span class="ref" data-ref="s1">$s_1$</span> row counts: $t^* = 4$, move to $(0, 4)$. The <span class="ref" data-ref="s2">$s_2$</span> row has $d_2 &lt; 0$: $s_2 = 1 + y$ only grows.</p>
       </div>
     </div>
   </div>
@@ -288,7 +296,7 @@
         <text x="220" y="203" font-size="14" class="mono">z=6.5</text>
         <text x="70" y="55" font-size="14" class="mono">z=4</text>
       </svg>
-      <p class="cap">$\max\ 2x+y$ over unit 01's polygon. <span class="term">Dantzig's rule</span>: enter $x$ (coefficient 2), then $y$.</p>
+      <p class="cap">$\max\ 2x+y$ over <span class="ref" data-ref="LP">unit 01's polygon</span>. <span class="term">Dantzig's rule</span>: enter $x$ (coefficient 2), then $y$.</p>
     </div>
     <div>
       <ol>
@@ -372,19 +380,19 @@
       <p>A <span class="term">degenerate pivot</span> has $t^* = 0$: the basis changes and the point stays. The objective does not increase, so the usual termination argument (strict improvement, finitely many bases) fails.</p>
       <p>Degenerate pivots in a row can bring the basis back to where it started. That is <span class="term">cycling</span>, and the method then never stops. The smallest classic case is <span class="term">Beale's example</span>, two slides on.</p>
     </div>
-    <div class="box ex"><span class="label">where degeneracy comes from, on the example</span>
-      <p class="small">Add unit 01's row 5, $3x - y \le 6$, with slack $s_3$. It passes through $(2.5, 1.5)$.</p>
-      <p class="small">Simplex reaches $(1, 0)$ as before and enters $y$. The ratio test now <b>ties</b>: $s_1$ row $\tfrac32$, $s_3$ row $\tfrac32$.</p>
-      <p class="small">$s_1$ leaves. $s_3$ stays basic, <b>at value 0</b>. The corner $(2.5, 1.5)$ now has three bases, and a pivot among them would have $t^* = 0$.</p>
+    <div class="box ex"><span class="label">where degeneracy comes from, on <span class="ref" data-ref="LP">the example</span></span>
+      <p class="small">Add <span class="ref" data-ref="c5">unit 01's constraint 5</span>, $3x - y \le 6$, with slack $s_5$. It passes through $(2.5, 1.5)$.</p>
+      <p class="small">Simplex reaches $(1, 0)$ as before and enters $y$. The ratio test now <b>ties</b>: $s_1$ row $\tfrac32$, $s_5$ row $\tfrac32$.</p>
+      <p class="small"><span class="ref" data-ref="s1">$s_1$</span> leaves. <span class="ref" data-ref="c5">$s_5$</span> stays basic, <b>at value 0</b>. The corner $(2.5, 1.5)$ now has three bases, and a pivot among them would have $t^* = 0$.</p>
       <p class="small muted">Here the reduced costs are already $\le 0$, so it stops. Beale's example is built so that it doesn't.</p>
     </div>
   </div>
   <p class="viz-link-row"><a class="viz-link" href="explore.html#/1" target="_blank" rel="noopener">explore interactively</a></p>
   <aside class="notes">
-    <p><b>The example box.</b> At $(1,0)$ with basis $\{s_1, x, s_3\}$: $x = 1 + y - s_2$,
-    $s_1 = 3 - 2y + s_2$ and $s_3 = 6 - 3x + y = 3 - 2y + 3s_2$. Raising $y$ empties $s_1$
-    and $s_3$ both at $y = \tfrac32$. The reference solution breaks the tie by lowest
-    row, so $s_1$ leaves and the final basis is $\{y, x, s_3\}$ with $s_3 = 0$. The
+    <p><b>The example box.</b> At $(1,0)$ with basis $\{s_1, x, s_5\}$: $x = 1 + y - s_2$,
+    $s_1 = 3 - 2y + s_2$ and $s_5 = 6 - 3x + y = 3 - 2y + 3s_2$. Raising $y$ empties $s_1$
+    and $s_5$ both at $y = \tfrac32$. The reference solution breaks the tie by lowest
+    row, so $s_1$ leaves and the final basis is $\{y, x, s_5\}$ with $s_5 = 0$. The
     other bases of the same point are $\{x, y, s_1\}$ and $\{x, y, s_2\}$, each with one
     zero-valued basic slack.</p>
     <p>Finiteness argument without degeneracy: each pivot strictly increases the
@@ -467,7 +475,7 @@
         <p class="small">In a cycle some variables leave and later come back. Watch the one with the <b>largest index</b> among them. When it left, and when it came back, the rule chose by lowest index both times. Those two choices say opposite things about the same reduced costs, so a cycle can't close.</p>
         <p class="proof-pointer">full proof in the notes (N)</p>
       </div>
-      <p class="small">On Beale's example it breaks the loop at pivot 5, by preferring $x_1$ over $s_1$.</p>
+      <p class="small">On <span class="ref" data-ref="beale">Beale's example</span> it breaks the loop at pivot 5, by preferring $x_1$ over $s_1$.</p>
     </div>
     <div>
       <p class="small"><b>Other cures</b> (<span class="term" data-term="anti-cycling rule">anti-cycling rules</span>): the <span class="term">lexicographic ratio test</span> (Dantzig, Orden, Wolfe 1955); <span class="term">perturbation</span> of $b$, symbolic or numerical.</p>
@@ -642,7 +650,7 @@
   <h2>Getting started: two phases</h2>
   <div class="cols">
     <div>
-      <p>If some $b_i &lt; 0$, the slack basis is infeasible. <b><span class="term">Phase 1</span>:</b> for each such row, negate it and add an <span class="term" data-term="artificial variable">artificial</span> $a_i \ge 0$ with coefficient $+1$, then solve</p>
+      <p>If some $b_i &lt; 0$, the slack basis is infeasible. <b><span class="term">Phase 1</span>:</b> for each such constraint, negate it and add an <span class="term" data-term="artificial variable">artificial</span> $a_i \ge 0$ with coefficient $+1$, then solve</p>
       $$\max\ -\textstyle\sum_i a_i$$
       <p>starting from the basis of slacks and artificials, which is feasible by construction.</p>
       <ul>
@@ -680,7 +688,7 @@
   <h2>Phase 1, on the example</h2>
   <div class="cols wide-left">
     <div>
-      <p class="small">Add $x + y \ge 1$ to the polygon. The origin breaks it, so the slack basis is infeasible. As a $\le$ row: $-x - y \le -1$, a negative $b$.</p>
+      <p class="small">Add $x + y \ge 1$ to <span class="ref" data-ref="LP">the polygon</span>. The origin breaks it, so the slack basis is infeasible. As a $\le$ constraint: $-x - y \le -1$, a negative $b$.</p>
       <p class="small"><b>Set up.</b> Negate and add an artificial: $x + y - s_3 + a_1 = 1$. Start from $s_1 = 4,\ s_2 = 1,\ a_1 = 1$ and maximize $-a_1$, now $-1$.</p>
       <table>
         <thead><tr><th>pivot</th><th>enters</th><th>leaves</th><th>at $(x,y)$</th><th>what happened</th></tr></thead>
@@ -691,7 +699,7 @@
           <tr><td>3</td><td>$s_3$</td><td>$s_1$</td><td>$(2.5, 1.5)$</td><td>phase 2, optimal at $z = 6.5$</td></tr>
         </tbody>
       </table>
-      <p class="small">Three pivots in all. <b>Phase 1 found a corner, $(1, 0)$, not the optimum</b>; phase 2 walked from there. Had the row been $x + y \ge 5$, phase 1 would end below 0: infeasible.</p>
+      <p class="small">Three pivots in all. <b>Phase 1 found a corner, $(1, 0)$, not the optimum</b>; phase 2 walked from there. Had the constraint been $x + y \ge 5$, phase 1 would end below 0: infeasible.</p>
     </div>
     <div class="fig">
       <svg viewBox="0 0 380 350" width="370" role="img" aria-label="the polygon with the corner x+y&lt;1 cut off; path from the infeasible origin to (1,0) then to (2.5,1.5)">
@@ -785,7 +793,7 @@
       <p><b><span class="term">Steepest edge</span></b> (Goldfarb & Reid 1977): the largest improvement per unit of <em>distance</em> along the edge,</p>
       $$\max_j \frac{\bar c_j}{\|\eta_j\|}, \qquad \eta_j = \begin{pmatrix} -A_B^{-1} a_j \\ e_j \end{pmatrix}$$
       <p class="small">where $\eta_j$ is the edge direction in the space of all variables.</p>
-      <div class="box ex"><span class="label">on the example: change the units of one variable</span>
+      <div class="box ex"><span class="label">on <span class="ref" data-ref="LP">the example</span>: change the units of one variable</span>
         <p class="small">Write $y = 10y'$. Column of $y'$: $(10, -10)$, cost $10$. At the origin:</p>
         <p class="small">Dantzig: $x$ scores $2$, $y'$ scores $10$ → <b>picks $y'$</b>.<br>
         Steepest edge: $x$ scores $2/\sqrt3 = 1.15$, $y'$ scores $10/\sqrt{201} = 0.71$ → <b>still picks $x$</b>, as it did before rescaling.</p>
@@ -868,7 +876,7 @@
     <ol>
       <li><b>Tableau and pivot</b>, the Gauss–Jordan step.</li>
       <li><b>Pricing and ratio test</b> under Dantzig's and Bland's rules, ties included.</li>
-      <li><b>The loop</b> with cycle detection. Agrees with HiGHS, cycles on Beale, and Bland fixes it.</li>
+      <li><b>The loop</b> with cycle detection. Agrees with HiGHS, cycles on <span class="ref" data-ref="beale">Beale</span>, and Bland fixes it.</li>
       <li><b>Two phases</b> for any $b$, with redundant rows and infeasibility.</li>
       <li><b>Klee–Minty</b>, and exactly $2^n - 1$ pivots under Dantzig's rule.</li>
     </ol>

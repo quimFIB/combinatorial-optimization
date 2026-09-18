@@ -348,7 +348,7 @@ window.GLOSSARY = [
 },
 {
 "term_html": "matching polytope",
-"html": "Degree rows plus odd-set inequalities \\(x(E[S]) \\le (|S| - 1)/2\\) for odd \\(S\\). The convex hull of matchings (Edmonds 1965).",
+"html": "Degree constraints plus odd-set inequalities \\(x(E[S]) \\le (|S| - 1)/2\\) for odd \\(S\\). The convex hull of matchings (Edmonds 1965).",
 "section": "General graphs",
 "slide": "The matching polytope",
 "keys": [

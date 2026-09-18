@@ -141,7 +141,7 @@ window.GLOSSARY = [
 },
 {
 "term_html": "linking constraints",
-"html": "The rows that tie the blocks together; they stay in the master.",
+"html": "The constraints that tie the blocks together; they stay in the master.",
 "section": "Dantzig–Wolfe",
 "slide": "Decomposition of block-angular programs",
 "keys": [
@@ -149,12 +149,12 @@ window.GLOSSARY = [
 ]
 },
 {
-"term_html": "convexity row",
+"term_html": "convexity constraint",
 "html": "\\(\\sum_p \\lambda_{kp} = 1\\), one per block, with dual \\(\\mu_k\\).",
 "section": "Dantzig–Wolfe",
 "slide": "Decomposition of block-angular programs",
 "keys": [
-"convexity row"
+"convexity constraint"
 ]
 },
 {

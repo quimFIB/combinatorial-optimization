@@ -11,6 +11,11 @@
 <link rel="stylesheet" href="../../slides/deck.css">
 </head>
 <body data-trunk="coda">
+<!-- The running example, once: what each <span class="ref"> on the slides shows on hover. -->
+<div class="refs" hidden>
+  <template data-ref="LP"><span class="ref-name">unit 01's polygon, as an LP</span>$\max\ 2x + y$ s.t. $x + y \le 4,\ \ x - y \le 1,\ \ x, y \ge 0$ <span class="ref-note">unit 02's running example. Optimum $(2.5, 1.5)$, value 6.5</span><svg viewBox="20 20 350 320" width="170" aria-hidden="true"><line x1="60" y1="24" x2="60" y2="336" class="rule" stroke-width="2"/><line x1="24" y1="300" x2="366" y2="300" class="rule" stroke-width="2"/><polygon points="60,300 120,300 210,210 60,60" class="fill-soft unit" stroke-width="3"/><circle cx="60" cy="300" r="8" class="fill-ink"/><text x="22" y="326" font-size="24">(0,0)</text><circle cx="120" cy="300" r="8" class="fill-ink"/><text x="120" y="326" font-size="24">(1,0)</text><circle cx="210" cy="210" r="11" class="fill-accent"/><text x="222" y="216" font-size="24">(2.5,1.5)</text><circle cx="60" cy="60" r="8" class="fill-ink"/><text x="72" y="66" font-size="24">(0,4)</text></svg></template>
+  <template data-ref="y"><span class="ref-name">the multipliers</span>$y = (1.5,\ 0.5)$ <span class="ref-note">the prices on $x + y \le 4$ and $x - y \le 1$: unit 02's shadow prices, and the KKT multipliers at $(2.5, 1.5)$</span></template>
+</div>
 <div class="reveal"><div class="slides">
 
 <section class="title-slide">
@@ -28,7 +33,7 @@
     <h4>How to read this deck</h4>
     <p>Three small examples carry it: three gradient steps on a two-variable quadratic with
     condition number 10; a projection and two Frank–Wolfe steps on a point in three dimensions; and
-    the KKT conditions checked on unit 01's polygon, where the multipliers are the shadow prices of
+    the KKT conditions checked on <span class="ref" data-ref="LP">unit 01's polygon</span>, where the multipliers are the shadow prices of
     unit 02. Every number was computed with the lab's reference solution. Rates and the lower bound
     are stated, not proved.</p>
   </aside>
@@ -333,7 +338,7 @@
   </div>
   <aside class="notes">
     <p>The derivation is the checkpoint, so do it on paper before reading the box. Write max c·x as
-    min −c·x, form the Lagrangian with y for the rows and w for the sign constraints, set the gradient to
+    min −c·x, form the Lagrangian with y for the constraints Ax ≤ b and w for the sign constraints, set the gradient to
     zero, and read off the conditions. The only extra step is noticing that w is determined by y, so the
     conditions are about (x, y) alone.</p>
     <p>For <b>QPs</b> the same conditions hold with stationarity Qx + q + Aᵀλ = 0. Lab step 5 checks CVXPY's primal
@@ -344,37 +349,37 @@
 
 <section>
   <p class="eyebrow">29 · KKT · example</p>
-  <h2>KKT, on unit 01's polygon</h2>
+  <h2>KKT, on <span class="ref" data-ref="LP">unit 01's polygon</span></h2>
   <div class="cols">
     <div>
-      <p class="small">$\max 2x + y$ over $x + y \le 4$, $x - y \le 1$, $x, y \ge 0$. Optimum $(2.5, 1.5)$, value 6.5. Try multipliers $y = (1.5,\ 0.5)$ on the two rows.</p>
+      <p class="small">$\max 2x + y$ over $x + y \le 4$, $x - y \le 1$, $x, y \ge 0$. Optimum $(2.5, 1.5)$, value 6.5. Try multipliers $y = (1.5,\ 0.5)$ on the two constraints.</p>
       <div class="box ex"><span class="label">the four checks</span>
         <table style="margin:0">
           <thead><tr><th>condition</th><th>on the example</th><th></th></tr></thead>
           <tbody>
             <tr><td>primal feasible</td><td>$4 \le 4$, $\ 1 \le 1$, $\ x, y \ge 0$</td><td>✓</td></tr>
             <tr><td>stationarity (dual feasible)</td><td>$1.5\,(1,1) + 0.5\,(1,-1) = (2, 1) = c$</td><td>✓</td></tr>
-            <tr><td>complementarity, rows</td><td>both rows tight: slack 0 × price</td><td>✓</td></tr>
-            <tr><td>complementarity, columns</td><td>$x, y &gt; 0$ and their reduced costs are 0</td><td>✓</td></tr>
+            <tr><td>complementarity, constraints</td><td>both constraints tight: slack 0 × price</td><td>✓</td></tr>
+            <tr><td>complementarity, variables</td><td>$x, y &gt; 0$ and their reduced costs are 0</td><td>✓</td></tr>
           </tbody>
         </table>
       </div>
     </div>
     <div>
-      <div class="box warn"><span class="label">the same multipliers at a wrong point</span>
-        <p class="small">At the corner $(1, 0)$: row $x + y \le 4$ has slack 3 but price 1.5. Complementarity residual $1.5 \times 3 = 4.5$. Everything else is fine.</p>
-        <p class="small">So KKT rejects $(1, 0)$ for exactly the reason unit 03's certificate would: a priced row with room left.</p>
+      <div class="box warn"><span class="label">the same <span class="ref" data-ref="y">multipliers</span> at a wrong point</span>
+        <p class="small">At the corner $(1, 0)$: constraint $x + y \le 4$ has slack 3 but price 1.5. Complementarity residual $1.5 \times 3 = 4.5$. Everything else is fine.</p>
+        <p class="small">So KKT rejects $(1, 0)$ for exactly the reason unit 03's certificate would: a priced constraint with room left.</p>
       </div>
-      <p class="small">The multipliers $1.5$ and $0.5$ are unit 02's shadow prices: loosening $x + y \le 4$ by one unit raises the optimum by 1.5. In the continuous world they are called Lagrange multipliers, and they are the same numbers.</p>
+      <p class="small"><span class="ref" data-ref="y">The multipliers</span> $1.5$ and $0.5$ are unit 02's shadow prices: loosening $x + y \le 4$ by one unit raises the optimum by 1.5. In the continuous world they are called Lagrange multipliers, and they are the same numbers.</p>
     </div>
   </div>
   <aside class="notes">
     <p><b>Stationarity, written out.</b> The implied multipliers for $x \ge 0$ and $y \ge 0$ are
     $A^\top y - c = (1.5 + 0.5 - 2,\ 1.5 - 0.5 - 1) = (0, 0)$. They are nonnegative (dual feasible), and
-    they multiply $x = 2.5$ and $y = 1.5$ to zero (column complementarity). The row slacks are
-    $4 - 4 = 0$ and $1 - 1 = 0$, so row complementarity holds whatever the prices.</p>
+    they multiply $x = 2.5$ and $y = 1.5$ to zero (complementarity for the variables). The constraints' slacks are
+    $4 - 4 = 0$ and $1 - 1 = 0$, so complementarity for the constraints holds whatever the prices.</p>
     <p>The reference <code>lp_kkt_residuals</code> returns all four residuals 0 at $(2.5, 1.5)$, and
-    <code>slack_rows = 4.5</code> at $(1, 0)$ with the same $y$. This is the checkpoint derivation run on
+    <code>slack_rows = 4.5</code> at $(1, 0)$ with the same <span class="ref" data-ref="y">$y$</span>. This is the checkpoint derivation run on
     numbers: KKT for an LP is complementary slackness.</p>
   </aside>
 </section>

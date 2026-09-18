@@ -14,10 +14,10 @@ engineering face of the most beautiful theorem in the course.
 
 | Given in `colib.tsp` / `colib.mip` | Yours in `lab.py` |
 |---|---|
-| `edges(n)`, `degree_milp(tsp, integer)` | A subtour row; components of the support graph |
+| `edges(n)`, `degree_milp(tsp, integer)` | A subtour constraint; components of the support graph |
 | `tour_from_edges`, `tour_length` | Stoer–Wagner minimum cut |
 | `lp_relaxation`, `highs_mip` | The separation oracle |
-| networkx (tests only) | The subtour LP by lazy rows |
+| networkx (tests only) | The subtour LP by lazy constraints |
 | | An exact TSP by lazy cuts on the integer program |
 
 ## Running it
@@ -67,12 +67,12 @@ and a bridge of total 1.5 are both caught, and a tour gives nothing.
 *Shape: an unfold.* Solve, separate, add, repeat.
 
 **Done when** `step 4 ✓`. On 6 instances with 8 cities, your lazily generated bound
-**equals** the LP with all 127 subtour rows written out. You used fewer rows, and
+**equals** the LP with all 127 subtour constraints written out. You used fewer constraints, and
 your final point satisfies all 254 cut constraints.
 
 *Think about:* why is "no violated row found" a proof that the LP over *all* rows
 is solved? (Because the oracle is exact: a minimum cut below 2 exists iff some
-subtour row is violated.)
+subtour constraint is violated.)
 
 ## Step 5 — The exact TSP  *(20 min)*
 
@@ -83,7 +83,7 @@ components alone, since a 0/1 degree-2 solution is a union of cycles.
 
 ---
 
-## Then — a few dozen rows out of 10⁵⁹  *(5 min, runs ~80 s)*
+## Then — a few dozen constraints out of 10⁵⁹  *(5 min, runs ~80 s)*
 
 ```fish
 uv run co then 09

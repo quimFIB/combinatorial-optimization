@@ -159,7 +159,7 @@ window.GLOSSARY = [
 },
 {
 "term_html": "triangle (metric) LP",
-"html": "A variable \\(z_{ij} \\in [0, 1]\\) for every pair, and for every triple \\(z_{ij} + z_{jk} + z_{ik} \\le 2\\) and \\(z_{ij} \\le z_{ik} + z_{jk}\\) with its rotations. Strong on small graphs, stuck at \\(\\tfrac23\\) of the weight on large dense ones, and needs \\(4\\binom{n}{3}\\) rows.",
+"html": "A variable \\(z_{ij} \\in [0, 1]\\) for every pair, and for every triple \\(z_{ij} + z_{jk} + z_{ik} \\le 2\\) and \\(z_{ij} \\le z_{ik} + z_{jk}\\) with its rotations. Strong on small graphs, stuck at \\(\\tfrac23\\) of the weight on large dense ones, and needs \\(4\\binom{n}{3}\\) constraints.",
 "section": "Goemans–Williamson",
 "slide": "Measured: the bound ladder and the rounded cuts",
 "keys": [

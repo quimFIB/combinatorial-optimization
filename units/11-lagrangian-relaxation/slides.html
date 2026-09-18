@@ -11,6 +11,15 @@
 <link rel="stylesheet" href="../../slides/deck.css">
 </head>
 <body data-trunk="ip">
+<!-- The running example, once: what each <span class="ref"> on the slides shows on hover. -->
+<div class="refs" hidden>
+  <template data-ref="ex"><span class="ref-name">the example</span>$\min 3x_1 + 5x_2 + 4x_3$ s.t. $2x_1 + 4x_2 + 3x_3 \ge 5$, $x \in \{0,1\}^3$ <span class="ref-note">the one constraint is dualised; best price $u = \tfrac43$ gives $L = 6.33$, below the optimum 7 (items 1 and 3)</span><svg viewBox="50 10 300 250" width="170" aria-hidden="true"><line x1="60" y1="250" x2="340" y2="250" class="ink" stroke-width="2"/><line x1="60" y1="250" x2="60" y2="20" class="ink" stroke-width="2"/><line x1="60" y1="40" x2="340" y2="40" class="warn" stroke-width="2.5" stroke-dasharray="6 4"/><polyline points="60,250 210,62.5 220,60 240,70 330,160" fill="none" style="stroke:var(--accent);stroke-width:5"/><circle cx="220" cy="60" r="8" class="fill-accent"/><text x="250" y="30" font-size="22" style="fill:var(--warn)">z = 7</text><text x="215" y="235" font-size="22" class="soft">max L = 6.33</text></svg></template>
+  <template data-ref="i1"><span class="ref-name">item 1</span>cost $c_1 = 3$, weight $w_1 = 2$ <span class="ref-note">bought once the price $u$ passes $\tfrac32$</span></template>
+  <template data-ref="i2"><span class="ref-name">item 2</span>cost $c_2 = 5$, weight $w_2 = 4$ <span class="ref-note">bought once the price $u$ passes $\tfrac54$</span></template>
+  <template data-ref="i3"><span class="ref-name">item 3</span>cost $c_3 = 4$, weight $w_3 = 3$ <span class="ref-note">bought once the price $u$ passes $\tfrac43$</span></template>
+  <template data-ref="d5"><span class="ref-name">the five cities</span>$d_{01} = 4,\ d_{02} = 5,\ d_{03} = 3,\ d_{04} = 2,\ d_{12} = 3,$ $d_{13} = 5,\ d_{14} = 2,\ d_{23} = 4,\ d_{24} = 3,\ d_{34} = 3$ <span class="ref-note">the distance table of "A 1-tree on five cities"; optimal tour 14</span></template>
+  <template data-ref="T0"><span class="ref-name">the plain 1-tree (π = 0)</span>edges $14, 12, 34$ on vertices 1–4, plus $04, 03$ at vertex 0 <span class="ref-note">cost 13; degrees $(2, 2, 1, 2, 3)$: vertex 2 a leaf, vertex 4 a hub</span></template>
+</div>
 <div class="reveal"><div class="slides">
 
 <section class="title-slide">
@@ -30,7 +39,7 @@
     method of choice when the relaxed problem has a fast specialised algorithm: spanning
     trees, shortest paths, knapsacks.</p>
     <h4>How to read this deck</h4>
-    <p>Two small examples carry it. A three-variable integer program with one dualised row,
+    <p>Two small examples carry it. A three-variable integer program with one dualised constraint,
     whose $L(u)$ is drawn exactly and climbed by hand; and five cities, where one subgradient
     step turns a 1-tree into an optimal tour and two edges are fixed. All values were computed
     with the lab's reference solution. The proof of Geoffrion's theorem is in the notes.</p>
@@ -134,27 +143,27 @@
         <text x="176" y="270" font-size="12" class="mono soft">1</text><text x="296" y="270" font-size="12" class="mono soft">2</text>
         <text x="330" y="244" font-size="12">u</text>
       </svg>
-      <p class="cap">$L(u)$ for the example. It rises while more of the row is worth covering, peaks at $u = \tfrac43$, and falls once every item is bought.</p>
+      <p class="cap">$L(u)$ for the example. It rises while the items bought weigh less than 5, peaks at $u = \tfrac43$, and falls once they weigh more.</p>
     </div>
     <div>
       $$\begin{aligned}\min\ & 3x_1 + 5x_2 + 4x_3 \\ \text{s.t. } & 2x_1 + 4x_2 + 3x_3 \ge 5, \quad x \in \{0,1\}^3\end{aligned}$$
-      <p class="small">Dualise the one row. For a price $u$ each item costs $c_j - u\,w_j$; take it if that is negative:</p>
+      <p class="small">Dualise the one constraint. For a price $u$ each item costs $c_j - u\,w_j$; take it if that is negative:</p>
       $$L(u) = 5u + \textstyle\sum_j \min(0,\ c_j - u\,w_j)$$
       <div class="box ex"><span class="label">two prices by hand</span>
         <p class="small"><b>$u = 1$:</b> item costs $3-2,\ 5-4,\ 4-3 = 1, 1, 1$, all positive, buy nothing. $L = 5$. Violation $g = 5 - 0 = 5$: the price is too low.</p>
         <p class="small"><b>$u = 2$:</b> costs $-1, -3, -2$, buy all three. $L = 10 - 6 = 4$. $g = 5 - 9 = -4$: too high.</p>
       </div>
-      <p class="small">The best price, $u = \tfrac43$, gives $\tfrac{19}{3} = 6.33$, below the true optimum 7 (buy items 1 and 3).</p>
+      <p class="small">The best price, $u = \tfrac43$, gives $\tfrac{19}{3} = 6.33$, below the true optimum 7 (buy items <span class="ref" data-ref="i1">1</span> and <span class="ref" data-ref="i3">3</span>).</p>
     </div>
   </div>
   <p class="viz-link-row"><a class="viz-link" href="explore.html#/1" target="_blank" rel="noopener">explore interactively</a></p>
   <aside class="notes">
-    <p><b>The pieces.</b> Item $j$ becomes worth buying when $u &gt; c_j / w_j$: item 2 at
-    $\tfrac54$, item 3 at $\tfrac43$, item 1 at $\tfrac32$. So $L = 5u$ up to $\tfrac54$, then
+    <p><b>The pieces.</b> Item $j$ becomes worth buying when $u &gt; c_j / w_j$: <span class="ref" data-ref="i2">item 2</span> at
+    $\tfrac54$, <span class="ref" data-ref="i3">item 3</span> at $\tfrac43$, <span class="ref" data-ref="i1">item 1</span> at $\tfrac32$. So $L = 5u$ up to $\tfrac54$, then
     $5u + 5 - 4u = u + 5$, then $u + 5 + 4 - 3u = 9 - 2u$ after $\tfrac43$, then $12 - 4u$ after
     $\tfrac32$. The maximum is at $\tfrac43$: $\tfrac43 + 5 = \tfrac{19}{3}$. The slope changes
     from $+1$ to $-2$ there, and the subgradients at the kink are the violations $g = 1$
-    (buy item 2 only) and $g = -2$ (buy items 2 and 3).</p>
+    (buy <span class="ref" data-ref="i2">item 2</span> only) and $g = -2$ (buy items <span class="ref" data-ref="i2">2</span> and <span class="ref" data-ref="i3">3</span>).</p>
     <p><b>The integer optimum.</b> Sets that cover weight 5: $\{1,2\}$ cost 8, $\{1,3\}$ cost 7,
     $\{2,3\}$ cost 9, all three cost 12. So $z = 7$.</p>
     <p><b>Why the bound equals the LP.</b> $X = \{0,1\}^3$ is a box, whose LP is integral: the
@@ -173,7 +182,7 @@
         <p class="small">So $z_{LP} \le z_{LD} \le z$, where $z_{LP}$ also relaxes $X$ to its LP description $\bar X$.</p>
       </div>
       <div class="box good"><span class="label"><span class="term">integrality property</span></span>
-        <p class="small">If $\mathrm{conv}(X) = \bar X$ (the easy problem's LP has integral vertices), then $z_{LD} = z_{LP}$. The Lagrangian relaxation gives <b>nothing the LP didn't</b>, though it may compute it faster. The example's box $\{0,1\}^3$ is such an $X$: 6.33 both ways.</p>
+        <p class="small">If $\mathrm{conv}(X) = \bar X$ (the easy problem's LP has integral vertices), then $z_{LD} = z_{LP}$. The Lagrangian relaxation gives <b>nothing the LP didn't</b>, though it may compute it faster. <span class="ref" data-ref="ex">The example</span>'s box $\{0,1\}^3$ is such an $X$: 6.33 both ways.</p>
         <p class="proof-pointer">why: notes (N)</p>
       </div>
       <p class="small muted">It is the same bound as Dantzig–Wolfe (unit 10), whose master convexifies $X$ explicitly.</p>
@@ -202,7 +211,7 @@
     but keep a subproblem <em>without</em> the integrality property, or you have reinvented
     the LP bound. The Held–Karp bound is the famous case where the subproblem has the property
     and that's still a good trade. The LP it matches (the subtour LP) has exponentially many
-    rows, and the 1-tree avoids them.</p>
+    constraints, and the 1-tree avoids them.</p>
   </aside>
 </section>
 
@@ -256,7 +265,7 @@
 <section>
   <p class="eyebrow">11 · subgradients · example</p>
   <h2>Subgradient steps, on the example</h2>
-  <p class="small">Polyak steps $t = \lambda\,(7 - L(u)) / g^2$, with the incumbent 7 as $\bar z$, starting at $u = 0$.</p>
+  <p class="small">Polyak steps $t = \lambda\,(7 - L(u)) / g^2$, with the incumbent 7 as $\bar z$, starting at $u = 0$, on <span class="ref" data-ref="ex">the example</span>.</p>
   <div class="cols">
     <div class="box warn"><span class="label">λ = 1 fixed: the zig-zag</span>
       <table style="margin:0">
@@ -286,13 +295,13 @@
   <p class="viz-link-row"><a class="viz-link" href="explore.html#/2" target="_blank" rel="noopener">explore interactively</a></p>
   <aside class="notes">
     <p><b>Step 0.</b> $L(0) = 0$ (buy nothing), $g = 5$, $t = (7 - 0)/25 = 0.28$, so $u$ moves by
-    $0.28 \times 5 = 1.4$. <b>Step 1.</b> At $u = 1.4$ items 2 and 3 are worth buying
+    $0.28 \times 5 = 1.4$. <b>Step 1.</b> At $u = 1.4$ items <span class="ref" data-ref="i2">2</span> and <span class="ref" data-ref="i3">3</span> are worth buying
     ($5 - 5.6 &lt; 0$, $4 - 4.2 &lt; 0$), weight 7, $g = -2$; $L = 7 + (-0.6) + (-0.2) = 6.2$;
     $t = 0.8 / 4 = 0.2$, move $-0.4$. <b>Step 2.</b> At $u = 1$ nothing is bought, $L = 5$,
     $g = 5$, $t = 2 / 25 = 0.08$, move $+0.4$: back to 1.4.</p>
     <p>The halving column uses a stricter rule than the lab (which waits 20 failures) so that
     the effect shows within a few steps. From $k = 3$ onward: $\lambda = 0.5$ gives a move of
-    $-0.2$ to 1.2; there $L = 6$, $g = 5$, and with $\lambda = 0.25$ the move is $+0.05$ to 1.25, where item 2 is exactly indifferent and $L = 6.25$ whichever way it is decided. The steps continue toward the kink at $\tfrac43$.</p>
+    $-0.2$ to 1.2; there $L = 6$, $g = 5$, and with $\lambda = 0.25$ the move is $+0.05$ to 1.25, where <span class="ref" data-ref="i2">item 2</span> is exactly indifferent and $L = 6.25$ whichever way it is decided. The steps continue toward the kink at $\tfrac43$.</p>
     <p>Every iterate's $L$ is a valid lower bound on 7, including the bad ones. That is why the
     method only has to <em>remember</em> the best, not climb monotonically.</p>
   </aside>
@@ -392,11 +401,11 @@
     </div>
     <div>
       <div class="box ex"><span class="label">one step, and it is a tour</span>
-        <p class="small">With $\bar z = 14$: $t = 2 \cdot (14 - 13) / 2 = 1$, so $\pi = (0, 0, -1, 0, 1)$. Edges at 2 get cheaper by 1, edges at 4 dearer by 1.</p>
+        <p class="small">From <span class="ref" data-ref="T0">the plain 1-tree</span>, with $\bar z = 14$: $t = 2 \cdot (14 - 13) / 2 = 1$, so $\pi = (0, 0, -1, 0, 1)$. Edges at 2 get cheaper by 1, edges at 4 dearer by 1.</p>
         <p class="small">The new minimum 1-tree is the tour $0\!-\!3\!-\!2\!-\!1\!-\!4\!-\!0$, all degrees 2, length $3 + 4 + 3 + 2 + 2 = 14$. $L(\pi) = 14 = \bar z$: <b>optimal, proved</b>.</p>
       </div>
       <div class="box ex"><span class="label"><span class="term">reduced-cost fixing</span>, at π = 0</span>
-        <p class="small">Force edge $13$ (length 5) into the tree: it must replace the heaviest edge on the tree path $1\!-\!4\!-\!3$, which is 3. Cost $13 + 5 - 3 = 15 &gt; 14$: no tour of length 14 uses edge 13. <b>Fixed to 0.</b> Edge $02$ is fixed the same way.</p>
+        <p class="small">Force edge $13$ (length 5) into <span class="ref" data-ref="T0">the plain 1-tree</span>: it must replace the heaviest edge on the tree path $1\!-\!4\!-\!3$, which is 3. Cost $13 + 5 - 3 = 15 &gt; 14$: no tour of length 14 uses edge 13. <b>Fixed to 0.</b> Edge $02$ is fixed the same way.</p>
       </div>
     </div>
   </div>
@@ -406,9 +415,9 @@
     cheaper of $12$, $24$, $34$ (all 3): it picks $12$, then $34$ ($24$ would close a cycle). The
     reference <code>one_tree</code> returns bound 13, degrees $[2, 2, 1, 2, 3]$ and edges
     $14, 12, 34, 04, 03$.</p>
-    <p><b>The step.</b> $\lVert g \rVert^2 = 2$, and with the lab's $\lambda = 2$ the Polyak step is
+    <p><b>The step.</b> From <span class="ref" data-ref="T0">the plain 1-tree</span>, $\lVert g \rVert^2 = 2$, and with the lab's $\lambda = 2$ the Polyak step is
     $2 \cdot 1 / 2 = 1$. The reference <code>held_karp_bound</code> records exactly two values,
-    13 then 14. The optimal tour, by brute force over the 24 orderings, has length 14.</p>
+    13 then 14. The optimal tour of <span class="ref" data-ref="d5">the five cities</span>, by brute force over the 24 orderings, has length 14.</p>
     <p><b>Fixing.</b> The reference <code>fix_edges</code> with $\bar z = 14$ returns
     $\{02, 13\}$. For $02$ (length 5): adding it at vertex 0 displaces the dearer of the two
     vertex-0 edges, 3, giving $13 + 5 - 3 = 15 &gt; 14$. In a 5-city instance two edges out of
@@ -502,7 +511,7 @@ uv run co then 11     # HK vs degree LP and subtour LP · GAP bounds · the zig-
     </div>
     <div>
       <h3>Next</h3>
-      <p class="small"><b>12</b> Benders decomposition, the row-generation twin · <b>23</b> Christofides, whose analysis uses the subtour LP bound again · <b>26</b> LKH's candidate sets.</p>
+      <p class="small"><b>12</b> Benders decomposition, which generates constraints as unit 10 generated columns · <b>23</b> Christofides, whose analysis uses the subtour LP bound again · <b>26</b> LKH's candidate sets.</p>
     </div>
   </div>
   <aside class="notes">

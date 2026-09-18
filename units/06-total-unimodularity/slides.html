@@ -11,6 +11,12 @@
 <link rel="stylesheet" href="../../slides/deck.css">
 </head>
 <body data-trunk="ip">
+<!-- The running example, once: what each <span class="ref"> on the slides shows on hover. -->
+<div class="refs" hidden>
+  <template data-ref="A"><span class="ref-name">the shift matrix $A$</span>$A = \begin{pmatrix}1&amp;0&amp;0\\1&amp;1&amp;0\\1&amp;1&amp;1\\0&amp;0&amp;1\end{pmatrix}$ <span class="ref-note">rows: time slots 1–4; columns: shifts A (slots 1–3), B (2–3), C (3–4). All 34 square submatrices have determinant 0 or 1: TU</span></template>
+  <template data-ref="T"><span class="ref-name">the triangle $T$</span>$T = \begin{pmatrix}1&amp;0&amp;1\\1&amp;1&amp;0\\0&amp;1&amp;1\end{pmatrix}$ <span class="ref-note">incidence matrix: rows are vertices 0, 1, 2, columns the edges 01, 12, 02; $\det T = 2$, so not TU</span><svg viewBox="0 0 260 230" width="150" aria-hidden="true"><line x1="130" y1="30" x2="45" y2="180" class="ink" stroke-width="4"/><line x1="130" y1="30" x2="215" y2="180" class="ink" stroke-width="4"/><line x1="45" y1="180" x2="215" y2="180" class="ink" stroke-width="4"/><circle cx="130" cy="30" r="18" class="fill-ground ink" stroke-width="2"/><circle cx="45" cy="180" r="18" class="fill-ground ink" stroke-width="2"/><circle cx="215" cy="180" r="18" class="fill-ground ink" stroke-width="2"/><text x="123" y="38" font-size="22" class="mono">0</text><text x="38" y="188" font-size="22" class="mono">1</text><text x="208" y="188" font-size="22" class="mono">2</text><text x="52" y="105" font-size="24" class="mono soft">01</text><text x="185" y="105" font-size="24" class="mono soft">02</text><text x="117" y="215" font-size="24" class="mono soft">12</text></svg></template>
+  <template data-ref="half"><span class="ref-name">the triangle's half point</span>$x = (\tfrac12, \tfrac12, \tfrac12)$, value $\tfrac32$ <span class="ref-note">the matching LP's optimal vertex on the triangle; the best real matching has 1 edge</span><svg viewBox="0 0 260 230" width="150" aria-hidden="true"><line x1="130" y1="30" x2="45" y2="180" class="accent" stroke-width="5"/><line x1="130" y1="30" x2="215" y2="180" class="accent" stroke-width="5"/><line x1="45" y1="180" x2="215" y2="180" class="accent" stroke-width="5"/><circle cx="130" cy="30" r="14" class="fill-ground ink" stroke-width="2"/><circle cx="45" cy="180" r="14" class="fill-ground ink" stroke-width="2"/><circle cx="215" cy="180" r="14" class="fill-ground ink" stroke-width="2"/><text x="66" y="100" font-size="30" class="mono">½</text><text x="182" y="100" font-size="30" class="mono">½</text><text x="124" y="210" font-size="30" class="mono">½</text></svg></template>
+</div>
 <div class="reveal"><div class="slides">
 
 <section class="title-slide">
@@ -215,7 +221,7 @@
     <p><span class="term" data-term="TU-preserving operations">Operations that preserve TU</span>: transposing; multiplying a row or column by −1;
     permuting, duplicating, or deleting rows and columns; appending a unit row or
     column; and pivoting. These let you check a model's matrix by transforming it into
-    a known family. A flow model with extra bound rows is still TU, for example.</p>
+    a known family. A flow model with extra bound constraints is still TU, for example.</p>
     <p>The characterization theorem (<span class="term" data-term="Seymour's decomposition">Seymour</span>, 1980): every TU matrix can be built by
     certain "1-, 2- and 3-sums" from network matrices, their transposes, and two
     special 5×5 matrices. This gives a polynomial recognition algorithm. It is deep,
@@ -228,7 +234,7 @@
   <h2>A Ghouila-Houri signing, worked</h2>
   <div class="cols">
     <div>
-      <div class="box ex"><span class="label">the shift matrix: signings exist</span>
+      <div class="box ex"><span class="label">the <span class="ref" data-ref="A">shift matrix</span>: signings exist</span>
         <p class="small">Rows $r_1 = (1,0,0)$, $r_2 = (1,1,0)$, $r_3 = (1,1,1)$, $r_4 = (0,0,1)$. Each column's ones are consecutive, so alternate signs down the rows:</p>
         <table style="margin:0">
           <thead><tr><th>chosen rows</th><th>signs</th><th>sum</th><th></th></tr></thead>
@@ -238,11 +244,11 @@
             <tr><td>$r_1, r_3, r_4$</td><td>$+,-,+$</td><td>$(0, -1, 0)$</td><td>✓</td></tr>
           </tbody>
         </table>
-        <p class="small">Every one of the 15 row subsets has a good signing: TU, the same verdict as the 34 determinants, from a test that is easy to <em>see</em>.</p>
+        <p class="small">Every one of the 15 row subsets has a good signing: TU, the same verdict as <span class="ref" data-ref="A">the 34 determinants</span>, from a test that is easy to <em>see</em>.</p>
       </div>
     </div>
     <div>
-      <div class="box warn"><span class="label">the triangle: no signing exists</span>
+      <div class="box warn"><span class="label"><span class="ref" data-ref="T">the triangle</span>: no signing exists</span>
         <p class="small">Take all three vertex rows. Each edge column has a 1 in exactly two rows, so for its sum to be 0 those two rows need <b>opposite</b> signs.</p>
         <p class="small">So adjacent vertices get opposite signs: a 2-colouring. A triangle has none. Some column sums to $\pm 2$ whatever you choose.</p>
         <p class="small">Try $+,-,+$: edge $02$ sums to $1 + 1 = 2$. ✗</p>
@@ -257,7 +263,7 @@
     consecutive block and the sum is $+1 -1 +1 \dots$, which is 0 or 1. First row
     of the table: column 1 has ones in $r_1, r_2, r_3$: $+1 - 1 + 1 = 1$; column 2 in
     $r_2, r_3$: $-1 + 1 = 0$; column 3 in $r_3, r_4$: $+1 - 1 = 0$.</p>
-    <p><b>The triangle.</b> The reference <code>ghouila_houri</code> returns the witness
+    <p><b><span class="ref" data-ref="T">The triangle</span>.</b> The reference <code>ghouila_houri</code> returns the witness
     <code>(0, 1, 2)</code>, all three rows. Its smaller subsets are fine: any two vertex rows
     can be signed $+,-$, and each edge column then sums to 0 or $\pm 1$.</p>
     <p>A bipartite graph's good signing is "left side $+$, right side $-$": each edge
@@ -291,9 +297,9 @@
     minus 1 for the empty submatrix. At $n = 10$ that is 184 755, which matches the
     table.</p>
     <p>A common real-world situation is a TU core plus a few "complicating"
-    constraints: a network flow with a budget row, or an assignment with a side
+    constraints: a network flow with a budget constraint, or an assignment with a side
     constraint (a <b>TU core with side constraints</b>). The side constraints break integrality, but only mildly. Lagrangian
-    relaxation (unit 11) exploits exactly this: dualize the few bad rows and solve the
+    relaxation (unit 11) exploits exactly this: dualize the few bad constraints and solve the
     TU remainder as a fast combinatorial problem.</p>
   </aside>
 </section>
@@ -323,8 +329,8 @@
       <p class="cap">Max matching LP on a triangle: value $\tfrac32$ at the vertex $x = (\tfrac12, \tfrac12, \tfrac12)$; the best integer matching has value 1.</p>
     </div>
     <div>
-      <p>The incidence matrix of a triangle has determinant 2:</p>
-      $$\det\begin{pmatrix}1&1&0\\0&1&1\\1&0&1\end{pmatrix} = 2$$
+      <p>The incidence matrix of the triangle has determinant 2:</p>
+      $$\det T = \det\begin{pmatrix}1&0&1\\1&1&0\\0&1&1\end{pmatrix} = 2$$
       <div class="box thm"><span class="label">theorem</span>
         <p>A graph's incidence matrix is TU if and only if the graph is <b>bipartite</b>. The obstruction is an <span class="term">odd cycle</span>: the incidence matrix of an odd cycle has determinant $\pm 2$.</p>
       </div>
@@ -333,8 +339,9 @@
   </div>
   <p class="viz-link-row"><a class="viz-link" href="explore.html#/1" target="_blank" rel="noopener">explore interactively</a></p>
   <aside class="notes">
-    <p>Determinant of an odd cycle's incidence matrix: expanding along the first row
-    gives $1 + (-1)^{k+1} = 2$ for odd $k$, and 0 for even $k$. The even cycle is fine;
+    <p>Determinant of an odd cycle's incidence matrix, with vertices as rows and the edges
+    $01, 12, \dots, (k-1)0$ as columns in that cyclic order, as in $T$: expanding along the
+    first row gives $1 + (-1)^{k+1} = 2$ for odd $k$, and 0 for even $k$. The even cycle is fine;
     the odd one is not.</p>
     <p>This is also the triangle of unit 00: the matching lower bound on vertex cover
     failed there. Both facts have the same cause. The LPs for matching and vertex
@@ -361,9 +368,9 @@
     </div>
   </div>
   <aside class="notes">
-    <p>The triangle violates its own odd-set inequality: $S = $ all three vertices,
+    <p><span class="ref" data-ref="T">The triangle</span> violates its own odd-set inequality: $S = $ all three vertices,
     $|S| = 3$, and the inequality says the three edge values sum to at most 1, while
-    the LP point sums to $\tfrac32$. Adding that one inequality makes the triangle's
+    <span class="ref" data-ref="half">the LP point</span> sums to $\tfrac32$. Adding that one inequality makes the triangle's
     LP integral. This is a cutting plane in the sense of unit 08: valid for all
     matchings and violated by the fractional vertex.</p>
     <p>Edmonds' 1965 papers are where "polynomial time" was first argued to be the
@@ -382,28 +389,28 @@
       <table>
         <thead><tr><th>graph</th><th>matching LP</th><th class="num">value</th><th>+ odd set $S = V$</th><th class="num">value</th></tr></thead>
         <tbody>
-          <tr><td>triangle</td><td>$(\tfrac12, \tfrac12, \tfrac12)$</td><td class="num">1.5</td><td>$(1, 0, 0)$</td><td class="num"><b>1</b></td></tr>
+          <tr><td><span class="ref" data-ref="T">triangle</span></td><td>$(\tfrac12, \tfrac12, \tfrac12)$</td><td class="num">1.5</td><td>$(1, 0, 0)$</td><td class="num"><b>1</b></td></tr>
           <tr><td>5-cycle</td><td>all five $= \tfrac12$</td><td class="num">2.5</td><td>$(0, 1, 0, 1, 0)$</td><td class="num"><b>2</b></td></tr>
         </tbody>
       </table>
-      <p class="small">Maximize the number of matched edges. The degree rows alone allow every edge at one half. One extra row per cycle, "at most $\frac{|S|-1}{2}$ edges inside $S$", and the LP optimum becomes a real matching.</p>
+      <p class="small">Maximize the number of matched edges. The degree constraints alone allow every edge at one half. One extra constraint per cycle, "at most $\frac{|S|-1}{2}$ edges inside $S$", and the LP optimum becomes a real matching.</p>
     </div>
     <div>
       <div class="box ex"><span class="label">why the half point is cut off</span>
-        <p class="small"><b>Triangle:</b> $S$ = all 3 vertices. A matching inside 3 vertices has at most 1 edge, so $x_{01} + x_{12} + x_{02} \le 1$. The half point sums to $\tfrac32$: violated.</p>
+        <p class="small"><b><span class="ref" data-ref="T">Triangle</span>:</b> $S$ = all 3 vertices. A matching inside 3 vertices has at most 1 edge, so $x_{01} + x_{12} + x_{02} \le 1$. <span class="ref" data-ref="half">The half point</span> sums to $\tfrac32$: violated.</p>
         <p class="small"><b>5-cycle:</b> 5 vertices hold at most 2 disjoint edges, so the five values sum to at most 2. The half point sums to $\tfrac52$: violated.</p>
       </div>
-      <p class="small muted">An even cycle needs no such row: its all-halves point is the average of two perfect matchings, not a vertex.</p>
+      <p class="small muted">An even cycle needs no such constraint: its all-halves point is the average of two perfect matchings, not a vertex.</p>
     </div>
   </div>
   <aside class="notes">
     <p>Both LPs were solved with HiGHS on the reference <code>incidence_matrix</code>, once
-    with the degree rows only and once with the extra odd-set row. The degree rows say
+    with the degree constraints only and once with the extra odd-set constraint. The degree constraints say
     each vertex touches at most one unit of matching; on an odd cycle of length $k$ the
     all-halves point satisfies them with equality and has value $k/2$, while the best
-    matching has $(k-1)/2$ edges. The one odd-set row with $S = V$ closes exactly that
+    matching has $(k-1)/2$ edges. The one odd-set constraint with $S = V$ closes exactly that
     gap.</p>
-    <p>For a general graph you need the rows for every odd set, not just $V$, and there
+    <p>For a general graph you need the constraints for every odd set, not just $V$, and there
     are exponentially many. Finding a violated one is a minimum odd cut computation
     (Padberg & Rao, 1982), which is unit 09's separation idea.</p>
     <p>Why an even cycle is fine: on a 4-cycle, all halves is $\tfrac12(1,0,1,0) + \tfrac12(0,1,0,1)$,
@@ -420,7 +427,7 @@
       <p class="small">0/1 matrices with no odd submatrix cycle. Set packing, covering and partitioning over them have integral LPs (Berge; Fulkerson, Hoffman & Oppenheim).</p>
     </div>
     <div class="box def"><span class="label"><span class="term" data-term="perfect matrix">perfect matrices</span></span>
-      <p class="small">Clique constraints of perfect graphs: the stable-set LP with clique rows is integral (Chvátal; Lovász's perfect graph theorem).</p>
+      <p class="small">Clique constraints of perfect graphs: the stable-set LP with clique constraints is integral (Chvátal; Lovász's perfect graph theorem).</p>
     </div>
     <div class="box def"><span class="label">TDI systems</span>
       <p class="small"><span class="term" data-term="total dual integrality">Total dual integrality</span> (Edmonds & Giles 1977): the dual has integral optima for every integral $c$. Then the primal polyhedron is integral, whatever $A$ is.</p>
@@ -484,7 +491,7 @@ uv run co then 06     # assignment LP vs Hungarian · matching LP fractionality 
     </div>
   </div>
   <aside class="notes">
-    <p>The flow question, answered: the flow conservation rows form a directed
+    <p>The flow question, answered: the flow conservation constraints have a directed
     incidence matrix, which is TU. Appending the capacity bounds $x \le u$ adds an
     identity block, which keeps it TU. So for integral $u$ every vertex is integral,
     and simplex returns a vertex.</p>

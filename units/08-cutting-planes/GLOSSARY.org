@@ -44,12 +44,12 @@ term can be looked up here and read properly there.
   practice./
 - coefficient growth :: The number of digits in cut coefficients rising round
   after round; in floating point it makes cuts invalid.
-- dynamism :: The ratio of largest to smallest coefficient in a row; solvers
+- dynamism :: The ratio of largest to smallest coefficient in a constraint; solvers
   discard cuts where it is too high.
 
 * Structural cuts
 
-- cover :: For a knapsack row \(\sum_j w_j x_j \le c\), a set \(C\) with
+- cover :: For a knapsack constraint \(\sum_j w_j x_j \le c\), a set \(C\) with
   \(\sum_{j \in C} w_j > c\): not all of it fits. /Slide: Knapsack cover
   inequalities./
 - cover inequality :: \(\sum_{j \in C} x_j \le |C| - 1\).
@@ -68,10 +68,10 @@ term can be looked up here and read properly there.
 - lifted cover inequality :: A minimal cover inequality after sequential lifting.
   Always a facet of the knapsack polytope; the lifting order can change which.
 - mixed-integer rounding (MIR) cut :: A rounding formula applied to an
-  aggregation of rows. /Slide: The families solvers actually run./
-- aggregation :: A combination of several rows into one, used as the base for MIR
-  cuts. Sees structure no single row shows.
-- flow cover cut :: A cut from fixed-charge flow rows \(x \le uy\).
+  aggregation of constraints. /Slide: The families solvers actually run./
+- aggregation :: A combination of several constraints into one, used as the base for
+  MIR cuts. Sees structure no single constraint shows.
+- flow cover cut :: A cut from fixed-charge flow constraints \(x \le uy\).
 - conflict graph :: A graph on binaries (and their complements) with an edge
   wherever two cannot both be 1.
 - clique cut :: \(\sum_{j \in K} x_j \le 1\) for a clique \(K\) of the conflict

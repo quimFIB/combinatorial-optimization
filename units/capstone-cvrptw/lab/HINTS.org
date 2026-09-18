@@ -50,7 +50,7 @@ codes use.
 
 ** Rung 3 — building the SCIP model
 ~Model()~, ~hideOutput()~, ~setParam("limits/time", ...)~. One binary per arc with the distance as its
-objective coefficient, ~addVar(lb=..., ub=...)~ for each t_c. The degree rows are two ~quicksum~​s per
+objective coefficient, ~addVar(lb=..., ub=...)~ for each t_c. The degree constraints are two ~quicksum~​s per
 customer. Then ~lazy_cut_handler(m, x, separate)~, where ~separate(values)~ returns
 ~[(entering arcs, rhs), ...]~. With ~cuts=False~, return ~[]~ whenever some value is fractional, so cuts
 are only used to reject integer solutions. Read routes with ~getSolVal(getBestSol(), x[a]) > 0.5~ and
@@ -59,7 +59,7 @@ are only used to reject integer solutions. Read routes with ~getSolVal(getBestSo
 ** Functional route
 The separator is pure: components, then a comprehension that keeps the violated ones. The model builder is
 imperative because SCIP's API is. Keep its loops to comprehensions over ~tz.groupby(0, arcs)~ and
-~tz.groupby(1, arcs)~ for the degree rows.
+~tz.groupby(1, arcs)~ for the degree constraints.
 
 * Step 3 — (b) Branch-and-price
 

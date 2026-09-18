@@ -2,7 +2,7 @@
 window.GLOSSARY = [
 {
 "term_html": "complicating constraints",
-"html": "The rows \\(Ax \\ge b\\) that make the problem hard; the ones to move into the objective.",
+"html": "The constraints \\(Ax \\ge b\\) that make the problem hard; the ones to move into the objective.",
 "section": "Dualising",
 "slide": "The Lagrangian function",
 "keys": [
@@ -20,7 +20,7 @@ window.GLOSSARY = [
 },
 {
 "term_html": "Lagrange multipliers",
-"html": "The prices \\(u \\ge 0\\), one per dualised row; free sign for equality rows.",
+"html": "The prices \\(u \\ge 0\\), one per dualised constraint; free sign for equality constraints.",
 "section": "Dualising",
 "slide": "The Lagrangian function",
 "keys": [
@@ -127,7 +127,7 @@ window.GLOSSARY = [
 },
 {
 "term_html": "subgradient",
-"html": "\\(g\\) with \\(L(v) \\le L(u) + g^\\top (v - u)\\) for all \\(v\\). For the Lagrangian, \\(g = b - Ax(u)\\), the violation of the dualised rows: free to compute.",
+"html": "\\(g\\) with \\(L(v) \\le L(u) + g^\\top (v - u)\\) for all \\(v\\). For the Lagrangian, \\(g = b - Ax(u)\\), the violation of the dualised constraints: free to compute.",
 "section": "Subgradients",
 "slide": "Subgradient ascent",
 "keys": [

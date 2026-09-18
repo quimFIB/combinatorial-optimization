@@ -11,6 +11,11 @@
 <link rel="stylesheet" href="../../slides/deck.css">
 </head>
 <body data-trunk="coda">
+<!-- The running example, once: what each <span class="ref"> on the slides shows on hover. -->
+<div class="refs" hidden>
+  <template data-ref="f"><span class="ref-name">the example</span>$f(x, y) = xy + \sin x$ at $(x, y) = (1, 2)$ <span class="ref-note">value 2.8415; gradient $(y + \cos x,\ x) = (2.5403,\ 1)$. Tape: $v_0 = x$, $v_1 = y$, $v_2 = v_0 v_1$, $v_3 = \sin v_0$, $v_4 = v_2 + v_3$</span></template>
+  <template data-ref="mlp"><span class="ref-name">the lab's MLP</span>layers $[2, 64, 64, 1]$, tanh on the hidden layers, batch 64, float64 <span class="ref-note">its tape: 29 185 numbers, 233 480 bytes, predicted and measured</span></template>
+</div>
 <div class="reveal"><div class="slides">
 
 <section class="title-slide">
@@ -184,7 +189,7 @@
 
 <section>
   <p class="eyebrow">30 · reverse · example</p>
-  <h2>The tape and its adjoints, on the example</h2>
+  <h2>The tape and its adjoints, on <span class="ref" data-ref="f">the example</span></h2>
   <div class="cols">
     <div class="box ex"><span class="label">forward: record</span>
       <table style="margin:0">
@@ -217,7 +222,7 @@
     <p><b>Order matters.</b> $v_0$'s adjoint is only complete after every node that uses $v_0$ has been
     visited, which is what reverse topological order guarantees: $v_4$, then $v_3$ and $v_2$, then the
     inputs. Visiting $v_0$ before $v_3$ would propagate a half-finished adjoint.</p>
-    <p>The reference <code>reverse_gradient</code> on this function returns value 2.8414710 and gradient
+    <p>The reference <code>reverse_gradient</code> on <span class="ref" data-ref="f">this function</span> returns value 2.8414710 and gradient
     $[2.5403023, 1.0]$, matching the forward passes to all printed digits.</p>
   </aside>
 </section>
@@ -277,10 +282,10 @@
           <tr><td><b>total</b></td><td></td><td class="num"><b>29 185</b></td></tr>
         </tbody>
       </table>
-      <p class="small">At 8 bytes per float64: $29\,185 \times 8 = \mathbf{233\,480}$ bytes, exactly what the lab measures.</p>
+      <p class="small">At 8 bytes per float64: $29\,185 \times 8 = \mathbf{233\,480}$ bytes, exactly what the lab measures for <span class="ref" data-ref="mlp">the MLP</span>.</p>
     </div>
     <div class="box ex"><span class="label">what the count tells you</span>
-      <p class="small">The 64×64 activations dominate: 7 of them hold 28 672 of the 29 185 numbers. Double the batch and those double; the weights don't.</p>
+      <p class="small">The 64×64 arrays dominate: 7 of them hold 28 672 of the 29 185 numbers. Double the batch and the six activations among them double; the weights don't.</p>
       <p class="small">The last layer's output is not followed by tanh (a regression output), and the biases are not saved at all, since adding a bias needs no stored value to differentiate.</p>
     </div>
   </div>
@@ -306,7 +311,7 @@
           <tr><td><span class="term" data-term="Hessian-vector product (HVP)">HVP</span></td><td>$H v = \frac{d}{d\varepsilon} \nabla f(x + \varepsilon v)$</td><td><span class="term">forward over reverse</span></td></tr>
         </tbody>
       </table>
-      <div class="box ex"><span class="label">on the example</span>
+      <div class="box ex"><span class="label">on <span class="ref" data-ref="f">the example</span></span>
         <p class="small">$H = \begin{pmatrix} -\sin x & 1 \\ 1 & 0 \end{pmatrix}$ at $(1, 2)$. With $v = (1, 0)$: $Hv = (-0.8415,\ 1)$, one tape run on dual inputs $(1 + \varepsilon,\ 2)$.</p>
       </div>
       <div class="box"><span class="label">forward over reverse in the lab</span>
@@ -333,7 +338,7 @@
     different operation (for example a fused kernel), not "numerical noise".</p>
     <p>The dual-number trick generalises: nesting dual numbers gives higher derivatives (hyper-dual numbers),
     and forward-over-reverse is the standard composition in JAX (jax.jvp of jax.grad).</p>
-    <p><b>A VJP on the example.</b> For $(x, y) \mapsto (xy,\ \sin x)$ and $u = (2, -1)$, one backward sweep seeded
+    <p><b>A VJP on <span class="ref" data-ref="f">the example</span>.</b> For $(x, y) \mapsto (xy,\ \sin x)$ and $u = (2, -1)$, one backward sweep seeded
     with $u$ gives $u^\top J = (2y - \cos x,\ 2x) = (3.4597,\ 2)$.</p>
     <p><b>The example box.</b> The reference <code>hvp</code> with inputs $(1, 2)$ and direction
     $(1, 0)$ returns $[-0.8414710, 1.0]$: the first column of $H$. The VJP: $J$ has rows $(y, x)$ and
@@ -358,7 +363,7 @@
         <tbody>
           <tr><td>predict the mean (<span class="term">baseline</span>)</td><td class="num">161.3 m</td><td></td></tr>
           <tr><td>linear in (x, y)</td><td class="num">144.9 m</td><td></td></tr>
-          <tr><td><b>your MLP</b></td><td class="num"><b>90.4 m</b></td><td class="num">1.8</td></tr>
+          <tr><td><b>your <span class="ref" data-ref="mlp">MLP</span></b></td><td class="num"><b>90.4 m</b></td><td class="num">1.8</td></tr>
           <tr><td>same in JAX (jit)</td><td class="num">90.4 m</td><td class="num">2.6</td></tr>
         </tbody>
       </table>

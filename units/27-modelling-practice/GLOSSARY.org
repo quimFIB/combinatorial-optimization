@@ -21,7 +21,7 @@ term can be looked up here and read properly there.
 - probing :: Tentatively fixing a binary both ways and learning implications from
   what propagation deduces.
 - clique detection :: Merging pairwise conflicts between binaries into one clique
-  row.
+  constraint.
 - numerically wide coefficients :: Values like \(10^{-6}\) next to \(10^6\) in one
   model, where tolerances start to bite and cuts get rejected.
 - indicator constraint :: \(y = 1 \Rightarrow a^\top x \le b\) given to the solver
@@ -77,7 +77,7 @@ term can be looked up here and read properly there.
 - stuck dual bound :: A dual bound that never leaves the first LP value while nodes
   pile up: a weak relaxation.
 - performance variability :: Large changes in solve time from irrelevant changes such
-  as the random seed or row order. /Slide: Performance variability: the same model,
+  as the random seed or constraint order. /Slide: Performance variability: the same model,
   different seeds./
 - random seed (solver) :: The number fixing a solver's internal random choices.
   Different seeds give different trees on the same model.

@@ -11,6 +11,11 @@
 <link rel="stylesheet" href="../../slides/deck.css">
 </head>
 <body data-trunk="prac">
+<!-- The running example, once: what each <span class="ref"> on the slides shows on hover. -->
+<div class="refs" hidden>
+  <template data-ref="c07"><span class="ref-name">unit 07's branching claim</span>totals over 3 instances: strong branching uses the fewest nodes; pseudocost is fastest <span class="ref-note">audited here on 24 knapsacks: survives. Strong saves about a quarter of the nodes at 2.3× the time; pseudocost is fastest on 22 of 24</span></template>
+  <template data-ref="c19"><span class="ref-name">unit 19's restart claims</span>one instance, 100 seeds, 3 000-node cap: restarts cut the mean from 153.6 to 52.1 nodes and make the median worse, 31 → 49.5 <span class="ref-note">audited here: the median claim is withdrawn (intervals overlap; worse on only 3 of 8 more instances); what survives is that restarts cut the tail</span></template>
+</div>
 <div class="reveal"><div class="slides">
 
 <section class="title-slide">
@@ -24,7 +29,7 @@
     noise. This unit is the method that would have told you so in advance: store runs, not summaries;
     choose the summary for the question; attach uncertainty; correct for the number of questions asked.</p>
     <p>The curriculum says: "Expect at least one earlier conclusion not to survive; that is the unit
-    working." It happened. Unit 19's claim that restarts worsen the median has been withdrawn.</p>
+    working." It happened. <span class="ref" data-ref="c19">Unit 19's claim that restarts worsen the median</span> has been withdrawn.</p>
     <h4>How to read this deck</h4>
     <p>The two-solver, ten-instance table on the first content slide is the running example for
     summaries. Two example slides work the other tools by hand: a performance profile for three
@@ -46,7 +51,7 @@
     <div class="box def"><span class="label">3 · inference</span>
       <p class="small">Seeds, paired bootstrap intervals, Wilcoxon, Holm; instance selection; negative results.</p></div>
     <div class="box def"><span class="label">4 · the audit</span>
-      <p class="small">Unit 07's branching claim survives, quantified. Unit 19's median claim doesn't.</p></div>
+      <p class="small"><span class="ref" data-ref="c07">Unit 07's branching claim</span> survives, quantified. <span class="ref" data-ref="c19">Unit 19's median claim</span> doesn't.</p></div>
   </div>
   <div class="box good"><span class="label">getting around</span>
     <p class="small">Words with a <span class="term" data-term="shifted geometric mean (SGM)">dotted underline</span> are glossary terms: click one for its definition. <kbd>G</kbd> lists every term in the unit, <kbd>N</kbd> shows the notes. Optional extra: <a href="explore.html" target="_blank" rel="noopener">interactive figures</a>, linked from the slides they support by a small ▸ chip; skip them freely.</p>
@@ -86,7 +91,7 @@
         <p class="small">An unsolved run has no time, only a lower bound. <b><span class="term" data-term="PAR-\(k\)">PAR-k</span></b> counts it as $k \times$ the limit. The result depends on the limit and on $k$, so report both, and report the solved count separately.</p>
       </div>
       <div class="box warn"><span class="label"><span class="term">censoring</span>, in this course</span>
-        <p class="small">Unit 19 reported a mean of 153.6 nodes with a 3 000-node cap. Three capped runs contributed 90 of it: without them the mean is 65.6. A higher cap would give a higher mean. The number described the cap as much as the solver.</p>
+        <p class="small"><span class="ref" data-ref="c19">Unit 19 reported a mean of 153.6 nodes</span> with a 3 000-node cap. Three capped runs contributed 90 of it: without them the mean is 65.6. A higher cap would give a higher mean. The number described the cap as much as the solver.</p>
       </div>
       <p class="small muted">SCIP and most MIP benchmark reports use shift 10 s (Achterberg 2007). For sub-second runs, pick a shift on their scale: the lab's audit uses 0.1 s.</p>
     </div>
@@ -99,7 +104,7 @@
     <p>The PAR-2 line: with a 300 s limit A's slow instance is unsolved and counts $2 \times 300 = 600$, so
     A's mean is $(9 \cdot 1 + 600)/10 = 60.9$; B's 100 s instance is solved and its mean stays 11.8. With a
     limit of 2 000 s it would be solved and count 1 000. Report the limit, $k$ and the solved counts.</p>
-    <p>For node counts, shifted geometric means work the same way. Unit 28's audit uses shift 10 nodes.</p>
+    <p>For node counts, shifted geometric means work the same way. This unit's audit uses shift 10 nodes.</p>
   </aside>
 </section>
 
@@ -126,7 +131,7 @@
       </div>
     </div>
     <div>
-      <p class="small">Lab <code>then</code>, unit 07's branching rules on 24 knapsacks, time:</p>
+      <p class="small">Lab <code>then</code>, <span class="ref" data-ref="c07">unit 07's branching rules</span> on 24 knapsacks, time:</p>
       <table class="dense">
         <thead><tr><th>τ</th><th class="num">1</th><th class="num">1.25</th><th class="num">1.5</th><th class="num">2</th><th class="num">3</th><th class="num">5</th></tr></thead>
         <tbody>
@@ -166,7 +171,7 @@
           <tr><td>p4</td><td class="num">—</td><td class="num">8</td><td class="num">4</td><td>Z</td></tr>
         </tbody>
       </table>
-      <p class="small"><b>Ratios</b> (time over the row's best): X $1, 2, 1, \infty$; Y $2, 1, 1, 2$; Z $1.5, \infty, 2, 1$.</p>
+      <p class="small"><b>Ratios</b> (time over the instance's best): X $1, 2, 1, \infty$; Y $2, 1, 1, 2$; Z $1.5, \infty, 2, 1$.</p>
       <p class="small">The virtual best takes 2, 5, 1, 4: every instance solved.</p>
     </div>
     <div>
@@ -192,7 +197,7 @@
     <code>virtual_best</code> picks X, Y, X, Z (the p3 tie broken by solver name).</p>
     <p><b>Without Y.</b> p1: X 1, Z 1.5. p2: X is now the best solver, ratio 1; Z failed. p3: X 1, Z 2.
     p4: X failed, Z 1. So X's profile at τ = 1 is 0.75 instead of 0.5, although X itself did nothing
-    different. This is Gould and Scott's point, on four rows.</p>
+    different. This is Gould and Scott's point, on four instances.</p>
   </aside>
 </section>
 
@@ -299,10 +304,10 @@
     </div>
     <div>
       <div class="box def"><span class="label"><span class="term" data-term="aggregate vs per-instance claim">per-instance or aggregate?</span></span>
-        <p class="small">"Faster on average" (an aggregate claim) and "faster on most instances" (a per-instance claim) are different. Unit 28's audit reports both: pseudocost has the lower SGM <em>and</em> wins 22 of 24.</p>
+        <p class="small">"Faster on average" (an aggregate claim) and "faster on most instances" (a per-instance claim) are different. <span class="ref" data-ref="c07">The audit of unit 07</span> reports both: pseudocost has the lower SGM <em>and</em> wins 22 of 24.</p>
       </div>
       <div class="box good"><span class="label">a <span class="term">negative result</span> worth reading</span>
-        <p class="small">State the hypothesis, the instances and budget, the effect size with its interval, and what it rules out. "Restarts don't reliably change the median on QCP(12, 55%): 3/8 instances worse, p = 0.79, and the original instance's intervals overlap" rules out a specific claim, which is useful.</p>
+        <p class="small">State the hypothesis, the instances and budget, the effect size with its interval, and what it rules out. "Restarts don't reliably change the median on QCP(12, 55%): 3/8 instances worse, p = 0.79, and <span class="ref" data-ref="c19">the original instance</span>'s intervals overlap" rules out a specific claim, which is useful.</p>
       </div>
     </div>
   </div>

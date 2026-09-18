@@ -99,8 +99,8 @@ cumulative model 5× sooner. **Neither proves it** in 100 000 nodes: timetable f
 weak to bound the makespan. That needs edge-finding (slides), or the learning of units 20–21.
 
 **The Hall set:** two decisions down the path to the solution, after pairwise ≠ has reached its
-fixpoint, alldifferent on row 7 removes 2 from r7c1 (domain {2, 4, 5, 7}). Cells r7c2, r7c4,
-r7c5 and r7c6 hold only {2, 4, 7, 9} between them.
+fixpoint, alldifferent on row 7 removes 2, 4 and 7 from r7c1 (domain {2, 4, 5, 7}), leaving 5. Cells
+r7c2, r7c4, r7c5 and r7c6 hold only {2, 4, 7, 9} between them.
 
 **CP-SAT:** all 2 680 solutions of queens 11 take 8.1 s pairwise and **2.1 s** with
 `AddAllDifferent`. ft06 is solved to proven optimality (55) in 0.035 s with disjunctions and

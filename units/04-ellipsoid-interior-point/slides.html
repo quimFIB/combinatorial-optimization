@@ -11,6 +11,13 @@
 <link rel="stylesheet" href="../../slides/deck.css">
 </head>
 <body data-trunk="lp">
+<!-- The running example, once: what each <span class="ref"> on the slides shows on hover. -->
+<div class="refs" hidden>
+  <template data-ref="P"><span class="ref-name">the running example: unit 01's polygon</span>$-x \le 0,\ \ -y \le 0,\ \ x + y \le 4,\ \ x - y \le 1$ <span class="ref-note">constraints 1–4, slacks $s_1, \dots, s_4$ in that order. Maximizing $2x + y$: optimum $(2.5, 1.5)$, $z = 6.5$</span><svg viewBox="20 20 350 320" width="170" aria-hidden="true"><line x1="60" y1="24" x2="60" y2="336" class="rule" stroke-width="2"/><line x1="24" y1="300" x2="366" y2="300" class="rule" stroke-width="2"/><polygon points="60,300 120,300 210,210 60,60" class="fill-soft unit" stroke-width="3"/><circle cx="60" cy="300" r="8" class="fill-ink"/><text x="22" y="326" font-size="24">(0,0)</text><circle cx="120" cy="300" r="8" class="fill-ink"/><text x="120" y="326" font-size="24">(1,0)</text><circle cx="210" cy="210" r="11" class="fill-accent"/><text x="222" y="216" font-size="24">(2.5,1.5)</text><circle cx="60" cy="60" r="8" class="fill-ink"/><text x="72" y="66" font-size="24">(0,4)</text></svg></template>
+  <template data-ref="c3"><span class="ref-name">constraint 3</span>$x + y \le 4$ <span class="ref-note">tight at the optimum $(2.5, 1.5)$; shadow price $3/2$ (unit 02)</span><svg viewBox="20 20 350 320" width="170" aria-hidden="true"><line x1="60" y1="24" x2="60" y2="336" class="rule" stroke-width="2"/><line x1="24" y1="300" x2="366" y2="300" class="rule" stroke-width="2"/><polygon points="60,300 120,300 210,210 60,60" class="fill-soft unit" stroke-width="3"/><line x1="30" y1="30" x2="330" y2="330" class="accent" stroke-width="5"/></svg></template>
+  <template data-ref="c4"><span class="ref-name">constraint 4</span>$x - y \le 1$ <span class="ref-note">tight at the optimum $(2.5, 1.5)$; shadow price $1/2$ (unit 02)</span><svg viewBox="20 20 350 320" width="170" aria-hidden="true"><line x1="60" y1="24" x2="60" y2="336" class="rule" stroke-width="2"/><line x1="24" y1="300" x2="366" y2="300" class="rule" stroke-width="2"/><polygon points="60,300 120,300 210,210 60,60" class="fill-soft unit" stroke-width="3"/><line x1="90" y1="330" x2="360" y2="60" class="accent" stroke-width="5"/></svg></template>
+  <template data-ref="ell"><span class="ref-name">the ellipsoid example</span>find a point of the polygon with $x + y \ge 3$ <span class="ref-note">start: ball of radius 5 at the origin. Centres $(0, 0) \to (1.18, 1.18) \to (1.96, 1.96)$, feasible after 2 steps</span><svg viewBox="20 -20 390 380" width="170" aria-hidden="true"><line x1="190" y1="-10" x2="190" y2="350" class="rule" stroke-width="2"/><line x1="30" y1="190" x2="400" y2="190" class="rule" stroke-width="2"/><polygon points="190,190 220,190 265,145 190,70" class="fill-soft unit" stroke-width="2.5" style="fill-opacity:.6"/><polygon points="190,100 250,160 265,145 190,70" class="fill-accent" style="fill-opacity:.55"/><circle cx="190" cy="190" r="150" fill="none" class="rule" stroke-width="3"/><ellipse cx="225.36" cy="154.64" rx="173.2" ry="100" transform="rotate(45 225.36 154.64)" fill="none" class="ink" stroke-width="3" stroke-dasharray="8 6"/><ellipse cx="248.93" cy="131.07" rx="200" ry="66.67" transform="rotate(45 248.93 131.07)" fill="none" class="accent" stroke-width="4"/><circle cx="190" cy="190" r="8" class="fill-ink"/><circle cx="225.36" cy="154.64" r="8" class="fill-ink"/><circle cx="248.93" cy="131.07" r="9" class="fill-accent"/></svg></template>
+</div>
 <div class="reveal"><div class="slides">
 
 <!-- ================================================================== -->
@@ -28,11 +35,11 @@
     choosing between simplex and interior point is a real decision you make whenever
     you configure a solver, and this unit gives you the reasons.</p>
     <p>Convention: $\max\{c^\top x : Ax \le b\}$ with $A \in \mathbb{R}^{m\times n}$ and no
-    separate sign constraints. The barrier needs every inequality as a row.</p>
+    separate sign constraints. The barrier needs every inequality, sign constraints included, written into $Ax \le b$.</p>
     <h4>How to read this deck</h4>
     <p>Both methods are shown on small examples with numbers: one ellipsoid run on a
-    corner of unit 01's polygon, the barrier on a single variable where everything has
-    a closed form, and the central path on the polygon itself. The inequality chains
+    corner of <span class="ref" data-ref="P">unit 01's polygon</span>, the barrier on a single variable where everything has
+    a closed form, and the central path on <span class="ref" data-ref="P">the polygon</span> itself. The inequality chains
     and the bit-size bookkeeping behind the theorems are in the notes under <b>Full
     proof</b>; nothing in the lab needs them.</p>
   </aside>
@@ -50,7 +57,7 @@
       <p>A barrier keeps you inside, and following the central path reaches the optimum in a few dozen Newton steps.</p></div>
   </div>
   <div class="box good"><span class="label">getting around</span>
-    <p class="small">Words with a <span class="term" data-term="central path">dotted underline</span> are glossary terms: click one for its definition. <kbd>G</kbd> lists every term in the unit, <kbd>N</kbd> shows the notes, where the proofs live. Optional extra: <a href="explore.html" target="_blank" rel="noopener">interactive figures</a>, linked from the slides they support by a small ▸ chip; skip them freely.</p>
+    <p class="small">Words with a <span class="term" data-term="central path">dotted underline</span> are glossary terms: click one for its definition. <kbd>G</kbd> lists every term in the unit, <kbd>N</kbd> shows the notes, where the proofs live. <span class="ref" data-ref="P">Unit 01's polygon</span> is the running example again: a solid underline like that one shows it on hover. Optional extra: <a href="explore.html" target="_blank" rel="noopener">interactive figures</a>, linked from the slides they support by a small ▸ chip; skip them freely.</p>
   </div>
   <p class="muted">Then: the pure barrier method breaks down in floating point past $t \approx 10^6$. HiGHS's IPM beats its simplex 7× cold at $n = 3000$, and loses 4× on the warm re-solve.</p>
   <aside class="notes">
@@ -83,7 +90,7 @@
     </div>
     <div class="box def"><span class="label">"polynomial" for LP</span>
       <p>Polynomial in the <span class="term" data-term="bit size L">bit size</span> $L$ of the input: the number of bits needed to write $A, b, c$ as integers.</p>
-      <p class="small muted">Example: the row $x + y \le 4$ needs about 2 bits per coefficient; $1000x + y \le 4096$ needs up to 13. Same shape of problem, more bits, and a polynomial method may take more steps.</p>
+      <p class="small muted">Example: the constraint $x + y \le 4$ needs about 2 bits per coefficient; $1000x + y \le 4096$ needs up to 13. Same shape of problem, more bits, and a polynomial method may take more steps.</p>
       <p class="small">Whether there is a <span class="term" data-term="strongly polynomial">strongly</span> polynomial LP algorithm, polynomial in $m$ and $n$ alone, independent of the numbers, is still open. It is one of Smale's problems for the 21st century.</p>
     </div>
   </div>
@@ -132,7 +139,7 @@
       <ol>
         <li>Start with a ball $E_0$ of radius $R$ that contains the feasible set, if nonempty.</li>
         <li>If the centre is feasible, stop.</li>
-        <li>Otherwise a violated row $a^\top z \le \beta$ separates the centre from every feasible point. Keep the half $\{a^\top z \le a^\top \text{centre}\}$.</li>
+        <li>Otherwise a violated constraint $a^\top z \le \beta$ separates the centre from every feasible point. Keep the half $\{a^\top z \le a^\top \text{centre}\}$.</li>
         <li>Replace $E_k$ by the <b>smallest ellipsoid containing that half</b>, and repeat.</li>
       </ol>
       <p>Each step shrinks the volume by a fixed factor, so the ellipsoid soon becomes too small to contain the feasible set. The set was therefore empty, or the centre found it.</p>
@@ -159,13 +166,13 @@
   <h2>Two ellipsoid steps, with numbers</h2>
   <div class="cols wide-left">
     <div>
-      <p class="small">Find a point of unit 01's polygon with $x + y \ge 3$, written $-x - y \le -3$. Start: ball of radius $R = 5$ at the origin, $P = 25I$.</p>
+      <p class="small">Find a point of <span class="ref" data-ref="P">unit 01's polygon</span> with $x + y \ge 3$, written $-x - y \le -3$. Start: ball of radius $R = 5$ at the origin, $P = 25I$.</p>
       <table>
-        <thead><tr><th class="num">$k$</th><th>centre</th><th>check the rows</th><th>$P$</th></tr></thead>
+        <thead><tr><th class="num">$k$</th><th>centre</th><th>check the constraints</th><th>$P$</th></tr></thead>
         <tbody>
           <tr><td class="num">0</td><td>$(0, 0)$</td><td>$x + y = 0 &lt; 3$ ✗</td><td>$\begin{pmatrix}25 & 0\\0 & 25\end{pmatrix}$</td></tr>
           <tr><td class="num">1</td><td>$(1.18, 1.18)$</td><td>$x + y = 2.36 &lt; 3$ ✗</td><td>$\begin{pmatrix}22.2 & -11.1\\-11.1 & 22.2\end{pmatrix}$</td></tr>
-          <tr><td class="num">2</td><td>$(1.96, 1.96)$</td><td>every row ✓</td><td>$\begin{pmatrix}24.7 & -19.8\\-19.8 & 24.7\end{pmatrix}$</td></tr>
+          <tr><td class="num">2</td><td>$(1.96, 1.96)$</td><td>every constraint ✓</td><td>$\begin{pmatrix}24.7 & -19.8\\-19.8 & 24.7\end{pmatrix}$</td></tr>
         </tbody>
       </table>
       <div class="box ex"><span class="label">step 1, by the formulas</span>
@@ -205,10 +212,10 @@
     along $(1, -1)$ and 11.1 along $(1, 1)$, so the semi-axes are 5.77 (along the cut) and
     3.33 (across it): the unit-ball picture of "The idea", scaled by $R = 5$
     ($5 \cdot \tfrac{2}{\sqrt3} = 5.77$, $5 \cdot \tfrac23 = 3.33$).</p>
-    <p><b>Step 2.</b> The centre still violates the same row, so $a$ is again $(-1, -1)$.
+    <p><b>Step 2.</b> The centre still violates the same constraint, so $a$ is again $(-1, -1)$.
     Now $Pa = (-11.1, -11.1)$, $a^\top P a = 22.2$, $g = (-2.36, -2.36)$, and the centre
     moves by $-g/3$ to $(1.96, 1.96)$. There $x + y = 3.93$: above 3 and below 4, and
-    $x - y = 0 \le 1$, so every row holds and the method stops. The area ratio is again
+    $x - y = 0 \le 1$, so every constraint holds and the method stops. The area ratio is again
     0.770: in 2-D it is the same at every step, whatever the cut.</p>
     <p>The run is the reference <code>ellipsoid_feasible</code> with $R = 5$; it returns
     after 2 iterations. The figure maps $(x, y)$ to $(190 + 30x,\ 190 - 30y)$, and the
@@ -277,7 +284,7 @@
       <p>Three gaps between the lab's version and Khachiyan's theorem, each closed by a fact about bit size (<span class="term" data-term="R and r from the data">$R$ and $r$ from the data</span>):</p>
       <ul class="small">
         <li><b>How big to start.</b> If any solution exists, one has coordinates at most $2^{O(L)}$, so that is $R$.</li>
-        <li><b>How small to stop.</b> A feasible set can be flat, holding no ball at all. Loosening every row by a tiny $2^{-O(L)}$ gives it one, without changing whether it is empty.</li>
+        <li><b>How small to stop.</b> A feasible set can be flat, holding no ball at all. Loosening every constraint by a tiny $2^{-O(L)}$ gives it one, without changing whether it is empty.</li>
         <li><b>Optimizing, not just finding.</b> Ask for $c^\top x \ge \gamma$ and search over $\gamma$: the <span class="term">sliding objective</span>.</li>
       </ul>
       <p class="proof-pointer">details in the notes (N)</p>
@@ -332,7 +339,7 @@
       </ul>
     </div>
     <div class="box good"><span class="label">what it really needs</span>
-      <p>Look at step 3 again, or at the example: the method only ever asked "which row fails at $(1.18, 1.18)$?". It never reads the constraint matrix. It only asks, of one point: <b>"is this feasible, and if not, give me a violated inequality."</b></p>
+      <p>Look at step 3 again, or at <span class="ref" data-ref="ell">the example</span>: the method only ever asked "which constraint fails at $(1.18, 1.18)$?". It never reads the constraint matrix. It only asks, of one point: <b>"is this feasible, and if not, give me a violated inequality."</b></p>
       <p>That is a <span class="term">separation oracle</span>. It works even when there are <b>exponentially many</b> constraints, provided violated ones can be found efficiently. This is unit 09.</p>
     </div>
   </div>
@@ -377,7 +384,7 @@
         <text x="140" y="245" font-size="13" class="mono">t = 7.3</text>
         <text x="220" y="203" font-size="13" class="mono">optimum</text>
       </svg>
-      <p class="cap">Central path of $\max 2x + y$ on unit 01's polygon, computed by the lab's reference solution ($t = 0.01 \cdot 3^k$).</p>
+      <p class="cap">Central path of $\max 2x + y$ on <span class="ref" data-ref="P">unit 01's polygon</span>, computed by the lab's reference solution ($t = 0.01 \cdot 3^k$).</p>
     </div>
     <div>
       <p>Replace the constraints by a penalty that is infinite on the boundary, the <span class="term">log barrier</span>:</p>
@@ -411,7 +418,7 @@
   <h2>The barrier on one variable</h2>
   <div class="cols">
     <div>
-      <p class="small">$\max x$ subject to $0 \le x \le 1$: two rows, slacks $x$ and $1 - x$, optimum 1.</p>
+      <p class="small">$\max x$ subject to $0 \le x \le 1$: two constraints, slacks $x$ and $1 - x$, optimum 1.</p>
       $$f_t(x) = -t\,x - \log x - \log(1 - x)$$
       <p class="small">Set the derivative to zero, $-t - \tfrac1x + \tfrac{1}{1-x} = 0$, and solve the quadratic:</p>
       $$x^*(t) = \frac{t - 2 + \sqrt{t^2 + 4}}{2t}$$
@@ -458,7 +465,7 @@
     root in $(0, 1)$ is the formula on the slide. At $t = 1$ it is $(\sqrt5 - 1)/2 = 0.618$,
     the golden ratio's reciprocal. As $t \to 0$, $\sqrt{t^2 + 4} \approx 2 + t^2/4$, so the
     numerator is about $t$ and $x^* \to \tfrac12$.</p>
-    <p><b>The dual point.</b> The rows are $-x \le 0$ and $x \le 1$, with slacks
+    <p><b>The dual point.</b> The constraints are $-x \le 0$ and $x \le 1$, with slacks
     $s_1 = x$, $s_2 = 1 - x$. So $y_1 = 1/(tx)$, $y_2 = 1/(t(1-x))$, and
     $A^\top y = -y_1 + y_2$. At $t = 1$: $1/0.618 = 1.618$ and $1/0.382 = 2.618$, and
     indeed $2.618 - 1.618 = 1$. The dual objective is $b^\top y = 0 \cdot y_1 + 1 \cdot y_2$.</p>
@@ -486,7 +493,7 @@
       <div class="box thm"><span class="label">consequence</span>
         <p>$x^*(t)$ is within $m/t$ of optimal, with a certificate. To reach accuracy $\varepsilon$, run until $t \ge m/\varepsilon$.</p>
       </div>
-      <div class="box ex"><span class="label">on the polygon, one point of the path</span>
+      <div class="box ex"><span class="label">on <span class="ref" data-ref="P">the polygon</span>, one point of the path</span>
         <p class="small">At $t = 7.29$: $x = (2.316, 1.597)$, slacks $s = (2.316, 1.597, 0.087, 0.282)$</p>
         <p class="small">$y = 1/(ts) = (0.059, 0.086, 1.573, 0.487)$</p>
         <p class="small">$A^\top y$: $\ -0.059 + 1.573 + 0.487 = 2$, $\ -0.086 + 1.573 - 0.487 = 1$ ✓</p>
@@ -501,16 +508,16 @@
     taken entrywise. Setting it to zero and dividing by $t$ gives
     $A^\top \frac{1}{ts} = c$. The gap is $b^\top y - c^\top x = b^\top y - (A^\top y)^\top x
     = y^\top (b - Ax) = y^\top s$, and each $y_i s_i = \frac{1}{t s_i} s_i = \frac1t$.</p>
-    <p><b>The example box.</b> The rows of the polygon are $-x \le 0$, $-y \le 0$,
+    <p><b>The example box.</b> The constraints of <span class="ref" data-ref="P">the polygon</span> are $-x \le 0$, $-y \le 0$,
     $x + y \le 4$, $x - y \le 1$, so the columns of $A$ are $(-1, 0, 1, 1)$ for $x$ and
     $(0, -1, 1, -1)$ for $y$, and $b^\top y = 4y_3 + y_4$. Watch $y$ along the path: at
     $t = 5314$ it is $(0.0001, 0.0001, 1.5001, 0.5)$, heading for $(0, 0, \tfrac32, \tfrac12)$,
-    unit 02's shadow prices of rows 3 and 4. The path computes the dual optimum as it
+    unit 02's shadow prices of constraints <span class="ref" data-ref="c3">3</span> and <span class="ref" data-ref="c4">4</span>. The path computes the dual optimum as it
     goes. All numbers are from the reference <code>central_path</code> with $t_0 = 0.01$,
     $\mu = 3$, started at $(0.5, 0.5)$.</p>
     <p>Compare with complementary slackness (unit 03), which asks for $y_i s_i = 0$.
     On the central path $y_i s_i = 1/t$ for every $i$: approximate complementary
-    slackness, with the same value in every row. Primal–dual interior-point methods
+    slackness, with the same value for every constraint. Primal–dual interior-point methods
     are built exactly on this. They solve the perturbed KKT system
     $Ax + s = b$, $A^\top y = c$, $y_i s_i = \mu$ by Newton's method in all of
     $(x, y, s)$ together, and drive $\mu$ to zero.</p>
@@ -536,8 +543,8 @@
           <tr><td class="num">1e7</td><td class="num">1.40e-6</td><td class="num"><b>1.31e-3</b></td><td class="num"><b>100</b></td></tr>
         </tbody>
       </table>
-      <p class="small muted">Lab <code>then</code>, part 2: 3 variables, 14 rows.</p>
-      <p class="small">On the polygon at $t = 5314$ the slacks are already $(2.5, 1.5, 0.0001, 0.0004)$: entries of $1/s^2$ range from $0.16$ to about $6 \times 10^7$. Each factor of 10 in $t$ adds a factor of 100 to that spread.</p>
+      <p class="small muted">Lab <code>then</code>, part 2: 3 variables, 14 constraints.</p>
+      <p class="small">On <span class="ref" data-ref="P">the polygon</span> at $t = 5314$ the slacks are already $(2.5, 1.5, 0.0001, 0.0004)$: entries of $1/s^2$ range from $0.16$ to about $6 \times 10^7$. Each factor of 10 in $t$ adds a factor of 100 to that spread.</p>
     </div>
     <div class="box warn"><span class="label">why</span>
       <p class="small">The Hessian $A^\top \mathrm{diag}(1/s^2) A$ has entries of size $1/s_i^2$. Near the optimum some slacks are $\approx 10^{-7}$ and others $\approx 1$, so its condition number reaches $10^{14}$ and beyond, and the Newton direction becomes numerical noise.</p>

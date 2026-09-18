@@ -52,7 +52,7 @@ term can be looked up here and read properly there.
 - triangle (metric) LP :: A variable \(z_{ij} \in [0, 1]\) for every pair, and
   for every triple \(z_{ij} + z_{jk} + z_{ik} \le 2\) and \(z_{ij} \le z_{ik} +
   z_{jk}\) with its rotations. Strong on small graphs, stuck at \(\tfrac23\) of the weight on large
-  dense ones, and needs \(4\binom{n}{3}\) rows.
+  dense ones, and needs \(4\binom{n}{3}\) constraints.
 - cut polytope :: The convex hull of cut incidence vectors.
 - three senses of tightness :: The rounding analysis is tight per edge; the SDP
   itself has integrality gap \(\alpha_{GW}\) (Feige & Schechtman 2002); and no

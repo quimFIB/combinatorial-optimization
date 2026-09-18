@@ -11,6 +11,20 @@
 <link rel="stylesheet" href="../../slides/deck.css">
 </head>
 <body data-trunk="prac">
+<!-- The running example, once: what each <span class="ref"> on the slides shows on hover. -->
+<div class="refs" hidden>
+  <template data-ref="inst"><span class="ref-name">the running example</span>five items, sizes $3, 3, 2, 2, 2$ (total 12), bins of capacity 5 <span class="ref-note">optimum 3 bins; a bin holds a 3 and a 2, two 2s, or one item</span></template>
+  <template data-ref="ffd"><span class="ref-name">FFD's packing</span>$\{3,2\}\ \{3,2\}\ \{2\}$: 3 bins <span class="ref-note">first-fit decreasing on the example; optimal, since the bounds say 3</span></template>
+  <template data-ref="p1"><span class="ref-name">constraint 1</span>$x + 10\,y \le 12$ <span class="ref-note">of the two-constraint presolve model, with $0 \le x \le 50$, $y \in \{0, 1\}$</span></template>
+  <template data-ref="p2"><span class="ref-name">constraint 2</span>$x \le 1000\,y$ <span class="ref-note">of the two-constraint presolve model; tightened to $x \le 12\,y$</span></template>
+  <template data-ref="mA"><span class="ref-name">model A</span>capacity $\sum_i s_i x_{ib} \le C$ per bin, and separately $x_{ib} \le y_b$ <span class="ref-note">the weak assignment model: LP bound 1.0 on the example; 6/10 solved in <code>then</code></span></template>
+  <template data-ref="mB"><span class="ref-name">model B</span>capacity linked: $\sum_i s_i x_{ib} \le C\,y_b$ <span class="ref-note">the linked assignment model: LP bound 2.4 on the example; 8/10 solved in <code>then</code></span></template>
+  <template data-ref="mBp"><span class="ref-name">configuration B′</span>model B with SCIP's symmetry handling off <span class="ref-note">8/10 solved in <code>then</code>, SGM 4.00 s</span></template>
+  <template data-ref="mC"><span class="ref-name">configuration C</span>B + symmetry breaking: $y_b \ge y_{b+1}$, item $i$ only in bins $0..i$ <span class="ref-note">9/10 solved in <code>then</code>, SGM 3.80 s</span></template>
+  <template data-ref="mD"><span class="ref-name">configuration D</span>C with only as many bins as FFD uses, and bins $0..L_2-1$ fixed open <span class="ref-note">the bounded model: 10/10 solved in <code>then</code>, SGM 3.43 s</span></template>
+  <template data-ref="mE"><span class="ref-name">configuration E</span>D + FFD's packing given as a MIP start <span class="ref-note">9/10 solved in <code>then</code>, SGM 3.02 s</span></template>
+  <template data-ref="mF"><span class="ref-name">model F: arc flow</span>one path per bin from 0 to $C$; item arcs are contents, loss arcs empty space <span class="ref-note">LP bound 2.5 on the example; 10/10 solved in <code>then</code>, median 1 node. Its graph for the example, optimal flow thick:</span><svg viewBox="20 72 340 100" width="190" aria-hidden="true"><g fill="none" stroke-width="2" class="rule"><path d="M40,125 Q130,40 220,125"/><path d="M100,125 Q190,40 280,125"/><path d="M160,125 Q250,40 340,125"/><path d="M40,125 Q100,195 160,125"/><path d="M100,125 Q160,195 220,125"/><path d="M160,125 Q220,195 280,125"/><path d="M220,125 Q280,195 340,125"/><line x1="100" y1="125" x2="340" y2="125"/></g><g fill="none" class="accent"><path d="M40,125 Q130,40 220,125" stroke-width="8"/><path d="M220,125 Q280,195 340,125" stroke-width="8"/><path d="M100,125 Q160,195 220,125" stroke-width="4" stroke-dasharray="8 5"/><line x1="40" y1="125" x2="100" y2="125" stroke-width="4" stroke-dasharray="8 5"/></g><g class="fill-ground ink" stroke-width="2"><circle cx="40" cy="125" r="15"/><circle cx="100" cy="125" r="15"/><circle cx="160" cy="125" r="15"/><circle cx="220" cy="125" r="15"/><circle cx="280" cy="125" r="15"/><circle cx="340" cy="125" r="15"/></g><g font-size="18" class="mono" text-anchor="middle"><text x="40" y="131">0</text><text x="100" y="131">1</text><text x="160" y="131">2</text><text x="220" y="131">3</text><text x="280" y="131">4</text><text x="340" y="131">5</text></g></svg></template>
+</div>
 <div class="reveal"><div class="slides">
 
 <section class="title-slide">
@@ -29,7 +43,7 @@
     <h4>How to read this deck</h4>
     <p>A five-item bin-packing instance (capacity 5, sizes 3, 3, 2, 2, 2) runs through the unit: its LP
     bounds under three models, the copies symmetry creates, and its arc-flow graph drawn out. A
-    separate two-row model shows presolve's reductions one at a time. Bounds and counts were
+    separate two-constraint model shows presolve's reductions one at a time. Bounds and counts were
     computed with the lab's reference models and SCIP.</p>
   </aside>
 </section>
@@ -87,12 +101,12 @@
         <table style="margin:0">
           <thead><tr><th>model</th><th class="num">LP</th></tr></thead>
           <tbody>
-            <tr><td>A: capacity rows, separate $x \le y$</td><td class="num">1.0</td></tr>
+            <tr><td>A: capacity constraints, separate $x \le y$</td><td class="num">1.0</td></tr>
             <tr><td>B: capacity linked, $\text{load} \le 5\,y$</td><td class="num">2.4</td></tr>
             <tr><td>F: <span class="term" data-term="arc-flow model">arc flow</span></td><td class="num">2.5</td></tr>
           </tbody>
         </table>
-        <p class="small">A's LP spreads every item as ⅕ over five bins, each bin open only ⅕. B's LP is the area bound $12/5$. Arc flow's 2.5 rounds up to the optimum: the <span class="term">round-up property</span>.</p>
+        <p class="small"><span class="ref" data-ref="mA">A's LP</span> spreads every item as ⅕ over five bins, each bin open only ⅕. <span class="ref" data-ref="mB">B's LP</span> is the area bound $12/5$. <span class="ref" data-ref="mF">Arc flow's 2.5</span> rounds up to the optimum: the <span class="term">round-up property</span>.</p>
       </div>
     </div>
   </div>
@@ -100,11 +114,11 @@
     <p>The LP values are SCIP on the reference <code>assignment_model(sizes, 5, 5, linked=..., vtype="C")</code>
     and <code>arcflow_model(sizes, 5, vtype="C")</code>; the integer versions all return 3. FFD and
     <code>lower_bound_l2</code> are the reference functions.</p>
-    <p><b>Why model A's LP is 1.</b> Its capacity rows don't mention $y$, and $x_{ib} \le y_b$ only
+    <p><b>Why <span class="ref" data-ref="mA">model A</span>'s LP is 1.</b> Its capacity constraints don't mention $y$, and $x_{ib} \le y_b$ only
     forces $y_b$ to be at least the largest fraction of any item in bin $b$. Spreading each item as
-    $\tfrac15$ over five bins satisfies every capacity row and needs $y_b = \tfrac15$: total 1. Whatever
+    $\tfrac15$ over five bins satisfies every capacity constraint and needs $y_b = \tfrac15$: total 1. Whatever
     the instance, that trick gives exactly 1.</p>
-    <p><b>Why arc flow's LP is 2.5.</b> It can't split an item between bins, only split whole bin
+    <p><b>Why <span class="ref" data-ref="mF">arc flow</span>'s LP is 2.5.</b> It can't split an item between bins, only split whole bin
     patterns: two units of flow along "3 then 2" and half a unit along "2, one unit of waste, 2"
     put exactly 2 units on size-3 arcs and 3 on size-2 arcs, at a cost of 2.5 bins.</p>
   </aside>
@@ -123,7 +137,7 @@
           <tr><td><span class="term">dual fixing</span></td><td>a variable that only hurts the objective and only helps constraints → its bound</td></tr>
           <tr><td><span class="term" data-term="aggregation (presolve)">aggregation</span></td><td>$x = y + z$ substituted away</td></tr>
           <tr><td><span class="term">probing</span></td><td>fix a binary both ways and learn implications</td></tr>
-          <tr><td><span class="term">clique detection</span></td><td>pairwise conflicts merged into one row</td></tr>
+          <tr><td><span class="term">clique detection</span></td><td>pairwise conflicts merged into one constraint</td></tr>
         </tbody>
       </table>
       <p class="small muted">Achterberg et al., "Presolve reductions in mixed integer programming", <em>INFORMS JoC</em> 32 (2020).</p>
@@ -132,8 +146,8 @@
       <div class="box warn"><span class="label">modelling habits that defeat it</span>
         <ul class="small">
           <li><b>Big-M larger than it needs to be.</b> Presolve can tighten some; it can't know your data's true range.</li>
-          <li><b>Unbounded continuous variables</b> feeding big-M rows: nothing to tighten from.</li>
-          <li><b>Redundant formulations</b> that hide structure, like one aggregated row in place of many disaggregated ones (unit 05).</li>
+          <li><b>Unbounded continuous variables</b> feeding big-M constraints: nothing to tighten from.</li>
+          <li><b>Redundant formulations</b> that hide structure, like one aggregated constraint in place of many disaggregated ones (unit 05).</li>
           <li><b><span class="term" data-term="numerically wide coefficients">Numerically wide coefficients</span></b> (1e-6 next to 1e6): tolerances start to bite, and cuts get rejected.</li>
         </ul>
       </div>
@@ -144,8 +158,8 @@
   </div>
   <aside class="notes">
     <p>Unit 05 met the aggregated and disaggregated facility-location models, and big-M. The lab here
-    meets the same thing in bin packing: capacity rows linked to y (strong) against separate x ≤ y
-    rows (weak). The weak model's LP bound is exactly 1 bin, whatever the instance.</p>
+    meets the same thing in bin packing: <span class="ref" data-ref="mB">capacity constraints linked to y</span> (strong) against <span class="ref" data-ref="mA">separate x ≤ y
+    constraints</span> (weak). The weak model's LP bound is exactly 1 bin, whatever the instance.</p>
     <p>Why "sometimes worse" for indicators: branching on an implication gives no LP bound at all until
     the binary is fixed, while a well-chosen big-M does contribute to the relaxation. The best choice
     depends on whether M can be made small.</p>
@@ -154,33 +168,33 @@
 
 <section>
   <p class="eyebrow">27 · presolve · example</p>
-  <h2>Two reductions, on a two-row model</h2>
+  <h2>Two reductions, on a two-constraint model</h2>
   <div class="cols">
     <div>
       $$\begin{aligned} & x + 10\,y \le 12 \\ & x \le 1000\,y \\ & 0 \le x \le 50,\quad y \in \{0, 1\} \end{aligned}$$
       <div class="box ex"><span class="label">step 1: bound tightening</span>
-        <p class="small">Row 1 with $y \ge 0$ gives $x \le 12 - 10y \le 12$. The bound $x \le 50$ becomes <b>$x \le 12$</b>.</p>
+        <p class="small"><span class="ref" data-ref="p1">Constraint 1</span> with $y \ge 0$ gives $x \le 12 - 10y \le 12$. The bound $x \le 50$ becomes <b>$x \le 12$</b>.</p>
       </div>
       <div class="box ex"><span class="label">step 2: coefficient tightening</span>
-        <p class="small">Row 2 only matters when $y = 0$, where it says $x \le 0$. When $y = 1$ it allows 1000, but $x$ can't exceed 12 anyway. So 1000 can shrink to 12: <b>$x \le 12\,y$</b>, the same integer solutions.</p>
+        <p class="small"><span class="ref" data-ref="p2">Constraint 2</span> only matters when $y = 0$, where it says $x \le 0$. When $y = 1$ it allows 1000, but $x$ can't exceed 12 anyway. So 1000 can shrink to 12: <b>$x \le 12\,y$</b>, the same integer solutions.</p>
       </div>
     </div>
     <div>
       <div class="box warn"><span class="label">what it changes for the LP</span>
-        <p class="small">The point $x = 11$, $y = 0.011$ satisfies the original rows: $11 + 0.11 \le 12$ and $11 \le 11$. After step 2 it needs $11 \le 0.132$: <b>cut off</b>.</p>
+        <p class="small">The point $x = 11$, $y = 0.011$ satisfies the original constraints: $11 + 0.11 \le 12$ and $11 \le 11$. After step 2 it needs $11 \le 0.132$: <b>cut off</b>.</p>
         <p class="small">Same integer points, a much tighter relaxation. That is the whole value of presolve, and why the tightening in step 2 needed step 1's bound first.</p>
       </div>
-      <p class="small">If $x$ had no upper bound (the "unbounded continuous variable" habit), row 1 still supplies $x \le 12$. Without row 1 as well, nothing bounds $x$, and the 1000 has to stay.</p>
+      <p class="small">If $x$ had no upper bound (the "unbounded continuous variable" habit), <span class="ref" data-ref="p1">constraint 1</span> still supplies $x \le 12$. Without it as well, nothing bounds $x$, and the 1000 has to stay.</p>
     </div>
   </div>
   <aside class="notes">
     <p>The example is built by hand to isolate the two reductions; there is no solver run to quote.
-    A real presolve would also note that row 1 makes $y = 1$ force $x \le 2$, and could derive the
+    A real presolve would also note that <span class="ref" data-ref="p1">constraint 1</span> makes $y = 1$ force $x \le 2$, and could derive the
     stronger pair $x \le 12 - 10y$ as the variable bound. Probing does exactly that: fix $y$ to 0 and to
     1, propagate, and record what $x$ can be in each case.</p>
-    <p>The same pattern is lab step 1's two bin-packing models: "load ≤ 5" plus "x ≤ y" against
-    "load ≤ 5y". The second is the coefficient-tightened version of the first, and its LP bound on the
-    running example is 2.4 instead of 1.</p>
+    <p>The same pattern is lab step 1's two bin-packing models: <span class="ref" data-ref="mA">"load ≤ 5" plus "x ≤ y"</span> against
+    <span class="ref" data-ref="mB">"load ≤ 5y"</span>. The second is the coefficient-tightened version of the first, and its LP bound on the
+    <span class="ref" data-ref="inst">running example</span> is 2.4 instead of 1.</p>
   </aside>
 </section>
 
@@ -212,19 +226,19 @@
       <table class="dense">
         <thead><tr><th>variant</th><th class="num">solved</th><th class="num">SGM s</th></tr></thead>
         <tbody>
-          <tr><td>B  SCIP symmetry handling on</td><td class="num">8/10</td><td class="num">5.32</td></tr>
+          <tr><td><span class="ref" data-ref="mB">B</span>  SCIP symmetry handling on</td><td class="num">8/10</td><td class="num">5.32</td></tr>
           <tr><td>B′ off</td><td class="num">8/10</td><td class="num">4.00</td></tr>
           <tr><td>C  on + your constraints</td><td class="num">9/10</td><td class="num">3.80</td></tr>
         </tbody>
       </table>
-      <p class="small">Within noise: four seeds on one instance gave B 20, 15.3, 20, 1.7 s and B′ 1.6, 11.3, 2.8, 11.4 s.</p>
+      <p class="small">Within noise: four seeds on one instance gave <span class="ref" data-ref="mB">B</span> 20, 15.3, 20, 1.7 s and <span class="ref" data-ref="mBp">B′</span> 1.6, 11.3, 2.8, 11.4 s.</p>
     </div>
   </div>
   <p class="viz-link-row"><a class="viz-link" href="explore.html#/2" target="_blank" rel="noopener">explore interactively</a></p>
   <aside class="notes">
     <p>A better model removes the symmetry at the source. The arc-flow and pattern formulations don't
     have bin identities at all: a solution is a multiset of patterns. That's why section 3's
-    reformulation was the one intervention with a large, stable effect.</p>
+    <span class="ref" data-ref="mF">reformulation</span> was the one intervention with a large, stable effect.</p>
     <p>Why the lab's symmetry breaking is valid: renumber the bins of any packing by their smallest item.
     Then used bins come first, and the bin holding item i has number at most i. Every orbit keeps at
     least one member, so the optimum is unchanged, and the tests check exactly that.</p>
@@ -236,7 +250,7 @@
   <h2>Symmetry, counted on the example</h2>
   <div class="cols">
     <div>
-      <p class="small">Pack the five items into 3 labelled bins, 0, 1, 2. Count the assignments that use all three bins:</p>
+      <p class="small">Pack <span class="ref" data-ref="inst">the five items</span> into 3 labelled bins, 0, 1, 2. Count the assignments that use all three bins:</p>
       <table>
         <thead><tr><th>what</th><th class="num">count</th></tr></thead>
         <tbody>
@@ -299,7 +313,7 @@
         </tbody>
       </table>
       <p class="small muted">10 instances, SCIP 10, 20 s limit, shift 1 s.</p>
-      <p class="small">Arc flow's LP proves optimality at the root on these instances. On the triplet instances (C = 1000) its graph is ten times bigger and it's <em>slower</em> than C–E.</p>
+      <p class="small">Arc flow's LP proves optimality at the root on these instances. On the triplet instances (C = 1000) its graph is ten times bigger and it's <em>slower</em> than <span class="ref" data-ref="mC">C</span>–<span class="ref" data-ref="mE">E</span>.</p>
     </div>
   </div>
   <p class="viz-link-row"><a class="viz-link" href="explore.html#/1" target="_blank" rel="noopener">explore interactively</a></p>
@@ -360,8 +374,8 @@
     <code>f_0_3 = 2</code>, <code>f_3_2 = 3</code>, <code>f_1_2 = 1</code>, <code>loss_0 = 1</code>, $z = 3$.
     Flow conservation at node 3: in $2 + 1 = 3$, out 3. The integer-flow decomposition into three
     paths is not unique; the caption shows one.</p>
-    <p>The LP relaxation of the same model gives 2.5 (first slide of section 1). Since the optimum must be
-    an integer, $\lceil 2.5 \rceil = 3$ is a proof of optimality as soon as FFD's 3-bin packing is known,
+    <p>The LP relaxation of <span class="ref" data-ref="mF">the same model</span> gives 2.5 (first slide of section 1). Since the optimum must be
+    an integer, $\lceil 2.5 \rceil = 3$ is a proof of optimality as soon as <span class="ref" data-ref="ffd">FFD's 3-bin packing</span> is known,
     which is why arc flow needed 1 node on the lab's instances.</p>
   </aside>
 </section>
@@ -380,7 +394,7 @@
       <table class="dense">
         <thead><tr><th>section</th><th>read it for</th></tr></thead>
         <tbody>
-          <tr><td>Presolvers</td><td>which reductions fired: fixed vars, deleted rows, changed coefficients</td></tr>
+          <tr><td>Presolvers</td><td>which reductions fired: fixed vars, deleted constraints, changed coefficients</td></tr>
           <tr><td>Constraints</td><td>which constraint handlers did the propagating and separating</td></tr>
           <tr><td>Separators</td><td>cuts found and <b>applied</b> per family; <code>&gt;</code> rows split a separator by cut class</td></tr>
           <tr><td>Primal Heuristics</td><td>which heuristic found solutions, and which found the best</td></tr>
@@ -404,10 +418,10 @@
     </div>
   </div>
   <aside class="notes">
-    <p>An example while building the lab: 30 items, linked assignment model, 10 s. The report said first
+    <p>An example while building the lab: 30 items, <span class="ref" data-ref="mB">linked assignment model</span>, 10 s. The report said first
     LP value 13.34, final dual bound 13.34, primal bound 15, gap 12.44%, after about 1 350 nodes. That's the
     "stuck bound" pattern: the LP can't see that bins are discrete, and no cut SCIP found moved it. The
-    arc-flow model's median of 1 node in <code>then</code> is the same diagnosis from the other side.</p>
+    <span class="ref" data-ref="mF">arc-flow model</span>'s median of 1 node in <code>then</code> is the same diagnosis from the other side.</p>
     <p>The log formats change between versions. Parsing by column name rather than position is what
     keeps a parser working after an upgrade.</p>
   </aside>
@@ -422,19 +436,19 @@
       <table class="dense">
         <thead><tr><th>instance, step</th><th>before</th><th>after</th></tr></thead>
         <tbody>
-          <tr><td>triplets #1, A → B</td><td>20 13.8 12.5 20</td><td>6.4 1.9 3.1 2.0</td></tr>
-          <tr><td>triplets #3, B → B′</td><td>20 15.3 20 1.7</td><td>1.6 11.3 2.8 11.4</td></tr>
-          <tr><td>uniform #3, B′ → C</td><td>20 2.9 7.1 8.6</td><td>2.9 3.2 9.6 10.7</td></tr>
-          <tr><td>uniform #2, D → E</td><td>15.9 19.3 1.9 20</td><td>20 1.7 10.0 4.9</td></tr>
-          <tr><td>uniform #2, E → F</td><td>20 1.7 10.1 4.9</td><td><b>0.4 0.4 0.3 0.3</b></td></tr>
+          <tr><td>triplets #1, <span class="ref" data-ref="mA">A</span> → <span class="ref" data-ref="mB">B</span></td><td>20 13.8 12.5 20</td><td>6.4 1.9 3.1 2.0</td></tr>
+          <tr><td>triplets #3, <span class="ref" data-ref="mB">B</span> → <span class="ref" data-ref="mBp">B′</span></td><td>20 15.3 20 1.7</td><td>1.6 11.3 2.8 11.4</td></tr>
+          <tr><td>uniform #3, <span class="ref" data-ref="mBp">B′</span> → <span class="ref" data-ref="mC">C</span></td><td>20 2.9 7.1 8.6</td><td>2.9 3.2 9.6 10.7</td></tr>
+          <tr><td>uniform #2, <span class="ref" data-ref="mD">D</span> → <span class="ref" data-ref="mE">E</span></td><td>15.9 19.3 1.9 20</td><td>20 1.7 10.0 4.9</td></tr>
+          <tr><td>uniform #2, <span class="ref" data-ref="mE">E</span> → <span class="ref" data-ref="mF">F</span></td><td>20 1.7 10.1 4.9</td><td><b>0.4 0.4 0.3 0.3</b></td></tr>
         </tbody>
       </table>
     </div>
     <div>
       <div class="box warn"><span class="label">what survives</span>
-        <p class="small"><b>Linking</b> (A → B) and <b>reformulation</b> (→ F). The rest are <span class="term">within noise</span> on ten instances. Two runs of the whole script also disagreed on solved counts (A: 5 then 6; B: 9 then 8), because runs near the time limit flip.</p>
+        <p class="small"><b>Linking</b> (<span class="ref" data-ref="mA">A</span> → <span class="ref" data-ref="mB">B</span>) and <b>reformulation</b> (→ <span class="ref" data-ref="mF">F</span>). The rest are <span class="term">within noise</span> on ten instances. Two runs of the whole script also disagreed on solved counts (<span class="ref" data-ref="mA">A</span>: 5 then 6; <span class="ref" data-ref="mB">B</span>: 9 then 8), because runs near the time limit flip.</p>
       </div>
-      <p class="small">MIP solvers are <span class="term" data-term="chaotic behaviour (MIP)">chaotic</span> in the technical sense (<span class="term">performance variability</span>): a tiny change (a seed, row order, a different but equivalent model) changes branching decisions early, and the tree grows differently from there. Lodi & Tramontani (2013) document this across solvers.</p>
+      <p class="small">MIP solvers are <span class="term" data-term="chaotic behaviour (MIP)">chaotic</span> in the technical sense (<span class="term">performance variability</span>): a tiny change (a seed, constraint order, a different but equivalent model) changes branching decisions early, and the tree grows differently from there. Lodi & Tramontani (2013) document this across solvers.</p>
       <p class="small muted"><span class="term">MIPLIB 2017</span> (Gleixner et al. 2021): 1 065 instances, a 240-instance benchmark set, and many still open. The shared reality check. <code>then</code> section 2 runs any MIPLIB files you download.</p>
     </div>
   </div>

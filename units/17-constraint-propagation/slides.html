@@ -11,6 +11,14 @@
 <link rel="stylesheet" href="../../slides/deck.css">
 </head>
 <body data-trunk="cp">
+<!-- The running example, once: what each <span class="ref"> on the slides shows on hover. -->
+<div class="refs" hidden>
+  <template data-ref="sudoku4"><span class="ref-name">the 4×4 sudoku</span><span style="display:block;white-space:pre;font-family:var(--f-mono);line-height:1.3">1 . . .
+. . 3 .
+. 4 . .
+. . . 2</span><span class="ref-note">the lab's: 133 NotEqual propagations fix every cell, no search</span></template>
+  <template data-ref="triangle"><span class="ref-name">the triangle</span>three variables in $\{0,1\}$, pairwise $\ne$ <span class="ref-note">arc consistent (nothing pruned), yet no 2-colouring exists</span><svg viewBox="0 0 260 220" width="170" aria-hidden="true"><g class="ink" stroke-width="2"><line x1="130" y1="30" x2="40" y2="180"/><line x1="130" y1="30" x2="220" y2="180"/><line x1="40" y1="180" x2="220" y2="180"/></g><g class="fill-ground ink" stroke-width="2"><circle cx="130" cy="30" r="22"/><circle cx="40" cy="180" r="22"/><circle cx="220" cy="180" r="22"/></g><g font-size="15" text-anchor="middle" class="mono"><text x="130" y="35">{0,1}</text><text x="40" y="185">{0,1}</text><text x="220" y="185">{0,1}</text></g><g font-size="24" text-anchor="middle" class="muted"><text x="68" y="104">≠</text><text x="192" y="104">≠</text><text x="130" y="210">≠</text></g></svg></template>
+</div>
 <div class="reveal"><div class="slides">
 
 <section class="title-slide">
@@ -32,7 +40,7 @@
     <p>The unit is procedural, so the examples are traces: AC-3 revise by revise on three
     variables, bounds against domain consistency on one equation with a hole, and a trail written
     and undone over two decisions. Each was produced by running the lab's reference engine, and
-    the 4×4 sudoku of the checkpoint is traced in the notes.</p>
+    the <span class="ref" data-ref="sudoku4">4×4 sudoku</span> of the checkpoint is traced in the notes.</p>
   </aside>
 </section>
 
@@ -55,8 +63,8 @@
     <p class="small">Words with a <span class="term" data-term="propagator">dotted underline</span> are glossary terms: click one for its definition. <kbd>G</kbd> lists every term in the unit, <kbd>N</kbd> shows the notes. Optional extra: <a href="explore.html" target="_blank" rel="noopener">interactive figures</a>, linked from the slides they support by a small ▸ chip; skip them freely.</p>
   </div>
   <aside class="notes">
-    <p>The checkpoint has two parts. Trace a fixpoint by hand on a 4×4 sudoku. Explain why arc
-    consistency does not imply satisfiability. Both are about what propagation <em>is</em>: local
+    <p>The checkpoint has two parts. Trace a fixpoint by hand on a <span class="ref" data-ref="sudoku4">4×4 sudoku</span>. Explain why arc
+    consistency does not imply satisfiability (<span class="ref" data-ref="triangle">the triangle</span>). Both are about what propagation <em>is</em>: local
     reasoning that is sound, cheap and incomplete.</p>
   </aside>
 </section>
@@ -212,7 +220,7 @@
   </div>
   <p class="viz-link-row"><a class="viz-link" href="explore.html#/1" target="_blank" rel="noopener">explore interactively</a></p>
   <aside class="notes">
-    <p>Tracing the 4×4 by hand, which is the checkpoint: start with the givens as singletons.
+    <p>Tracing the <span class="ref" data-ref="sudoku4">4×4</span> by hand, which is the checkpoint: start with the givens as singletons.
     Each NotEqual with a fixed side removes that value from the other cell. Cell (0, 1) loses 1
     from its row and 4 from its column, leaving {2, 3}. Cell (0, 2) loses 1 (row) and 3 (column),
     leaving {2, 4}. Keep a queue of cells that became singletons and push their values into their
@@ -470,7 +478,7 @@ uv run co then 17     # the same models in CP-SAT</code></pre>
   <div class="box good"><span class="label">checkpoint</span>
     <ul>
       <li>All five lab steps are ✓.</li>
-      <li>You can trace your propagator's fixpoint by hand on a 4×4 sudoku, and explain why arc consistency does not imply satisfiability.</li>
+      <li>You can trace your propagator's fixpoint by hand on a <span class="ref" data-ref="sudoku4">4×4 sudoku</span>, and explain why arc consistency does not imply satisfiability (<span class="ref" data-ref="triangle">the triangle</span>).</li>
       <li>You can say what nodes and propagations measure, and why one usually rises when the other falls.</li>
     </ul>
   </div>

@@ -11,6 +11,36 @@
 <link rel="stylesheet" href="../../slides/deck.css">
 </head>
 <body data-trunk="ip">
+<!-- The running example, once: what each <span class="ref"> on the slides shows on hover. -->
+<div class="refs" hidden>
+  <template data-ref="int6"><span class="ref-name">the integer point</span>$x_e = 1$ on the triangles $\{0,1,2\}$ and $\{3,4,5\}$, $0$ elsewhere <span class="ref-note">six cities, two subtours: components find both, each with cut weight 0</span></template>
+  <template data-ref="frac6"><span class="ref-name">the fractional point</span>$x_{01} = x_{12} = 1,\ x_{02} = \tfrac12$; $\ x_{34} = x_{45} = 1,\ x_{35} = \tfrac12$; bridges $x_{03} = x_{25} = \tfrac12$ <span class="ref-note">every degree is 2 and it is connected, yet the cut around $\{3,4,5\}$ weighs 1 &lt; 2</span><svg viewBox="10 25 360 165" width="170" aria-hidden="true">
+        <g class="accent" stroke-width="5">
+          <line x1="60" y1="50" x2="30" y2="170"/><line x1="30" y1="170" x2="130" y2="120"/>
+          <line x1="320" y1="50" x2="350" y2="170"/><line x1="350" y1="170" x2="250" y2="120"/>
+        </g>
+        <g class="accent" stroke-width="3" stroke-dasharray="7 5">
+          <line x1="60" y1="50" x2="130" y2="120"/><line x1="320" y1="50" x2="250" y2="120"/>
+        </g>
+        <line x1="130" y1="120" x2="250" y2="120" class="warn" stroke-width="3" stroke-dasharray="7 5"/>
+        <line x1="60" y1="50" x2="320" y2="50" class="warn" stroke-width="3" stroke-dasharray="7 5"/>
+        <g class="fill-ground ink" stroke-width="2">
+          <circle cx="60" cy="50" r="13"/><circle cx="30" cy="170" r="13"/><circle cx="130" cy="120" r="13"/>
+          <circle cx="320" cy="50" r="13"/><circle cx="350" cy="170" r="13"/><circle cx="250" cy="120" r="13"/>
+        </g>
+        <g font-size="14" text-anchor="middle">
+          <text x="60" y="55">0</text><text x="30" y="175">1</text><text x="130" y="125">2</text>
+          <text x="320" y="55">3</text><text x="350" y="175">4</text><text x="250" y="125">5</text>
+        </g>
+        <g font-size="14" text-anchor="middle" style="fill:var(--accent)">
+          <text x="108" y="78">½</text><text x="272" y="78">½</text>
+        </g>
+        <text x="190" y="40" text-anchor="middle" font-size="14" style="fill:var(--warn)">½</text>
+        <text x="190" y="112" text-anchor="middle" font-size="14" style="fill:var(--warn)">½</text>
+        
+      </svg></template>
+  <template data-ref="g4"><span class="ref-name">the four-vertex graph</span>weights $01 = 3$, $23 = 3$, $02 = 12 = 13 = 1$ <span class="ref-note">Stoer–Wagner's example: phase cuts 4, 3, 4; minimum cut $\{0,1\}$ against $\{2,3\}$, weight 3</span></template>
+</div>
 <div class="reveal"><div class="slides">
 
 <section class="title-slide">
@@ -50,7 +80,7 @@
   <div class="box good"><span class="label">getting around</span>
     <p class="small">Words with a <span class="term" data-term="separation oracle">dotted underline</span> are glossary terms: click one for its definition. <kbd>G</kbd> lists every term in the unit, <kbd>N</kbd> shows the notes. Optional extra: <a href="explore.html" target="_blank" rel="noopener">interactive figures</a>, linked from the slides they support by a small ▸ chip; skip them freely.</p>
   </div>
-  <p class="muted">Lab <code>then</code>: at 200 cities there are 8 × 10⁵⁹ subtour rows. The LP bound needed 56, the optimal tour 70.</p>
+  <p class="muted">Lab <code>then</code>: at 200 cities there are 8 × 10⁵⁹ subtour constraints. The LP bound needed 56, the optimal tour 70.</p>
   <aside class="notes">
     <p>Section 1 is theory with no lab counterpart, because the ellipsoid method is never
     run in practice. Sections 2 and 3 use a simplex-based LP solver with the same
@@ -78,7 +108,7 @@
       <p class="small">"Find a violated constraint, if there is one."</p>
     </div>
   </div>
-  <p>A polytope with exponentially many facets can have a <b>short</b> separation oracle, one that searches its facets implicitly. For subtour rows it is a minimum cut, and for matching's odd-set rows a minimum odd cut.</p>
+  <p>A polytope with exponentially many facets can have a <b>short</b> separation oracle, one that searches its facets implicitly. For subtour constraints it is a minimum cut, and for matching's odd-set constraints a minimum odd cut.</p>
   <p class="small muted">For the theorem, $P$ must be <span class="term" data-term="well-described polyhedron">"well-described"</span>: its facets have bounded encoding size $\varphi$, and the running time may be polynomial in $\varphi$ and $n$.</p>
   <aside class="notes">
     <p>The encoding bound is what lets the ellipsoid method start and stop. From $\varphi$
@@ -112,7 +142,7 @@
     <h4>Details</h4>
     <p><b>Separation ⇒ optimization.</b> Run the ellipsoid method on
     $P \cap \{c^\top x \ge \gamma\}$. Its cuts come from the separation oracle, or from the
-    objective row when the centre is feasible (a "sliding objective"). The volume
+    objective constraint $c^\top x \ge \gamma$ when the centre is feasible (a "sliding objective"). The volume
     argument bounds the number of iterations, and rounding at the end gives an exact
     optimal vertex.</p>
     <p><b>Optimization ⇒ separation.</b> With $0$ in the interior of $P$, the polar is
@@ -201,7 +231,7 @@
       <tr><td><b>Maximum-weight matching</b> as an LP in polynomial time</td><td>odd-set inequalities (unit 06) separated by a <span class="term">minimum odd cut</span> (Padberg & Rao 1982)</td></tr>
       <tr><td>The first polynomial algorithm for <b><span class="term">submodular function minimization</span></b></td><td>separation over the base polytope by a greedy algorithm (unit 13)</td></tr>
       <tr><td><b>Maximum stable set in perfect graphs</b></td><td>Lovász's <span class="term" data-term="theta function">theta function</span>, an SDP, separated over the theta body (unit 25)</td></tr>
-      <tr><td><b>Subtour LP</b> for the TSP in polynomial time</td><td>subtour rows separated by a global minimum cut (this lab)</td></tr>
+      <tr><td><b>Subtour LP</b> for the TSP in polynomial time</td><td>subtour constraints separated by a global minimum cut (this lab)</td></tr>
       <tr><td><span class="term" data-term="NP-hardness of separation">NP-hardness of separation</span> for hard polytopes</td><td>the other direction, contrapositive</td></tr>
     </tbody>
   </table>
@@ -229,10 +259,13 @@
   <h2>The subtour elimination LP</h2>
   <div class="cols wide-right">
     <div class="fig">
-      <svg viewBox="0 0 380 230" width="380" role="img" aria-label="two triangles joined by two half edges">
+      <svg viewBox="0 0 380 230" width="380" role="img" aria-label="two triangles, each with one half edge, joined by two half edges">
         <g class="accent" stroke-width="5">
-          <line x1="60" y1="50" x2="30" y2="170"/><line x1="60" y1="50" x2="130" y2="120"/><line x1="30" y1="170" x2="130" y2="120"/>
-          <line x1="320" y1="50" x2="350" y2="170"/><line x1="320" y1="50" x2="250" y2="120"/><line x1="350" y1="170" x2="250" y2="120"/>
+          <line x1="60" y1="50" x2="30" y2="170"/><line x1="30" y1="170" x2="130" y2="120"/>
+          <line x1="320" y1="50" x2="350" y2="170"/><line x1="350" y1="170" x2="250" y2="120"/>
+        </g>
+        <g class="accent" stroke-width="3" stroke-dasharray="7 5">
+          <line x1="60" y1="50" x2="130" y2="120"/><line x1="320" y1="50" x2="250" y2="120"/>
         </g>
         <line x1="130" y1="120" x2="250" y2="120" class="warn" stroke-width="3" stroke-dasharray="7 5"/>
         <line x1="60" y1="50" x2="320" y2="50" class="warn" stroke-width="3" stroke-dasharray="7 5"/>
@@ -240,27 +273,34 @@
           <circle cx="60" cy="50" r="13"/><circle cx="30" cy="170" r="13"/><circle cx="130" cy="120" r="13"/>
           <circle cx="320" cy="50" r="13"/><circle cx="350" cy="170" r="13"/><circle cx="250" cy="120" r="13"/>
         </g>
-        <text x="190" y="40" text-anchor="middle" font-size="14" style="fill:var(--warn)" class="mono">0.75</text>
-        <text x="190" y="112" text-anchor="middle" font-size="14" style="fill:var(--warn)" class="mono">0.75</text>
-        <text x="190" y="210" text-anchor="middle" font-size="14" class="soft">cut between the triangles: 1.5 &lt; 2</text>
+        <g font-size="14" text-anchor="middle">
+          <text x="60" y="55">0</text><text x="30" y="175">1</text><text x="130" y="125">2</text>
+          <text x="320" y="55">3</text><text x="350" y="175">4</text><text x="250" y="125">5</text>
+        </g>
+        <g font-size="14" text-anchor="middle" style="fill:var(--accent)">
+          <text x="108" y="78">½</text><text x="272" y="78">½</text>
+        </g>
+        <text x="190" y="40" text-anchor="middle" font-size="14" style="fill:var(--warn)">½</text>
+        <text x="190" y="112" text-anchor="middle" font-size="14" style="fill:var(--warn)">½</text>
+        <text x="190" y="210" text-anchor="middle" font-size="14" class="soft">cut between the triangles: ½ + ½ = 1 &lt; 2</text>
       </svg>
-      <p class="cap">A connected fractional point that still violates a subtour row. Degrees don't match 2 exactly here: it is lab step 3's separation example, not an LP vertex.</p>
+      <p class="cap">Solid edges at 1, dashed at ½. Every degree is 2 and the graph is connected, yet the cut around $\{3,4,5\}$ weighs 1: a subtour constraint is violated.</p>
     </div>
     <div>
       <p>Edge variables $x_e$ on the complete graph, the <span class="term" data-term="DFJ formulation">DFJ formulation</span> (1954), with <span class="term" data-term="\(\delta(v)\), \(\delta(S)\)">$\delta(S)$</span> the edges leaving $S$:</p>
       $$\begin{aligned}\min\ & \textstyle\sum_e c_e x_e \\ \text{s.t. } & \textstyle\sum_{e \in \delta(v)} x_e = 2 \quad \forall v \\ & \textstyle\sum_{e \in \delta(S)} x_e \ge 2 \quad \forall\, \emptyset \ne S \subsetneq V \\ & 0 \le x_e \le 1\end{aligned}$$
-      <p>The <span class="term" data-term="degree rows">degree rows</span> alone allow <span class="term" data-term="subtour">subtours</span>: several disjoint cycles. The <span class="term" data-term="subtour elimination row">subtour rows</span> say every vertex set must be entered and left. There are $2^{n-1}-1$ of them.</p>
+      <p>The <span class="term" data-term="degree constraints">degree constraints</span> alone allow <span class="term" data-term="subtour">subtours</span>: several disjoint cycles. The <span class="term" data-term="subtour elimination constraint">subtour constraints</span> say every vertex set must be entered and left. There are $2^{n-1}-1$ of them.</p>
     </div>
   </div>
   <aside class="notes">
-    <p>With integrality, the degree rows plus all subtour rows describe exactly the tours.
+    <p>With integrality, the degree constraints plus all subtour constraints describe exactly the tours.
     The LP relaxation is the <span class="term">subtour polytope</span>, which contains the TSP polytope
     and is strictly bigger, so its bound is a lower bound on the optimal tour.</p>
     <p>DFJ solved a 49-city instance (48 US state capitals plus Washington) by hand in
-    1954, adding subtour rows and a few other cuts as needed. It is the first
+    1954, adding subtour constraints and a few other cuts as needed. It is the first
     cutting-plane computation and the origin of the whole approach.</p>
-    <p>Counting: a set and its complement give the same row, so there are
-    $(2^n - 2)/2 = 2^{n-1} - 1$ distinct rows. The lab's tests count 127 for $n = 8$.</p>
+    <p>Counting: a set and its complement give the same constraint, so there are
+    $(2^n - 2)/2 = 2^{n-1} - 1$ distinct constraints. The lab's tests count 127 for $n = 8$.</p>
   </aside>
 </section>
 
@@ -270,10 +310,10 @@
   <div class="cols">
     <div>
       <div class="box thm"><span class="label">claim</span>
-        <p>$x^*$ violates some subtour row iff the <span class="term">global minimum cut</span> of the <span class="term">support graph</span> with edge weights $x^*$ has value below 2.</p>
+        <p>$x^*$ violates some subtour constraint iff the <span class="term">global minimum cut</span> of the <span class="term">support graph</span> with edge weights $x^*$ has value below 2.</p>
       </div>
-      <p class="small">The row for $S$ is exactly "the cut $\delta(S)$ has weight $\ge 2$", so the most violated row is the lightest cut. It is a restatement, not a trick.</p>
-      <p class="small"><b>Integer points</b> are easier: a 0/1 solution of the degree rows is a union of cycles, and each cycle's vertex set has cut weight 0. The <span class="term" data-term="connected components check">connected components check</span> suffices (lab step 5).</p>
+      <p class="small">The constraint for $S$ is exactly "the cut $\delta(S)$ has weight $\ge 2$", so the most violated one is the lightest cut. It is a restatement, not a trick.</p>
+      <p class="small"><b>Integer points</b> are easier: a 0/1 solution of the degree constraints is a union of cycles, and each cycle's vertex set has cut weight 0. The <span class="term" data-term="connected components check">connected components check</span> suffices (lab step 5).</p>
     </div>
     <div class="box def"><span class="label"><span class="term" data-term="Stoer–Wagner algorithm">Stoer–Wagner</span> (1997)</span>
       <ol class="small">
@@ -306,12 +346,12 @@
     <div>
       <div class="box ex"><span class="label">an integer point: components are enough</span>
         <p class="small">$x = 1$ on the edges of triangles $\{0,1,2\}$ and $\{3,4,5\}$, 0 elsewhere. Every degree is 2.</p>
-        <p class="small">Support graph components: $\{0,1,2\}$ and $\{3,4,5\}$. Two components, so both rows $x(\delta(\{0,1,2\})) \ge 2$ and $x(\delta(\{3,4,5\})) \ge 2$ are violated, with left side 0.</p>
+        <p class="small">Support graph components: $\{0,1,2\}$ and $\{3,4,5\}$. Two components, so both constraints $x(\delta(\{0,1,2\})) \ge 2$ and $x(\delta(\{3,4,5\})) \ge 2$ are violated, with left side 0.</p>
       </div>
       <div class="box ex"><span class="label">a fractional point: connected, still violated</span>
         <p class="small">In each triangle two edges at 1 and one at $\tfrac12$: $01 = 12 = 1$, $02 = \tfrac12$, and the same on $\{3,4,5\}$. Two bridges at $\tfrac12$: $03$ and $25$.</p>
-        <p class="small">Degrees: vertex 0 has $1 + \tfrac12 + \tfrac12 = 2$, vertex 1 has $1 + 1 = 2$, and so on. <b>All degree rows hold</b>, and the support graph is <b>connected</b>.</p>
-        <p class="small">Minimum cut: $\{3,4,5\}$, weight $\tfrac12 + \tfrac12 = 1 &lt; 2$. The row for $S = \{3,4,5\}$ is violated.</p>
+        <p class="small">Degrees: vertex 0 has $1 + \tfrac12 + \tfrac12 = 2$, vertex 1 has $1 + 1 = 2$, and so on. <b>All degree constraints hold</b>, and the support graph is <b>connected</b>.</p>
+        <p class="small">Minimum cut: $\{3,4,5\}$, weight $\tfrac12 + \tfrac12 = 1 &lt; 2$. The constraint for $S = \{3,4,5\}$ is violated.</p>
       </div>
     </div>
     <div>
@@ -327,16 +367,16 @@
         </table>
         <p class="small">After each phase the last two are merged. The best phase cut, 3, is the global minimum: $\{0,1\}$ against $\{2,3\}$.</p>
       </div>
-      <p class="small">Why the fractional point needs a real min cut: components see one piece, and every degree is right. Only a cut computation finds the thin connection.</p>
+      <p class="small">Why <span class="ref" data-ref="frac6">the fractional point</span> needs a real min cut: components see one piece, and every degree is right. Only a cut computation finds the thin connection.</p>
     </div>
   </div>
   <p class="viz-link-row"><a class="viz-link" href="explore.html#/1" target="_blank" rel="noopener">explore interactively</a></p>
   <aside class="notes">
-    <p><b>The reference oracle.</b> <code>separate_subtours</code> on the integer point returns
-    both components; on the fractional point <code>components</code> returns one piece and
+    <p><b>The reference oracle.</b> <code>separate_subtours</code> on <span class="ref" data-ref="int6">the integer point</span> returns
+    both components; on <span class="ref" data-ref="frac6">the fractional point</span> <code>components</code> returns one piece and
     <code>min_cut</code> returns $(1.0, (3, 4, 5))$. The cut edges are exactly the two bridges.
-    The row for $\{0,1,2\}$ is the same row, since a set and its complement share a cut.</p>
-    <p><b>The Stoer–Wagner phases.</b> Phase 1 starts at 0. Vertex 1 is attached by 3,
+    The constraint for $\{0,1,2\}$ is the same one, since a set and its complement share a cut.</p>
+    <p><b>The Stoer–Wagner phases</b> on <span class="ref" data-ref="g4">the four-vertex graph</span>. Phase 1 starts at 0. Vertex 1 is attached by 3,
     vertex 2 by 1, vertex 3 by 0: add 1. Now 2 is attached by $1 + 1 = 2$ and 3 by 1: add 2.
     Then 3 is attached by $1 + 3 = 4$: add 3, cut of the phase 4, merge 2 and 3. Phase 2:
     1 is attached by 3, $\{2,3\}$ by $1$; add 1; then $\{2,3\}$ is attached by $1 + 1 + 1 = 3$:
@@ -351,9 +391,9 @@
 
 <section>
   <p class="eyebrow">09 · subtours</p>
-  <h2>A few dozen rows out of 10⁵⁹</h2>
+  <h2>A few dozen constraints out of 10⁵⁹</h2>
   <table>
-    <thead><tr><th class="num">$n$</th><th class="num">rows that exist</th><th class="num">LP rows used</th><th class="num">LP bound</th><th class="num">optimum</th><th class="num">MIP cuts</th><th class="num">gap</th></tr></thead>
+    <thead><tr><th class="num">$n$</th><th class="num">constraints that exist</th><th class="num">used by the LP</th><th class="num">LP bound</th><th class="num">optimum</th><th class="num">MIP cuts</th><th class="num">gap</th></tr></thead>
     <tbody>
       <tr><td class="num">30</td><td class="num">5.4 × 10⁸</td><td class="num">6</td><td class="num">480.5</td><td class="num">482</td><td class="num">5</td><td class="num">0.31%</td></tr>
       <tr><td class="num">80</td><td class="num">6.0 × 10²³</td><td class="num">16</td><td class="num">725.0</td><td class="num">726</td><td class="num">24</td><td class="num">0.14%</td></tr>
@@ -363,9 +403,9 @@
   </table>
   <p>Lab <code>then</code>, random Euclidean instances. The exact tour at $n = 200$ took 10 MIP solves and 46 s with HiGHS as the integer solver.</p>
   <aside class="notes">
-    <p>Why so few rows: most subtour rows are satisfied by a wide margin at any reasonable
+    <p>Why so few: most subtour constraints are satisfied by a wide margin at any reasonable
     LP point. Only cuts around clusters of nearby cities come close to binding, and
-    there are few such clusters. The LP only needs rows that bind at its optimum, which
+    there are few such clusters. The LP only needs constraints that bind at its optimum, which
     number at most the dimension, and in practice far fewer are ever violated along the
     way.</p>
     <p>The naive "re-solve the whole MIP after adding cuts" loop in step 5 is wasteful.
@@ -387,24 +427,24 @@
     <div>
       <p>Every MIP solver can take constraints it doesn't see up front:</p>
       <ul class="small">
-        <li><span class="term" data-term="lazy constraint">Lazy constraints</span>: checked on every candidate integer solution; if one is violated, the solution is rejected and the row is added. Required for correctness.</li>
+        <li><span class="term" data-term="lazy constraint">Lazy constraints</span>: checked on every candidate integer solution; if one is violated, the solution is rejected and the constraint is added. Required for correctness.</li>
         <li><span class="term" data-term="user cut">User cuts</span>: separated at fractional LP points to tighten the bound. Optional; only for speed.</li>
       </ul>
       <p class="small">Gurobi: a <span class="term">callback</span> with <code>cbLazy</code> and <code>cbCut</code>. SCIP: a <span class="term">constraint handler</span> with <code>check</code>, <code>enforce</code> and <code>separate</code> methods. That is the same distinction.</p>
     </div>
     <div class="box warn"><span class="label">the classic bug</span>
-      <p class="small">Adding subtour rows only as <b>user cuts</b> means the solver can accept an integer solution made of subtours, if no fractional node happened to trigger separation. Lazy constraints need <span class="term">enforcement</span> on integer solutions, which is what lab step 5 does, clumsily.</p>
+      <p class="small">Adding subtour constraints only as <b>user cuts</b> means the solver can accept an integer solution made of subtours, if no fractional node happened to trigger separation. Lazy constraints need <span class="term">enforcement</span> on integer solutions, which is what lab step 5 does, clumsily.</p>
     </div>
   </div>
   <aside class="notes">
     <p>The GLS theorem is why this is sound: as long as the separation routine is exact on
     integer solutions (enforcement) and good on fractional ones (bound), the solver
     solves the problem over the implicit exponential family. The lab's step 4 shows the
-    LP version: "no violated row found" is a proof that the full LP is solved, because
+    LP version: "no violated constraint found" is a proof that the full LP is solved, because
     minimum cut is an exact oracle.</p>
     <p>SCIP's Python interface (PySCIPOpt, installed) supports writing constraint
     handlers. A TSP handler in that style is the natural extension of this lab if you
-    want to see branch-and-cut with lazy subtour rows instead of repeated MIP solves.</p>
+    want to see branch-and-cut with lazy subtour constraints instead of repeated MIP solves.</p>
   </aside>
 </section>
 
@@ -420,7 +460,7 @@
       <p class="small">Unit 11 computes the same bound a completely different way (the <span class="term">Held–Karp bound</span> from 1-trees), and gets the same number.</p>
     </div>
     <div class="box good"><span class="label">Concorde</span>
-      <p class="small"><span class="term">Concorde</span>: Applegate, Bixby, Chvátal & Cook. Branch-and-cut with subtour rows, <span class="term" data-term="comb inequality">comb inequalities</span>, and "local cuts" found by solving small projected subproblems.</p>
+      <p class="small"><span class="term">Concorde</span>: Applegate, Bixby, Chvátal & Cook. Branch-and-cut with subtour constraints, <span class="term" data-term="comb inequality">comb inequalities</span>, and "local cuts" found by solving small projected subproblems.</p>
       <p class="small">It solved an 85 900-city instance from a chip-layout application (pla85900) to proven optimality in 2006, with about 136 CPU-years of computation.</p>
     </div>
   </div>
@@ -443,10 +483,10 @@
   <div class="lab">
     <span class="label">about 2½ hours · uv run co lab 09</span>
     <ol>
-      <li><b>A subtour row</b>, and the connected components of a support graph.</li>
+      <li><b>A subtour constraint</b>, and the connected components of a support graph.</li>
       <li><b>Stoer–Wagner</b> global minimum cut.</li>
       <li><b>The separation oracle</b>: components, else min cut.</li>
-      <li><b>The subtour LP</b> by lazy rows, which equals the LP with every row written out.</li>
+      <li><b>The subtour LP</b> by lazy constraints, which equals the LP with every one written out.</li>
       <li><b>An exact TSP</b> by lazy cuts on the integer program.</li>
     </ol>
   </div>
@@ -454,7 +494,7 @@
 uv run co then 09     # rows used vs rows that exist, LP bound vs optimum, up to 200 cities</code></pre>
   <aside class="notes">
     <p>Step 4's test is the theorem in miniature. The lazily generated bound must equal
-    the bound with all 127 rows written out, and your final point must satisfy all 254
+    the bound with all 127 subtour constraints written out, and your final point must satisfy all 254
     cut constraints, even though you never wrote most of them down.</p>
   </aside>
 </section>
@@ -479,7 +519,7 @@ uv run co then 09     # rows used vs rows that exist, LP bound vs optimum, up to
     </div>
     <div>
       <h3>Next</h3>
-      <p class="small"><b>10</b> column generation, where the same idea applies to columns · <b>11</b> Lagrangian relaxation and the Held–Karp bound · <b>12</b> Benders, where rows are generated from a subproblem's duals.</p>
+      <p class="small"><b>10</b> column generation, where the same idea applies to columns · <b>11</b> Lagrangian relaxation and the Held–Karp bound · <b>12</b> Benders, where constraints are generated from a subproblem's duals.</p>
     </div>
   </div>
   <aside class="notes">

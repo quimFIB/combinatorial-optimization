@@ -64,7 +64,7 @@ def cfl(inst: FacilityLocation, strong: bool) -> MILP:
 
         sum_j demand_j x_ij <= capacity_i y_i       for every i    (always)
 
-    If strong, also add, in this order after the capacity rows:
+    If strong, also add, in this order after the capacity constraints:
         x_ij <= y_i                                  for every i, j
         sum_i capacity_i y_i >= sum_j demand_j       (one row, written as <=)
 

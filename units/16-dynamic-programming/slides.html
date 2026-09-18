@@ -11,6 +11,14 @@
 <link rel="stylesheet" href="../../slides/deck.css">
 </head>
 <body data-trunk="comb">
+<!-- The running example, once: what each <span class="ref"> on the slides shows on hover. -->
+<div class="refs" hidden>
+  <template data-ref="i1"><span class="ref-name">item 1</span>weight 2, value 3 <span class="ref-note">value per unit of weight 1.5; one of the four knapsack items, capacity $C = 6$</span></template>
+  <template data-ref="i2"><span class="ref-name">item 2</span>weight 3, value 4 <span class="ref-note">value per unit of weight 1.33; one of the four knapsack items, capacity $C = 6$</span></template>
+  <template data-ref="i3"><span class="ref-name">item 3</span>weight 4, value 5 <span class="ref-note">value per unit of weight 1.25; one of the four knapsack items, capacity $C = 6$</span></template>
+  <template data-ref="i4"><span class="ref-name">item 4</span>weight 5, value 9 <span class="ref-note">value per unit of weight 1.8; one of the four knapsack items, capacity $C = 6$</span></template>
+  <template data-ref="eg"><span class="ref-name">the graph</span>vertices 0–4, edges $01, 02, 12, 13, 23, 34$ <span class="ref-note">triangles $\{0,1,2\}$ and $\{1,2,3\}$ sharing edge 12, and a pendant edge 34. Chordal, treewidth 2</span></template>
+</div>
 <div class="reveal"><div class="slides">
 
 <section class="title-slide">
@@ -168,24 +176,24 @@
           <tr><td>1–4</td><td class="num">0</td><td class="num">0</td><td class="num">3</td><td class="num">4</td><td class="num">5</td><td class="num">9</td><td class="num"><b>9</b></td></tr>
         </tbody>
       </table>
-      <p class="small">Answer: 9, by item 4 alone. $5 \times 7 = 35$ cells, each one max of two numbers.</p>
+      <p class="small">Answer: 9, by <span class="ref" data-ref="i4">item 4</span> alone. $5 \times 7 = 35$ cells, each one max of two numbers.</p>
     </div>
     <div class="box ex"><span class="label">three cells, worked</span>
-      <p class="small"><b>Row 1–2, capacity 5:</b> skip item 2 → 3; take it → row above at $5 - 3 = 2$, plus 4 → $3 + 4 = 7$. Keep 7.</p>
-      <p class="small"><b>Row 1–3, capacity 6:</b> skip → 7; take item 3 → row above at $6 - 4 = 2$, plus 5 → 8. Keep 8.</p>
-      <p class="small"><b>Row 1–4, capacity 6:</b> skip → 8; take item 4 → row above at $6 - 5 = 1$, plus 9 → 9. Keep 9.</p>
+      <p class="small"><b>Row 1–2, capacity 5:</b> skip <span class="ref" data-ref="i2">item 2</span> → 3; take it → row above at $5 - 3 = 2$, plus 4 → $3 + 4 = 7$. Keep 7.</p>
+      <p class="small"><b>Row 1–3, capacity 6:</b> skip → 7; take <span class="ref" data-ref="i3">item 3</span> → row above at $6 - 4 = 2$, plus 5 → 8. Keep 8.</p>
+      <p class="small"><b>Row 1–4, capacity 6:</b> skip → 8; take <span class="ref" data-ref="i4">item 4</span> → row above at $6 - 5 = 1$, plus 9 → 9. Keep 9.</p>
       <p class="small muted">The state "capacity used" forgets <em>which</em> items filled it. That forgetting is the merge that makes this $O(nC)$ instead of $2^n$.</p>
     </div>
   </div>
   <p class="viz-link-row"><a class="viz-link" href="explore.html#/1" target="_blank" rel="noopener">explore interactively</a></p>
   <aside class="notes">
-    <p><b>Reconstruction.</b> Walk back from the bottom-right cell: row 1–4 at capacity 6 took item 4,
+    <p><b>Reconstruction.</b> Walk back from the bottom-right cell: row 1–4 at capacity 6 took <span class="ref" data-ref="i4">item 4</span>,
     so move to row 1–3 at capacity 1, where nothing was taken all the way up. The reference
     <code>knapsack([3, 4, 5, 9], [2, 3, 4, 5], 6)</code> returns <code>(9, [3])</code> (items are
     0-indexed there).</p>
-    <p><b>Greedy by value per weight</b> happens to work here: item 4 has the best ratio (1.8), uses 5 of
-    the 6, and nothing else fits. Lower item 4's value to 6 and the DP's answer becomes 8 (items 1 and 3),
-    while ratio-greedy takes item 1 (1.5) then item 2 (1.33) for only 7.</p>
+    <p><b>Greedy by value per weight</b> happens to work here: <span class="ref" data-ref="i4">item 4</span> has the best ratio (1.8), uses 5 of
+    the 6, and nothing else fits. Lower <span class="ref" data-ref="i4">item 4's</span> value to 6 and the DP's answer becomes 8 (items <span class="ref" data-ref="i1">1</span> and <span class="ref" data-ref="i3">3</span>),
+    while ratio-greedy takes <span class="ref" data-ref="i1">item 1</span> (1.5) then <span class="ref" data-ref="i2">item 2</span> (1.33) for only 7.</p>
   </aside>
 </section>
 
@@ -479,14 +487,14 @@
     <div>
       <div class="box warn"><span class="label">vertex 1 first: width 3</span>
         <p class="small">Eliminating 1 first: its neighbours 0, 2, 3 must become a clique. Edges 02 and 23 exist, but <b>03 is added</b>. Bag $\{0,1,2,3\}$: width 3.</p>
-        <p class="small">Same graph, same algorithm, one bad choice at the start: the DP over this decomposition would use $2^4$ states per bag instead of $2^3$.</p>
+        <p class="small"><span class="ref" data-ref="eg">Same graph</span>, same algorithm, one bad choice at the start: the DP over this decomposition would use $2^4$ states per bag instead of $2^3$.</p>
       </div>
       <p class="small">Hanging bags together: each bag attaches to the bag of its earliest-eliminated remaining neighbour. From min-degree: $\{3,4\} - \{3\}$, $\{0,1,2\} - \{1,2,3\} - \{2,3\} - \{3\}$.</p>
     </div>
   </div>
   <aside class="notes">
     <p>Both decompositions pass the reference <code>is_tree_decomposition</code>; the min-degree one
-    has width 2 and the "1 first" one width 3. The treewidth is exactly 2: the graph contains a
+    has width 2 and the "1 first" one width 3. The treewidth is exactly 2: <span class="ref" data-ref="eg">the graph</span> contains a
     triangle (so at least 2), and min-degree achieved 2.</p>
     <p>On top of the width-2 decomposition, the reference <code>td_vertex_cover</code> with unit
     weights returns a cover of size 3, for example $\{0, 1, 3\}$: each triangle needs two of its

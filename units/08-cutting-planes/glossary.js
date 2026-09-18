@@ -130,7 +130,7 @@ window.GLOSSARY = [
 },
 {
 "term_html": "dynamism",
-"html": "The ratio of largest to smallest coefficient in a row; solvers discard cuts where it is too high.",
+"html": "The ratio of largest to smallest coefficient in a constraint; solvers discard cuts where it is too high.",
 "section": "General cuts",
 "slide": "Convergence in theory, stalling in practice",
 "keys": [
@@ -139,7 +139,7 @@ window.GLOSSARY = [
 },
 {
 "term_html": "cover",
-"html": "For a knapsack row \\(\\sum_j w_j x_j \\le c\\), a set \\(C\\) with \\(\\sum_{j \\in C} w_j &gt; c\\): not all of it fits.",
+"html": "For a knapsack constraint \\(\\sum_j w_j x_j \\le c\\), a set \\(C\\) with \\(\\sum_{j \\in C} w_j &gt; c\\): not all of it fits.",
 "section": "Structural cuts",
 "slide": "Knapsack cover inequalities",
 "keys": [
@@ -202,7 +202,7 @@ window.GLOSSARY = [
 },
 {
 "term_html": "mixed-integer rounding (MIR) cut",
-"html": "A rounding formula applied to an aggregation of rows.",
+"html": "A rounding formula applied to an aggregation of constraints.",
 "section": "Structural cuts",
 "slide": "The families solvers actually run",
 "keys": [
@@ -211,7 +211,7 @@ window.GLOSSARY = [
 },
 {
 "term_html": "aggregation",
-"html": "A combination of several rows into one, used as the base for MIR cuts. Sees structure no single row shows.",
+"html": "A combination of several constraints into one, used as the base for MIR cuts. Sees structure no single constraint shows.",
 "section": "Structural cuts",
 "slide": "The families solvers actually run",
 "keys": [
@@ -220,7 +220,7 @@ window.GLOSSARY = [
 },
 {
 "term_html": "flow cover cut",
-"html": "A cut from fixed-charge flow rows \\(x \\le uy\\).",
+"html": "A cut from fixed-charge flow constraints \\(x \\le uy\\).",
 "section": "Structural cuts",
 "slide": "The families solvers actually run",
 "keys": [

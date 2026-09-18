@@ -32,14 +32,14 @@ each entry names the slide it comes from.
 
 * Four models of one problem
 
-- arc MIP :: Binary arc variables, start-time variables, and big-M time rows
+- arc MIP :: Binary arc variables, start-time variables, and big-M time constraints
   \(t_j \ge t_i + s_i + d_{ij} - M_{ij}(1 - x_{ij})\) with the smallest valid
-  \(M_{ij}\). The time rows rule out subtours but not overloads. /Slide: A compact
+  \(M_{ij}\). The time constraints rule out subtours but not overloads. /Slide: A compact
   model whose capacity lives in your cuts./
 - \(\delta^+(i)\), \(\delta^-(i)\) :: The arcs leaving and entering \(i\) or a set.
 - rounded capacity inequality :: \(x(\delta^-(S)) \ge \lceil q(S)/Q \rceil\) for
   every customer set \(S\): at least that many vehicles must enter it. With the right
-  side 1 it is unit 09's subtour row.
+  side 1 it is unit 09's subtour constraint.
 - connected-components separation :: Checking each component of the support graph as
   a candidate \(S\). Exact on integer points, heuristic on fractional ones.
 - CVRPSEP :: The standard code for separating capacity cuts heuristically.
@@ -60,7 +60,7 @@ each entry names the slide it comes from.
   \lambda_r\): forbid the arc, or force it by forbidding its alternatives.
 - multiple-circuit constraint :: CP-SAT's constraint that arc literals form circuits
   through a depot visited by many and every other vertex on exactly one. Replaces
-  degree rows and subtour elimination. /Slide: A circuit constraint, enforced
+  degree constraints and subtour elimination. /Slide: A circuit constraint, enforced
   implications, and a strategy./
 - enforced implication :: A constraint active only when a literal is true
   (~only_enforce_if~), propagated directly instead of through big-M.

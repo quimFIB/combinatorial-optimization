@@ -119,7 +119,7 @@ window.GLOSSARY = [
 },
 {
 "term_html": "tightest valid M",
-"html": "The best upper bound on \\(x\\) you can prove. A larger \\(M\\) lets the LP set \\(y = x/M\\), opening a facility \"a little\" and weakening the bound; it also mixes magnitudes in one row, inviting unit 02's tolerance problems.",
+"html": "The best upper bound on \\(x\\) you can prove. A larger \\(M\\) lets the LP set \\(y = x/M\\), opening a facility \"a little\" and weakening the bound; it also mixes magnitudes in one constraint, inviting unit 02's tolerance problems.",
 "section": "Strength",
 "slide": "Big-M, and why the M matters",
 "keys": [
@@ -155,7 +155,7 @@ window.GLOSSARY = [
 },
 {
 "term_html": "aggregated formulation",
-"html": "One linking row per facility, \\(\\sum_j x_{ij} \\le C y_i\\).",
+"html": "One linking constraint per facility, \\(\\sum_j x_{ij} \\le C y_i\\).",
 "section": "Strength",
 "slide": "Aggregated against disaggregated",
 "keys": [
@@ -164,7 +164,7 @@ window.GLOSSARY = [
 },
 {
 "term_html": "disaggregated formulation",
-"html": "One linking row per facility–customer pair, \\(x_{ij} \\le y_i\\). Strictly stronger: its rows sum to the aggregated ones, and it forbids \\(y_i = 1/C\\) for a facility serving one customer.",
+"html": "One linking constraint per facility–customer pair, \\(x_{ij} \\le y_i\\). Strictly stronger: its constraints sum to the aggregated ones, and it forbids \\(y_i = 1/C\\) for a facility serving one customer.",
 "section": "Strength",
 "slide": "Aggregated against disaggregated",
 "keys": [
@@ -183,21 +183,21 @@ window.GLOSSARY = [
 ]
 },
 {
-"term_html": "linking row",
+"term_html": "linking constraint",
 "html": "\\(x_{ij} \\le y_i\\) added to CFL. Removes no integer solution but cuts off fractional ones.",
 "section": "Strength",
 "slide": "When a constraint is implied, and still helps",
 "keys": [
-"linking row"
+"linking constraint"
 ]
 },
 {
-"term_html": "cover row",
+"term_html": "cover constraint",
 "html": "\\(\\sum_i u_i y_i \\ge \\sum_j d_j\\): open capacity must cover total demand. Valid, and it tightens the relaxation.",
 "section": "Strength",
 "slide": "When a constraint is implied, and still helps",
 "keys": [
-"cover row"
+"cover constraint"
 ]
 },
 {
@@ -211,7 +211,7 @@ window.GLOSSARY = [
 },
 {
 "term_html": "extended formulation",
-"html": "A description in extra variables whose projection is the polytope you want. Can replace exponentially many facets with polynomially many rows.",
+"html": "A description in extra variables whose projection is the polytope you want. Can replace exponentially many facets with polynomially many constraints.",
 "section": "Strength",
 "slide": "Extended formulations: add variables, lose facets",
 "keys": [
@@ -257,12 +257,12 @@ window.GLOSSARY = [
 ]
 },
 {
-"term_html": "symmetry-breaking rows",
+"term_html": "symmetry-breaking constraints",
 "html": "Constraints that pick one representative, such as \\(y_1 \\ge y_2 \\ge \\dots\\), or item \\(i\\) only in bins \\(\\le i\\).",
 "section": "Strength",
 "slide": "Symmetry is a formulation defect",
 "keys": [
-"symmetry-breaking rows"
+"symmetry-breaking constraints"
 ]
 },
 {
@@ -294,7 +294,7 @@ window.GLOSSARY = [
 },
 {
 "term_html": "implied bound cut",
-"html": "A cut that recovers \\(x_{ij} \\le y_i\\) from bounds and linking rows.",
+"html": "A cut that recovers \\(x_{ij} \\le y_i\\) from bounds and linking constraints.",
 "section": "What solvers do with your model",
 "slide": "Presolve and cuts repair weak models",
 "keys": [

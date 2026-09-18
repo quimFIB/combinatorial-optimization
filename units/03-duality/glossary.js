@@ -20,7 +20,7 @@ window.GLOSSARY = [
 },
 {
 "term_html": "dual variable (multiplier)",
-"html": "\\(y_i\\), the weight put on primal row \\(i\\) when combining constraints into a bound.",
+"html": "\\(y_i\\), the weight put on primal constraint \\(i\\) when combining constraints into a bound.",
 "section": "The dual as a bound",
 "slide": "Where the dual comes from",
 "keys": [
@@ -31,7 +31,7 @@ window.GLOSSARY = [
 },
 {
 "term_html": "dualization rules",
-"html": "\\(\\le\\) rows get \\(y_i \\ge 0\\), \\(\\ge\\) rows get \\(y_i \\le 0\\), equality rows get free \\(y_i\\); \\(x_j \\ge 0\\) gives a \\(\\ge c_j\\) dual row, \\(x_j \\le 0\\) a \\(\\le\\) row, free \\(x_j\\) an equality. Rebuild them from the bounding argument rather than memorizing.",
+"html": "\\(\\le\\) constraints get \\(y_i \\ge 0\\), \\(\\ge\\) constraints get \\(y_i \\le 0\\), equality constraints get free \\(y_i\\); \\(x_j \\ge 0\\) gives a \\(\\ge c_j\\) dual constraint, \\(x_j \\le 0\\) a \\(\\le\\) one, free \\(x_j\\) an equality. Rebuild them from the bounding argument rather than memorizing.",
 "section": "The dual as a bound",
 "slide": "The rules, once",
 "keys": [
@@ -94,7 +94,7 @@ window.GLOSSARY = [
 },
 {
 "term_html": "complementary slackness",
-"html": "Feasible \\(x, y\\) are both optimal if and only if \\(y_i (b_i - a_i x) = 0\\) for every row and \\(x_j ((A^\\top y)_j - c_j) = 0\\) for every variable. In words: a constraint with slack has price 0, and a used variable has zero reduced cost.",
+"html": "Feasible \\(x, y\\) are both optimal if and only if \\(y_i (b_i - a_i x) = 0\\) for every constraint and \\(x_j ((A^\\top y)_j - c_j) = 0\\) for every variable. In words: a constraint with slack has price 0, and a used variable has zero reduced cost.",
 "section": "The dual as a certificate",
 "slide": "Complementary slackness",
 "keys": [
@@ -258,7 +258,7 @@ window.GLOSSARY = [
 },
 {
 "term_html": "<code>GeneralLP</code>",
-"html": "An LP with \\(\\le\\), \\(\\ge\\) and \\(=\\) rows and variables that are \\(\\ge 0\\), \\(\\le 0\\) or free: the input the dual transformer handles.",
+"html": "An LP with \\(\\le\\), \\(\\ge\\) and \\(=\\) constraints and variables that are \\(\\ge 0\\), \\(\\le 0\\) or free: the input the dual transformer handles.",
 "section": "In the lab",
 "slide": "",
 "keys": [

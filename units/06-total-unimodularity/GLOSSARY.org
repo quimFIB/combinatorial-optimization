@@ -42,12 +42,12 @@ term can be looked up here and read properly there.
   with no valid signing is the /witness/ that \(A\) is not TU.
 - TU-preserving operations :: Transposing, negating a row or column, permuting,
   duplicating or deleting rows and columns, appending a unit row or column, and
-  pivoting. A flow model with bound rows stays TU.
+  pivoting. A flow model with bound constraints stays TU.
 - Seymour's decomposition :: Every TU matrix is built by 1-, 2- and 3-sums from
   network matrices, their transposes and two special \(5 \times 5\) matrices
   (1980). Gives polynomial recognition.
-- TU core with side constraints :: A mostly TU model broken by a few extra rows,
-  such as a flow with a budget row. The setting Lagrangian relaxation exploits
+- TU core with side constraints :: A mostly TU model broken by a few extra constraints,
+  such as a flow with a budget constraint. The setting Lagrangian relaxation exploits
   (unit 11). /Slide: Testing by brute force, and why nobody does./
 
 * Where it ends
@@ -70,7 +70,7 @@ term can be looked up here and read properly there.
 - balanced matrix :: A 0/1 matrix with no odd submatrix cycle. Set packing,
   covering and partitioning over one have integral LPs. /Slide: Beyond TU./
 - perfect matrix :: The clique constraints of a perfect graph; the stable-set LP
-  with clique rows is integral.
+  with clique constraints is integral.
 - total dual integrality (TDI) :: A system whose dual has integral optima for
   every integral objective. With integral \(b\) the primal polyhedron is integral,
   whatever \(A\) is (Edmonds & Giles 1977).

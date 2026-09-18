@@ -104,15 +104,15 @@
         const ra = edge(b[0], lo), rz = edge(b[0], hi);
         el("rect", { x: Q.X(ra), y: Q.Y(Q.box[3]), width: Math.max(1, Q.X(rz) - Q.X(ra)),
                      height: Q.Y(Q.box[2]) - Q.Y(Q.box[3]), class: "viz-shade-good" }, curve);
-        // the linear prediction z* + y1 (b1' - b1)
+        // the linear prediction z* + u (b1' - b1)
         const y1 = sol.weights[2];
         el("line", { x1: Q.X(lo), y1: Q.Y(sol.z + y1 * (lo - b[0])), x2: Q.X(hi), y2: Q.Y(sol.z + y1 * (hi - b[0])), class: "viz-levelline" }, curve);
         read.replaceChildren();
         const rng = `[${num(ra)}, ${num(rz)}]${ra <= lo + 1e-9 || rz >= hi - 1e-9 ? " (at least)" : ""}`;
         V.table(read, ["", "value", "reading"], [
           ["optimum", `z* = ${num(sol.z)}`, `at (${num(sol.x[0])}, ${num(sol.x[1])})`],
-          ["price of row 1", `y₁ = ${num(sol.weights[2])}`, sol.weights[2] ? "one more unit of b₁ adds this much" : "row 1 has slack: worth nothing"],
-          ["price of row 2", `y₂ = ${num(sol.weights[3])}`, sol.weights[3] ? "one more unit of b₂ adds this much" : "row 2 has slack: worth nothing"],
+          ["price of constraint 1", `u = ${num(sol.weights[2])}`, sol.weights[2] ? "one more unit of b₁ adds this much" : "constraint 1 has slack: worth nothing"],
+          ["price of constraint 2", `v = ${num(sol.weights[3])}`, sol.weights[3] ? "one more unit of b₂ adds this much" : "constraint 2 has slack: worth nothing"],
           ["range of b₁", rng, "shaded: the same prices hold"],
           ["check", `${num(b[0])}·${num(sol.weights[2])} + ${num(b[1])}·${num(sol.weights[3])}`, `= ${num(b[0] * sol.weights[2] + b[1] * sol.weights[3])}, equal to z*`],
         ], (i, j) => (j === 0 ? "viz-bas" : j === 2 ? "viz-soft" : ""));
